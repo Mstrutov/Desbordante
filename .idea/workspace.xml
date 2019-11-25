@@ -11,22 +11,28 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="fb80a5c4-b662-4c0d-8645-0d9d54369a0b" name="Default Changelist" comment="">
+    <list default="true" id="fb80a5c4-b662-4c0d-8645-0d9d54369a0b" name="Default Changelist" comment="Bugfix tests +">
+      <change beforePath="$PROJECT_DIR$/.idea/customTargets.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/customTargets.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/algorithms/TaneX.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms/TaneX.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/algorithms/TaneX.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms/TaneX.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SConscript" beforeDir="false" afterPath="$PROJECT_DIR$/SConscript" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SConstruct" beforeDir="false" afterPath="$PROJECT_DIR$/SConstruct" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main2.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/model/ColumnCombination.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/ColumnCombination.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/model/ColumnLayoutRelationData.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/ColumnLayoutRelationData.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/model/Vertical.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/Vertical.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/parser/CSVParser.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/parser/CSVParser.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model/RelationData.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/RelationData.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tests/CIPublicHighway.csv" beforeDir="false" afterPath="$PROJECT_DIR$/src/tests/inputData/CIPublicHighway.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tests/ProbeTest1.csv" beforeDir="false" afterPath="$PROJECT_DIR$/src/tests/inputData/ProbeTest1.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tests/ProbeTest2.csv" beforeDir="false" afterPath="$PROJECT_DIR$/src/tests/inputData/ProbeTest2.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/tests/Test1.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/tests/Test1.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/util/LatticeLevel.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/util/LatticeLevel.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/util/LatticeVertex.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/util/LatticeVertex.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/util/LatticeVertex.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/util/LatticeVertex.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/util/PositionListIndex.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/util/PositionListIndex.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tests/Test1.csv" beforeDir="false" afterPath="$PROJECT_DIR$/src/tests/inputData/Test1.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tests/TestTane.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/tests/TestTane.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tests/TestTane.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tests/inputData/multiple_files/WDC_age.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tests/inputData/multiple_files/WDC_symbols.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tests/inputData/multiple_files/nested/WDC_astronomical.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tests/inputData/multiple_files/nested/WDC_game.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tests/neighbors100k.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tests/neighbors50k.csv" beforeDir="false" afterPath="$PROJECT_DIR$/src/tests/inputData/neighbors50k.csv" afterDir="false" />
     </list>
-    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -49,7 +55,6 @@
     <expand />
     <select />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
   <component name="FavoritesManager">
     <favorites_list name="metanome_cpp" />
   </component>
@@ -78,6 +83,11 @@
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="1" id="Add" />
   </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
   <component name="PropertiesComponent">
     <property name="DatabaseDriversLRU" value="sqlite" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
@@ -85,7 +95,7 @@
     <property name="add_unversioned_files" value="$PROJECT_DIR$/main.cpp&#10;/home/kek/CLionProjects/metanome_cpp/.gitignore&#10;/home/kek/CLionProjects/metanome_cpp/CMakeLists.txt" />
     <property name="js.buildTools.grunt.grunt-cli.package" value="" />
     <property name="js.buildTools.gulp.gulp_package_dir" value="" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/src/tests" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/build/metanome" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
@@ -101,76 +111,34 @@
     <property name="settings.editor.selected.configurable" value="CLionExternalConfigurable" />
   </component>
   <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/src/algorithms" />
-      <recent name="$PROJECT_DIR$" />
-      <recent name="$PROJECT_DIR$/src" />
-      <recent name="$PROJECT_DIR$/model" />
-    </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/tests" />
       <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/cmake-build-debug" />
     </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/tests/inputData" />
+      <recent name="$PROJECT_DIR$/src/algorithms" />
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/src" />
+      <recent name="$PROJECT_DIR$/model" />
+    </key>
   </component>
-  <component name="RunDashboard">
-    <option name="ruleStates">
-      <list>
-        <RuleState>
-          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
-        </RuleState>
-        <RuleState>
-          <option name="name" value="StatusDashboardGroupingRule" />
-        </RuleState>
-      </list>
-    </option>
-  </component>
-  <component name="RunManager" selected="Google Test.TaneTester.first">
-    <configuration name="Scons tests" type="CLionExternalRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="Scons" CONFIG_NAME="Scons" RUN_PATH="$PROJECT_DIR$/build/tests/tester">
+  <component name="RunManager" selected="Custom Build Application.Scons tests">
+    <configuration name="SCons" type="CLionExternalRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="Scons" CONFIG_NAME="Scons" RUN_PATH="$PROJECT_DIR$/build/metanome">
       <method v="2">
         <option name="CLION.EXTERNAL.BUILD" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Scons" type="CLionExternalRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="Scons" CONFIG_NAME="Scons" RUN_PATH="$PROJECT_DIR$/build/metanome">
+    <configuration name="Scons tests" type="CLionExternalRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="Scons test" CONFIG_NAME="Scons test" RUN_PATH="$PROJECT_DIR$/build/tests/tester">
       <method v="2">
         <option name="CLION.EXTERNAL.BUILD" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="TaneTester.first" type="CMakeGoogleTestRunConfigurationType" factoryName="Google Test" temporary="true" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="metanome_cpp" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="metanome_cpp" RUN_TARGET_NAME="metanome_cpp" TEST_CLASS="TaneTester" TEST_METHOD="first" TEST_MODE="SUITE_TEST">
-      <method v="2">
-        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
-        <option name="BeforeTestRunTask" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="pliChecker.first" type="CMakeGoogleTestRunConfigurationType" factoryName="Google Test" temporary="true" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="metanome_cpp" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="metanome_cpp" RUN_TARGET_NAME="metanome_cpp" TEST_CLASS="pliChecker" TEST_METHOD="first" TEST_MODE="SUITE_TEST">
-      <method v="2">
-        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
-        <option name="BeforeTestRunTask" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="pliChecker.second" type="CMakeGoogleTestRunConfigurationType" factoryName="Google Test" temporary="true" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="metanome_cpp" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="metanome_cpp" RUN_TARGET_NAME="metanome_cpp" TEST_CLASS="pliChecker" TEST_METHOD="second" TEST_MODE="SUITE_TEST">
-      <method v="2">
-        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
-        <option name="BeforeTestRunTask" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="pliIntersectChecker.first" type="CMakeGoogleTestRunConfigurationType" factoryName="Google Test" temporary="true" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="metanome_cpp" RUN_TARGET_PROJECT_NAME="metanome_cpp" RUN_TARGET_NAME="metanome_cpp" TEST_CLASS="pliIntersectChecker" TEST_METHOD="first" TEST_MODE="SUITE_TEST">
-      <method v="2">
-        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
-        <option name="BeforeTestRunTask" enabled="true" />
       </method>
     </configuration>
     <configuration name="metanome_cpp" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="metanome_cpp" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="metanome_cpp" RUN_TARGET_NAME="metanome_cpp">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
-    </configuration>
-    <configuration name="clean" type="ShConfigurationType">
-      <option name="SCRIPT_PATH" value="$PROJECT_DIR$/clean.sh" />
-      <option name="SCRIPT_OPTIONS" value="" />
-      <option name="INTERPRETER_PATH" value="/bin/bash" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <method v="2" />
     </configuration>
     <configuration default="true" type="js.build_tools.grunt">
       <node-interpreter value="project" />
@@ -188,22 +156,21 @@
     </configuration>
     <list>
       <item itemvalue="CMake Application.metanome_cpp" />
-      <item itemvalue="Custom Build Application.Scons" />
+      <item itemvalue="Custom Build Application.SCons" />
       <item itemvalue="Custom Build Application.Scons tests" />
-      <item itemvalue="Google Test.pliChecker.first" />
-      <item itemvalue="Google Test.TaneTester.first" />
-      <item itemvalue="Google Test.pliChecker.second" />
-      <item itemvalue="Google Test.pliIntersectChecker.first" />
-      <item itemvalue="Shell Script.clean" />
     </list>
-    <recent_temporary>
+  </component>
+  <component name="ServiceViewManager">
+    <option name="viewStates">
       <list>
-        <item itemvalue="Google Test.TaneTester.first" />
-        <item itemvalue="Google Test.pliIntersectChecker.first" />
-        <item itemvalue="Google Test.pliChecker.second" />
-        <item itemvalue="Google Test.pliChecker.first" />
+        <serviceView>
+          <treeState>
+            <expand />
+            <select />
+          </treeState>
+        </serviceView>
       </list>
-    </recent_temporary>
+    </option>
   </component>
   <component name="SvnConfiguration">
     <configuration />
@@ -287,7 +254,13 @@
       <workItem from="1572080848328" duration="1089000" />
       <workItem from="1572085681605" duration="6736000" />
       <workItem from="1572684118725" duration="16060000" />
-      <workItem from="1572865811483" duration="1069000" />
+      <workItem from="1572865811483" duration="1536000" />
+      <workItem from="1573375612443" duration="4670000" />
+      <workItem from="1573986159092" duration="5391000" />
+      <workItem from="1573998433402" duration="2837000" />
+      <workItem from="1574702421696" duration="1709000" />
+      <workItem from="1574705644273" duration="268000" />
+      <workItem from="1575219678636" duration="5494000" />
     </task>
     <task id="LOCAL-00001" summary="Add ConfigParser and CSVParser">
       <created>1562777944282</created>
@@ -345,7 +318,21 @@
       <option name="project" value="LOCAL" />
       <updated>1571563596533</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Tane: fixed and tested.">
+      <created>1572866928902</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1572866928902</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Tane: fixed and tested.">
+      <created>1572867008838</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1572867008838</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -406,18 +393,65 @@
     <MESSAGE value="TANE компилится!" />
     <MESSAGE value="Багфикс; тесты для Тейна" />
     <MESSAGE value="Refactoring" />
-    <option name="LAST_COMMIT_MESSAGE" value="Refactoring" />
+    <MESSAGE value="Tane: fixed and tested." />
+    <option name="LAST_COMMIT_MESSAGE" value="Tane: fixed and tested." />
   </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/tests/Test1.cpp</url>
-          <line>63</line>
-          <option name="timeStamp" value="23" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
+  <component name="WindowStateProjectService">
+    <state x="669" y="244" width="572" height="549" key="#Scons_tests" timestamp="1575222707299">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="669" y="244" width="572" height="549" key="#Scons_tests/1920.0.1920.1080/0.0.1920.1040@0.0.1920.1040" timestamp="1575222707299" />
+    <state x="2589" y="244" width="572" height="549" key="#Scons_tests/1920.0.1920.1080/0.0.1920.1040@1920.0.1920.1080" timestamp="1575222587148" />
+    <state x="418" y="171" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1575225207939">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="418" y="171" key="#com.intellij.execution.impl.EditConfigurationsDialog/1920.0.1920.1080/0.0.1920.1040@0.0.1920.1040" timestamp="1575225207939" />
+    <state x="2338" y="178" key="#com.intellij.execution.impl.EditConfigurationsDialog/1920.0.1920.1080/0.0.1920.1040@1920.0.1920.1080" timestamp="1575222580907" />
+    <state x="2616" y="332" width="424" height="582" key="#com.intellij.ide.macro.MacrosDialog" timestamp="1575222602083">
+      <screen x="1920" y="0" width="1920" height="1080" />
+    </state>
+    <state x="2616" y="332" width="424" height="582" key="#com.intellij.ide.macro.MacrosDialog/1920.0.1920.1080/0.0.1920.1040@1920.0.1920.1080" timestamp="1575222602083" />
+    <state x="2603" y="458" width="461" height="331" key="#com.intellij.tools.ToolEditorDialog" timestamp="1575222618363">
+      <screen x="1920" y="0" width="1920" height="1080" />
+    </state>
+    <state x="2603" y="458" width="461" height="331" key="#com.intellij.tools.ToolEditorDialog/1920.0.1920.1080/0.0.1920.1040@1920.0.1920.1080" timestamp="1575222618363" />
+    <state x="560" y="116" width="790" height="805" key="CommitChangelistDialog2" timestamp="1575225176101">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="560" y="116" width="790" height="805" key="CommitChangelistDialog2/1920.0.1920.1080/0.0.1920.1040@0.0.1920.1040" timestamp="1575225176101" />
+    <state x="738" y="276" width="424" height="482" key="FileChooserDialogImpl" timestamp="1575225192764">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="738" y="276" width="424" height="482" key="FileChooserDialogImpl/1920.0.1920.1080/0.0.1920.1040@0.0.1920.1040" timestamp="1575225192764" />
+    <state width="1878" height="400" key="GridCell.Tab.0.bottom" timestamp="1575225038595">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1878" height="400" key="GridCell.Tab.0.bottom/1920.0.1920.1080/0.0.1920.1040@0.0.1920.1040" timestamp="1575225038595" />
+    <state width="1878" height="237" key="GridCell.Tab.0.bottom/1920.0.1920.1080/0.0.1920.1040@1920.0.1920.1080" timestamp="1575222549671" />
+    <state width="1878" height="400" key="GridCell.Tab.0.center" timestamp="1575225038595">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1878" height="400" key="GridCell.Tab.0.center/1920.0.1920.1080/0.0.1920.1040@0.0.1920.1040" timestamp="1575225038595" />
+    <state width="1878" height="237" key="GridCell.Tab.0.center/1920.0.1920.1080/0.0.1920.1040@1920.0.1920.1080" timestamp="1575222549671" />
+    <state width="1878" height="400" key="GridCell.Tab.0.left" timestamp="1575225038595">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1878" height="400" key="GridCell.Tab.0.left/1920.0.1920.1080/0.0.1920.1040@0.0.1920.1040" timestamp="1575225038595" />
+    <state width="1878" height="237" key="GridCell.Tab.0.left/1920.0.1920.1080/0.0.1920.1040@1920.0.1920.1080" timestamp="1575222549671" />
+    <state width="1878" height="400" key="GridCell.Tab.0.right" timestamp="1575225038595">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1878" height="400" key="GridCell.Tab.0.right/1920.0.1920.1080/0.0.1920.1040@0.0.1920.1040" timestamp="1575225038595" />
+    <state width="1878" height="237" key="GridCell.Tab.0.right/1920.0.1920.1080/0.0.1920.1040@1920.0.1920.1080" timestamp="1575222549671" />
+    <state x="464" y="149" key="SettingsEditor" timestamp="1575222745318">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="464" y="149" key="SettingsEditor/1920.0.1920.1080/0.0.1920.1040@0.0.1920.1040" timestamp="1575222745318" />
+    <state x="2384" y="155" key="SettingsEditor/1920.0.1920.1080/0.0.1920.1040@1920.0.1920.1080" timestamp="1575222619681" />
+    <state x="2775" y="258" key="com.intellij.tools.ToolSelectDialog.dimensionServiceKey" timestamp="1575222619164">
+      <screen x="1920" y="0" width="1920" height="1080" />
+    </state>
+    <state x="2775" y="258" key="com.intellij.tools.ToolSelectDialog.dimensionServiceKey/1920.0.1920.1080/0.0.1920.1040@1920.0.1920.1080" timestamp="1575222619164" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand>

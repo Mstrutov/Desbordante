@@ -1,0 +1,11 @@
+Planet,CalculatedTitiusBodeLaw,Observed,PerfectOctaves,DistanceFromMercury
+Mercury,0.4,0.387,0,0
+Venus,0.7,0.723,1,1.1
+Earth,1,1,2,2
+Mars,1.6,1.524,4,3.7
+Asteroid belt; (Ceres),2.8,2.767,8,7.8
+Jupiter,5.2,5.203,16,15.7
+Saturn,10,9.539,32,29.9
+Uranus,19.6,19.191,64,61.4
+Neptune,38.8,30.061,(64x1.5=96),-96.8
+Pluto,77.2,39.529,128,127.7

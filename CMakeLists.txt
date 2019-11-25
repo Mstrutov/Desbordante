@@ -11,7 +11,7 @@ find_package(Boost 1.70.0 COMPONENTS filesystem regex container)
 find_package(GTest REQUIRED)
 #find_package(GMock REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
-include_directories(/home/maxim/Study/Metanome-coding/metanome_git/src)
+include_directories(src)
 include_directories(/usr/include)
 link_directories(/usr/lib)
 

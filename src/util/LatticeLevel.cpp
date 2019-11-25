@@ -3,6 +3,7 @@
 #include "LatticeLevel.h"
 
 #include <algorithm>
+#include <chrono>
 #include <iostream>
 
 #include "model/ColumnCombination.h"
@@ -31,6 +32,8 @@ void LatticeLevel::generateNextLevel(vector<shared_ptr<LatticeLevel>>& levels) {
   cout << "-------------Creating level " << arity + 1 << "...-----------------" << endl;
   shared_ptr<LatticeLevel> currentLevel = levels[arity];
 
+  //auto startTime = std::chrono::system_clock::now();
+
   //using vector because of 'get()''
   vector<shared_ptr<LatticeVertex>> currentLevelVertices;
   for (const auto& [map_key, vertice] : currentLevel->getVertices()){
@@ -41,7 +44,7 @@ void LatticeLevel::generateNextLevel(vector<shared_ptr<LatticeLevel>>& levels) {
   LatticeLevel nextLevel(arity + 1);
 
 
-  //TODO: вынести иниц-ю объектов за циклы
+  //TODO: вынести иниц-ю объектов за циклы - unnecessary, speed is OK
 
   for (unsigned int vertexIndex1 = 0; vertexIndex1 < currentLevelVertices.size(); vertexIndex1++){
     shared_ptr<LatticeVertex> vertex1 = currentLevelVertices[vertexIndex1];
@@ -113,6 +116,9 @@ continueMidOuter:
   }
 
   levels.push_back(make_shared<LatticeLevel>(nextLevel));
+  //std::chrono::milliseconds elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
+  //cout << "Level " << arity << " created in " << elapsed_milliseconds.count() << " ms." << endl;
+
 }
 
 void LatticeLevel::clearLevelsBelow(vector<shared_ptr<LatticeLevel>>& levels, int arity) {

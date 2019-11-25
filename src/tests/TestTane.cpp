@@ -14,13 +14,10 @@ using namespace std;
 
 std::string get_selfpath();
 
-//TODO: wrong file => WARNING
-//TODO: NO ABSOLUTE PATHS!!
-TEST(TaneTester, first){
+extern string path;
 
-    //string path = "/home/maxim/Study/Metanome-coding/metanome_git/src/tests";
-    string path = fs::path(get_selfpath()).parent_path().string();
-    //CSVParser csvParser(path + "/TestTane.csv");
+//TODO: wrong file => WARNING
+TEST(TaneTester, first){
     Tane algoInstance(path + "/neighbors100k.csv");
     //Tane algoInstance(path + "/CIPublicHighway50k.csv");
     algoInstance.execute();

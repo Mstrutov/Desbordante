@@ -24,9 +24,9 @@ public:
     virtual vector<int> getTuple(int tupleIndex)=0;
     virtual void shuffleColumns()=0;
     double getMaximumNip() { return getNumRows() * (getNumRows() - 1) / 2.0; }
-    long long getNumTuplePairs() {
+    unsigned long long getNumTuplePairs() {
         //std::cout << "----" << (long long) getNumRows() * (getNumRows() - 1) / 2 << std::endl;
-        return (long long) getNumRows() * (getNumRows() - 1) / 2; }
+        return (unsigned long long) getNumRows() * (getNumRows() - 1) / 2; }
 
     shared_ptr<RelationalSchema> getSchema();
 protected:

@@ -4,10 +4,20 @@
     <target id="c01c6f2f-f113-4467-aa89-02881199473b" name="Scons" projectName="metanome_cpp">
       <configuration id="fb137c0a-5c44-4adf-9769-8238f37077bc" name="Scons">
         <build type="TOOL">
-          <tool actionId="Tool_External Tools_Scons" />
+          <tool actionId="Tool_External Tools_SCons" />
         </build>
         <clean type="TOOL">
-          <tool actionId="Tool_External Tools_Scons clean" />
+          <tool actionId="Tool_External Tools_SCons clean" />
+        </clean>
+      </configuration>
+    </target>
+    <target id="050caec4-c3a2-425f-b0e9-52efeb4729a9" name="Scons test" projectName="metanome_cpp">
+      <configuration id="3da9bc4e-cbb7-4bef-8557-d7fb15a8b72a" name="Scons test" toolchainName="Default">
+        <build type="TOOL">
+          <tool actionId="Tool_External Tools_SCons" />
+        </build>
+        <clean type="TOOL">
+          <tool actionId="Tool_External Tools_SCons clean" />
         </clean>
       </configuration>
     </target>

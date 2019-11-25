@@ -1,10 +1,13 @@
-env = Environment(CPPPATH='/home/maxim/Study/Metanome-coding/Software/boost_1_70_0/boost/include',
-    CPPDEFINES=[],
-    LIBS=[],
-    SCONS_CXX_STANDARD="c++17")
+AddOption('--release', dest='release', nargs=0)
 
-env.Append( CPPPATH=['./src'] )
-env.Append(CPPFLAGS = [ '-O0', '-std=c++17',
+if GetOption('release') == ():
+    env = Environment(
+        CXX = 'g++',
+        CPPFLAGS = ['-std=c++17', '-O3'])
+else:
+    env = Environment(
+        CXX = 'g++',
+        CPPFLAGS = [ '-O0', '-std=c++17',
         #'-fvar-tracking',
         '-ggdb', '-fstack-protector-all','-pedantic', '-Wall', '-Werror',
         '-Wextra', '-Wcast-align', '-Wcast-qual',
@@ -19,6 +22,6 @@ env.Append(CPPFLAGS = [ '-O0', '-std=c++17',
         #'-fsanitize=undefined', '-Wno-gnu-zero-variadic-macro-arguments'           # for clang
         ])
 
-test_env = env.Clone()
+env.Append(CPPPATH=['src'] )
 
-SConscript('SConscript', variant_dir = 'build', exports=['env', 'test_env'], duplicate=0)
+SConscript('SConscript', variant_dir = 'build', exports=['env'], duplicate=0)
