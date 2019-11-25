@@ -3,7 +3,7 @@
 
 using namespace std;
 
-int main(){
+int main2(){
     ConfigParser configParser("config.json");
     CSVParser parser(configParser.getInputPath());
     return 0;

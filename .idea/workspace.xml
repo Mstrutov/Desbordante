@@ -14,17 +14,12 @@
     <list default="true" id="fb80a5c4-b662-4c0d-8645-0d9d54369a0b" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/algorithms/TaneX.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms/TaneX.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/algorithms/TaneX.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms/TaneX.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main2.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/model/ColumnCombination.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/ColumnCombination.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/model/ColumnLayoutRelationData.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/ColumnLayoutRelationData.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/model/Vertical.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/Vertical.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/parser/CSVParser.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/parser/CSVParser.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main2.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/tests/Test1.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/tests/Test1.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tests/TestTane.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/tests/TestTane.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/util/LatticeLevel.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/util/LatticeLevel.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/util/LatticeVertex.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/util/LatticeVertex.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/util/LatticeVertex.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/util/LatticeVertex.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/util/PositionListIndex.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/util/PositionListIndex.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/util/PositionListIndex.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/util/PositionListIndex.h" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -200,8 +195,8 @@
       <list>
         <item itemvalue="Google Test.TaneTester.first" />
         <item itemvalue="Google Test.pliIntersectChecker.first" />
-        <item itemvalue="Google Test.pliChecker.second" />
         <item itemvalue="Google Test.pliChecker.first" />
+        <item itemvalue="Google Test.pliChecker.second" />
       </list>
     </recent_temporary>
   </component>
@@ -287,7 +282,12 @@
       <workItem from="1572080848328" duration="1089000" />
       <workItem from="1572085681605" duration="6736000" />
       <workItem from="1572684118725" duration="16060000" />
-      <workItem from="1572865811483" duration="1069000" />
+      <workItem from="1572865811483" duration="1536000" />
+      <workItem from="1573375612443" duration="4670000" />
+      <workItem from="1573986159092" duration="5391000" />
+      <workItem from="1573998433402" duration="2837000" />
+      <workItem from="1574702421696" duration="1709000" />
+      <workItem from="1574705644273" duration="268000" />
     </task>
     <task id="LOCAL-00001" summary="Add ConfigParser and CSVParser">
       <created>1562777944282</created>
@@ -345,7 +345,21 @@
       <option name="project" value="LOCAL" />
       <updated>1571563596533</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Tane: fixed and tested.">
+      <created>1572866928902</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1572866928902</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Tane: fixed and tested.">
+      <created>1572867008838</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1572867008838</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -406,18 +420,8 @@
     <MESSAGE value="TANE компилится!" />
     <MESSAGE value="Багфикс; тесты для Тейна" />
     <MESSAGE value="Refactoring" />
-    <option name="LAST_COMMIT_MESSAGE" value="Refactoring" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/tests/Test1.cpp</url>
-          <line>63</line>
-          <option name="timeStamp" value="23" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
+    <MESSAGE value="Tane: fixed and tested." />
+    <option name="LAST_COMMIT_MESSAGE" value="Tane: fixed and tested." />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand>

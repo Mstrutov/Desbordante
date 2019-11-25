@@ -1,0 +1,10 @@
+Planet,OrbitalRadius,LengthOfYear,OrbitalVelocity
+Mercury,0.387,0.2409,1.607
+Venus,0.723,0.616,1.174
+Earth,1,1,1
+Mars,1.524,1.9,0.802
+Jupiter,5.203,12,0.434
+Saturn,9.539,29.5,0.323
+Uranus,19.18,84,0.228
+Neptune,30.06,165,0.182
+Pluto,39.52,248,0.159

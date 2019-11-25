@@ -1,0 +1,15 @@
+Planet,MeanPerNASA,RelativeMeanDistanceMercury1
+Mercury,57.91,1
+Venus,108.21,1.86859
+Earth,149.6,1.3825
+Mars,227.92,1.52353
+Ceres,413.79,1.81552
+Jupiter,778.57,1.88154
+Saturn,"1,433.53",1.84123
+Uranus,"2,872.46",2.00377
+Neptune,"4,495.06",1.56488
+Pluto,"5,869.66",1.3058
+Total,,16.18736
+Average,,1.61874
+Phi,,1.61803
+Degree of variance,,-0.00043

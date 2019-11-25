@@ -18,8 +18,8 @@ std::string get_selfpath();
 //TODO: NO ABSOLUTE PATHS!!
 TEST(TaneTester, first){
 
-    //string path = "/home/maxim/Study/Metanome-coding/metanome_git/src/tests";
-    string path = fs::path(get_selfpath()).parent_path().string();
+    string path = "/home/maxim/Study/Metanome-coding/metanome_git/src/tests";
+    //string path = fs::path(get_selfpath()).parent_path().string();
     //CSVParser csvParser(path + "/TestTane.csv");
     Tane algoInstance(path + "/neighbors100k.csv");
     //Tane algoInstance(path + "/CIPublicHighway50k.csv");

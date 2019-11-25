@@ -1,0 +1,174 @@
+Numeral,Name,Mean radius (km),Sidereal period (d) (r = retrograde),Discovery year,Discovered by,Notes,Planet
+I,Moon,1737.1,27.321582,Prehistoric,—,Synchronous rotation,Earth
+I,Phobos,11.1 ± 0.15,0.319,1877,Hall,,Mars
+II,Deimos,6.2 ± 0.18,1.262,1877,Hall,,Mars
+I,Io,1818.1 ± 0.1,1.769,1610,Galileo,Main group moon (Galilean),Jupiter
+II,Europa,1560.7 ± 0.7,3.551,1610,Galileo,Main group moon (Galilean),Jupiter
+III,Ganymede,2634.1 ± 0.3,7.155,1610,Galileo,Main group moon (Galilean),Jupiter
+IV,Callisto,2408.4 ± 0.3,16.69,1610,Galileo,Main group moon (Galilean),Jupiter
+V,Amalthea,83.45 ± 2.4,0.498,1892,Barnard,Inner moon (Amalthea),Jupiter
+VI,Himalia,85,250.56,1904,Perrine,Prograde irregular (Himalia),Jupiter
+VII,Elara,43,259.64,1905,Perrine,Prograde irregular (Himalia),Jupiter
+VIII,Pasiphae,30,743.63 (r),1908,Melotte,Retrograde irregular (Pasiphae),Jupiter
+IX,Sinope,19,758.90 (r),1914,Nicholson,Retrograde irregular (Pasiphae),Jupiter
+X,Lysithea,18,259.2,1938,Nicholson,Prograde irregular (Himalia),Jupiter
+XI,Carme,23,734.17 (r),1938,Nicholson,Retrograde irregular (Carme),Jupiter
+XII,Ananke,14,629.77 (r),1951,Nicholson,Retrograde irregular (Ananke),Jupiter
+XIII,Leda,10,240.92,1974,Kowal,Prograde irregular (Himalia),Jupiter
+XIV,Thebe,49.3 ± 2.0,0.675,1979,Synnott (Voyager 1),Inner moon (Amalthea),Jupiter
+XV,Adrastea,8.2 ± 2.0,0.298,1979,"Jewitt, Danielson (Voyager 1)",Inner moon (Amalthea),Jupiter
+XVI,Metis,21.5 ± 2.0,0.295,1979,Synnott (Voyager 1),Inner moon (Amalthea),Jupiter
+XVII,Callirrhoe,4.3,758.77 (r),2000,"Scotti, Spahr, McMillan, Larsen, Montani, Gleason, Gehrels",Retrograde irregular (Pasiphae),Jupiter
+XVIII,Themisto,4,130.02,1975/2000,"Kowal and Roemer (original); Sheppard, Jewitt, Fernández, Magnier (rediscovery)",Prograde irregular (Themisto),Jupiter
+XIX,Megaclite,2.7,752.86 (r),2000,"Sheppard, Jewitt, Fernández, Magnier, Dahm, Evans",Retrograde irregular (Pasiphae),Jupiter
+XX,Taygete,2.5,732.41 (r),2000,"Sheppard, Jewitt, Fernández, Magnier, Dahm, Evans",Retrograde irregular (Carme),Jupiter
+XXI,Chaldene,1.9,723.72 (r),2000,"Sheppard, Jewitt, Fernández, Magnier, Dahm, Evans",Retrograde irregular (Carme),Jupiter
+XXII,Harpalyke,2.2,623.32 (r),2000,"Sheppard, Jewitt, Fernández, Magnier, Dahm, Evans",Retrograde irregular (Ananke),Jupiter
+XXIII,Kalyke,2.6,742.06 (r),2000,"Sheppard, Jewitt, Fernández, Magnier, Dahm, Evans",Retrograde irregular (Carme),Jupiter
+XXIV,Iocaste,2.6,631.60 (r),2000,"Sheppard, Jewitt, Fernández, Magnier, Dahm, Evans",Retrograde irregular (Ananke),Jupiter
+XXV,Erinome,1.6,728.46 (r),2000,"Sheppard, Jewitt, Fernández, Magnier, Dahm, Evans",Retrograde irregular (Carme),Jupiter
+XXVI,Isonoe,1.9,726.23 (r),2000,"Sheppard, Jewitt, Fernández, Magnier, Dahm, Evans",Retrograde irregular (Carme),Jupiter
+XXVII,Praxidike,3.4,625.39 (r),2000,"Sheppard, Jewitt, Fernández, Magnier, Dahm, Evans",Retrograde irregular (Ananke),Jupiter
+XXVIII,Autonoe,2,760.95 (r),2001,"Sheppard, Jewitt, Kleyna",Retrograde irregular (Pasiphae),Jupiter
+XXIX,Thyone,2,627.21 (r),2001,"Sheppard, Jewitt, Kleyna",Retrograde irregular (Ananke),Jupiter
+XXX,Hermippe,2,633.9 (r),2001,"Sheppard, Jewitt, Kleyna",Retrograde irregular (Ananke?),Jupiter
+XXXI,Aitne,1.5,730.18 (r),2001,"Sheppard, Jewitt, Kleyna",Retrograde irregular (Carme),Jupiter
+XXXII,Eurydome,1.5,717.33 (r),2001,"Sheppard, Jewitt, Kleyna",Retrograde irregular (Pasiphae?),Jupiter
+XXXIII,Euanthe,1.5,620.49 (r),2001,"Sheppard, Jewitt, Kleyna",Retrograde irregular (Ananke),Jupiter
+XXXIV,Euporie,1,550.74 (r),2001,"Sheppard, Jewitt, Kleyna",Retrograde irregular (Ananke),Jupiter
+XXXV,Orthosie,1,622.56 (r),2001,"Sheppard, Jewitt, Kleyna",Retrograde irregular (Ananke),Jupiter
+XXXVI,Sponde,1,748.34 (r),2001,"Sheppard, Jewitt, Kleyna",Retrograde irregular (Pasiphae),Jupiter
+XXXVII,Kale,1,729.47 (r),2001,"Sheppard, Jewitt, Kleyna",Retrograde irregular (Carme),Jupiter
+XXXVIII,Pasithee,1,719.44 (r),2001,"Sheppard, Jewitt, Kleyna",Retrograde irregular (Carme),Jupiter
+XXXIX,Hegemone,1.5,739.88 (r),2003,"Sheppard, Jewitt, Kleyna, Fernández",Retrograde irregular (Pasiphae),Jupiter
+XL,Mneme,1,620.04 (r),2003,"Gladman, Allen",Retrograde irregular (Ananke),Jupiter
+XLI,Aoede,2,761.50 (r),2003,"Sheppard, Jewitt, Kleyna, Fernández, Hsieh",Retrograde irregular (Pasiphae),Jupiter
+XLII,Thelxinoe,1,628.09 (r),2003,"Sheppard, Jewitt, Kleyna, Gladman, Kavelaars, Petit, Allen",Retrograde irregular (Ananke),Jupiter
+XLIII,Arche,1.5,731.95 (r),2002,"Sheppard, Meech, Hsieh, Tholen, Tonry",Retrograde irregular (Carme),Jupiter
+XLIV,Kallichore,1,728.73 (r),2003,"Sheppard, Jewitt, Kleyna, Fernández",Retrograde irregular (Carme?),Jupiter
+XLV,Helike,2,626.32 (r),2003,"Sheppard, Jewitt, Kleyna, Fernández, Hsieh",Retrograde irregular (Ananke),Jupiter
+XLVI,Carpo,1.5,456.3,2003,"Sheppard, Gladman, Kavelaars, Petit, Allen, Jewitt, Kleyna",Prograde irregular (Carpo),Jupiter
+XLVII,Eukelade,2,730.47 (r),2003,"Sheppard, Jewitt, Kleyna, Fernández, Hsieh",Retrograde irregular (Carme),Jupiter
+XLVIII,Cyllene,1,752 (r),2003,"Sheppard, Jewitt, Kleyna",Retrograde irregular (Pasiphae),Jupiter
+XLIX,Kore,1,779.17 (r),2003,"Sheppard, Jewitt, Kleyna",Retrograde irregular (Pasiphae),Jupiter
+L,Herse,1,714.51 (r),2003,"Gladman, Sheppard, Jewitt, Kleyna, Kavelaars, Petit, Allen",Retrograde irregular (Carme),Jupiter
+—,S/2000 J 11,2,287.93,2001,"Sheppard, Jewitt, Kleyna, Fernández, Hsieh",Prograde irregular (Himalia?),Jupiter
+—,S/2003 J 2,1,981.55 (r),2003,"Sheppard, Jewitt, Kleyna, Fernández, Hsieh",Retrograde irregular,Jupiter
+—,S/2003 J 3,1,583.88 (r),2003,"Sheppard, Jewitt, Kleyna, Fernández, Hsieh",Retrograde irregular (Ananke),Jupiter
+—,S/2003 J 4,1,755.26 (r),2003,"Sheppard, Jewitt, Kleyna, Fernández, Hsieh",Retrograde irregular (Pasiphae),Jupiter
+—,S/2003 J 5,2,738.74 (r),2003,"Sheppard, Jewitt, Kleyna, Fernández, Hsieh",Retrograde irregular (Carme),Jupiter
+—,S/2003 J 9,0.5,733.30 (r),2003,"Sheppard, Jewitt, Kleyna, Fernández",Retrograde irregular (Carme),Jupiter
+—,S/2003 J 10,1,716.25 (r),2003,"Sheppard, Jewitt, Kleyna, Fernández",Retrograde irregular (Pasiphae?),Jupiter
+—,S/2003 J 12,0.5,489.72 (r),2003,"Sheppard, Jewitt, Kleyna, Fernández",Retrograde irregular (Ananke),Jupiter
+—,S/2003 J 15,1,689.77 (r),2003,"Sheppard, Jewitt, Kleyna, Fernández",Retrograde irregular (Ananke?),Jupiter
+—,S/2003 J 16,1,616.33 (r),2003,"Gladman, Sheppard, Jewitt, Kleyna, Kavelaars, Petit, Allen",Retrograde irregular (Ananke),Jupiter
+—,S/2003 J 18,1,596.58 (r),2003,"Gladman, Sheppard, Jewitt, Kleyna, Kavelaars, Petit, Allen",Retrograde irregular (Ananke),Jupiter
+—,S/2003 J 19,1,740.43 (r),2003,"Gladman, Sheppard, Jewitt, Kleyna, Kavelaars, Petit, Allen",Retrograde irregular (Carme),Jupiter
+—,S/2003 J 23,1,732.45 (r),2004,"Sheppard, Jewitt, Kleyna, Fernández",Retrograde irregular (Pasiphae),Jupiter
+—,S/2010 J 1,1,723.2 (r),2010,"Jacobson, Brozovic, Gladman, Alexandersen",Retrograde irregular (Pasiphae?),Jupiter
+—,S/2010 J 2,0.5,588.1 (r),2010,Veillet,Retrograde irregular (Ananke?),Jupiter
+—,S/2011 J 1,0.5,580.7 (r),2011,Sheppard,Retrograde irregular,Jupiter
+—,S/2011 J 2,0.5,726.8 (r),2011,Sheppard,Retrograde irregular (Pasiphae?),Jupiter
+I,Mimas,198.2 ± 0.4,0.942,1789,Herschel,Main group moon,Saturn
+II,Enceladus,252.3 ± 0.6,1.37,1789,Herschel,Main group moon,Saturn
+III,Tethys,536.3 ± 1.5,1.888,1684,Cassini,Main group moon (Sidera Lodoicea),Saturn
+IV,Dione,562.5 ± 1.5,2.737,1684,Cassini,Main group moon (Sidera Lodoicea),Saturn
+V,Rhea,764.5 ± 2.0,4.518,1672,Cassini,Main group moon (Sidera Lodoicea),Saturn
+VI,Titan,2575.5 ± 2.0,15.95,1655,Huygens,Main group moon,Saturn
+VII,Hyperion,133.0 ± 8.0,21.28,1848,"W.Bond, G. Bond, and Lassell",Main group moon,Saturn
+VIII,Iapetus,734.5 ± 4.0,79.33,1671,Cassini,Main group moon (Sidera Lodoicea),Saturn
+IX,Phoebe,106.6 ± 1.1,550.31 (r),1899,Pickering,Retrograde irregular (Norse),Saturn
+X,Janus,90.4 ± 3.0,0.695,1966,Dollfus; Voyager 1,Inner moon (co-orbital),Saturn
+XI,Epimetheus,58.3 ± 3.1,0.694,1980,Walker; Voyager 1,Inner moon (co-orbital),Saturn
+XII,Helene,16 ± 4,2.737,1980,"Laques, Lecacheux",Main group trojan,Saturn
+XIII,Telesto,12 ± 3,1.888,1980,"Smith, Reitsema, Larson, Fountain (Voyager 1)",Main group trojan,Saturn
+XIV,Calypso,9.5 ± 1.5,1.888,1980,"Pascu, Seidelmann, Baum, Currie",Main group trojan,Saturn
+XV,Atlas,15.3 ± 1.2,0.602,1980,Terrile (Voyager 1),Inner moon (shepherd),Saturn
+XVI,Prometheus,46.8 ± 5.6,0.613,1980,Collins (Voyager 1),Inner moon (shepherd),Saturn
+XVII,Pandora,40.6 ± 4.5,0.629,1980,Collins (Voyager 1),Inner moon (shepherd),Saturn
+XVIII,Pan,12.8,0.575,1990,Showalter (Voyager 2),Inner moon (shepherd),Saturn
+XIX,Ymir,9,"1,315.14 (r)",2000,Gladman,Retrograde irregular (Norse),Saturn
+XX,Paaliaq,11,686.95,2000,Gladman,Prograde irregular (Inuit),Saturn
+XXI,Tarvos,7.5,926.23,2000,"Gladman, Kavelaars",Prograde irregular (Gallic),Saturn
+XXII,Ijiraq,6,451.42,2000,"Gladman, Kavelaars",Prograde irregular (Inuit),Saturn
+XXIII,Suttungr,3.5,"1,016.67 (r)",2000,"Gladman, Kavelaars",Retrograde irregular (Norse),Saturn
+XXIV,Kiviuq,8,449.22,2000,Gladman,Prograde irregular (Inuit),Saturn
+XXV,Mundilfari,3.5,952.77 (r),2000,"Gladman, Kavelaars",Retrograde irregular (Norse),Saturn
+XXVI,Albiorix,16,783.45,2000,"Holman, Spahr",Prograde irregular (Gallic),Saturn
+XXVII,Skathi,4,728.20 (r),2000,"Gladman, Kavelaars",Retrograde irregular (Norse),Saturn
+XXVIII,Erriapus,5,871.19,2000,"Gladman, Kavelaars",Prograde irregular (Gallic),Saturn
+XXIX,Siarnaq,20,895.53,2000,"Gladman, Kavelaars",Prograde irregular (Inuit),Saturn
+XXX,Thrymr,3.5,"1,094.11 (r)",2000,"Gladman, Kavelaars",Retrograde irregular (Norse),Saturn
+XXXI,Narvi,3.5,"1,003.86 (r)",2003,"Sheppard, Jewitt, Kleyna",Retrograde irregular (Norse),Saturn
+XXXII,Methone,1.5,1.01,2004,"Porco, Charnoz, Brahic, Dones (Cassini–Huygens)",Alkyonide moon,Saturn
+XXXIII,Pallene,2,1.154,2004,"Gordon, Murray, Beurle, et al. (Cassini–Huygens)",Alkyonide moon,Saturn
+XXXIV,Polydeuces,1.25,2.737,2004,Porco et al. (Cassini–Huygens),Main group trojan,Saturn
+XXXV,Daphnis,3–4,0.594,2005,Porco et al. (Cassini–Huygens),Inner moon (shepherd),Saturn
+XXXVI,Aegir,3,"1,117.52 (r)",2004,"Sheppard, Jewitt, Kleyna, Marsden",Retrograde irregular (Norse),Saturn
+XXXVII,Bebhionn,3,834.84,2004,"Sheppard, Jewitt, Kleyna, Marsden",Prograde irregular (Gallic),Saturn
+XXXVIII,Bergelmir,3,"1,005.74 (r)",2004,"Sheppard, Jewitt, Kleyna, Marsden",Retrograde irregular (Norse),Saturn
+XXXIX,Bestla,3.5,"1,088.72 (r)",2004,"Sheppard, Jewitt, Kleyna, Marsden",Retrograde irregular (Norse),Saturn
+XL,Farbauti,2.5,"1,085.55 (r)",2004,"Sheppard, Jewitt, Kleyna, Marsden",Retrograde irregular (Norse),Saturn
+XLI,Fenrir,2,"1,260.35 (r)",2004,"Sheppard, Jewitt, Kleyna, Marsden",Retrograde irregular (Norse),Saturn
+XLII,Fornjot,3,"1,494.2 (r)",2004,"Sheppard, Jewitt, Kleyna, Marsden",Retrograde irregular (Norse),Saturn
+XLIII,Hati,3,"1,038.61 (r)",2004,"Sheppard, Jewitt, Kleyna, Marsden",Retrograde irregular (Norse),Saturn
+XLIV,Hyrrokkin,4,931.86 (r),2006,"Sheppard, Jewitt, Kleyna",Retrograde irregular (Norse),Saturn
+XLV,Kari,3.5,"1,230.97 (r)",2006,"Sheppard, Jewitt, Kleyna",Retrograde irregular (Norse),Saturn
+XLVI,Loge,3,"1,311.36 (r)",2006,"Sheppard, Jewitt, Kleyna",Retrograde irregular (Norse),Saturn
+XLVII,Skoll,3,878.29 (r),2006,"Sheppard, Jewitt, Kleyna",Retrograde irregular (Norse),Saturn
+XLVIII,Surtur,3,"1,297.36 (r)",2006,"Sheppard, Jewitt, Kleyna",Retrograde irregular (Norse),Saturn
+XLIX,Anthe,1,1.0365,2007,Porco et al. (Cassini–Huygens),Alkyonide moon,Saturn
+L,Jarnsaxa,3,964.74 (r),2006,"Sheppard, Jewitt, Kleyna",Retrograde irregular (Norse),Saturn
+LI,Greip,3,921.19 (r),2006,"Sheppard, Jewitt, Kleyna",Retrograde irregular (Norse),Saturn
+LII,Tarqeq,3.5,887.48,2007,"Sheppard, Jewitt, Kleyna",Prograde irregular (Inuit),Saturn
+LIII,Aegaeon,0.25,0.808,2008,Cassini Imaging Science Team Cassini–Huygens,G-ring moonlet,Saturn
+—,S/2004 S 7,3,"1,140.24 (r)",2004,"Sheppard, Jewitt, Kleyna, Marsden",Retrograde irregular (Norse),Saturn
+—,S/2004 S 12,2.5,"1,046.19 (r)",2004,"Sheppard, Jewitt, Kleyna, Marsden",Retrograde irregular (Norse),Saturn
+—,S/2004 S 13,3,933.48 (r),2004,"Sheppard, Jewitt, Kleyna, Marsden",Retrograde irregular (Norse),Saturn
+—,S/2004 S 17,2,"1,014.70 (r)",2004,"Sheppard, Jewitt, Kleyna, Marsden",Retrograde irregular (Norse),Saturn
+—,S/2006 S 1,3,963.37 (r),2006,"Sheppard, Jewitt, Kleyna",Retrograde irregular (Norse),Saturn
+—,S/2006 S 3,3,"1,227.21 (r)",2006,"Sheppard, Jewitt, Kleyna",Retrograde irregular (Norse),Saturn
+—,S/2007 S 2,3,808.08 (r),2007,"Sheppard, Jewitt, Kleyna",Retrograde irregular (Norse),Saturn
+—,S/2007 S 3,3,977.8 (r),2007,"Sheppard, Jewitt, Kleyna",Retrograde irregular (Norse),Saturn
+—,S/2009 S 1,0.15,0.471,2009,Cassini Imaging Science Team Cassini–Huygens,B-ring moonlet,Saturn
+I,Ariel,578.9 ± 0.6,2.52,1851,Lassell,Main group moon,Uranus
+II,Umbriel,584.7 ± 2.8,4.144,1851,Lassell,Main group moon,Uranus
+III,Titania,788.9 ± 1.8,8.706,1787,Herschel,Main group moon,Uranus
+IV,Oberon,761.4 ± 2.6,13.46,1787,Herschel,Main group moon,Uranus
+V,Miranda,235.8 ± 0.7,1.413,1948,Kuiper,Main group moon,Uranus
+VI,Cordelia,20.1 ± 3,0.335,1986,Terrile (Voyager 2),Inner moon (shepherd),Uranus
+VII,Ophelia,21.4 ± 4,0.376,1986,Terrile (Voyager 2),Inner moon (shepherd),Uranus
+VIII,Bianca,25.7 ± 2,0.435,1986,Smith (Voyager 2),Inner moon,Uranus
+IX,Cressida,39.8 ± 2,0.464,1986,Synnott (Voyager 2),Inner moon,Uranus
+X,Desdemona,32.0 ± 4,0.474,1986,Synnott (Voyager 2),Inner moon,Uranus
+XI,Juliet,46.8 ± 4,0.493,1986,Synnott (Voyager 2),Inner moon,Uranus
+XII,Portia,67.6 ± 4,0.513,1986,Synnott (Voyager 2),Inner moon,Uranus
+XIII,Rosalind,36 ± 6,0.558,1986,Synnott (Voyager 2),Inner moon,Uranus
+XIV,Belinda,40.3 ± 8,0.624,1986,Synnott (Voyager 2),Inner moon,Uranus
+XV,Puck,81 ± 2,0.762,1985,Synnott (Voyager 2),Inner moon,Uranus
+XVI,Caliban,49,579.73 (r),1997,"Gladman, Nicholson, Burns, Kavelaars",Retrograde irregular,Uranus
+XVII,Sycorax,95,"1,288.3 (r)",1997,"Gladman, Nicholson, Burns, Kavelaars",Retrograde irregular,Uranus
+XVIII,Prospero,15,"1,978.29 (r)",1999,"Gladman, Holman, Kavelaars, Petit, Scholl",Retrograde irregular,Uranus
+XIX,Setebos,15,"2,225.21 (r)",1999,"Gladman, Holman, Kavelaars, Petit, Scholl",Retrograde irregular,Uranus
+XX,Stephano,10,677.36 (r),1999,"Gladman, Holman, Kavelaars, Petit, Scholl",Retrograde irregular,Uranus
+XXI,Trinculo,5,749.24 (r),2001,"Holman, Kavelaars, Milisavljevic",Retrograde irregular,Uranus
+XXII,Francisco,6,266.56 (r),2001,"Holman, Kavelaars, Milisavljevic, Gladman",Retrograde irregular,Uranus
+XXIII,Margaret,5.5,"1,687.01",2003,"Sheppard, Jewitt",Prograde irregular,Uranus
+XXIV,Ferdinand,6,"2,887.21 (r)",2001,"Holman, Kavelaars, Milisavljevic, et al",Retrograde irregular,Uranus
+XXV,Perdita,10,0.638,1986,Karkoschka (Voyager 2),Inner moon,Uranus
+XXVI,Mab,5,0.923,2003,"Showalter, Lissauer",Inner moon,Uranus
+XXVII,Cupid,5,0.613,2003,"Showalter, Lissauer",Inner moon,Uranus
+I,Triton,1353.4 ± 0.9,5.877 (r),1846,Lassell,Retrograde irregular,Neptune
+II,Nereid,170 ± 25,360.14,1949,Kuiper,Prograde irregular,Neptune
+III,Naiad,33 ± 3,0.294,1989,Terrile (Voyager 2),Inner moon,Neptune
+IV,Thalassa,41 ± 3,0.311,1989,Terrile (Voyager 2),Inner moon,Neptune
+V,Despina,75 ± 3,0.335,1989,Synnott (Voyager 2),Inner moon,Neptune
+VI,Galatea,88 ± 4,0.429,1989,Synnott (Voyager 2),Inner moon,Neptune
+VII,Larissa,97 ± 3,0.555,1989,"Reitsema, Hubbard, Lebofsky, Tholen (Voyager 2)",Inner moon,Neptune
+VIII,Proteus,210 ± 7,1.122,1989,Synnott (Voyager 2),Inner moon,Neptune
+IX,Halimede,31,"1,879.71 (r)",2002,"Holman, Kavelaars, Grav, Fraser, Milisavljevic",Retrograde irregular,Neptune
+X,Psamathe,20,"9,115.91 (r)",2003,"Jewitt, Kleyna, Sheppard, Holman, Kavelaars",Retrograde irregular,Neptune
+XI,Sao,22,"2,914.07",2002,"Holman, Kavelaars, Grav, Fraser, Milisavljevic",Prograde irregular,Neptune
+XII,Laomedeia,21,"3,167.85",2002,"Holman, Kavelaars, Grav, Fraser, Milisavljevic",Prograde irregular,Neptune
+XIII,Neso,30,"9,373.99 (r)",2002,"Holman, Kavelaars, Grav, Fraser, Milisavljevic",Retrograde irregular,Neptune
+—,S/2004 N 1,8–10,0.9362,2013,Showalter et al,Inner moon,Neptune

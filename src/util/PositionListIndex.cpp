@@ -4,9 +4,11 @@
 
 #include "PositionListIndex.h"
 
-#include <map>
-#include <cmath>
 #include <algorithm>
+#include <chrono>
+#include <cmath>
+#include <deque>
+#include <map>
 #include <utility>
 
 #include <boost/dynamic_bitset.hpp>
@@ -17,7 +19,10 @@ using namespace std;
 
 const int PositionListIndex::singletonValueId = 0;
 
-PositionListIndex::PositionListIndex(vector<vector<int>> index, vector<int> nullCluster, int size, double entropy,
+int PositionListIndex::millis = 0;
+int PositionListIndex::intersectionCount = 0;
+
+PositionListIndex::PositionListIndex(deque<vector<int>> index, vector<int> nullCluster, int size, double entropy,
                                      long nep, unsigned int relationSize, unsigned int originalRelationSize):
                                      index(std::move(index)),
                                      nullCluster(std::move(nullCluster)),
@@ -45,7 +50,7 @@ shared_ptr<PositionListIndex> PositionListIndex::createFor(vector<int>& data, bo
     double keyGap = 0.0;
     long nep = 0;
     int size = 0;
-    vector<vector<int>> clusters = vector<vector<int>>();
+    deque<vector<int>> clusters;
 
     for (auto & iter : index){
         if (iter.second.size() >= 2){
@@ -67,10 +72,9 @@ long PositionListIndex::calculateNep(long numElements) {
     return numElements * (numElements - 1) / 2;
 }
 
-void PositionListIndex::sortClusters(vector<vector<int>> &clusters) {
+void PositionListIndex::sortClusters(deque<vector<int>> &clusters) {
     sort(clusters.begin(), clusters.end(), [](vector<int> & a, vector<int> & b){
-        return a[0] < b[0];
-    });
+        return a[0] < b[0]; } );
 }
 
 vector<int> PositionListIndex::getProbingTable() {
@@ -95,7 +99,7 @@ vector<int> PositionListIndex::getProbingTable(bool isCaching) {
     return probingTable;
 }
 
-vector<vector<int>> & PositionListIndex::getIndex() {
+deque<vector<int>> & PositionListIndex::getIndex() {
     return index;
 }
 
@@ -108,41 +112,56 @@ shared_ptr<PositionListIndex> PositionListIndex::intersect(shared_ptr<PositionLi
 }
 
 //TODO: nullCluster некорректен
-shared_ptr<PositionListIndex> PositionListIndex::probe(vector<int> probingTable) {
+shared_ptr<PositionListIndex> PositionListIndex::probe(const vector<int>& probingTable) {
     assert(this->relationSize == probingTable.size());
-    vector<vector<int>> newIndex;
+    deque<vector<int>> newIndex;
     int newSize = 0;
     double newKeyGap = 0.0;
     long newNep = 0;
     vector<int> nullCluster;
 
     map<int, vector<int>> partialIndex;
+    //vector<int> newCluster;
 
     for (auto & positions : index){
         for (int & position : positions){
             int probingTableValueId = probingTable[position];
-            if (probingTableValueId == singletonValueId) continue;
-            partialIndex[probingTableValueId].push_back(position);
+            if (probingTableValueId == singletonValueId)
+                continue;
+    auto startTime = std::chrono::system_clock::now();
+    intersectionCount++;
+                 partialIndex[probingTableValueId].push_back(position);      //~500ms
+    auto elapsed_time = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - startTime);
+    millis += elapsed_time.count();
         }
 
         for (auto & iter : partialIndex){
             auto & cluster = iter.second;
-            if (cluster.size() == 1) continue;
+            if (cluster.size() <= 1) continue;
 
             newSize += cluster.size();
             newKeyGap += cluster.size() * log(cluster.size());
             newNep += calculateNep(cluster.size());
-            newIndex.emplace_back(std::move(cluster));
+            /*vector<int> newCluster(newSize);
+            int i = 0;
+            for (auto it = cluster.begin(); it != cluster.end(); it++, i++) {
+                newCluster[i] = *it;
+            }*/
+            newIndex.emplace_back(std::move(cluster));              //~25ms
         }
 
-        partialIndex.clear();
+        /*for (auto it = partialIndex.begin(); it != partialIndex.end(); it++)
+        {
+            it->first = -1;
+        }*/
+        partialIndex.clear();           //~36
     }
 
     double newEntropy = log(relationSize) - newKeyGap / relationSize;
 
-    sortClusters(newIndex);
+    //sortClusters(newIndex);         //!! ~100-200ms
 
-    auto ans = shared_ptr<PositionListIndex>(new PositionListIndex(newIndex, nullCluster, newSize, newEntropy, newNep, relationSize, relationSize));
+    shared_ptr<PositionListIndex> ans = make_shared<PositionListIndex>(PositionListIndex(newIndex, nullCluster, newSize, newEntropy, newNep, relationSize, relationSize));
     return ans;
 }
 
@@ -151,7 +170,7 @@ shared_ptr<PositionListIndex> PositionListIndex::probe(vector<int> probingTable)
 shared_ptr<PositionListIndex> PositionListIndex::probeAll(Vertical probingColumns, ColumnLayoutRelationData & relationData) {
     assert(this->relationSize == relationData.getNumRows());
 
-    vector<vector<int>> newIndex;
+    deque<vector<int>> newIndex;
     int newSize = 0;
     double newKeyGap = 0.0;
     long newNep = 0;
