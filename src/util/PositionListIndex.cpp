@@ -145,15 +145,23 @@ shared_ptr<PositionListIndex> PositionListIndex::probe(const vector<int>& probin
             newKeyGap += cluster.size() * log(cluster.size());
             newNep += calculateNep(cluster.size());
 
-            newIndex.emplace_back(std::move(cluster));              //~25ms
+/*vector<int> newCluster(newSize);
+            int i = 0;
+            for (auto it = cluster.begin(); it != cluster.end(); it++, i++) {
+                newCluster[i] = *it;
+            }*/            newIndex.emplace_back(std::move(cluster));              //~25ms
         }
 
+        /*for (auto it = partialIndex.begin(); it != partialIndex.end(); it++)
+        {
+            it->first = -1;
+        }*/
         partialIndex.clear();           //~36
     }
 
     double newEntropy = log(relationSize) - newKeyGap / relationSize;
 
-    sortClusters(newIndex);         //!! ~100-200ms
+    //sortClusters(newIndex);         //!! ~100-200ms
 
     shared_ptr<PositionListIndex> ans = make_shared<PositionListIndex>(PositionListIndex(newIndex, nullCluster, newSize, newEntropy, newNep, relationSize, relationSize));
     return ans;

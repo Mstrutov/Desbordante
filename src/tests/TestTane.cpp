@@ -14,6 +14,8 @@ using namespace std;
 
 std::string get_selfpath();
 
+extern string path;
+
 //TODO: wrong file => WARNING
 //TODO: NO ABSOLUTE PATHS!!
 TEST(TaneTester, first) {

@@ -14,8 +14,10 @@ using namespace std;
 
 std::string get_selfpath();
 
+string path = fs::path(get_selfpath()).parent_path().string() + "/inputData";
+
 TEST(pliChecker, first){
-    vector<vector<int>> ans = {
+    deque<vector<int>> ans = {
             {0, 2, 8, 11},
             {1, 5, 9},
             {4, 14},
@@ -34,7 +36,7 @@ TEST(pliChecker, first){
 }
 
 TEST(pliChecker, second){
-    vector<vector<int>> ans = {
+    deque<vector<int>> ans = {
             {0, 2, 8, 11},
             {1, 5, 9},
             {4, 14},
@@ -50,7 +52,7 @@ TEST(pliChecker, second){
    // ASSERT_THAT(ans, ContainerEq(index));
 }
 
-TEST(pliIntersectChecker, first){
+/*TEST(pliIntersectChecker, first){
     vector<vector<int>> ans = {
             {2, 5}
     };
@@ -66,6 +68,6 @@ TEST(pliIntersectChecker, first){
 
     auto intersection = pli1->intersect(pli2);
     int i = 0;
-    //auto index = columnData->getPositionListIndex()->getIndex();
+    auto index = columnData->getPositionListIndex()->getIndex();
     //ASSERT_THAT(intersection->getIndex(), ContainerEq(ans));
-}
+}*/
