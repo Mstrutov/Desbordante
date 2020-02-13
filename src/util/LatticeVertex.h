@@ -16,16 +16,16 @@
 //enable_shared_from_this - if LV needs to create shared_ptr
 class LatticeVertex{
 private:
-  //use pointer to vertical?
   Vertical vertical;
   std::shared_ptr<PositionListIndex> positionListIndex;
   dynamic_bitset<> rhsCandidates;
-  // Using member initialization?
   bool isKeyCandidate = false;
-  //list => vector due to usage of opertor[] in Tane
   std::vector<std::shared_ptr<LatticeVertex>> parents;
   bool isInvalid = false;
 
+  //list => vector due to usage of opertor[] in Tane
+  //use pointer to vertical?
+  // Using member initialization?
 public:
   //TODO: no default initialization of PLI
   explicit LatticeVertex(Vertical&& _vertical) : vertical(_vertical), rhsCandidates(vertical.getSchema()->getNumColumns()) {}

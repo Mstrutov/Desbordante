@@ -19,15 +19,15 @@ public:
   const double maxFdError = 0;
   const double maxUccError = 0;
   const int maxArity = 20;
-  //TODO: DO NOT FORGET ABOUT MAXARITY!!
+  //TODO: DO NOT FORGET ABOUT MAXARITY!! - SET ARITY IN CONSTRUCTOR
   // no evidence that there will be multiple Tane instances + tricky static stuff => just const
 
   int countOfFD = 0;
   int countOfUCC = 0;
   long aprioriMillis = 0;
   explicit Tane(fs::path& path) : inputGenerator(path) {}
-  explicit Tane(fs::path&& path) : inputGenerator(path) {}
-  void execute();
+  explicit Tane(fs::path&& path) : inputGenerator(path) {} //std::move(path)
+  long execute();
 
   static double calculateZeroAryFdError(shared_ptr<ColumnData> rhs, shared_ptr<ColumnLayoutRelationData> relationData);
   static double calculateFdError(shared_ptr<PositionListIndex> lhsPli, shared_ptr<PositionListIndex> jointPli, shared_ptr<ColumnLayoutRelationData> relationData);

@@ -13,6 +13,8 @@ int main(int argc, char **argv) {
     return RUN_ALL_TESTS();
 }
 
+//Overall, just give file path to csv to the main when execute via console or smth.
+//https://stackoverflow.com/a/27460370 - better use this function
 std::string get_selfpath(){
     std::vector<char> buf(400);
     unsigned int len;

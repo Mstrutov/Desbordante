@@ -16,6 +16,7 @@ Vertical::Vertical(shared_ptr<RelationalSchema>& relSchema, int indices) :
         columnIndices(indices),
         schema(relSchema) {}
 
+        //
 Vertical::Vertical(Vertical &&other) noexcept :
     columnIndices(std::move(other.columnIndices)),
     schema(std::move(other.schema)) {

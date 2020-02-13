@@ -4,7 +4,7 @@ env = Environment(CPPPATH='/home/maxim/Study/Metanome-coding/Software/boost_1_70
     SCONS_CXX_STANDARD="c++17")
 
 env.Append( CPPPATH=['./src'] )
-env.Append(CPPFLAGS = [ '-O0', '-std=c++17',
+env.Append(CPPFLAGS = [ '-O3', '-std=c++17',
         #'-fvar-tracking',
         '-ggdb', '-fstack-protector-all','-pedantic', '-Wall', '-Werror',
         '-Wextra', '-Wcast-align', '-Wcast-qual',

@@ -11,15 +11,27 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="fb80a5c4-b662-4c0d-8645-0d9d54369a0b" name="Default Changelist" comment="">
+    <list default="true" id="fb80a5c4-b662-4c0d-8645-0d9d54369a0b" name="Default Changelist" comment="Tane: fixed and tested.">
+      <change beforePath="$PROJECT_DIR$/.idea/customTargets.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/customTargets.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SConstruct" beforeDir="false" afterPath="$PROJECT_DIR$/SConstruct" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/algorithms/TaneX.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms/TaneX.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main2.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/algorithms/TaneX.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms/TaneX.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main2.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model/ColumnCombination.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/ColumnCombination.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model/ColumnCombination.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/ColumnCombination.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model/ColumnLayoutRelationData.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/ColumnLayoutRelationData.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model/RelationData.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/RelationData.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model/RelationalSchema.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/RelationalSchema.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model/Vertical.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/Vertical.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model/Vertical.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/Vertical.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/parser/ConfigParser.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/parser/ConfigParser.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/tests/Test1.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/tests/Test1.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/tests/TestTane.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/tests/TestTane.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/util/LatticeLevel.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/util/LatticeLevel.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tests/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/tests/main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/util/LatticeVertex.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/util/LatticeVertex.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/util/PositionListIndex.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/util/PositionListIndex.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/util/PositionListIndex.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/util/PositionListIndex.h" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -44,7 +56,6 @@
     <expand />
     <select />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
   <component name="FavoritesManager">
     <favorites_list name="metanome_cpp" />
   </component>
@@ -80,7 +91,7 @@
     <property name="add_unversioned_files" value="$PROJECT_DIR$/main.cpp&#10;/home/kek/CLionProjects/metanome_cpp/.gitignore&#10;/home/kek/CLionProjects/metanome_cpp/CMakeLists.txt" />
     <property name="js.buildTools.grunt.grunt-cli.package" value="" />
     <property name="js.buildTools.gulp.gulp_package_dir" value="" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/src/tests" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../5SEM/Translator/Referat" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
@@ -120,7 +131,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Google Test.TaneTester.first">
+  <component name="RunManager" selected="Custom Build Application.Scons tests">
     <configuration name="Scons tests" type="CLionExternalRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="Scons" CONFIG_NAME="Scons" RUN_PATH="$PROJECT_DIR$/build/tests/tester">
       <method v="2">
         <option name="CLION.EXTERNAL.BUILD" enabled="true" />
@@ -149,15 +160,10 @@
         <option name="BeforeTestRunTask" enabled="true" />
       </method>
     </configuration>
-    <configuration name="pliIntersectChecker.first" type="CMakeGoogleTestRunConfigurationType" factoryName="Google Test" temporary="true" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="metanome_cpp" RUN_TARGET_PROJECT_NAME="metanome_cpp" RUN_TARGET_NAME="metanome_cpp" TEST_CLASS="pliIntersectChecker" TEST_METHOD="first" TEST_MODE="SUITE_TEST">
+    <configuration name="pliIntersectChecker.first" type="CMakeGoogleTestRunConfigurationType" factoryName="Google Test" temporary="true" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="metanome_cpp" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="metanome_cpp" RUN_TARGET_NAME="metanome_cpp" TEST_CLASS="pliIntersectChecker" TEST_METHOD="first" TEST_MODE="SUITE_TEST">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
         <option name="BeforeTestRunTask" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="metanome_cpp" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="metanome_cpp" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="metanome_cpp" RUN_TARGET_NAME="metanome_cpp">
-      <method v="2">
-        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
     <configuration name="clean" type="ShConfigurationType">
@@ -182,7 +188,6 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="CMake Application.metanome_cpp" />
       <item itemvalue="Custom Build Application.Scons" />
       <item itemvalue="Custom Build Application.Scons tests" />
       <item itemvalue="Google Test.pliChecker.first" />
@@ -287,7 +292,12 @@
       <workItem from="1573986159092" duration="5391000" />
       <workItem from="1573998433402" duration="2837000" />
       <workItem from="1574702421696" duration="1709000" />
-      <workItem from="1574705644273" duration="268000" />
+      <workItem from="1574705644273" duration="1123000" />
+      <workItem from="1575196301589" duration="7874000" />
+      <workItem from="1576414001072" duration="5452000" />
+      <workItem from="1576683784312" duration="1733000" />
+      <workItem from="1578224055803" duration="203000" />
+      <workItem from="1580312813157" duration="13250000" />
     </task>
     <task id="LOCAL-00001" summary="Add ConfigParser and CSVParser">
       <created>1562777944282</created>
@@ -359,7 +369,14 @@
       <option name="project" value="LOCAL" />
       <updated>1572867008838</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="Tane: fixed and tested.">
+      <created>1574706065531</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1574706065531</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

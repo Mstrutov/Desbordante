@@ -22,6 +22,7 @@ const int PositionListIndex::singletonValueId = 0;
 int PositionListIndex::millis = 0;
 int PositionListIndex::intersectionCount = 0;
 
+// use r-value references, DO NOT copy
 PositionListIndex::PositionListIndex(deque<vector<int>> index, vector<int> nullCluster, int size, double entropy,
                                      long nep, unsigned int relationSize, unsigned int originalRelationSize):
                                      index(std::move(index)),
@@ -82,6 +83,7 @@ vector<int> PositionListIndex::getProbingTable() {
 }
 
 vector<int> PositionListIndex::getProbingTable(bool isCaching) {
+
     if (!probingTableCache.empty()) return probingTableCache;
     vector<int> probingTable = vector<int>(originalRelationSize);
     int nextClusterId = singletonValueId + 1;
@@ -128,11 +130,11 @@ shared_ptr<PositionListIndex> PositionListIndex::probe(const vector<int>& probin
             int probingTableValueId = probingTable[position];
             if (probingTableValueId == singletonValueId)
                 continue;
-    auto startTime = std::chrono::system_clock::now();
     intersectionCount++;
+    //auto startTime = std::chrono::system_clock::now();
                  partialIndex[probingTableValueId].push_back(position);      //~500ms
-    auto elapsed_time = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - startTime);
-    millis += elapsed_time.count();
+           // millis += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - startTime).count();
+
         }
 
         for (auto & iter : partialIndex){
@@ -142,24 +144,16 @@ shared_ptr<PositionListIndex> PositionListIndex::probe(const vector<int>& probin
             newSize += cluster.size();
             newKeyGap += cluster.size() * log(cluster.size());
             newNep += calculateNep(cluster.size());
-            /*vector<int> newCluster(newSize);
-            int i = 0;
-            for (auto it = cluster.begin(); it != cluster.end(); it++, i++) {
-                newCluster[i] = *it;
-            }*/
+
             newIndex.emplace_back(std::move(cluster));              //~25ms
         }
 
-        /*for (auto it = partialIndex.begin(); it != partialIndex.end(); it++)
-        {
-            it->first = -1;
-        }*/
         partialIndex.clear();           //~36
     }
 
     double newEntropy = log(relationSize) - newKeyGap / relationSize;
 
-    //sortClusters(newIndex);         //!! ~100-200ms
+    sortClusters(newIndex);         //!! ~100-200ms
 
     shared_ptr<PositionListIndex> ans = make_shared<PositionListIndex>(PositionListIndex(newIndex, nullCluster, newSize, newEntropy, newNep, relationSize, relationSize));
     return ans;

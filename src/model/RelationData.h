@@ -15,6 +15,8 @@ using std::vector;
 class RelationData {
 public:
     //static int singletonValueId;
+
+    //c++17: inline initialization || constexpr
     static const int nullValueId;
 
     virtual unsigned int getNumRows()=0;
@@ -24,9 +26,7 @@ public:
     virtual vector<int> getTuple(int tupleIndex)=0;
     virtual void shuffleColumns()=0;
     double getMaximumNip() { return getNumRows() * (getNumRows() - 1) / 2.0; }
-    long long getNumTuplePairs() {
-        //std::cout << "----" << (long long) getNumRows() * (getNumRows() - 1) / 2 << std::endl;
-        return (long long) getNumRows() * (getNumRows() - 1) / 2; }
+    unsigned long long getNumTuplePairs() { return (unsigned long long) getNumRows() * (getNumRows() - 1) / 2; }
 
     shared_ptr<RelationalSchema> getSchema();
 protected:

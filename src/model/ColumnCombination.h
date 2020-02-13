@@ -10,6 +10,7 @@
 
 using boost::dynamic_bitset, std::string;
 
+//useless class - think about deprecation
 class ColumnCombination : public Vertical {
 
 public:

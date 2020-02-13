@@ -11,5 +11,15 @@
         </clean>
       </configuration>
     </target>
+    <target id="b04a5cb8-105d-489f-90dc-4df01f8e9cb8" name="metanome" projectName="metanome_cpp">
+      <configuration id="a39e7ba7-a177-4c7e-8183-fb69ec94d23f" name="metanome">
+        <build type="TOOL">
+          <tool actionId="Tool_External Tools_Scons" />
+        </build>
+        <clean type="TOOL">
+          <tool actionId="Tool_External Tools_Scons clean" />
+        </clean>
+      </configuration>
+    </target>
   </component>
 </project>

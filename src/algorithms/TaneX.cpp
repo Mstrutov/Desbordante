@@ -14,8 +14,10 @@
 #include "util/LatticeLevel.h"
 #include "util/LatticeVertex.h"
 
+// for small projects this is OK
 #define log(x) cout << (x) << endl;
 
+// clearest code doesn't use 'using' at all, but this is highly subjective
 using boost::dynamic_bitset, std::make_shared, std::shared_ptr, std::cout, std::endl, std::setw, std::vector, std::list;
 
 double Tane::calculateZeroAryFdError(shared_ptr<ColumnData> rhs, shared_ptr<ColumnLayoutRelationData> relationData) {
@@ -45,13 +47,7 @@ void Tane::registerFD(Vertical& lhs, shared_ptr<Column> rhs, double error, share
 }
 
 void Tane::registerFD(shared_ptr<Vertical> lhs, shared_ptr<Column> rhs, double error, shared_ptr<RelationalSchema> schema) {
-    dynamic_bitset<> lhs_bitset = lhs->getColumnIndices();
-    cout << "Discovered FD: ";
-    for (int i = lhs_bitset.find_first(); i != -1; i = lhs_bitset.find_next(i)) {
-        cout << schema->getColumn(i)->getName() << " ";
-    }
-    cout << "-> " << rhs->getName() << " - error equals " << error << endl;
-    countOfFD++;
+    registerFD(*lhs, rhs, error, schema);
 }
 
 void Tane::registerUCC(Vertical& key, double error, shared_ptr<RelationalSchema> schema) {
@@ -65,7 +61,7 @@ void Tane::registerUCC(Vertical& key, double error, shared_ptr<RelationalSchema>
 }
 
 
-void Tane::execute() {
+long Tane::execute() {
 
   shared_ptr<ColumnLayoutRelationData> relation = ColumnLayoutRelationData::createFrom(inputGenerator, true);
 
@@ -130,6 +126,7 @@ void Tane::execute() {
       registerUCC(column, uccError, schema);
       vertex->setKeyCandidate(false);
       if (uccError == 0) {
+          //TODO: for each??
         for (unsigned long rhsIndex = vertex->getRhsCandidates().find_first();
              rhsIndex < vertex->getRhsCandidates().size();              //Possible to do it faster?
              rhsIndex = vertex->getRhsCandidates().find_next(rhsIndex)){
@@ -149,10 +146,8 @@ void Tane::execute() {
   levels.push_back(level1);
 
   for (int arity = 2; arity <= maxArity || maxArity <= 0; arity++) {
-      //Generate next level - CHECK if the method itself is correct
     //auto startTime = std::chrono::system_clock::now();
     LatticeLevel::clearLevelsBelow(levels, arity - 1);
-    //log(levels[1]->getVertices().size())
     LatticeLevel::generateNextLevel(levels);
     //std::chrono::duration<double> elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
     //aprioriMillis += elapsed_milliseconds.count();
@@ -276,4 +271,5 @@ void Tane::execute() {
   cout << "Total intersections: " << PositionListIndex::intersectionCount << endl;
   cout << "Total FD count: " << countOfFD << endl;
   cout << "Total UCC count: " << countOfUCC << endl;
+  return aprioriMillis;
 }

@@ -12,6 +12,7 @@ ColumnCombination::ColumnCombination(dynamic_bitset<> columnIndices, shared_ptr<
     this->schema = schema;
 }
 
+//full of errors - get rid of it
 string ColumnCombination::toString() {
     string ans = "[";
     string separator;

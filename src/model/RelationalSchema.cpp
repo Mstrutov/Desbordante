@@ -16,13 +16,14 @@ RelationalSchema::RelationalSchema(string name, bool isNullEqNull) :
         isNullEqNull(isNullEqNull),
         emptyVertical() {
 }
-
+// good practice is using std::make_shared instead
 shared_ptr<RelationalSchema> RelationalSchema::create(string name, bool isNullEqNull) {
     auto schema = shared_ptr<RelationalSchema>(new RelationalSchema(std::move(name), isNullEqNull));
     schema->init();
     return schema;
 }
 
+// this is hard to comprehend
 void RelationalSchema::init() {
     emptyVertical.reset(new Vertical(std::move(Vertical::emptyVertical(shared_from_this()))));
 }
@@ -59,6 +60,7 @@ void RelationalSchema::appendColumn(const string& colName) {
     columns.push_back(make_shared<Column>(shared_from_this(), colName, columns.size()));
 }
 
+// if you have nothing else to do: push_back through move semantics
 void RelationalSchema::appendColumn(shared_ptr<Column> column) {
     columns.push_back(column);
 }

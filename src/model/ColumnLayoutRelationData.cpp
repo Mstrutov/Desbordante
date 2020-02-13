@@ -10,6 +10,7 @@
 
 using namespace std;
 
+//vector <- pass by reference
 ColumnLayoutRelationData::ColumnLayoutRelationData(shared_ptr<RelationalSchema>& schema, vector<shared_ptr<ColumnData>> columnData) :
     RelationData(schema),
     columnData(std::move(columnData)){}

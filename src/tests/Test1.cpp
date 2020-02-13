@@ -15,7 +15,7 @@ using namespace std;
 std::string get_selfpath();
 
 TEST(pliChecker, first){
-    deque<vector<int>> ans = {
+    vector<vector<int>> ans = {
             {0, 2, 8, 11},
             {1, 5, 9},
             {4, 14},
@@ -23,37 +23,39 @@ TEST(pliChecker, first){
             {10, 17} //null
     };
 
-    /*string path = "/home/maxim/Study/Metanome-coding/metanome_git/src/tests";//fs::path(get_selfpath()).parent_path().string();
+    //string path = "/home/maxim/Study/Metanome-coding/metanome_git/src/tests";//
+    string path = fs::path(get_selfpath()).parent_path().string();
     cout << path << endl;
     CSVParser csvParser(path + "/Test1.csv");
     auto test = ColumnLayoutRelationData::createFrom(csvParser, true);
     auto columnData = test->getColumnData(0);
     auto index = columnData->getPositionListIndex()->getIndex();
-    ASSERT_THAT(ans, ContainerEq(index));*/
+    //ASSERT_THAT(ans, ContainerEq(index));
 }
 
 TEST(pliChecker, second){
-    deque<vector<int>> ans = {
+    vector<vector<int>> ans = {
             {0, 2, 8, 11},
             {1, 5, 9},
             {4, 14},
             {6, 7, 18},
     };
 
-    /*string path = "/home/maxim/Study/Metanome-coding/metanome_git/src/tests";//fs::path(get_selfpath()).parent_path().string();
+    //string path = "/home/maxim/Study/Metanome-coding/metanome_git/src/tests";
+    string path = fs::path(get_selfpath()).parent_path().string();
     CSVParser csvParser(path + "/Test1.csv");
     auto test = ColumnLayoutRelationData::createFrom(csvParser, false);
     auto columnData = test->getColumnData(0);
     auto index = columnData->getPositionListIndex()->getIndex();
-    ASSERT_THAT(ans, ContainerEq(index));*/
+   // ASSERT_THAT(ans, ContainerEq(index));
 }
 
 TEST(pliIntersectChecker, first){
-    /*vector<vector<int>> ans = {
+    vector<vector<int>> ans = {
             {2, 5}
-    };*/
+    };
 
-    string path = "/home/maxim/Study/Metanome-coding/metanome_git/src/tests";//fs::path(get_selfpath()).parent_path().string();
+    string path = fs::path(get_selfpath()).parent_path().string();
     CSVParser csvParser1(path + "/ProbeTest1.csv");
     CSVParser csvParser2(path + "/ProbeTest2.csv");
     auto test1 = ColumnLayoutRelationData::createFrom(csvParser1, false);
@@ -65,5 +67,5 @@ TEST(pliIntersectChecker, first){
     auto intersection = pli1->intersect(pli2);
     int i = 0;
     //auto index = columnData->getPositionListIndex()->getIndex();
-   // ASSERT_THAT(intersection->getIndex(), ContainerEq(ans));
+    //ASSERT_THAT(intersection->getIndex(), ContainerEq(ans));
 }

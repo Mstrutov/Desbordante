@@ -26,10 +26,10 @@ public:
     Vertical() = default;
     Vertical(Vertical& other) = default;
     Vertical& operator=(const Vertical& rhs) = default;
-    Vertical(Vertical&& other) noexcept;
+    Vertical(Vertical&& other) noexcept;        //just = default
     Vertical& operator=(Vertical&& rhs) noexcept ;
 
-    dynamic_bitset<> getColumnIndices();
+    dynamic_bitset<> getColumnIndices();    //return const &
     shared_ptr<RelationalSchema> getSchema();
     bool contains(Vertical& that);
     bool intersects(Vertical& that);
