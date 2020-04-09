@@ -21,11 +21,14 @@ extern string path;
 TEST(TaneTester, first) {
 
     //string path = "/home/maxim/Study/Metanome-coding/metanome_git/src/tests";
-    string path = fs::path(get_selfpath()).parent_path().string();
+    string path = fs::path(get_selfpath()).parent_path().string() + "/inputData";
     //CSVParser csvParser(path + "/TestTane.csv");
     //cout << path;
     vector<long> results;
-    for (int i = 0; i < 10; i++) {
+    Tane algoInstance(path + "/neighbors100k.csv");
+    //Tane algoInstance(path + "/CIPublicHighway50k.csv");
+    results.push_back(algoInstance.execute());
+    /*for (int i = 0; i < 10; i++) {
         Tane algoInstance(path + "/neighbors50k.csv");
         //Tane algoInstance(path + "/CIPublicHighway50k.csv");
         results.push_back(algoInstance.execute());
@@ -49,7 +52,7 @@ TEST(TaneTester, first) {
         Tane algoInstance(path + "/EpicVitals.csv");
         //Tane algoInstance(path + "/CIPublicHighway50k.csv");
         results.push_back(algoInstance.execute());
-    }
+    }*/
 
     for (auto res : results)
         cout << res << " ";

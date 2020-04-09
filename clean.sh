@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-scons -c
+#scons -c

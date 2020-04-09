@@ -11,29 +11,19 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="fb80a5c4-b662-4c0d-8645-0d9d54369a0b" name="Default Changelist" comment="Tane: fixed and tested.">
+    <list default="true" id="fb80a5c4-b662-4c0d-8645-0d9d54369a0b" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/customTargets.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/customTargets.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SConstruct" beforeDir="false" afterPath="$PROJECT_DIR$/SConstruct" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/clean.sh" beforeDir="false" afterPath="$PROJECT_DIR$/clean.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/algorithms/TaneX.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms/TaneX.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/algorithms/TaneX.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms/TaneX.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main2.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/model/ColumnCombination.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/ColumnCombination.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/model/ColumnCombination.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/ColumnCombination.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/model/ColumnLayoutRelationData.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/ColumnLayoutRelationData.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/model/RelationData.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/RelationData.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/model/RelationalSchema.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/RelationalSchema.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/maino.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/model/Vertical.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/Vertical.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/model/Vertical.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/Vertical.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/parser/ConfigParser.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/parser/ConfigParser.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/tests/Test1.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/tests/Test1.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/tests/TestTane.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/tests/TestTane.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/tests/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/tests/main.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/util/LatticeVertex.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/util/LatticeVertex.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/util/PositionListIndex.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/util/PositionListIndex.cpp" afterDir="false" />
     </list>
-    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -56,6 +46,7 @@
     <expand />
     <select />
   </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
   <component name="FavoritesManager">
     <favorites_list name="metanome_cpp" />
   </component>
@@ -84,6 +75,11 @@
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="1" id="Add" />
   </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
   <component name="PropertiesComponent">
     <property name="DatabaseDriversLRU" value="sqlite" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
@@ -91,7 +87,7 @@
     <property name="add_unversioned_files" value="$PROJECT_DIR$/main.cpp&#10;/home/kek/CLionProjects/metanome_cpp/.gitignore&#10;/home/kek/CLionProjects/metanome_cpp/CMakeLists.txt" />
     <property name="js.buildTools.grunt.grunt-cli.package" value="" />
     <property name="js.buildTools.gulp.gulp_package_dir" value="" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../5SEM/Translator/Referat" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../Inkscape/inkscape" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
@@ -104,7 +100,7 @@
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
-    <property name="settings.editor.selected.configurable" value="CLionExternalConfigurable" />
+    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -119,19 +115,21 @@
       <recent name="$PROJECT_DIR$/cmake-build-debug" />
     </key>
   </component>
-  <component name="RunDashboard">
-    <option name="ruleStates">
-      <list>
-        <RuleState>
-          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
-        </RuleState>
-        <RuleState>
-          <option name="name" value="StatusDashboardGroupingRule" />
-        </RuleState>
-      </list>
-    </option>
-  </component>
-  <component name="RunManager" selected="Custom Build Application.Scons tests">
+  <component name="RunManager" selected="CMake Application.cmake">
+    <configuration default="true" type="js.build_tools.grunt">
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="js.build_tools.gulp">
+      <node-interpreter>project</node-interpreter>
+      <node-options />
+      <gulpfile />
+      <tasks />
+      <arguments />
+      <envs />
+      <method v="2" />
+    </configuration>
     <configuration name="Scons tests" type="CLionExternalRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="Scons" CONFIG_NAME="Scons" RUN_PATH="$PROJECT_DIR$/build/tests/tester">
       <method v="2">
         <option name="CLION.EXTERNAL.BUILD" enabled="true" />
@@ -140,6 +138,12 @@
     <configuration name="Scons" type="CLionExternalRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="Scons" CONFIG_NAME="Scons" RUN_PATH="$PROJECT_DIR$/build/metanome">
       <method v="2">
         <option name="CLION.EXTERNAL.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="All in metanome_cpp" type="CMakeGoogleTestRunConfigurationType" factoryName="Google Test" nameIsGenerated="true" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="metanome_cpp" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="metanome_cpp" RUN_TARGET_NAME="metanome_cpp" TEST_MODE="SUITE_TEST">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+        <option name="BeforeTestRunTask" enabled="true" />
       </method>
     </configuration>
     <configuration name="TaneTester.first" type="CMakeGoogleTestRunConfigurationType" factoryName="Google Test" temporary="true" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="metanome_cpp" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="metanome_cpp" RUN_TARGET_NAME="metanome_cpp" TEST_CLASS="TaneTester" TEST_METHOD="first" TEST_MODE="SUITE_TEST">
@@ -166,32 +170,26 @@
         <option name="BeforeTestRunTask" enabled="true" />
       </method>
     </configuration>
+    <configuration name="cmake" type="CMakeRunConfiguration" factoryName="Application" WORKING_DIR="file://$PROJECT_DIR$/src" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="metanome_cpp" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="metanome_cpp" RUN_TARGET_NAME="metanome_cpp">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="clean" type="ShConfigurationType">
       <option name="SCRIPT_PATH" value="$PROJECT_DIR$/clean.sh" />
       <option name="SCRIPT_OPTIONS" value="" />
+      <option name="SCRIPT_WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="INTERPRETER_PATH" value="/bin/bash" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <method v="2" />
     </configuration>
-    <configuration default="true" type="js.build_tools.grunt">
-      <node-interpreter value="project" />
-      <envs />
-      <method v="2" />
-    </configuration>
-    <configuration default="true" type="js.build_tools.gulp">
-      <node-interpreter>project</node-interpreter>
-      <node-options />
-      <gulpfile />
-      <tasks />
-      <arguments />
-      <envs />
-      <method v="2" />
-    </configuration>
     <list>
-      <item itemvalue="Custom Build Application.Scons" />
+      <item itemvalue="CMake Application.cmake" />
       <item itemvalue="Custom Build Application.Scons tests" />
-      <item itemvalue="Google Test.pliChecker.first" />
+      <item itemvalue="Custom Build Application.Scons" />
+      <item itemvalue="Google Test.All in metanome_cpp" />
       <item itemvalue="Google Test.TaneTester.first" />
+      <item itemvalue="Google Test.pliChecker.first" />
       <item itemvalue="Google Test.pliChecker.second" />
       <item itemvalue="Google Test.pliIntersectChecker.first" />
       <item itemvalue="Shell Script.clean" />
@@ -439,6 +437,84 @@
     <MESSAGE value="Refactoring" />
     <MESSAGE value="Tane: fixed and tested." />
     <option name="LAST_COMMIT_MESSAGE" value="Tane: fixed and tested." />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="667" y="276" width="642" height="553" key="#clean" timestamp="1582451274165">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state x="667" y="276" width="642" height="553" key="#clean/67.27.1853.1053@67.27.1853.1053" timestamp="1582451274165" />
+    <state x="451" y="210" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1582871168238">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state x="451" y="210" key="#com.intellij.execution.impl.EditConfigurationsDialog/67.27.1853.1053@67.27.1853.1053" timestamp="1582871168238" />
+    <state x="320" y="252" width="411" height="601" key="#com.intellij.ide.util.MemberChooser" timestamp="1583149720216">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state x="320" y="252" width="411" height="601" key="#com.intellij.ide.util.MemberChooser/67.27.1853.1053@67.27.1853.1053" timestamp="1583149720216" />
+    <state x="776" y="310" width="424" height="484" key="FileChooserDialogImpl" timestamp="1585841931032">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state x="776" y="310" width="424" height="484" key="FileChooserDialogImpl/67.27.1853.1053@67.27.1853.1053" timestamp="1585841931032" />
+    <state x="827" y="447" width="322" height="210" key="Github.ShareDialog" timestamp="1586443446336">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state x="827" y="447" width="322" height="210" key="Github.ShareDialog/67.27.1853.1053@67.27.1853.1053" timestamp="1586443446336" />
+    <state width="1807" height="344" key="GridCell.Tab.0.bottom" timestamp="1582873066706">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state width="1807" height="344" key="GridCell.Tab.0.bottom/67.27.1853.1053@67.27.1853.1053" timestamp="1582873066706" />
+    <state width="1807" height="344" key="GridCell.Tab.0.center" timestamp="1582873066706">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state width="1807" height="344" key="GridCell.Tab.0.center/67.27.1853.1053@67.27.1853.1053" timestamp="1582873066706" />
+    <state width="1807" height="344" key="GridCell.Tab.0.left" timestamp="1582873066706">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state width="1807" height="344" key="GridCell.Tab.0.left/67.27.1853.1053@67.27.1853.1053" timestamp="1582873066706" />
+    <state width="1807" height="344" key="GridCell.Tab.0.right" timestamp="1582873066706">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state width="1807" height="344" key="GridCell.Tab.0.right/67.27.1853.1053@67.27.1853.1053" timestamp="1582873066706" />
+    <state width="1807" height="344" key="GridCell.Tab.1.bottom" timestamp="1582873066634">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state width="1807" height="344" key="GridCell.Tab.1.bottom/67.27.1853.1053@67.27.1853.1053" timestamp="1582873066634" />
+    <state width="1807" height="344" key="GridCell.Tab.1.center" timestamp="1582873066634">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state width="1807" height="344" key="GridCell.Tab.1.center/67.27.1853.1053@67.27.1853.1053" timestamp="1582873066634" />
+    <state width="1807" height="344" key="GridCell.Tab.1.left" timestamp="1582873066634">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state width="1807" height="344" key="GridCell.Tab.1.left/67.27.1853.1053@67.27.1853.1053" timestamp="1582873066634" />
+    <state width="1807" height="344" key="GridCell.Tab.1.right" timestamp="1582873066634">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state width="1807" height="344" key="GridCell.Tab.1.right/67.27.1853.1053@67.27.1853.1053" timestamp="1582873066634" />
+    <state x="853" y="167" key="SettingsEditor" timestamp="1583149371533">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state x="853" y="167" key="SettingsEditor/67.27.1853.1053@67.27.1853.1053" timestamp="1583149371533" />
+    <state x="588" y="288" width="800" height="528" key="Vcs.Push.Dialog.v2" timestamp="1586443905405">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state x="588" y="288" width="800" height="528" key="Vcs.Push.Dialog.v2/67.27.1853.1053@67.27.1853.1053" timestamp="1586443905405" />
+    <state x="644" y="336" key="com.intellij.ide.util.TipDialog" timestamp="1586443859942">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state x="644" y="336" key="com.intellij.ide.util.TipDialog/67.27.1853.1053@67.27.1853.1053" timestamp="1586443859942" />
+    <state x="715" y="171" width="537" height="674" key="git4idea.branch.GitSmartOperationDialog" timestamp="1581621617708">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state x="715" y="171" width="537" height="674" key="git4idea.branch.GitSmartOperationDialog/67.27.1853.1053@67.27.1853.1053" timestamp="1581621617708" />
+    <state x="763" y="419" width="450" height="267" key="git4idea.rebase.GitRebaseDialog" timestamp="1586443266329">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state x="763" y="419" width="450" height="267" key="git4idea.rebase.GitRebaseDialog/67.27.1853.1053@67.27.1853.1053" timestamp="1586443266329" />
+    <state x="414" y="210" width="672" height="678" key="search.everywhere.popup" timestamp="1583149785674">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state x="414" y="210" width="672" height="678" key="search.everywhere.popup/67.27.1853.1053@67.27.1853.1053" timestamp="1583149785674" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand>

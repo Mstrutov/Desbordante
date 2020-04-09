@@ -32,7 +32,7 @@ public:
   explicit LatticeVertex(Vertical& _vertical) : vertical(_vertical), rhsCandidates(vertical.getSchema()->getNumColumns()) {}
 
   std::vector<std::shared_ptr<LatticeVertex>>& getParents() { return parents; }
-  //TODO: const - usually other Metanome classes use these otputs, so returning const isn't possible
+  //TODO: const - usually other Metanome classes use these outputs, so returning const isn't possible
   Vertical& getVertical() { return vertical; }
   boost::dynamic_bitset<>& getRhsCandidates() { return rhsCandidates; }
 

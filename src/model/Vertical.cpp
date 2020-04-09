@@ -70,11 +70,12 @@ Vertical Vertical::without(Vertical &that) {
     return schema.lock()->getVertical(retainedColumnIndices);
 }
 
+//TODO: UNUSED METHOD - CHECK ITS VALIDITY
 Vertical Vertical::invert() {
     auto relation = schema.lock();
     dynamic_bitset<> flippedIndices(columnIndices);
     flippedIndices.resize(relation->getNumColumns());
-    flippedIndices.flip(0, getSchema()->getNumColumns());
+    flippedIndices.flip();
     return relation->getVertical(flippedIndices);
 }
 

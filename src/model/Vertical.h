@@ -27,7 +27,7 @@ public:
     Vertical(Vertical& other) = default;
     Vertical& operator=(const Vertical& rhs) = default;
     Vertical(Vertical&& other) noexcept;        //just = default
-    Vertical& operator=(Vertical&& rhs) noexcept ;
+    Vertical& operator=(Vertical&& rhs) noexcept;
 
     dynamic_bitset<> getColumnIndices();    //return const &
     shared_ptr<RelationalSchema> getSchema();
