@@ -6,6 +6,7 @@
 #include <iostream>
 #include <iomanip>
 #include <list>
+#include <memory>
 
 #include "model/ColumnCombination.h"
 #include "model/ColumnData.h"
@@ -15,19 +16,19 @@
 #include "util/LatticeVertex.h"
 
 // clearest code doesn't use 'using' at all, but this is highly subjective
-using boost::dynamic_bitset, std::make_shared, std::shared_ptr, std::cout, std::endl, std::setw, std::vector, std::list;
+using boost::dynamic_bitset, std::make_shared, std::shared_ptr, std::cout, std::endl, std::setw, std::vector, std::list, std::dynamic_pointer_cast;
 
 double Tane::calculateZeroAryFdError(shared_ptr<ColumnData> rhs, shared_ptr<ColumnLayoutRelationData> relationData) {
-     return 1 - rhs->getPositionListIndex()->getNep() / static_cast<double>(relationData->getNumTuplePairs());
+     return 1 - rhs->getPositionListIndex()->getNepAsLong() / static_cast<double>(relationData->getNumTuplePairs());
 }
 
 double Tane::calculateFdError(shared_ptr<PositionListIndex> lhsPli, shared_ptr<PositionListIndex> jointPli, shared_ptr<ColumnLayoutRelationData> relationData) {
-    return (double) (lhsPli->getNep() - jointPli->getNep()) / static_cast<double>(relationData->getNumTuplePairs());
+    return (double) (lhsPli->getNepAsLong() - jointPli->getNepAsLong()) / static_cast<double>(relationData->getNumTuplePairs());
 }
 
 
 double Tane::calculateUccError(shared_ptr<PositionListIndex> pli, shared_ptr<ColumnLayoutRelationData> relationData) {
-    return pli->getNep() / static_cast<double>(relationData->getNumTuplePairs());
+    return pli->getNepAsLong() / static_cast<double>(relationData->getNumTuplePairs());
 }
 
 void Tane::registerFD(Vertical& lhs, shared_ptr<Column> rhs, double error, shared_ptr<RelationalSchema> schema) {
@@ -56,8 +57,6 @@ void Tane::registerUCC(Vertical& key, double error, shared_ptr<RelationalSchema>
 
 
 long Tane::execute() {
-
-
     shared_ptr<ColumnLayoutRelationData> relation = ColumnLayoutRelationData::createFrom(inputGenerator, true);
     shared_ptr<RelationalSchema> schema = relation->getSchema();
     cout << schema->getName() << " has " << relation->getNumColumns() << " columns, "
@@ -66,7 +65,7 @@ long Tane::execute() {
 
     for (auto column : schema->getColumns()) {
         shared_ptr<ColumnData> columnData = relation->getColumnData(column->getIndex());
-        double avgPartners = columnData->getPositionListIndex()->getNep() * 2.0 / relation->getNumRows();
+        double avgPartners = columnData->getPositionListIndex()->getNepAsLong() * 2.0 / relation->getNumRows();
         cout << "* " << column->toString() << ": every tuple has " << setw(2)
              << avgPartners << " partners on average." << endl;
     }
@@ -108,7 +107,7 @@ long Tane::execute() {
 
     for (auto [key_map, vertex] : level1->getVertices()) {
         //Originally column is of type Column
-        Vertical& column = vertex->getVertical();               //TODO: perhaps store V as pointer in LV??
+        Vertical column = vertex->getVertical();               //TODO: perhaps store V as pointer in LV??
         //TODO: tricky conversion: it looks like we originally constructed  vertex using columns - deprecated for now,
         //so level1 has pointer to Vertices that actually point to columns, therefore we should be able to cast them somehow back to *columns
         //would be possible if vertical had been an abstract class - I suppose, it is possible by using downcast with static_pointer_cast
@@ -120,9 +119,8 @@ long Tane::execute() {
             registerUCC(column, uccError, schema);
             vertex->setKeyCandidate(false);
             if (uccError == 0) {
-                //TODO: for each??
                 for (unsigned long rhsIndex = vertex->getRhsCandidates().find_first();
-                     rhsIndex < vertex->getRhsCandidates().size();              //Possible to do it faster?
+                     rhsIndex < vertex->getRhsCandidates().size();
                      rhsIndex = vertex->getRhsCandidates().find_next(rhsIndex)){
                     if (rhsIndex != column.getColumnIndices().find_first()){                          //KOSTYL'!!
                         registerFD(column, schema->getColumn(rhsIndex), 0, schema);
@@ -136,7 +134,6 @@ long Tane::execute() {
             }
         }
     }
-    //log(level1->getVertices().size())
     levels.push_back(level1);
 
     for (int arity = 2; arity <= maxArity || maxArity <= 0; arity++) {
@@ -146,7 +143,7 @@ long Tane::execute() {
         //std::chrono::duration<double> elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
         //aprioriMillis += elapsed_milliseconds.count();
 
-        shared_ptr<LatticeLevel> level = levels[arity];   //TODO: careful, should write arity-1? - No, its OK
+        shared_ptr<LatticeLevel> level = levels[arity];
         cout << "Checking " << level->getVertices().size() << " " << arity << "-ary lattice vertices." << endl;
         if (level->getVertices().empty()) {
             break;
@@ -171,8 +168,8 @@ long Tane::execute() {
             dynamic_bitset<> aCandidates = xaVertex->getRhsCandidates();
 
             for (const auto& xVertex : xaVertex->getParents()) {
-                Vertical& lhs = xVertex->getVertical();
-                //TODO: faster to return shared_ptr to a lhs and use it afterwards or to return a & and call getVertical everytime?
+                Vertical lhs = xVertex->getVertical();
+                //TODO: faster to return shared_ptr to a lhs and use it afterwards or to return a & and call getVertical every time?
 
                 // Find index of A in XA. If a is not a candidate, continue. TODO: possible to do it easier??
                 //like "aIndex = xaIndices - xIndices;"
@@ -206,7 +203,7 @@ long Tane::execute() {
         //cout << "Pruning level: " << level->getArity() << ". " << level->getVertices().size() << " vertices" << endl;
         list<shared_ptr<LatticeVertex>> keyVertices;
         for (auto [map_key, vertex] : level->getVertices()) {
-            Vertical& columns = vertex->getVertical();            //Originally it's a ColumnCombination
+            Vertical columns = vertex->getVertical();            //Originally it's a ColumnCombination
 
             if (vertex->getIsKeyCandidate()) {
                 double uccError = calculateUccError(vertex->getPositionListIndex(), relation);
@@ -220,11 +217,11 @@ long Tane::execute() {
                         for (unsigned long rhsIndex = vertex->getRhsCandidates().find_first();
                              rhsIndex < vertex->getRhsCandidates().size();      //TODO: check that it's a correct way to traverse bitset
                              rhsIndex = vertex->getRhsCandidates().find_next(rhsIndex)) {
-                            Vertical rhs = *(std::static_pointer_cast<Vertical>(schema->getColumn((int)rhsIndex)));        //TODO: KOSTYL' - upcast - should be OK
+                            Vertical rhs = static_cast<Vertical>(*schema->getColumn((int)rhsIndex));
                             if (!columns.contains(rhs)) {         //TODO: again this conversion (P.S. was)
                                 bool isRhsCandidate = true;
                                 for (const auto& column : columns.getColumns()) { //TODO: implement getColumns - DONE, but it returns v<Vertical>
-                                    Vertical sibling = columns.without(*std::static_pointer_cast<Vertical>(column)).Union(rhs);   //check types carfully
+                                    Vertical sibling = columns.without(static_cast<Vertical>(*column)).Union(rhs);   //check types carfully
                                     shared_ptr<LatticeVertex> siblingVertex = level->getLatticeVertex(sibling.getColumnIndices());
                                     if (siblingVertex == nullptr || !siblingVertex->getRhsCandidates()[rhs.getColumnIndices().find_first()]) { //TODO: KOSTYL'
                                         isRhsCandidate = false;

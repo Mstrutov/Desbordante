@@ -24,6 +24,7 @@ private:
     unsigned int relationSize;
     unsigned int originalRelationSize;
     vector<int> probingTableCache;
+    int freq_ = 0;
 
     PositionListIndex(deque<vector<int>> index, vector<int> nullCluster, int size, double entropy,
                       long nep, unsigned int relationSize, unsigned int originalRelationSize);
@@ -41,7 +42,11 @@ public:
     vector<int> getProbingTable();
     vector<int> getProbingTable(bool isCaching);
     deque<vector<int>> & getIndex();
-    long getNep() const { return nep; }           //ADDED: getNep()
+    long getNepAsLong() const { return nep; }           //ADDED: getNep()
+    int getNumNonSingletonCluster() const { return index.size(); }
+    int getFreq() const { return freq_; }
+    void incFreq() { freq_++; }
+    int getSize() { return size; }
 
     shared_ptr<PositionListIndex> intersect(shared_ptr<PositionListIndex> that);
     shared_ptr<PositionListIndex> probe(const vector<int>& probingTable);

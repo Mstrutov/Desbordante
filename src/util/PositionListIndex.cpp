@@ -14,6 +14,7 @@
 #include <boost/dynamic_bitset.hpp>
 
 #include "model/ColumnLayoutRelationData.h"
+#include "model/Vertical.h"
 
 using namespace std;
 

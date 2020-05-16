@@ -2,11 +2,10 @@
 // Created by kek on 17.07.19.
 //
 
-#include "model/RelationalSchema.h"
-
 #include <utility>
 
-#include "model/ColumnCombination.h"
+#include "model/RelationalSchema.h"
+#include "model/Vertical.h"
 
 using namespace std;
 
@@ -33,10 +32,9 @@ Vertical RelationalSchema::getVertical(dynamic_bitset<> indices) {
     if (indices.empty()) return *(this->emptyVertical);
 
     if (indices.count() == 1){
-        return *(std::static_pointer_cast<Vertical>(this->columns[indices.find_first()]));          //TODO: TEMPORAL KOSTYL'
+        return static_cast<Vertical>(*this->columns[indices.find_first()]);          //TODO: TEMPORAL KOSTYL'
     }
-
-    return ColumnCombination(indices, shared_from_this());
+    return Vertical(shared_from_this(), indices);
 }
 
 string RelationalSchema::getName() { return name; }

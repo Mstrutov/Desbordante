@@ -7,16 +7,19 @@
 #include <iostream>
 #include <utility>
 
-#include "model/RelationalSchema.h"
 
 
 using namespace std;
 
-Vertical::Vertical(shared_ptr<RelationalSchema>& relSchema, int indices) :
-        columnIndices(indices),
-        schema(relSchema) {}
+Vertical::Vertical(shared_ptr<RelationalSchema> relSchema, dynamic_bitset<> const & indices) :
+    columnIndices(indices),
+    schema(relSchema) {}
 
-        //
+Vertical::Vertical(Column & col) : schema(col.getSchema()){
+    columnIndices = dynamic_bitset<>(schema.lock()->getNumColumns());
+    columnIndices.set(col.getIndex());
+}
+
 Vertical::Vertical(Vertical &&other) noexcept :
     columnIndices(std::move(other.columnIndices)),
     schema(std::move(other.schema)) {
@@ -28,7 +31,7 @@ Vertical& Vertical::operator=(Vertical &&rhs) noexcept {
     return *this;
 }
 
-dynamic_bitset<> Vertical::getColumnIndices() { return columnIndices; }
+dynamic_bitset<> Vertical::getColumnIndices() const { return columnIndices; }
 
 shared_ptr<RelationalSchema> Vertical::getSchema() { return schema.lock(); }
 
@@ -63,7 +66,7 @@ Vertical Vertical::project(Vertical &that) {
 }
 
 //TODO: check
-Vertical Vertical::without(Vertical &that) {
+Vertical Vertical::without(Vertical const & that) const {
     dynamic_bitset<> retainedColumnIndices(columnIndices);
     retainedColumnIndices &= ~that.columnIndices;
     //retainedColumnIndices = ~retainedColumnIndices;
@@ -86,17 +89,17 @@ Vertical Vertical::invert(Vertical &scope) {
 }
 
 Vertical Vertical::emptyVertical(shared_ptr<RelationalSchema> relSchema) {
-    return Vertical(relSchema, 0);
+    return Vertical(relSchema, dynamic_bitset<>(relSchema->getNumColumns()));
 }
 
-int Vertical::getArity() {
+int Vertical::getArity() const {
     return columnIndices.count();
 }
 
-vector<shared_ptr<Vertical>> Vertical::getColumns() {
+vector<shared_ptr<Column>> Vertical::getColumns() {
     //dynamic_bitset<> returnColumnIndices = getColumnIndices();
     auto relation = schema.lock();
-    vector<shared_ptr<Vertical>> columns;
+    vector<shared_ptr<Column>> columns;
     for (int index = columnIndices.find_first();
          index != -1;//dynamic_bitset<>::npos;
          index = columnIndices.find_next(index)) {

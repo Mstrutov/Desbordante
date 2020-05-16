@@ -94,7 +94,7 @@ shared_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::createFrom(CSVPar
 
     vector<shared_ptr<ColumnData>> columnData;
     for (int i = 0; i < numColumns; ++i) {
-        auto column = make_shared<Column>(schema, fileInput.getColumnName(i), i, numColumns);               //numColumns instead of i - same problem as described in Column.cpp
+        auto column = make_shared<Column>(schema, fileInput.getColumnName(i), i);               //numColumns instead of i - same problem as described in Column.cpp
         schema->appendColumn(column);
         auto pli = PositionListIndex::createFor(columnVectors[i], schema->isNullEqualNull());
         auto colData = make_shared<ColumnData>(column, pli->getProbingTable(true), pli);

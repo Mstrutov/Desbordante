@@ -18,7 +18,7 @@ private:
 public:
   explicit LatticeLevel(int m_arity) { arity = m_arity; }
   int getArity() const { return arity; }
-  //return const& ? Or use pointers?
+
   std::map<boost::dynamic_bitset<>, std::shared_ptr<LatticeVertex>>& getVertices() { return vertices; }
   std::shared_ptr<LatticeVertex> getLatticeVertex(const boost::dynamic_bitset<>& columnIndices);
   void add(std::shared_ptr<LatticeVertex> vertex);
