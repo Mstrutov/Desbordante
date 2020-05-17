@@ -4,8 +4,9 @@
 #include <exception>
 #include <queue>
 #include <unordered_set>
-#include "VerticalMap.h"
-
+#include "util/VerticalMap.h"
+#include "core/VerticalInfo.h"
+#include "core/DependencyCandidate.h"
 /*void linkingProblemsSolver() {
     VerticalMap<std::shared_ptr<Vertical>> obj(nullptr);
 }*/
@@ -527,3 +528,6 @@ Value VerticalMap<Value>::get(bitset const &key) {
 
 //explicitly instantiate to solve template implementation linking issues
 template class VerticalMap<std::shared_ptr<PositionListIndex>>;
+template class VerticalMap<std::shared_ptr<AgreeSetSample>>;
+template class VerticalMap<std::shared_ptr<DependencyCandidate>>;
+template class VerticalMap<std::shared_ptr<VerticalInfo>>;

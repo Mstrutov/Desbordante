@@ -25,9 +25,11 @@ public:
             name(std::move(name)),
             index(index),
             schema(schema) {}
+    explicit operator Vertical() const;
     int getIndex() const;
     string getName() const;
     std::shared_ptr<RelationalSchema> getSchema();
-    string toString();
+    string toString() const;
+    explicit operator std::string() const { return toString(); }
     bool operator==(const Column& rhs);
 };

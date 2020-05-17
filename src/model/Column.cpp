@@ -6,6 +6,7 @@
 #include <utility>
 
 #include "model/Column.h"
+#include "model/Vertical.h"
 
 
 using namespace std;
@@ -17,7 +18,7 @@ string Column::getName() const { return name; }
 
 
 
-string Column::toString() { return "[" + name + "]";}
+string Column::toString() const { return "[" + name + "]";}
 
 bool Column::operator==(const Column &rhs) {
     if (this == &rhs) return true;
@@ -26,4 +27,8 @@ bool Column::operator==(const Column &rhs) {
 
 std::shared_ptr<RelationalSchema> Column::getSchema() {
     return schema.lock();
+}
+
+Column::operator Vertical() const {
+    return Vertical(*this);
 }

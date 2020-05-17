@@ -8,6 +8,11 @@ template<class Value>
 class VerticalMap;
 #include "core/Configuration.h"
 #include "util/AgreeSetSample.h"
+#include "model/PartialFD.h"
+#include "model/PartialKey.h"
+#include "caching/CacheEvictionMethod.h"
+#include "caching/CachingMethod.h"
+#include "util/AgreeSetSample.h"
 //#include "util/PLICache.h"
 
 
@@ -23,5 +28,31 @@ public:
     std::shared_ptr<PLICache> pliCache_;            //unique_ptr?
     std::shared_ptr<VerticalMap<std::shared_ptr<AgreeSetSample>>> agreeSetSamples_;     //unique_ptr?
 
-    //std::mt19937 random_;
+    std::shared_ptr<ColumnLayoutRelationData> relationData_;
+    std::mt19937 random_;
+
+    std::function<void (PartialFD const&)> fdConsumer_;
+    std::function<void (PartialKey const&)> uccConsumer_;
+
+    ProfilingContext(Configuration const& configuration, std::shared_ptr<ColumnLayoutRelationData> relationData,
+            std::function<void (PartialKey const&)> const& uccConsumer, std::function<void (PartialFD const&)> const& fdConsumer,
+            CachingMethod const& cachingMethod, CacheEvictionMethod const& evictionMethod, double cachingMethodValue) :
+            configuration_(configuration), relationData_(relationData), uccConsumer_(uccConsumer), fdConsumer_(fdConsumer),
+            random_(configuration_.seed == 0 ? std::mt19937() : std::mt19937(configuration_.seed)) {
+        //somebody once told me
+    }
+
+    std::shared_ptr<AgreeSetSample> createFocusedSample(std::shared_ptr<Vertical> focus, double boostFactor);
+    // Retrieve an AgreeSetSample with a best possible sampling ratio
+    std::shared_ptr<AgreeSetSample> getAgreeSetSample(std::shared_ptr<Vertical> focus);
+    std::shared_ptr<RelationalSchema> getSchema() { return relationData_->getSchema(); }
+
+    static double getMaximumEntropy(std::shared_ptr<ColumnLayoutRelationData> relationData);
+    static double getMinEntropy(std::shared_ptr<ColumnLayoutRelationData> relationData);
+    static double getMedianEntropy(std::shared_ptr<ColumnLayoutRelationData> relationData);
+    static double getMedianInvertedEntropy(std::shared_ptr<ColumnLayoutRelationData> relationData);
+    static double getMeanEntropy(std::shared_ptr<ColumnLayoutRelationData> relationData);
+    static double getMedianGini(std::shared_ptr<ColumnLayoutRelationData> relationData);
+private:
+    static double setMaximumEntropy(std::shared_ptr<ColumnLayoutRelationData> relationData, CachingMethod const & cachingMethod);
 };

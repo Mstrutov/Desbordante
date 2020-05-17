@@ -25,11 +25,13 @@ int PositionListIndex::intersectionCount = 0;
 
 // use r-value references, DO NOT copy
 PositionListIndex::PositionListIndex(deque<vector<int>> index, vector<int> nullCluster, int size, double entropy,
-                                     long nep, unsigned int relationSize, unsigned int originalRelationSize):
+                                     long nep, unsigned int relationSize, unsigned int originalRelationSize, double invertedEntropy, double giniImpurity):
                                      index(std::move(index)),
                                      nullCluster(std::move(nullCluster)),
                                      size(size),
                                      entropy(entropy),
+                                     invertedEntropy(invertedEntropy),
+                                     giniImpurity(giniImpurity),
                                      nep(nep),
                                      relationSize(relationSize),
                                      originalRelationSize(originalRelationSize),

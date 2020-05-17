@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <cmath>
 #include <vector>
 
 #include "model/ColumnData.h"
@@ -25,6 +26,7 @@ public:
     unsigned int getNumRows() override;
     vector<int> getTuple(int tupleIndex) override;
     void shuffleColumns() override;
+    double getMaximumEntropy() { return std::log(getNumRows()); }
 
     static shared_ptr<ColumnLayoutRelationData> createFrom(CSVParser& fileInput, bool isNullEqNull);
     static shared_ptr<ColumnLayoutRelationData> createFrom(CSVParser& fileInput, bool isNullEqNull, int maxCols, long maxRows);

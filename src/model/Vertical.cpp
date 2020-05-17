@@ -53,7 +53,7 @@ bool Vertical::intersects(Vertical &that) {
     return thisIndices.intersects(thatIndices);
 }
 
-Vertical Vertical::Union(Vertical &that) {
+Vertical Vertical::Union(Vertical const &that) {
     dynamic_bitset<> retainedColumnIndices(columnIndices);
     retainedColumnIndices |= that.columnIndices;
     return schema.lock()->getVertical(retainedColumnIndices);
@@ -108,7 +108,7 @@ vector<shared_ptr<Column>> Vertical::getColumns() {
     return columns;
 }
 
-string Vertical::toString() {
+string Vertical::toString() const {
     string result = "[";
 
     if ((int)columnIndices.find_first() == -1)

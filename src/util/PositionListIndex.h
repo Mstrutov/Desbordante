@@ -20,6 +20,8 @@ private:
     vector<int> nullCluster;
     int size;
     double entropy;
+    double invertedEntropy;
+    double giniImpurity;
     long nep;
     unsigned int relationSize;
     unsigned int originalRelationSize;
@@ -27,7 +29,8 @@ private:
     int freq_ = 0;
 
     PositionListIndex(deque<vector<int>> index, vector<int> nullCluster, int size, double entropy,
-                      long nep, unsigned int relationSize, unsigned int originalRelationSize);
+                      long nep, unsigned int relationSize, unsigned int originalRelationSize,
+                      double invertedEntropy = 0, double giniImpurity = 0);
 
     static long calculateNep(long numElements);
     static void sortClusters(deque<vector<int>> & clusters);
@@ -47,6 +50,11 @@ public:
     int getFreq() const { return freq_; }
     void incFreq() { freq_++; }
     int getSize() { return size; }
+    double getEntropy() const { return entropy; }
+    double getInvertedEntropy() const { return invertedEntropy; }
+    double getGiniImpurity() const { return giniImpurity; }
+    double getMaximumNip() const { return calculateNep(relationSize); }
+    double getNip() const { return getMaximumNip() - getNepAsLong(); }
 
     shared_ptr<PositionListIndex> intersect(shared_ptr<PositionListIndex> that);
     shared_ptr<PositionListIndex> probe(const vector<int>& probingTable);

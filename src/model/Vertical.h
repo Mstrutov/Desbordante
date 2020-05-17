@@ -39,7 +39,7 @@ public:
     shared_ptr<RelationalSchema> getSchema();
     bool contains(Vertical& that);
     bool intersects(Vertical& that);
-    Vertical Union(Vertical& that);
+    Vertical Union(Vertical const& that);
     Vertical project(Vertical& that);
     Vertical without (Vertical const & that) const;
     Vertical invert();
@@ -49,5 +49,6 @@ public:
     vector<shared_ptr<Column>> getColumns();
     //possible to use list or set?
 
-    virtual string toString();
+    string toString() const;
+    explicit operator std::string() const { return toString(); }
 };
