@@ -9,10 +9,10 @@ class DependencyStrategy {
 protected:
     double maxDependencyError_;
     double minNonDependencyError_;
-    std::shared_ptr<ProfilingContext> context_;
 
     DependencyStrategy(double maxError, double deviation) : maxDependencyError_(maxError + deviation), minNonDependencyError_(maxError - deviation) {}
 public:
+    std::shared_ptr<ProfilingContext> context_;
     /*
      * Create the initial candidate for the given SearchSpace
      * */

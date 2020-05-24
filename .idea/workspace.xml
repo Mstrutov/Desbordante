@@ -13,19 +13,8 @@
   <component name="ChangeListManager">
     <list default="true" id="fb80a5c4-b662-4c0d-8645-0d9d54369a0b" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/DependencyConsumer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/DependencyConsumer.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/DependencyConsumer.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/DependencyConsumer.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/DependencyStrategy.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/DependencyStrategy.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/ProfilingContext.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/ProfilingContext.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/model/Column.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/Column.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/model/Column.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/Column.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/model/ColumnLayoutRelationData.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/ColumnLayoutRelationData.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/model/Vertical.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/Vertical.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/model/Vertical.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/Vertical.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/util/PositionListIndex.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/util/PositionListIndex.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/util/PositionListIndex.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/util/PositionListIndex.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/util/VerticalMap.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/util/VerticalMap.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/SearchSpace.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/SearchSpace.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -440,7 +429,8 @@
     <MESSAGE value="Refactoring" />
     <MESSAGE value="Tane: fixed and tested." />
     <MESSAGE value="Pyro's data structures: AgreeSetSample, PliCache, SetTrie, VerticalMap" />
-    <option name="LAST_COMMIT_MESSAGE" value="Pyro's data structures: AgreeSetSample, PliCache, SetTrie, VerticalMap" />
+    <MESSAGE value="Pyro's profiling base: Dependency strategies, ProfilingContext; implementing SearchSpace" />
+    <option name="LAST_COMMIT_MESSAGE" value="Pyro's profiling base: Dependency strategies, ProfilingContext; implementing SearchSpace" />
   </component>
   <component name="WindowStateProjectService">
     <state x="667" y="276" width="642" height="553" key="#clean" timestamp="1582451274165">
@@ -455,10 +445,10 @@
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
     <state x="320" y="252" width="411" height="601" key="#com.intellij.ide.util.MemberChooser/67.27.1853.1053@67.27.1853.1053" timestamp="1583149720216" />
-    <state x="556" y="96" width="1163" height="912" key="CommitChangelistDialog2" timestamp="1589625783950">
+    <state x="556" y="96" width="1163" height="912" key="CommitChangelistDialog2" timestamp="1589716130260">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
-    <state x="556" y="96" width="1163" height="912" key="CommitChangelistDialog2/67.27.1853.1053@67.27.1853.1053" timestamp="1589625783950" />
+    <state x="556" y="96" width="1163" height="912" key="CommitChangelistDialog2/67.27.1853.1053@67.27.1853.1053" timestamp="1589716130260" />
     <state x="776" y="310" width="424" height="484" key="FileChooserDialogImpl" timestamp="1585841931032">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
@@ -503,22 +493,18 @@
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
     <state x="853" y="167" key="SettingsEditor/67.27.1853.1053@67.27.1853.1053" timestamp="1588581908078" />
-    <state x="588" y="288" width="800" height="528" key="Vcs.Push.Dialog.v2" timestamp="1589625794004">
+    <state x="588" y="288" width="800" height="528" key="Vcs.Push.Dialog.v2" timestamp="1590310531180">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
-    <state x="588" y="288" width="800" height="528" key="Vcs.Push.Dialog.v2/67.27.1853.1053@67.27.1853.1053" timestamp="1589625794004" />
-    <state x="644" y="336" key="com.intellij.ide.util.TipDialog" timestamp="1589624471429">
+    <state x="588" y="288" width="800" height="528" key="Vcs.Push.Dialog.v2/67.27.1853.1053@67.27.1853.1053" timestamp="1590310531180" />
+    <state x="644" y="336" key="com.intellij.ide.util.TipDialog" timestamp="1590308639824">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
-    <state x="644" y="336" key="com.intellij.ide.util.TipDialog/67.27.1853.1053@67.27.1853.1053" timestamp="1589624471429" />
+    <state x="644" y="336" key="com.intellij.ide.util.TipDialog/67.27.1853.1053@67.27.1853.1053" timestamp="1590308639824" />
     <state x="728" y="445" width="454" height="160" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1588500475788">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
     <state x="728" y="445" width="454" height="160" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/67.27.1853.1053@67.27.1853.1053" timestamp="1588500475788" />
-    <state x="715" y="171" width="537" height="674" key="git4idea.branch.GitSmartOperationDialog" timestamp="1581621617708">
-      <screen x="67" y="27" width="1853" height="1053" />
-    </state>
-    <state x="715" y="171" width="537" height="674" key="git4idea.branch.GitSmartOperationDialog/67.27.1853.1053@67.27.1853.1053" timestamp="1581621617708" />
     <state x="763" y="419" width="450" height="267" key="git4idea.rebase.GitRebaseDialog" timestamp="1586443266329">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
