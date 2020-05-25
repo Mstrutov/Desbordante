@@ -5,9 +5,10 @@ private:
     bool isExtremal_;
     double error_;
 
+public:
     VerticalInfo(bool isDependency, bool isExtremal, double error = 0) :
         isDependency_(isDependency), isExtremal_(isExtremal), error_(error) {}
-public:
+
     static VerticalInfo forMinimalDependency() { return VerticalInfo(true, true); }
     static VerticalInfo forNonDependency() { return VerticalInfo(false, false); }
     static VerticalInfo forMaximalNonDependency() { return VerticalInfo(false, true); }

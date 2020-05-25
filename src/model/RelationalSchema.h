@@ -4,11 +4,16 @@
 
 #pragma once
 
+#include <functional>
+#include <list>
 #include <memory>
 #include <string>
 #include <vector>
+#include <unordered_set>
 
 #include <boost/dynamic_bitset.hpp>
+#include <boost/optional.hpp>
+
 
 class Column;
 class Vertical;
@@ -37,4 +42,7 @@ public:
     //TODO: getVertical работает неверно, нужно будет подумать в зависимотси от его использования
     Vertical getVertical(dynamic_bitset<> indices);
     bool isNullEqualNull();
+
+    std::unordered_set<Vertical> calculateHittingSet(std::list<std::shared_ptr<Vertical>>&& verticals,
+            boost::optional<std::function<bool (Vertical const&)>> pruningFunction);
 };

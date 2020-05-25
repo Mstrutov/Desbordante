@@ -5,14 +5,14 @@
 
 class DependencyCandidate {
 private:
-    std::shared_ptr<Vertical> vertical_;
-    ConfidenceInterval error_;
     bool isExact_;
 
 public:
+    ConfidenceInterval error_;
+    std::shared_ptr<Vertical> vertical_;
+
     DependencyCandidate(std::shared_ptr<Vertical> vertical, ConfidenceInterval error, bool isExact) :
         vertical_(vertical), error_(error), isExact_(isExact) {}
-
     bool operator<(DependencyCandidate const& other) const;
     
     //TODO: implement if used

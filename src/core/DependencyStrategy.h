@@ -7,11 +7,11 @@ class SearchSpace;
 
 class DependencyStrategy {
 protected:
-    double maxDependencyError_;
     double minNonDependencyError_;
 
     DependencyStrategy(double maxError, double deviation) : maxDependencyError_(maxError + deviation), minNonDependencyError_(maxError - deviation) {}
 public:
+    double maxDependencyError_;
     std::shared_ptr<ProfilingContext> context_;
     /*
      * Create the initial candidate for the given SearchSpace

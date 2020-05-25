@@ -6,6 +6,7 @@
 
 #include "model/RelationalSchema.h"
 #include "model/Vertical.h"
+#include "util/VerticalMap.h"
 
 using namespace std;
 
@@ -69,3 +70,49 @@ int RelationalSchema::getNumColumns() {
 
 bool RelationalSchema::isNullEqualNull() { return isNullEqNull; }
 
+// TODO: critical part - consider optimization
+std::unordered_set<Vertical> RelationalSchema::calculateHittingSet(std::list<std::shared_ptr<Vertical>>&& verticals, boost::optional<std::function<bool (Vertical const&)>> pruningFunction) {
+    using std::shared_ptr;
+    auto arityComparator = [](auto vertical1, auto vertical2) { return vertical1->getArity() < vertical2->getArity(); };
+    std::sort(verticals.begin(), verticals.end(), arityComparator);
+    VerticalMap<shared_ptr<Vertical>> consolidatedVerticals(shared_from_this());
+
+    VerticalMap<shared_ptr<Vertical>> hittingSet(shared_from_this());
+    hittingSet.put(*emptyVertical, emptyVertical);
+
+    for (auto vertical_ptr : verticals) {
+        if (consolidatedVerticals.getAnySubsetEntry(*vertical_ptr).second == nullptr) {
+            continue;
+        }
+        consolidatedVerticals.put(*vertical_ptr, vertical_ptr);
+
+        auto invalidHittingSetMembers = hittingSet.getSubsetKeys(vertical_ptr->invert());
+        std::sort(invalidHittingSetMembers.begin(), invalidHittingSetMembers.end(), arityComparator);
+
+        for (auto& invalidHittingSetMember : invalidHittingSetMembers) {
+            hittingSet.remove(invalidHittingSetMember);
+        }
+
+        for (auto& invalidMember : invalidHittingSetMembers) {
+            for (size_t correctiveColumnIndex = vertical_ptr->getColumnIndices().find_first();
+                 correctiveColumnIndex != boost::dynamic_bitset<>::npos;
+                 correctiveColumnIndex = vertical_ptr->getColumnIndices().find_next(correctiveColumnIndex)) {
+
+                auto correctiveColumn = *getColumn(correctiveColumnIndex);
+                Vertical correctedMember = invalidMember.Union(static_cast<Vertical>(correctiveColumn));
+
+                if (hittingSet.getAnySubsetEntry(correctedMember).second == nullptr) {
+                    if (pruningFunction) {
+                        bool isPruned = (*pruningFunction)(correctedMember);
+                        if (isPruned) {
+                            continue;
+                        }
+                    }
+                    hittingSet.put(correctedMember, std::make_shared<Vertical>(correctedMember));
+                }
+            }
+        }
+        if (hittingSet.isEmpty()) break;
+    }
+    return hittingSet.keySet();
+}
