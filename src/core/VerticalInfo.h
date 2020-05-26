@@ -2,10 +2,10 @@
 class VerticalInfo {
 private:
     bool isDependency_;
-    bool isExtremal_;
-    double error_;
 
 public:
+    double error_;
+    bool isExtremal_;
     VerticalInfo(bool isDependency, bool isExtremal, double error = 0) :
         isDependency_(isDependency), isExtremal_(isExtremal), error_(error) {}
 

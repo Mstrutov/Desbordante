@@ -71,10 +71,11 @@ int RelationalSchema::getNumColumns() {
 bool RelationalSchema::isNullEqualNull() { return isNullEqNull; }
 
 // TODO: critical part - consider optimization
-std::unordered_set<Vertical> RelationalSchema::calculateHittingSet(std::list<std::shared_ptr<Vertical>>&& verticals, boost::optional<std::function<bool (Vertical const&)>> pruningFunction) {
+// TODO: list -> vector as list doesn't have RAIterators therefore can't be sorted
+std::unordered_set<std::shared_ptr<Vertical>> RelationalSchema::calculateHittingSet(std::list<std::shared_ptr<Vertical>>&& verticals, boost::optional<std::function<bool (Vertical const&)>> pruningFunction) {
     using std::shared_ptr;
-    auto arityComparator = [](auto vertical1, auto vertical2) { return vertical1->getArity() < vertical2->getArity(); };
-    std::sort(verticals.begin(), verticals.end(), arityComparator);
+    //auto arityComparator = [](auto vertical1, auto vertical2) { return vertical1->getArity() < vertical2->getArity(); };
+    verticals.sort([](auto vertical1, auto vertical2) { return vertical1->getArity() < vertical2->getArity(); });
     VerticalMap<shared_ptr<Vertical>> consolidatedVerticals(shared_from_this());
 
     VerticalMap<shared_ptr<Vertical>> hittingSet(shared_from_this());
@@ -87,7 +88,8 @@ std::unordered_set<Vertical> RelationalSchema::calculateHittingSet(std::list<std
         consolidatedVerticals.put(*vertical_ptr, vertical_ptr);
 
         auto invalidHittingSetMembers = hittingSet.getSubsetKeys(vertical_ptr->invert());
-        std::sort(invalidHittingSetMembers.begin(), invalidHittingSetMembers.end(), arityComparator);
+        std::sort(invalidHittingSetMembers.begin(), invalidHittingSetMembers.end(),
+                [](auto vertical1, auto vertical2) { return vertical1.getArity() < vertical2.getArity(); });
 
         for (auto& invalidHittingSetMember : invalidHittingSetMembers) {
             hittingSet.remove(invalidHittingSetMember);

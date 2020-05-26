@@ -25,7 +25,7 @@ bool Column::operator==(const Column &rhs) {
     return index == rhs.index && schema.lock().get() == rhs.schema.lock().get();
 }
 
-std::shared_ptr<RelationalSchema> Column::getSchema() {
+std::shared_ptr<RelationalSchema> Column::getSchema() const {
     return schema.lock();
 }
 

@@ -375,14 +375,14 @@ bool VerticalMap<Value>::removeSubsetEntries(Vertical const& key) {
 }
 
 template<class Value>
-std::unordered_set<Vertical> VerticalMap<Value>::keySet() {
-    std::unordered_set<Vertical> keySet;
+std::unordered_set<std::shared_ptr<Vertical>> VerticalMap<Value>::keySet() {
+    std::unordered_set<std::shared_ptr<Vertical>> keySet;
     auto relation_ptr = relation_.lock();
 
     bitset subsetKey(relation_ptr->getNumColumns());
     setTrie_.traverseEntries(
             subsetKey,
-            [&keySet, relation_ptr](auto k, auto v) { keySet.insert(relation_ptr->getVertical(k)); }
+            [&keySet, relation_ptr](auto k, auto v) { keySet.insert(std::make_shared<Vertical>(relation_ptr->getVertical(k)); }
             );
     return keySet;
 }
@@ -531,3 +531,4 @@ template class VerticalMap<std::shared_ptr<PositionListIndex>>;
 template class VerticalMap<std::shared_ptr<AgreeSetSample>>;
 template class VerticalMap<std::shared_ptr<DependencyCandidate>>;
 template class VerticalMap<std::shared_ptr<VerticalInfo>>;
+template class VerticalMap<std::shared_ptr<Vertical>>;

@@ -1,11 +1,15 @@
 #include "SearchSpace.h"
-
+#include <queue>
 /*SearchSpace::SearchSpace(int id, std::shared_ptr<DependencyStrategy> strategy,
                          std::unique_ptr<VerticalMap<Vertical>> scope, VerticalMap<VerticalInfo> globalVisitees,
                          std::shared_ptr<RelationalSchema> schema, std::function<bool(DependencyCandidate const &,
                                                                                       DependencyCandidate const &)> const &dependencyCandidateComparator,
                          int recursionDepth, double sampleBoost) : id_(id), strategy_(strategy), scope_(std::move(scope)), globalVisitees_(globalVisitees), recursionDepth_(recursionDepth),
                                                                    sampleBoost_(sampleBoost), launchPadIndex_(schema), launchPads_(dependencyCandidateComparator) {}*/
+
+// TODO: extra careful with const& -> shared_ptr conversions via make_shared-smart pointer may delete the object - pass empty deleter [](*) {}
+
+// TODO: consider storing only containers of shared_ptrs
 
 void SearchSpace::discover(std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees) {
     while (true) {
@@ -47,8 +51,8 @@ std::shared_ptr<DependencyCandidate> SearchSpace::pollLaunchPad(
         if (supersetEntries.empty()) return launchPad;
 
         std::list<std::shared_ptr<Vertical>> supersetVerticals;
-        std::transform(supersetEntries.begin(), supersetEntries.end(), supersetVerticals,
-                [](auto entry) {return std::make_shared<Vertical>(entry->second); });
+        std::transform(supersetEntries.begin(), supersetEntries.end(), supersetVerticals.begin(),
+                [](auto entry) {return std::make_shared<Vertical>(entry.first); });
         escapeLaunchPad(launchPad->vertical_, std::move(supersetVerticals), localVisitees);
         //continue;
 
@@ -65,7 +69,7 @@ void SearchSpace::escapeLaunchPad(std::shared_ptr<Vertical> launchPad,
             [this](auto superset) { return std::make_shared<Vertical>(superset->invert().without(strategy_->getIrrelevantColumns())); } );
 
     std::function<bool (Vertical const&)> pruningFunction = [this, &launchPad, &localVisitees] (auto const& hittingSetCandidate) -> bool {
-        if (scope_ != nullptr && scope_->getAnySupersetEntry(hittingSetCandidate)) {
+        if (scope_ != nullptr && scope_->getAnySupersetEntry(hittingSetCandidate).second == nullptr) {
             return true;
         }
 
@@ -90,7 +94,7 @@ void SearchSpace::escapeLaunchPad(std::shared_ptr<Vertical> launchPad,
         );
 
     for (auto& escaping : hittingSet) {
-        auto escapedLaunchPadVertical = std::make_shared<Vertical>(launchPad->Union(escaping));
+        auto escapedLaunchPadVertical = std::make_shared<Vertical>(launchPad->Union(*escaping));
         // assert, который не имплементнуть из-за трансформа
         DependencyCandidate escapedLaunchPad = strategy_->createDependencyCandidate(escapedLaunchPadVertical);
         launchPads_.insert(escapedLaunchPad);
@@ -225,4 +229,165 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad,
     }
     return false;
 }
+
+void SearchSpace::checkEstimate(std::shared_ptr<DependencyStrategy> strategy,
+                                DependencyCandidate const &traversalCandidate) {
+    std::cout << "Stepped into method 'checkEstimate' - not implemented yet being a debug method\n";
+}
+
+void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPeakError,
+                              std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees) {
+    std::unordered_set<Vertical> maximalNonDeps;
+    auto allegedMinDeps = std::make_shared<VerticalMap<std::shared_ptr<VerticalInfo>>>(context_->getSchema());
+    // arityComparator returns true if candidate1 < candidate2. We need a candidate with the smallest arity to be the highest value in the heap,
+    // i.e. such a candidate that arityComparator returns false for every other candidate => peaksComparator should return !(candidate1 < candidate2)
+    // In one word, Java priority queue highlights the least element, C++ - the largest
+    std::function<bool(std::shared_ptr<DependencyCandidate>, std::shared_ptr<DependencyCandidate>)> peaksComparator =
+            [](auto candidate1, auto candidate2) -> bool { return !DependencyCandidate::arityComparator(*candidate1, *candidate2); };
+    std::vector<std::shared_ptr<DependencyCandidate>> peaks;
+    std::make_heap(peaks.begin(), peaks.end(), peaksComparator);
+    peaks.push_back(std::make_shared<DependencyCandidate>(mainPeak, ConfidenceInterval(mainPeakError), true));
+    std::push_heap(peaks.begin(), peaks.end(), peaksComparator);
+    std::unordered_set<Vertical> allegedNonDeps;
+
+    while (!peaks.empty()) {
+        auto peak = peaks.front();
+
+        auto subsetDeps = getSubsetDeps(peak->vertical_, allegedMinDeps);
+        if (!subsetDeps.empty()) {
+            std::pop_heap(peaks.begin(), peaks.end(), peaksComparator);
+            peaks.pop_back();
+
+            auto escapedPeakVerticals = context_->getSchema()->calculateHittingSet(
+                    std::move(subsetDeps), boost::optional<std::function<bool (Vertical const&)>>());
+            std::transform(escapedPeakVerticals.begin(), escapedPeakVerticals.end(), escapedPeakVerticals.begin(),
+                    [&peak](auto& vertical) { return peak->vertical_->without(vertical); });
+
+            for (auto& escapedPeakVertical : escapedPeakVerticals) {
+                if (escapedPeakVertical->getArity() > 0
+                        && allegedNonDeps.find(*escapedPeakVertical) != allegedNonDeps.end()) {
+                    // TODO: escapedPeakVertical, [](Vertical* v) {} ?
+                    //auto escapedPeakVertical_ptr = std::make_shared<Vertical>(escapedPeakVertical);
+                    auto escapedPeak = strategy_->createDependencyCandidate(escapedPeakVertical);
+
+                    if (escapedPeak.error_.getMean() > strategy_->minNonDependencyError_) {
+                        allegedNonDeps.insert(*escapedPeakVertical);
+                        continue;
+                    }
+                    if (isKnownNonDependency(escapedPeakVertical, localVisitees)
+                            || isKnownNonDependency(escapedPeakVertical, globalVisitees_)) {
+                        continue;
+                    }
+                    peaks.push_back(std::make_shared<DependencyCandidate>(escapedPeak));
+                    std::push_heap(peaks.begin(), peaks.end(), peaksComparator);
+                }
+            }
+            continue;
+        }
+        auto allegedMinDep = trickleDownFrom(*peak, strategy_,
+                allegedMinDeps, allegedNonDeps, localVisitees, globalVisitees_, sampleBoost_);
+        if (allegedMinDep == nullptr) {
+            std::pop_heap(peaks.begin(), peaks.end(), peaksComparator);
+            peaks.pop_back();
+        }
+    }
+    int numUncertainMinDeps = 0;
+    for (auto& [allegedMinDep, info] : allegedMinDeps->entrySet()) {
+        if (info->isExtremal_ && !globalVisitees_->containsKey(allegedMinDep)) {
+            globalVisitees_->put(allegedMinDep, info);
+            strategy_->registerDependency(std::make_shared<Vertical>(allegedMinDep), info->error_, *context_);  // TODO: is it expensive to dereference ptr like this?
+        }
+    }
+    auto allegedMinDepsSet = allegedMinDeps->keySet();
+    // TODO: костыль: calculateHittingSet needs a list, but keySet returns an unordered_set
+    auto allegedMaxNonDeps = context_->getSchema()->calculateHittingSet(
+            std::list<std::shared_ptr<Vertical>>(allegedMinDepsSet.begin(), allegedMinDepsSet.end()),
+            boost::optional<std::function<bool (Vertical const&)>>());
+    std::transform(allegedMaxNonDeps.begin(), allegedMaxNonDeps.end(), allegedMaxNonDeps.begin(),
+            [mainPeak](auto minLeaveOutVertical) { return minLeaveOutVertical->invert(*mainPeak); });
+
+    // checking the consistency of all data structures
+    if (auto allegedMinDepsKeySet = allegedMinDeps->keySet();
+            !std::all_of(allegedMinDepsKeySet.begin(), allegedMinDepsKeySet.end(),
+                [mainPeak](auto vertical) -> bool { return mainPeak->contains(*vertical); })) {
+        throw std::exception();
+    }
+    if (!std::all_of(allegedMaxNonDeps.begin(), allegedMaxNonDeps.end(),
+                     [mainPeak](auto vertical) -> bool { return mainPeak->contains(*vertical); })) {
+        throw std::exception();
+    }
+
+    for (auto allegedMaxNonDep : allegedMaxNonDeps) {
+        if (allegedMaxNonDep->getArity() == 0) continue;
+
+        if (maximalNonDeps.find(*allegedMaxNonDep) != maximalNonDeps.end()
+                || isKnownNonDependency(allegedMaxNonDep, localVisitees)
+                || isKnownNonDependency(allegedMaxNonDep, globalVisitees_)) {
+            continue;
+        }
+
+        double error = context_->configuration_.isEstimateOnly
+                ? strategy_->createDependencyCandidate(allegedMaxNonDep).error_.getMean()
+                : strategy_->calculateError(allegedMaxNonDep);
+        bool isNonDep = error > strategy_->minNonDependencyError_;
+        if (isNonDep) {
+            maximalNonDeps.insert(*allegedMaxNonDep);
+            localVisitees->put(*allegedMaxNonDep, std::make_shared<VerticalInfo>(VerticalInfo::forNonDependency()));
+        } else {
+            peaks.push_back(std::make_shared<DependencyCandidate>(allegedMaxNonDep, ConfidenceInterval(error), true));
+            std::push_heap(peaks.begin(), peaks.end(), peaksComparator);
+        }
+    }
+
+    if (peaks.empty()) {
+        for (auto& [allegedMinDep, info] : allegedMinDeps->entrySet()) {
+            if (!info->isExtremal_ && !globalVisitees_->containsKey(allegedMinDep)) {
+                info->isExtremal_ = true;
+                globalVisitees_->put(allegedMinDep, info);
+                strategy_->registerDependency(std::make_shared<Vertical>(allegedMinDep), info->error_, *context_);
+            }
+        }
+    } else {
+        auto newScope = std::make_unique<VerticalMap<std::shared_ptr<Vertical>>>(context_->getSchema());
+        std::sort_heap(peaks.begin(), peaks.end(), peaksComparator);
+        for (auto& peak : peaks) {
+            newScope->put(*peak->vertical_, peak->vertical_);
+        }
+
+        double newSampleBoost = sampleBoost_ * sampleBoost_;
+
+        auto scopeVerticals  = newScope->keySet();
+        auto nestedSearchSpace = std::make_shared<SearchSpace> (
+                -1, strategy_, std::move(newScope), globalVisitees_, context_->getSchema(),
+                launchPads_.key_comp(), recursionDepth_ + 1,
+                sampleBoost_ * context_->configuration_.sampleBooster
+                );
+        nestedSearchSpace->setContext(context_);
+
+        std::unordered_set<std::shared_ptr<Column>> scopeColumns;
+        for (auto vertical : scopeVerticals) {
+            for (auto column : vertical->getColumns()) {
+                scopeColumns.insert(column);
+            }
+        }
+        for (auto scopeColumn : scopeColumns) {
+            // TODO: again problems with conversion: Column* -> Vertical*. If this is too inefficient, consider refactoring
+            nestedSearchSpace->addLaunchPad(strategy_->createDependencyCandidate(
+                    std::make_shared<Vertical>(static_cast<Vertical>(*scopeColumn))
+                    ));
+        }
+        nestedSearchSpace->discover(localVisitees);
+
+        for (auto& [allegedMinDep, info] : allegedMinDeps->entrySet()) {
+            if (auto allegedMinDep_ptr = std::make_shared<Vertical>(allegedMinDep);
+                        !isImpliedByMinDep(allegedMinDep_ptr, globalVisitees_)) {
+                info->isExtremal_ = true;
+                globalVisitees_->put(allegedMinDep, info);
+                strategy_->registerDependency(allegedMinDep_ptr, info->error_, *context_);
+            }
+        }
+    }
+}
+
+
 

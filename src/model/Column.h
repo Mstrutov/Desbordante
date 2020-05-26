@@ -28,7 +28,7 @@ public:
     explicit operator Vertical() const;
     int getIndex() const;
     string getName() const;
-    std::shared_ptr<RelationalSchema> getSchema();
+    std::shared_ptr<RelationalSchema> getSchema() const;        // TODO: straight up bad: const-ness may be violated!
     string toString() const;
     explicit operator std::string() const { return toString(); }
     bool operator==(const Column& rhs);

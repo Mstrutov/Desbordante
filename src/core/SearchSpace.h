@@ -33,10 +33,10 @@ private:
     void trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPeakError, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees);
     std::shared_ptr<Vertical> trickleDownFrom(DependencyCandidate const& minDepCandidate,
             std::shared_ptr<DependencyStrategy> strategy, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> allegedMinDeps,
-            std::set<std::shared_ptr<Vertical>> const& allegedNonDeps, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees,
+            std::unordered_set<Vertical> const& allegedNonDeps, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees,
             std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> globalVisitees, double boostFactor);
     static void requireMinimalDependency(std::shared_ptr<DependencyStrategy> strategy, std::shared_ptr<Vertical> minDependency);
-    static void getSubsetDeps() = delete; // no idea of return type
+    static std::list<std::shared_ptr<Vertical>> getSubsetDeps(std::shared_ptr<Vertical> vertical, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> verticalInfos); // no idea of return type
     static bool isImpliedByMinDep(std::shared_ptr<Vertical> vertical, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> verticalInfos);
     static bool isKnownNonDependency(std::shared_ptr<Vertical> vertical, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> verticalInfos);
     static std::string formatArityHistogram() = delete;
@@ -54,9 +54,12 @@ public:
                 id_(id), strategy_(strategy), scope_(std::move(scope)), globalVisitees_(globalVisitees), recursionDepth_(recursionDepth),
                 sampleBoost_(sampleBoost), launchPadIndex_(schema), launchPads_(dependencyCandidateComparator) {}
 
+    // shared_ptr<RelationalSchema> --constructor--> VerticalMap<...> --make_shared--> shared_ptr<VerticalInfo<...>>
     SearchSpace(int id, std::shared_ptr<DependencyStrategy> strategy, std::shared_ptr<RelationalSchema> schema,
             std::function<bool (DependencyCandidate const&, DependencyCandidate const&)> const& dependencyCandidateComparator):
-            SearchSpace(id, strategy, nullptr, std::static_pointer_cast<VerticalMap<std::shared_ptr<VerticalInfo>>>(schema), schema, dependencyCandidateComparator, 0, 1) {}
+            SearchSpace(id, strategy, nullptr,
+                    std::make_shared<VerticalMap<std::shared_ptr<VerticalInfo>>>(static_cast<VerticalMap<std::shared_ptr<VerticalInfo>>>(schema)),
+                            schema, dependencyCandidateComparator, 0, 1) {}
 
     void ensureInitialized() { strategy_->ensureInitialized(shared_from_this()); }
     void discover() { discover(nullptr); }

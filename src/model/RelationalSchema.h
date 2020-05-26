@@ -43,6 +43,6 @@ public:
     Vertical getVertical(dynamic_bitset<> indices);
     bool isNullEqualNull();
 
-    std::unordered_set<Vertical> calculateHittingSet(std::list<std::shared_ptr<Vertical>>&& verticals,
+    std::unordered_set<std::shared_ptr<Vertical>> calculateHittingSet(std::list<std::shared_ptr<Vertical>>&& verticals,
             boost::optional<std::function<bool (Vertical const&)>> pruningFunction);
 };
