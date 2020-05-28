@@ -19,5 +19,5 @@ public:
     double get() const { return mean_; }
 
     ConfidenceInterval multiply(double scalar) { return ConfidenceInterval(min_ * scalar, mean_ * scalar, max_ * scalar); }
-    bool isPoint() { return min_ == max_; }
+    bool isPoint() const { return min_ == max_; }
 };

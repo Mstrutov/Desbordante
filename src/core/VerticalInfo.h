@@ -1,10 +1,10 @@
 #pragma once
 class VerticalInfo {
 private:
-    bool isDependency_;
 
 public:
     double error_;
+    bool isDependency_;
     bool isExtremal_;
     VerticalInfo(bool isDependency, bool isExtremal, double error = 0) :
         isDependency_(isDependency), isExtremal_(isExtremal), error_(error) {}

@@ -258,10 +258,15 @@ void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPea
             std::pop_heap(peaks.begin(), peaks.end(), peaksComparator);
             peaks.pop_back();
 
-            auto escapedPeakVerticals = context_->getSchema()->calculateHittingSet(
+            auto peakHittingSet = context_->getSchema()->calculateHittingSet(
                     std::move(subsetDeps), boost::optional<std::function<bool (Vertical const&)>>());
-            std::transform(escapedPeakVerticals.begin(), escapedPeakVerticals.end(), escapedPeakVerticals.begin(),
-                    [&peak](auto& vertical) { return peak->vertical_->without(vertical); });
+            std::unordered_set<std::shared_ptr<Vertical>> escapedPeakVerticals;
+
+            for (auto vertical : peakHittingSet) {
+                escapedPeakVerticals.insert(std::make_shared<Vertical>(peak->vertical_->without(*vertical)));
+            }
+//            std::transform(peakHittingSet.begin(), peakHittingSet.end(), escapedPeakVerticals.begin(),
+//                [&peak](auto vertical) { return std::make_shared<Vertical>(peak->vertical_->without(*vertical)); });
 
             for (auto& escapedPeakVertical : escapedPeakVerticals) {
                 if (escapedPeakVertical->getArity() > 0
@@ -297,14 +302,22 @@ void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPea
             globalVisitees_->put(allegedMinDep, info);
             strategy_->registerDependency(std::make_shared<Vertical>(allegedMinDep), info->error_, *context_);  // TODO: is it expensive to dereference ptr like this?
         }
+        if (!info->isExtremal_) {
+            numUncertainMinDeps++;
+        }
     }
     auto allegedMinDepsSet = allegedMinDeps->keySet();
     // TODO: костыль: calculateHittingSet needs a list, but keySet returns an unordered_set
-    auto allegedMaxNonDeps = context_->getSchema()->calculateHittingSet(
+    // ещё и морока с transform и unordered_set - мб вообще в лист переделать.
+    auto allegedMaxNonDepsHS = context_->getSchema()->calculateHittingSet(
             std::list<std::shared_ptr<Vertical>>(allegedMinDepsSet.begin(), allegedMinDepsSet.end()),
             boost::optional<std::function<bool (Vertical const&)>>());
-    std::transform(allegedMaxNonDeps.begin(), allegedMaxNonDeps.end(), allegedMaxNonDeps.begin(),
-            [mainPeak](auto minLeaveOutVertical) { return minLeaveOutVertical->invert(*mainPeak); });
+    std::unordered_set<std::shared_ptr<Vertical>> allegedMaxNonDeps;
+    for (auto minLeaveOutVertical : allegedMaxNonDepsHS) {
+        allegedMaxNonDeps.insert(std::make_shared<Vertical>(minLeaveOutVertical->invert(*mainPeak)));
+    }
+    //std::transform(allegedMaxNonDepsHS.begin(), allegedMaxNonDepsHS.end(), allegedMaxNonDeps.begin(),
+    //        [mainPeak](auto minLeaveOutVertical) { return minLeaveOutVertical->invert(*mainPeak); });
 
     // checking the consistency of all data structures
     if (auto allegedMinDepsKeySet = allegedMinDeps->keySet();
@@ -388,6 +401,140 @@ void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPea
         }
     }
 }
+
+std::shared_ptr<Vertical>
+SearchSpace::trickleDownFrom(DependencyCandidate &minDepCandidate, std::shared_ptr<DependencyStrategy> strategy,
+                             std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> allegedMinDeps,
+                             std::unordered_set<Vertical> &allegedNonDeps,
+                             std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees,
+                             std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> globalVisitees,
+                             double boostFactor) {
+    if (minDepCandidate.error_.getMin() <= strategy->maxDependencyError_)
+        throw std::exception();
+
+    bool areAllParentsKnownNonDeps = true;
+    if (minDepCandidate.vertical_->getArity() > 1) {
+        std::priority_queue<std::shared_ptr<DependencyCandidate>, std::vector<std::shared_ptr<DependencyCandidate>>,
+            std::function<bool (std::shared_ptr<DependencyCandidate>, std::shared_ptr<DependencyCandidate>)>>
+            parentCandidates([](auto candidate1, auto candidate2)
+                {return !DependencyCandidate::minErrorComparator(*candidate1, *candidate2); });
+        for (auto parentVertical : minDepCandidate.vertical_->getParents()) {
+            if (isKnownNonDependency(parentVertical, localVisitees)
+                    || isKnownNonDependency(parentVertical, globalVisitees))
+                continue;
+            if (allegedNonDeps.count(*parentVertical) != 0) {
+                areAllParentsKnownNonDeps = false;
+                continue;
+            }
+            // TODO: construction methods should return unique_ptr<...>
+            parentCandidates.push(std::make_shared<DependencyCandidate>(strategy->createDependencyCandidate(parentVertical)));
+        }
+
+        while (!parentCandidates.empty()) {
+            auto parentCandidate = parentCandidates.top();
+            parentCandidates.pop();
+
+            if (parentCandidate->error_.getMin() > strategy->minNonDependencyError_) {
+                do {
+                    if (parentCandidate->isExact()) {
+                        localVisitees->put(*parentCandidate->vertical_,
+                                std::make_shared<VerticalInfo>(VerticalInfo::forNonDependency()));
+                    } else {
+                        allegedNonDeps.insert(*parentCandidate->vertical_);
+                        areAllParentsKnownNonDeps = false;
+                    }
+                } while (parentCandidate != nullptr);
+                break;
+            }
+
+            auto allegedMinDep = trickleDownFrom(
+                    *parentCandidate,
+                    strategy,
+                    allegedMinDeps,
+                    allegedNonDeps,
+                    localVisitees,
+                    globalVisitees,
+                    boostFactor
+                    );
+            if (allegedMinDep != nullptr) return allegedMinDep;
+
+            if (!minDepCandidate.isExact()) {
+                double error = strategy->calculateError(minDepCandidate.vertical_);
+                // TODO: careful with reference shenanigans - looks like it works this way in the original
+                minDepCandidate = DependencyCandidate(minDepCandidate.vertical_, ConfidenceInterval(error), true);
+                if (error > strategy->minNonDependencyError_) break;
+            }
+        }
+    }
+
+    double candidateError = minDepCandidate.isExact()
+        ? minDepCandidate.error_.get()
+        : strategy->calculateError(minDepCandidate.vertical_);
+    double errorDiff = candidateError - minDepCandidate.error_.getMean();
+    if (candidateError <= strategy->maxDependencyError_) {
+        allegedMinDeps->removeSupersetEntries(*minDepCandidate.vertical_);
+        allegedMinDeps->put(*minDepCandidate.vertical_,
+                std::make_shared<VerticalInfo>(true, areAllParentsKnownNonDeps, candidateError));
+        if (areAllParentsKnownNonDeps && context_->configuration_.isCheckEstimates) {
+            requireMinimalDependency(strategy, minDepCandidate.vertical_);
+        }
+        return minDepCandidate.vertical_;
+    } else {
+        localVisitees->put(*minDepCandidate.vertical_, std::make_shared<VerticalInfo>(VerticalInfo::forNonDependency()));
+
+        if (strategy->shouldResample(minDepCandidate.vertical_, boostFactor)) {
+            context_->createFocusedSample(minDepCandidate.vertical_, boostFactor);
+        }
+        return nullptr;
+    }
+}
+
+void SearchSpace::requireMinimalDependency(std::shared_ptr<DependencyStrategy> strategy,
+                                           std::shared_ptr<Vertical> minDependency) {
+    double error = strategy->calculateError(minDependency);
+    if (error > strategy->maxDependencyError_) {
+        throw std::runtime_error("Wrong minimal dependency estimate");
+    }
+    if (minDependency->getArity() > 1) {
+        for (auto parent : minDependency->getParents()) {
+            double parentError = strategy->calculateError(parent);
+            if (parentError <= strategy->minNonDependencyError_) {
+                throw std::runtime_error("Wrong minimal dependency estimate");
+            }
+        }
+    }
+}
+
+std::list<std::shared_ptr<Vertical>> SearchSpace::getSubsetDeps(std::shared_ptr<Vertical> vertical,
+                                                                std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> verticalInfos) {
+
+    auto subsetEntries = verticalInfos->getSubsetEntries(*vertical);
+    auto subsetEntriesEnd = std::remove_if(subsetEntries.begin(), subsetEntries.end(),
+            [](auto& entry){ return entry.second->isDependency_;});
+    std::list<std::shared_ptr<Vertical>> subsetDeps;
+    std::transform(subsetEntries.begin(), subsetEntriesEnd, subsetDeps.begin(),
+            [](auto& entry){ return std::make_shared<Vertical>(entry.first); });
+
+    return subsetDeps;
+}
+
+bool SearchSpace::isImpliedByMinDep(std::shared_ptr<Vertical> vertical,
+                                    std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> verticalInfos) {
+    // TODO: function<bool(Vertical, ...)> --> function<bool(Vertical&, ...)>
+    return verticalInfos->getAnySubsetEntry(*vertical,
+            [](auto vertical, auto info) -> bool { return info->isDependency_ && info->isExtremal_; }).second != nullptr;
+}
+
+bool SearchSpace::isKnownNonDependency(std::shared_ptr<Vertical> vertical,
+                                       std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> verticalInfos) {
+    return verticalInfos->getAnySupersetEntry(*vertical,
+                                            [](auto vertical, auto info) -> bool { return !info->isDependency_; }).second != nullptr;
+}
+
+
+
+
+
 
 
 

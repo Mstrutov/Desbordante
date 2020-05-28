@@ -3,7 +3,7 @@
 #include <boost/format.hpp>
 #include "DependencyStrategy.h"
 
-class FdG1Strategy : DependencyStrategy {
+class FdG1Strategy : public DependencyStrategy {
 private:
     std::shared_ptr<Column> rhs_;
 

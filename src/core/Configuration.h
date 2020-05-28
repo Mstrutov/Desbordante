@@ -2,9 +2,16 @@
 #include <string>
 
 struct Configuration {
+    bool isFindKeys = true;
+    bool isFindFds = true;
+    bool isNullEqualNull = true;
+
+    std::string uccErrorMeasure = "g1prime";
+
     //Error settings
     double errorDev = 0;
     bool isEstimateOnly = false;
+    double maxUccError = 0.01;
 
     //Traversal settings
     int parallelism = 0;

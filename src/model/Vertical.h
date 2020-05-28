@@ -47,6 +47,7 @@ public:
     static Vertical emptyVertical(shared_ptr<RelationalSchema> relSchema);
     int getArity() const;
     vector<shared_ptr<Column>> getColumns();
+    vector<shared_ptr<Vertical>> getParents();
     //possible to use list or set?
 
     string toString() const;

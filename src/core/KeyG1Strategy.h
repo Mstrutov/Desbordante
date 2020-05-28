@@ -2,7 +2,7 @@
 #include <boost/format.hpp>
 #include "DependencyStrategy.h"
 
-class KeyG1Strategy : DependencyStrategy {
+class KeyG1Strategy : public DependencyStrategy {
 private:
     double calculateKeyError(std::shared_ptr<PositionListIndex> pli);
     double calculateKeyError(double numViolatingTuplePairs);

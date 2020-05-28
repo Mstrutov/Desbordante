@@ -18,7 +18,7 @@ public:
     //TODO: implement if used
     //bool operator==(DependencyCandidate const& other) const;
 
-    bool isExact() { return isExact_ && error_.isPoint(); }
+    bool isExact() const { return isExact_ && error_.isPoint(); }
 
     //TODO: check if these comparators are used in a right way
     //using comparator = std::function<bool (DependencyCandidate const &, DependencyCandidate const &)>;

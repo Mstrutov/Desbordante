@@ -31,9 +31,9 @@ private:
     bool ascend(DependencyCandidate const& launchPad, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees);
     void checkEstimate(std::shared_ptr<DependencyStrategy> strategy, DependencyCandidate const& traversalCandidate);
     void trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPeakError, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees);
-    std::shared_ptr<Vertical> trickleDownFrom(DependencyCandidate const& minDepCandidate,
+    std::shared_ptr<Vertical> trickleDownFrom(DependencyCandidate & minDepCandidate,
             std::shared_ptr<DependencyStrategy> strategy, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> allegedMinDeps,
-            std::unordered_set<Vertical> const& allegedNonDeps, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees,
+            std::unordered_set<Vertical> & allegedNonDeps, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees,
             std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> globalVisitees, double boostFactor);
     static void requireMinimalDependency(std::shared_ptr<DependencyStrategy> strategy, std::shared_ptr<Vertical> minDependency);
     static std::list<std::shared_ptr<Vertical>> getSubsetDeps(std::shared_ptr<Vertical> vertical, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> verticalInfos); // no idea of return type

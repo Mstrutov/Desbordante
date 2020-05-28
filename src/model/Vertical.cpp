@@ -124,3 +124,17 @@ string Vertical::toString() const {
     result[result.size() - 1] = ']';
     return result;
 }
+
+vector<shared_ptr<Vertical>> Vertical::getParents() {
+    if (getArity() < 2) return vector<shared_ptr<Vertical>>();
+    vector<shared_ptr<Vertical>> parents(getArity());
+    int i = 0;
+    for (size_t columnIndex = columnIndices.find_first();
+         columnIndex != dynamic_bitset<>::npos;
+         columnIndex = columnIndices.find_next(columnIndex)) {
+        columnIndices.reset(columnIndex);
+        parents[i++] = std::make_shared<Vertical>(getSchema()->getVertical(columnIndices));
+        columnIndices.set(columnIndex);
+    }
+    return parents;
+}
