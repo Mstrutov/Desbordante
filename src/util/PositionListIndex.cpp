@@ -45,30 +45,43 @@ shared_ptr<PositionListIndex> PositionListIndex::createFor(vector<int>& data, bo
     }
 
     vector<int> nullCluster;
-    if (isNullEqNull){
+    if (index.count(RelationData::nullValueId) != 0) {
         nullCluster = index[RelationData::nullValueId];
-    } else {
-        index.erase(RelationData::nullValueId);
+    }
+    if (!isNullEqNull){
+        index.erase(RelationData::nullValueId); // move?
     }
 
     double keyGap = 0.0;
+    double invEnt = 0;
+    double giniGap = 0;
     long nep = 0;
     int size = 0;
     deque<vector<int>> clusters;
 
     for (auto & iter : index){
-        if (iter.second.size() >= 2){
-            keyGap += iter.second.size() * log(iter.second.size());
-            nep += calculateNep(iter.second.size());
-            size += iter.second.size();
-
-            clusters.emplace_back(std::move(iter.second));
+        if (iter.second.size() == 1){
+            giniGap += pow(1 / static_cast<double>(data.size()), 2);
+            continue;
         }
+        keyGap += iter.second.size() * log(iter.second.size());
+        nep += calculateNep(iter.second.size());
+        size += iter.second.size();
+        invEnt += -(1 - iter.second.size() / static_cast<double>(data.size()))
+                * log(1 - (iter.second.size() / static_cast<double>(data.size())));
+        giniGap += pow(iter.second.size() / static_cast<double>(data.size()), 2);
+
+        clusters.emplace_back(std::move(iter.second));
     }
     double entropy = log(data.size()) - keyGap / data.size();
 
+    double giniImpurity = 1 - giniGap;
+    if (giniImpurity == 0) {
+        invEnt = 0;
+    }
+
     sortClusters(clusters);
-    auto pli = shared_ptr<PositionListIndex>(new PositionListIndex(clusters, nullCluster, size, entropy, nep, data.size(), data.size()));
+    auto pli = shared_ptr<PositionListIndex>(new PositionListIndex(clusters, nullCluster, size, entropy, nep, data.size(), data.size(), invEnt, giniImpurity));
     return pli;
 }
 

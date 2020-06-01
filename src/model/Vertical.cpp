@@ -40,7 +40,7 @@ shared_ptr<RelationalSchema> Vertical::getSchema() { return schema.lock(); }
 bool Vertical::contains(Vertical &that) {
     dynamic_bitset<>& thisIndices = columnIndices;
     dynamic_bitset<>& thatIndices = that.columnIndices;
-    if(thisIndices.count() != thatIndices.count()) return false;
+    if(thisIndices.size() < thatIndices.size()) return false;
     for (unsigned long columnIndex = thatIndices.find_first(); columnIndex < thatIndices.size(); columnIndex = thatIndices.find_next(columnIndex)){
         if (!(thisIndices[columnIndex])) return false;
     }
@@ -96,7 +96,7 @@ int Vertical::getArity() const {
     return columnIndices.count();
 }
 
-vector<shared_ptr<Column>> Vertical::getColumns() {
+vector<shared_ptr<Column>> Vertical::getColumns() const {
     //dynamic_bitset<> returnColumnIndices = getColumnIndices();
     auto relation = schema.lock();
     vector<shared_ptr<Column>> columns;

@@ -19,7 +19,7 @@ TEST(PyroTester, first) {
     //CSVParser csvParser(path + "/TestTane.csv");
     //cout << path;
     vector<long> results;
-    Pyro algoInstance(path + "/TestTane.csv");
+    Pyro algoInstance(path + "/neighbors100k.csv");
     algoInstance.execute();
 
 

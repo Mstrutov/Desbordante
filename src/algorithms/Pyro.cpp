@@ -55,6 +55,6 @@ void Pyro::execute() {
 }
 
 Pyro::Pyro(fs::path const &path) : inputGenerator_(path) {
-    uccConsumer_ = [](auto const& key) { std::cout << "Found ucc!\n"; };
-    fdConsumer_ = [](auto const& key) { std::cout << "Found ucc!\n"; };
+    uccConsumer_ = [](auto const& key) { std::cout << "Found ucc: " << key.toString() << std::endl; };
+    fdConsumer_ = [](auto const& key) { std::cout << "Found fd: " << key.toString() << std::endl; };
 }

@@ -45,8 +45,8 @@ double AgreeSetSample::estimateAgreements(std::shared_ptr<Vertical> agreement) {
 }
 
 ConfidenceInterval AgreeSetSample::estimateAgreements(std::shared_ptr<Vertical> agreement, double confidence) {
-    if (agreement->contains(*this->focus)) {
-        throw std::exception();
+    if (!agreement->contains(*this->focus)) {
+        throw std::runtime_error("An agreement in estimateAgreemnts should contain the focus");
     }
     if (populationSize == 0) {
         return ConfidenceInterval(0, 0, 0);
@@ -59,8 +59,8 @@ ConfidenceInterval AgreeSetSample::estimateAgreements(std::shared_ptr<Vertical> 
 }
 
 ConfidenceInterval AgreeSetSample::estimateMixed(std::shared_ptr<Vertical> agreement, std::shared_ptr<Vertical> disagreement, double confidence) {
-    if (agreement->contains(*this->focus)) {
-        throw std::exception();
+    if (!agreement->contains(*this->focus)) {
+        throw std::runtime_error("An agreement in estimateMixed should contain the focus");
     }
     if (populationSize == 0) {
         return ConfidenceInterval(0, 0, 0);

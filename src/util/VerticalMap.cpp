@@ -91,7 +91,7 @@ std::shared_ptr<typename VerticalMap<Value>::SetTrie> VerticalMap<Value>::SetTri
 template <class Value>
 void VerticalMap<Value>::SetTrie::traverseEntries(bitset &subsetKey,
                                                   std::function<void(bitset const&, Value)> collector) {
-    if (value_ == nullptr) {
+    if (value_ != nullptr) {
         collector(bitset(subsetKey), value_);
     }   
     for (size_t i = offset_; i < dimension_; i++) {
@@ -106,7 +106,7 @@ void VerticalMap<Value>::SetTrie::traverseEntries(bitset &subsetKey,
 
 template <class Value>
 bool VerticalMap<Value>::SetTrie::collectSubsetKeys(bitset const& key, size_t nextBit, bitset & subsetKey, std::function<bool (bitset &&, Value)> const& collector) {
-    if (value_ == nullptr) {
+    if (value_ != nullptr) {
         if (!collector(bitset(subsetKey), value_)) return false;
     }
     
@@ -152,7 +152,7 @@ bool VerticalMap<Value>::SetTrie::collectSupersetKeys(bitset const& key, size_t 
         }
         
         std::shared_ptr<SetTrie> subtrie = getSubtrie(nextBit);
-        if (subtrie == nullptr) {
+        if (subtrie != nullptr) {
             supersetKey.set(nextBit);
             if (!subtrie->collectSupersetKeys(key, nextBit + 1, supersetKey, collector)) return false;
             supersetKey.reset(nextBit);
@@ -192,7 +192,7 @@ bool VerticalMap<Value>::SetTrie::collectRestrictedSupersetKeys(bitset const&key
         }
 
         std::shared_ptr<SetTrie> subtrie = getSubtrie(nextBit);
-        if (subtrie == nullptr) {
+        if (subtrie != nullptr) {
             supersetKey.set(nextBit);
             if (!subtrie->collectRestrictedSupersetKeys(key, blacklist, nextBit + 1, supersetKey, collector)) return false;
             supersetKey.reset(nextBit);

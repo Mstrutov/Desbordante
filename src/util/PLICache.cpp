@@ -9,7 +9,7 @@
 
 
 std::shared_ptr<PositionListIndex> PLICache::get(Vertical const &vertical) {
-    VerticalMap<std::shared_ptr<PositionListIndex>> ojb(nullptr);
+    //VerticalMap<std::shared_ptr<PositionListIndex>> obj(nullptr);
     return index_->get(vertical);
 }
 
@@ -73,7 +73,7 @@ PLICache::getOrCreateFor(Vertical const &vertical, ProfilingContext const &profi
             //erase ranks with low addedArity_
             ranks.erase(std::remove_if(ranks.begin(), ranks.end(),
                     [&coverTester, &cover] (auto& rank) {
-                        coverTester.clear();
+                        coverTester.reset();
                         coverTester |= rank.vertical_->getColumnIndices();
                         coverTester -= cover;
                         rank.addedArity_ = coverTester.count();
@@ -93,6 +93,14 @@ PLICache::getOrCreateFor(Vertical const &vertical, ProfilingContext const &profi
                 operands.push_back(*bestRank);
                 cover |= bestRank->vertical_->getColumnIndices();
             }
+        }
+    }
+    for (auto& column : vertical.getColumns()) {
+        if (!cover[column->getIndex()]) {
+            auto columnData = relationData_.lock()->getColumnData(column->getIndex());
+            operands.emplace_back(std::make_shared<Vertical>(static_cast<Vertical>(*column)),
+                    columnData->getPositionListIndex(), 1);
+            columnData->getPositionListIndex()->incFreq();
         }
     }
     // sort operands by ascending order
@@ -125,13 +133,14 @@ size_t PLICache::size() const {
 
 void PLICache::cachingProcess(Vertical const &vertical, std::shared_ptr<PositionListIndex> pli) {
     switch (cachingMethod_) {
-        case CachingMethod::COIN:
-            index_->put(vertical, pli);
-            // newUsageInfo - parallel
-            break;
+//        case CachingMethod::COIN:
+//            index_->put(vertical, pli);
+//            // newUsageInfo - parallel
+//            break;
         default:
+            index_->put(vertical, pli);
             // doubts on necessity of statistics => no implementation yet
-            throw std::exception();
+            //throw std::exception();
             break;
     }
 }

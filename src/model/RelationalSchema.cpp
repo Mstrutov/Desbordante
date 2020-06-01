@@ -82,7 +82,7 @@ std::unordered_set<std::shared_ptr<Vertical>> RelationalSchema::calculateHitting
     hittingSet.put(*emptyVertical, emptyVertical);
 
     for (auto vertical_ptr : verticals) {
-        if (consolidatedVerticals.getAnySubsetEntry(*vertical_ptr).second == nullptr) {
+        if (consolidatedVerticals.getAnySubsetEntry(*vertical_ptr).second != nullptr) {
             continue;
         }
         consolidatedVerticals.put(*vertical_ptr, vertical_ptr);

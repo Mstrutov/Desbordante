@@ -96,14 +96,16 @@ shared_ptr<T> AgreeSetSample::createFocusedFor(shared_ptr<ColumnLayoutRelationDa
             int clusterIndex = binary_search(clusterSizes.begin(), clusterSizes.end(), (long) (restrictionNep * random_double(gen)));
             if (clusterIndex < 0) clusterIndex = -(clusterIndex + 1);
             auto cluster = restrictionPli->getIndex()[clusterIndex];
-            std::uniform_int_distribution<> random_int(0, cluster.size());
+            std::uniform_int_distribution<> random_int(0, cluster.size() - 1);
+
             int tupleIndex1 = random_int(gen);
-            int tupleIndex2;
-            do {
+            int tupleIndex2 = random_int(gen);
+            while (tupleIndex1 == tupleIndex2) {
                 tupleIndex2 = random_int(gen);
-            } while (tupleIndex1 == tupleIndex2);
+            }
             tupleIndex1 = cluster[tupleIndex1];
             tupleIndex2 = cluster[tupleIndex2];
+
 
             dynamic_bitset<> agreeSet(agreeSetPrototype);
             for (auto & columnData : relevantColumnData){

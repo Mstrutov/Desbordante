@@ -59,7 +59,6 @@ shared_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::createFrom(CSVPar
     int rowNum = 0;
     vector<string> row;
 
-    //TODO: can't process "Mercury, Venus"
     while (fileInput.getHasNext()){
         row = std::move(fileInput.parseNext());
 
@@ -100,6 +99,9 @@ shared_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::createFrom(CSVPar
         auto colData = make_shared<ColumnData>(column, pli->getProbingTable(true), pli);
         columnData.emplace_back(colData);
     }
+    // TODO: тут костыль: в RelationalSchema::create происходит инициализация битсета нулевого размера. Можно обойти через resize
+    schema->init();
+
     auto ans = shared_ptr<ColumnLayoutRelationData>(new ColumnLayoutRelationData(schema, columnData));
     return ans;
 }

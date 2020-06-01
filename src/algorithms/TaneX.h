@@ -16,8 +16,8 @@ public:
   constexpr static char INPUT_FILE_CONFIG_KEY[] = "inputFile";
 
  //TODO: these consts should go in class (or struct) Configuration
-  const double maxFdError = 0;
-  const double maxUccError = 0;
+  const double maxFdError = 0.001;
+  const double maxUccError = 0.001;
   const int maxArity = 20;
   //TODO: DO NOT FORGET ABOUT MAXARITY!! - SET ARITY IN CONSTRUCTOR
   // no evidence that there will be multiple Tane instances + tricky static stuff => just const

@@ -38,12 +38,7 @@ public:
     // initialize random_ using std::random_device
     ProfilingContext(Configuration const& configuration, std::shared_ptr<ColumnLayoutRelationData> relationData,
             std::function<void (PartialKey const&)> const& uccConsumer, std::function<void (PartialFD const&)> const& fdConsumer,
-            CachingMethod const& cachingMethod, CacheEvictionMethod const& evictionMethod, double cachingMethodValue) :
-            configuration_(configuration), relationData_(relationData),
-            random_(configuration_.seed == 0 ? std::mt19937() : std::mt19937(configuration_.seed)) {
-        uccConsumer_ = uccConsumer;
-        fdConsumer_ = fdConsumer;
-    }
+            CachingMethod const& cachingMethod, CacheEvictionMethod const& evictionMethod, double cachingMethodValue);
 
     std::shared_ptr<AgreeSetSample> createFocusedSample(std::shared_ptr<Vertical> focus, double boostFactor);
     // Retrieve an AgreeSetSample with a best possible sampling ratio

@@ -3,6 +3,39 @@
 #include "util/PLICache.h"
 #include "util/VerticalMap.h"
 
+ProfilingContext::ProfilingContext(Configuration const& configuration, std::shared_ptr<ColumnLayoutRelationData> relationData,
+        std::function<void (PartialKey const&)> const& uccConsumer, std::function<void (PartialFD const&)> const& fdConsumer,
+        CachingMethod const& cachingMethod, CacheEvictionMethod const& evictionMethod, double cachingMethodValue) :
+configuration_(configuration), relationData_(relationData),
+random_(configuration_.seed == 0 ? std::mt19937() : std::mt19937(configuration_.seed)) {
+    uccConsumer_ = uccConsumer;
+    fdConsumer_ = fdConsumer;
+    pliCache_ = std::make_shared<PLICache>(
+            relationData_,
+            cachingMethod,
+            evictionMethod,
+            cachingMethodValue,
+            getMinEntropy(relationData_),
+            getMeanEntropy(relationData_),
+            getMedianEntropy(relationData_),
+            setMaximumEntropy(relationData_, cachingMethod),
+            getMedianGini(relationData_),
+            getMedianInvertedEntropy(relationData_)
+            );
+    pliCache_->setMaximumEntropy(getMaximumEntropy(relationData_));
+    if (configuration_.sampleSize > 0) {
+        auto schema = relationData_->getSchema();
+        agreeSetSamples_ = std::make_shared<VerticalMap<std::shared_ptr<AgreeSetSample>>>(schema);
+        for (auto& column : schema->getColumns()) {
+            auto sample = createFocusedSample(std::make_shared<Vertical>(static_cast<Vertical>(*column)), 1);
+            agreeSetSamples_->put(static_cast<Vertical>(*column), sample);
+        }
+    } else {
+        agreeSetSamples_ = nullptr;
+    }
+    // TODO: partialFDScoring - for FD registration
+}
+
 double ProfilingContext::getMaximumEntropy(std::shared_ptr<ColumnLayoutRelationData> relationData) {
     auto columns = relationData->getColumnData();
     auto maxColumn = std::max_element(columns.begin(), columns.end(),
@@ -117,6 +150,6 @@ std::shared_ptr<AgreeSetSample> ProfilingContext::getAgreeSetSample(std::shared_
             sample = nextSample;
         }
     }
-    return std::shared_ptr<AgreeSetSample>();
+    return sample;
 }
 

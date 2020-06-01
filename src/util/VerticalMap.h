@@ -34,7 +34,7 @@ private:
         bool isEmpty() const;
 
     public:
-        explicit SetTrie(size_t dimension) : SetTrie(0, dimension_) {}
+        explicit SetTrie(size_t dimension) : SetTrie(0, dimension) {}
         SetTrie(size_t offset, size_t dimension) : offset_(offset), dimension_(dimension) {}
 
         Value associate(bitset const& key, size_t nextBit, Value value);

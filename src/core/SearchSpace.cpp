@@ -12,7 +12,7 @@
 // TODO: consider storing only containers of shared_ptrs
 
 void SearchSpace::discover(std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees) {
-    while (true) {
+    while (true) {  // на второй итерации дропается
         std::shared_ptr<DependencyCandidate> launchPad = pollLaunchPad(localVisitees);
         if (launchPad == nullptr) break;
 
@@ -27,14 +27,15 @@ void SearchSpace::discover(std::shared_ptr<VerticalMap<std::shared_ptr<VerticalI
 std::shared_ptr<DependencyCandidate> SearchSpace::pollLaunchPad(
         std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees) {
     while (true) {
-        // TODO: boost::optional
-        std::shared_ptr<DependencyCandidate> launchPad;
         if (launchPads_.empty()) {
             if (deferredLaunchPads_.empty()) return nullptr;
 
             launchPads_.insert(deferredLaunchPads_.begin(), deferredLaunchPads_.end());
             deferredLaunchPads_.clear();
         }
+        auto launchPad = std::make_shared<DependencyCandidate>(*launchPads_.begin());
+        launchPads_.erase(launchPads_.begin());
+        launchPadIndex_.remove(*launchPad->vertical_);
 
         if (isImpliedByMinDep(launchPad->vertical_, globalVisitees_)
             || (localVisitees != nullptr && isImpliedByMinDep(launchPad->vertical_, localVisitees))) {
@@ -45,14 +46,18 @@ std::shared_ptr<DependencyCandidate> SearchSpace::pollLaunchPad(
         auto supersetEntries = globalVisitees_->getSupersetEntries(*launchPad->vertical_);
         if (localVisitees != nullptr) {
             auto localSupersetEntries = localVisitees->getSupersetEntries(*launchPad->vertical_);
-            auto endIterator = std::remove_if(localSupersetEntries.begin(), localSupersetEntries.end(), [](auto entry) { return entry.second->isPruningSubsets(); });
-            std::for_each(localSupersetEntries.begin(), localSupersetEntries.end(), [&supersetEntries](auto entry) { supersetEntries.push_back(entry); });
+            auto endIterator = std::remove_if(localSupersetEntries.begin(), localSupersetEntries.end(), [](auto entry) { return !entry.second->isPruningSubsets(); });
+
+            std::for_each(localSupersetEntries.begin(), endIterator, [&supersetEntries](auto entry) { supersetEntries.push_back(entry); });
         }
         if (supersetEntries.empty()) return launchPad;
 
         std::list<std::shared_ptr<Vertical>> supersetVerticals;
-        std::transform(supersetEntries.begin(), supersetEntries.end(), supersetVerticals.begin(),
-                [](auto entry) {return std::make_shared<Vertical>(entry.first); });
+        //std::transform(supersetEntries.begin(), supersetEntries.end(), supersetVerticals.begin(),
+        //        [](auto entry) {return std::make_shared<Vertical>(entry.first); });
+        for (auto& entry : supersetEntries) {
+            supersetVerticals.push_back(std::make_shared<Vertical>(entry.first));
+        }
         escapeLaunchPad(launchPad->vertical_, std::move(supersetVerticals), localVisitees);
         //continue;
 
@@ -65,6 +70,7 @@ void SearchSpace::escapeLaunchPad(std::shared_ptr<Vertical> launchPad,
                                   std::list<std::shared_ptr<Vertical>>&& pruningSupersets,
                                   std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees) {
     // TODO: list<не shared_ptr>, чтобы не создавать новые поинтеры? Мб создать новый лист list<Vertical>
+    // на второй итерации тут третий элемент какой-то неинициализированный - чекай, откуда он взялся.
     std::transform(pruningSupersets.begin(), pruningSupersets.end(), pruningSupersets.begin(),
             [this](auto superset) { return std::make_shared<Vertical>(superset->invert().without(strategy_->getIrrelevantColumns())); } );
 
@@ -75,7 +81,7 @@ void SearchSpace::escapeLaunchPad(std::shared_ptr<Vertical> launchPad,
 
         Vertical launchPadCandidate = launchPad->Union(hittingSetCandidate);
 
-        // TODO: после создания такого поинтера может произойти непреднамеренное удаление объекта при удалении поинтера?
+        // после создания такого поинтера может произойти непреднамеренное удаление объекта при удалении поинтера? - нет, тк новый создаётся
         auto launchPadCandidate_ptr = std::make_shared<Vertical>(launchPadCandidate);
         if ((localVisitees == nullptr && isImpliedByMinDep(launchPadCandidate_ptr, localVisitees))
             || isImpliedByMinDep(launchPadCandidate_ptr, globalVisitees_)) {
@@ -134,7 +140,7 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad,
             // TODO: getError()?
             error = traversalCandidate.error_.get();
 
-            bool canBeDependency = error <= strategy_->maxDependencyError_;
+            bool canBeDependency = *error <= strategy_->maxDependencyError_;
             localVisitees->put(*traversalCandidate.vertical_, std::make_shared<VerticalInfo>(
                     canBeDependency,
                     false,
@@ -159,7 +165,7 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad,
                         *error
                         ));
 
-                if (error <= strategy_->maxDependencyError_) break;
+                if (*error <= strategy_->maxDependencyError_) break;
 
                 if (strategy_->shouldResample(traversalCandidate.vertical_, sampleBoost_)) {
                     context_->createFocusedSample(traversalCandidate.vertical_, sampleBoost_);
@@ -210,7 +216,7 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad,
         double errorDiff = *error - traversalCandidate.error_.getMean();
     }
 
-    if (error <= strategy_->maxDependencyError_) {
+    if (*error <= strategy_->maxDependencyError_) {
         trickleDown(traversalCandidate.vertical_, *error, localVisitees);
 
         if (recursionDepth_ == 0) {
@@ -251,6 +257,8 @@ void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPea
     std::unordered_set<Vertical> allegedNonDeps;
 
     while (!peaks.empty()) {
+        // пока ситуация такая: при спуске из АС правильно считает C за не-ФЗ, АС за ФЗ, но не выходит из этого цикла,
+        // т.к. не убирает АС: subsetDeps - пусто (должно ли оно быть пустым?)
         auto peak = peaks.front();
 
         auto subsetDeps = getSubsetDeps(peak->vertical_, allegedMinDeps);
@@ -270,7 +278,7 @@ void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPea
 
             for (auto& escapedPeakVertical : escapedPeakVerticals) {
                 if (escapedPeakVertical->getArity() > 0
-                        && allegedNonDeps.find(*escapedPeakVertical) != allegedNonDeps.end()) {
+                        && allegedNonDeps.find(*escapedPeakVertical) == allegedNonDeps.end()) {
                     // TODO: escapedPeakVertical, [](Vertical* v) {} ?
                     //auto escapedPeakVertical_ptr = std::make_shared<Vertical>(escapedPeakVertical);
                     auto escapedPeak = strategy_->createDependencyCandidate(escapedPeakVertical);
@@ -323,11 +331,11 @@ void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPea
     if (auto allegedMinDepsKeySet = allegedMinDeps->keySet();
             !std::all_of(allegedMinDepsKeySet.begin(), allegedMinDepsKeySet.end(),
                 [mainPeak](auto vertical) -> bool { return mainPeak->contains(*vertical); })) {
-        throw std::exception();
+        throw std::runtime_error("Main peak should contain all alleged min dependencies");
     }
     if (!std::all_of(allegedMaxNonDeps.begin(), allegedMaxNonDeps.end(),
                      [mainPeak](auto vertical) -> bool { return mainPeak->contains(*vertical); })) {
-        throw std::exception();
+        throw std::runtime_error("Main peak should contain all alleged max non-dependencies");
     }
 
     for (auto allegedMaxNonDep : allegedMaxNonDeps) {
@@ -409,8 +417,8 @@ SearchSpace::trickleDownFrom(DependencyCandidate &minDepCandidate, std::shared_p
                              std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees,
                              std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> globalVisitees,
                              double boostFactor) {
-    if (minDepCandidate.error_.getMin() <= strategy->maxDependencyError_)
-        throw std::exception();
+    if (minDepCandidate.error_.getMin() > strategy->maxDependencyError_)
+        throw std::runtime_error("Error in trickleDownFrom: minDepCandidate's error should be <= maxError");
 
     bool areAllParentsKnownNonDeps = true;
     if (minDepCandidate.vertical_->getArity() > 1) {
@@ -443,7 +451,11 @@ SearchSpace::trickleDownFrom(DependencyCandidate &minDepCandidate, std::shared_p
                         allegedNonDeps.insert(*parentCandidate->vertical_);
                         areAllParentsKnownNonDeps = false;
                     }
-                } while (parentCandidate != nullptr);
+                    if (!parentCandidates.empty()) {
+                        parentCandidate = parentCandidates.top();
+                        parentCandidates.pop();
+                    }
+                } while (!parentCandidates.empty());
                 break;
             }
 
@@ -510,10 +522,13 @@ std::list<std::shared_ptr<Vertical>> SearchSpace::getSubsetDeps(std::shared_ptr<
 
     auto subsetEntries = verticalInfos->getSubsetEntries(*vertical);
     auto subsetEntriesEnd = std::remove_if(subsetEntries.begin(), subsetEntries.end(),
-            [](auto& entry){ return entry.second->isDependency_;});
+            [](auto& entry){ return !entry.second->isDependency_;});
     std::list<std::shared_ptr<Vertical>> subsetDeps;
-    std::transform(subsetEntries.begin(), subsetEntriesEnd, subsetDeps.begin(),
-            [](auto& entry){ return std::make_shared<Vertical>(entry.first); });
+
+    std::transform(subsetEntries.begin(), subsetEntriesEnd, std::inserter(subsetDeps, subsetDeps.begin()),
+            [](auto& entry){
+        return std::make_shared<Vertical>(entry.first);
+    });
 
     return subsetDeps;
 }

@@ -23,7 +23,6 @@ using boost::dynamic_bitset, std::string, std::vector;
 class RelationalSchema : public std::enable_shared_from_this<RelationalSchema> {
 private:
     RelationalSchema(string name, bool isNullEqNull);
-    void init();
     vector<std::shared_ptr<Column>> columns;
     string name;
     bool isNullEqNull;
@@ -31,6 +30,7 @@ private:
 public:
     std::shared_ptr<Vertical> emptyVertical;
 
+    void init();
     static std::shared_ptr<RelationalSchema> create(string name, bool isNullEqNull);
     string getName();
     vector<std::shared_ptr<Column>> getColumns();

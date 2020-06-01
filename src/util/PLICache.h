@@ -43,5 +43,7 @@ public:
     std::shared_ptr<PositionListIndex> get(Vertical const& vertical);
     std::shared_ptr<PositionListIndex> getOrCreateFor(Vertical const& vertical, ProfilingContext const& profilingContext);
 
+    void setMaximumEntropy(double e) { maximumEntropy_ = e; }
+
     size_t size() const;
 };
