@@ -57,7 +57,7 @@ double FdG1Strategy::calculateError(std::shared_ptr<Vertical> lhs) {
     double error = 0;
     if (lhs->getArity() == 0) {
         auto rhsPli = context_->pliCache_->get(static_cast<Vertical>(*rhs_));
-        if (rhsPli == nullptr) throw std::exception();
+        if (rhsPli == nullptr) throw std::runtime_error("Couldn't get rhsPLI from PLICache while calculating FD error");
         error = calculateG1(rhsPli->getNip());
     } else {
         auto lhsPli = context_->pliCache_->getOrCreateFor(*lhs, *context_);

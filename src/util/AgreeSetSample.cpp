@@ -34,8 +34,8 @@ AgreeSetSample::getNumAgreeSupersetsExt(std::shared_ptr<Vertical> agreement, std
 }
 
 double AgreeSetSample::estimateAgreements(std::shared_ptr<Vertical> agreement) {
-    if (agreement->contains(*this->focus)) {
-        throw std::exception();
+    if (!agreement->contains(*this->focus)) {
+        throw std::runtime_error("An agreement in estimateAgreemnts should contain the focus");
     }
 
     if (populationSize == 0) {
@@ -46,7 +46,7 @@ double AgreeSetSample::estimateAgreements(std::shared_ptr<Vertical> agreement) {
 
 ConfidenceInterval AgreeSetSample::estimateAgreements(std::shared_ptr<Vertical> agreement, double confidence) {
     if (!agreement->contains(*this->focus)) {
-        throw std::runtime_error("An agreement in estimateAgreemnts should contain the focus");
+        throw std::runtime_error("An agreement in estimateAgreemnts with confidence should contain the focus");
     }
     if (populationSize == 0) {
         return ConfidenceInterval(0, 0, 0);

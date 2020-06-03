@@ -82,7 +82,7 @@ std::shared_ptr<typename VerticalMap<Value>::SetTrie> VerticalMap<Value>::SetTri
         return nullptr;
     }
     if (index < offset_ || index >= dimension_) {
-        throw std::exception();
+        throw std::runtime_error("Error in getSubtrie: index must be in [offset_; dimension_)");
     }
     return subtries_[index - offset_];
 
@@ -338,7 +338,7 @@ VerticalMap<Value>::getAnySupersetEntry(Vertical const &vertical, std::function<
 template<class Value>
 std::vector<typename VerticalMap<Value>::Entry> VerticalMap<Value>::getRestrictedSupersetEntries(Vertical const &vertical, Vertical const &exclusion) {
     if (vertical.getColumnIndices().intersects(exclusion.getColumnIndices()))
-        throw std::exception();
+        throw std::runtime_error("Error in getRestrictedSupersetEntries: a vertical shouldn't intersect with a restriction");
 
     std::vector<typename VerticalMap<Value>::Entry> entries;
     std::shared_ptr<RelationalSchema> relation = relation_.lock();

@@ -1,3 +1,5 @@
+#include <chrono>
+
 #include "core/FdG1Strategy.h"
 #include "core/KeyG1Strategy.h"
 #include "algorithms/Pyro.h"
@@ -14,6 +16,8 @@ void Pyro::execute() {
             evictionMethod_,
             cachingMethodValue
             );
+
+    auto startTime = std::chrono::system_clock::now();
 
     std::function<bool(DependencyCandidate const&, DependencyCandidate const&)> launchPadOrder;
     if (configuration_.launchPadOrder == "arity") {
@@ -52,6 +56,9 @@ void Pyro::execute() {
         searchSpace->ensureInitialized();
         searchSpace->discover();
     }
+    auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
+
+    std::cout << "Time: " << elapsed_milliseconds.count() << " milliseconds" << std::endl;
 }
 
 Pyro::Pyro(fs::path const &path) : inputGenerator_(path) {
