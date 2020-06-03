@@ -1,3 +1,8 @@
+//
+// Created by Ilya Vologin
+// https://github.com/cupertank
+//
+
 #pragma once
 
 #include <map>

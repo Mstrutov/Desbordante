@@ -1,5 +1,6 @@
 //
-// Created by kek on 10.08.2019.
+// Created by Ilya Vologin
+// https://github.com/cupertank
 //
 
 #include <gtest/gtest.h>

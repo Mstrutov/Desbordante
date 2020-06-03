@@ -1,3 +1,8 @@
+//
+// Created by Ilya Vologin
+// https://github.com/cupertank
+//
+
 #include "model/ColumnLayoutRelationData.h"
 #include "parser/ConfigParser.h"
 

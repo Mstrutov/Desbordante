@@ -1,6 +1,8 @@
 //
-// Created by Ilya on 09.07.19.
+// Created by Ilya Vologin
+// https://github.com/cupertank
 //
+
 
 #pragma once
 
