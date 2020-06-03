@@ -238,3 +238,15 @@ bool PositionListIndex::takeProbe(int position, ColumnLayoutRelationData & relat
     }
     return true;
 }
+
+double PositionListIndex::getNep() {
+    return (double) nep;
+}
+
+long PositionListIndex::getNepAsLong() {
+    return nep;
+}
+
+int PositionListIndex::getNumNonSingletonCluster() {
+    return index.size();
+}

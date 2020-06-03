@@ -45,6 +45,7 @@ public:
     vector<int> getProbingTable();
     vector<int> getProbingTable(bool isCaching);
     deque<vector<int>> & getIndex();
+    double getNep();
     long getNepAsLong() const { return nep; }           //ADDED: getNep()
     int getNumNonSingletonCluster() const { return index.size(); }
     int getFreq() const { return freq_; }
