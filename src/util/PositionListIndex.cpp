@@ -14,6 +14,7 @@
 #include <boost/dynamic_bitset.hpp>
 
 #include "model/ColumnLayoutRelationData.h"
+#include "model/Vertical.h"
 
 using namespace std;
 
@@ -24,11 +25,13 @@ int PositionListIndex::intersectionCount = 0;
 
 // use r-value references, DO NOT copy
 PositionListIndex::PositionListIndex(deque<vector<int>> index, vector<int> nullCluster, int size, double entropy,
-                                     long nep, unsigned int relationSize, unsigned int originalRelationSize):
+                                     long nep, unsigned int relationSize, unsigned int originalRelationSize, double invertedEntropy, double giniImpurity):
                                      index(std::move(index)),
                                      nullCluster(std::move(nullCluster)),
                                      size(size),
                                      entropy(entropy),
+                                     invertedEntropy(invertedEntropy),
+                                     giniImpurity(giniImpurity),
                                      nep(nep),
                                      relationSize(relationSize),
                                      originalRelationSize(originalRelationSize),
@@ -42,30 +45,43 @@ shared_ptr<PositionListIndex> PositionListIndex::createFor(vector<int>& data, bo
     }
 
     vector<int> nullCluster;
-    if (isNullEqNull){
+    if (index.count(RelationData::nullValueId) != 0) {
         nullCluster = index[RelationData::nullValueId];
-    } else {
-        index.erase(RelationData::nullValueId);
+    }
+    if (!isNullEqNull){
+        index.erase(RelationData::nullValueId); // move?
     }
 
     double keyGap = 0.0;
+    double invEnt = 0;
+    double giniGap = 0;
     long nep = 0;
     int size = 0;
     deque<vector<int>> clusters;
 
     for (auto & iter : index){
-        if (iter.second.size() >= 2){
-            keyGap += iter.second.size() * log(iter.second.size());
-            nep += calculateNep(iter.second.size());
-            size += iter.second.size();
-
-            clusters.emplace_back(std::move(iter.second));
+        if (iter.second.size() == 1){
+            giniGap += pow(1 / static_cast<double>(data.size()), 2);
+            continue;
         }
+        keyGap += iter.second.size() * log(iter.second.size());
+        nep += calculateNep(iter.second.size());
+        size += iter.second.size();
+        invEnt += -(1 - iter.second.size() / static_cast<double>(data.size()))
+                * log(1 - (iter.second.size() / static_cast<double>(data.size())));
+        giniGap += pow(iter.second.size() / static_cast<double>(data.size()), 2);
+
+        clusters.emplace_back(std::move(iter.second));
     }
     double entropy = log(data.size()) - keyGap / data.size();
 
+    double giniImpurity = 1 - giniGap;
+    if (giniImpurity == 0) {
+        invEnt = 0;
+    }
+
     sortClusters(clusters);
-    auto pli = shared_ptr<PositionListIndex>(new PositionListIndex(clusters, nullCluster, size, entropy, nep, data.size(), data.size()));
+    auto pli = shared_ptr<PositionListIndex>(new PositionListIndex(clusters, nullCluster, size, entropy, nep, data.size(), data.size(), invEnt, giniImpurity));
     return pli;
 }
 
@@ -221,4 +237,16 @@ bool PositionListIndex::takeProbe(int position, ColumnLayoutRelationData & relat
         probe.push_back(value);
     }
     return true;
+}
+
+double PositionListIndex::getNep() {
+    return (double) nep;
+}
+
+long PositionListIndex::getNepAsLong() {
+    return nep;
+}
+
+int PositionListIndex::getNumNonSingletonCluster() {
+    return index.size();
 }

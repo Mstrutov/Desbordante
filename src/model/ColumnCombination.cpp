@@ -2,11 +2,11 @@
 // Created by kek on 16.08.2019.
 //
 
-#include "model/ColumnCombination.h"
+//#include "model/ColumnCombination.h"
 
-#include "model/RelationalSchema.h"
+//#include "model/RelationalSchema.h"
 
-ColumnCombination::ColumnCombination(dynamic_bitset<> columnIndices, shared_ptr<RelationalSchema> schema):
+/*ColumnCombination::ColumnCombination(dynamic_bitset<> columnIndices, shared_ptr<RelationalSchema> schema):
     Vertical(){
     this->columnIndices = std::move(columnIndices);
     this->schema = schema;
@@ -22,4 +22,4 @@ string ColumnCombination::toString() {
         separator = ", ";
     }
     return ans;
-}
+}*/

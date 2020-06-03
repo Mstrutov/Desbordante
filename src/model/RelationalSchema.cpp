@@ -2,11 +2,11 @@
 // Created by kek on 17.07.19.
 //
 
-#include "model/RelationalSchema.h"
-
 #include <utility>
 
-#include "model/ColumnCombination.h"
+#include "model/RelationalSchema.h"
+#include "model/Vertical.h"
+#include "util/VerticalMap.h"
 
 using namespace std;
 
@@ -33,10 +33,9 @@ Vertical RelationalSchema::getVertical(dynamic_bitset<> indices) {
     if (indices.empty()) return *(this->emptyVertical);
 
     if (indices.count() == 1){
-        return *(std::static_pointer_cast<Vertical>(this->columns[indices.find_first()]));          //TODO: TEMPORAL KOSTYL'
+        return static_cast<Vertical>(*this->columns[indices.find_first()]);          //TODO: TEMPORAL KOSTYL'
     }
-
-    return ColumnCombination(indices, shared_from_this());
+    return Vertical(shared_from_this(), indices);
 }
 
 string RelationalSchema::getName() { return name; }
@@ -71,3 +70,51 @@ int RelationalSchema::getNumColumns() {
 
 bool RelationalSchema::isNullEqualNull() { return isNullEqNull; }
 
+// TODO: critical part - consider optimization
+// TODO: list -> vector as list doesn't have RAIterators therefore can't be sorted
+std::unordered_set<std::shared_ptr<Vertical>> RelationalSchema::calculateHittingSet(std::list<std::shared_ptr<Vertical>>&& verticals, boost::optional<std::function<bool (Vertical const&)>> pruningFunction) {
+    using std::shared_ptr;
+    //auto arityComparator = [](auto vertical1, auto vertical2) { return vertical1->getArity() < vertical2->getArity(); };
+    verticals.sort([](auto vertical1, auto vertical2) { return vertical1->getArity() < vertical2->getArity(); });
+    VerticalMap<shared_ptr<Vertical>> consolidatedVerticals(shared_from_this());
+
+    VerticalMap<shared_ptr<Vertical>> hittingSet(shared_from_this());
+    hittingSet.put(*emptyVertical, emptyVertical);
+
+    for (auto vertical_ptr : verticals) {
+        if (consolidatedVerticals.getAnySubsetEntry(*vertical_ptr).second != nullptr) {
+            continue;
+        }
+        consolidatedVerticals.put(*vertical_ptr, vertical_ptr);
+
+        auto invalidHittingSetMembers = hittingSet.getSubsetKeys(vertical_ptr->invert());
+        std::sort(invalidHittingSetMembers.begin(), invalidHittingSetMembers.end(),
+                [](auto vertical1, auto vertical2) { return vertical1.getArity() < vertical2.getArity(); });
+
+        for (auto& invalidHittingSetMember : invalidHittingSetMembers) {
+            hittingSet.remove(invalidHittingSetMember);
+        }
+
+        for (auto& invalidMember : invalidHittingSetMembers) {
+            for (size_t correctiveColumnIndex = vertical_ptr->getColumnIndices().find_first();
+                 correctiveColumnIndex != boost::dynamic_bitset<>::npos;
+                 correctiveColumnIndex = vertical_ptr->getColumnIndices().find_next(correctiveColumnIndex)) {
+
+                auto correctiveColumn = *getColumn(correctiveColumnIndex);
+                Vertical correctedMember = invalidMember.Union(static_cast<Vertical>(correctiveColumn));
+
+                if (hittingSet.getAnySubsetEntry(correctedMember).second == nullptr) {
+                    if (pruningFunction) {
+                        bool isPruned = (*pruningFunction)(correctedMember);
+                        if (isPruned) {
+                            continue;
+                        }
+                    }
+                    hittingSet.put(correctedMember, std::make_shared<Vertical>(correctedMember));
+                }
+            }
+        }
+        if (hittingSet.isEmpty()) break;
+    }
+    return hittingSet.keySet();
+}

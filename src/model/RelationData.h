@@ -14,7 +14,7 @@ using std::vector;
 
 class RelationData {
 public:
-    //static int singletonValueId;
+    static const int singletonValueId;
 
     //c++17: inline initialization || constexpr
     static const int nullValueId;

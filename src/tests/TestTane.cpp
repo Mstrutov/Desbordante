@@ -25,7 +25,7 @@ TEST(TaneTester, first) {
     //CSVParser csvParser(path + "/TestTane.csv");
     //cout << path;
     vector<long> results;
-    Tane algoInstance(path + "/neighbors100k.csv");
+    Tane algoInstance(path + "/CIPublicHighway50k.csv");
     //Tane algoInstance(path + "/CIPublicHighway50k.csv");
     results.push_back(algoInstance.execute());
     /*for (int i = 0; i < 10; i++) {

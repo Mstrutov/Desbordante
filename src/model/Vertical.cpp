@@ -7,16 +7,19 @@
 #include <iostream>
 #include <utility>
 
-#include "model/RelationalSchema.h"
 
 
 using namespace std;
 
-Vertical::Vertical(shared_ptr<RelationalSchema>& relSchema, int indices) :
-        columnIndices(indices),
-        schema(relSchema) {}
+Vertical::Vertical(shared_ptr<RelationalSchema> relSchema, dynamic_bitset<> const & indices) :
+    columnIndices(indices),
+    schema(relSchema) {}
 
-        //
+Vertical::Vertical(Column & col) : schema(col.getSchema()){
+    columnIndices = dynamic_bitset<>(schema.lock()->getNumColumns());
+    columnIndices.set(col.getIndex());
+}
+
 Vertical::Vertical(Vertical &&other) noexcept :
     columnIndices(std::move(other.columnIndices)),
     schema(std::move(other.schema)) {
@@ -28,7 +31,7 @@ Vertical& Vertical::operator=(Vertical &&rhs) noexcept {
     return *this;
 }
 
-dynamic_bitset<> Vertical::getColumnIndices() { return columnIndices; }
+dynamic_bitset<> Vertical::getColumnIndices() const { return columnIndices; }
 
 shared_ptr<RelationalSchema> Vertical::getSchema() { return schema.lock(); }
 
@@ -37,7 +40,7 @@ shared_ptr<RelationalSchema> Vertical::getSchema() { return schema.lock(); }
 bool Vertical::contains(Vertical &that) {
     dynamic_bitset<>& thisIndices = columnIndices;
     dynamic_bitset<>& thatIndices = that.columnIndices;
-    if(thisIndices.count() != thatIndices.count()) return false;
+    if(thisIndices.size() < thatIndices.size()) return false;
     for (unsigned long columnIndex = thatIndices.find_first(); columnIndex < thatIndices.size(); columnIndex = thatIndices.find_next(columnIndex)){
         if (!(thisIndices[columnIndex])) return false;
     }
@@ -50,7 +53,7 @@ bool Vertical::intersects(Vertical &that) {
     return thisIndices.intersects(thatIndices);
 }
 
-Vertical Vertical::Union(Vertical &that) {
+Vertical Vertical::Union(Vertical const &that) {
     dynamic_bitset<> retainedColumnIndices(columnIndices);
     retainedColumnIndices |= that.columnIndices;
     return schema.lock()->getVertical(retainedColumnIndices);
@@ -63,7 +66,7 @@ Vertical Vertical::project(Vertical &that) {
 }
 
 //TODO: check
-Vertical Vertical::without(Vertical &that) {
+Vertical Vertical::without(Vertical const & that) const {
     dynamic_bitset<> retainedColumnIndices(columnIndices);
     retainedColumnIndices &= ~that.columnIndices;
     //retainedColumnIndices = ~retainedColumnIndices;
@@ -86,17 +89,17 @@ Vertical Vertical::invert(Vertical &scope) {
 }
 
 Vertical Vertical::emptyVertical(shared_ptr<RelationalSchema> relSchema) {
-    return Vertical(relSchema, 0);
+    return Vertical(relSchema, dynamic_bitset<>(relSchema->getNumColumns()));
 }
 
-int Vertical::getArity() {
+int Vertical::getArity() const {
     return columnIndices.count();
 }
 
-vector<shared_ptr<Vertical>> Vertical::getColumns() {
+vector<shared_ptr<Column>> Vertical::getColumns() const {
     //dynamic_bitset<> returnColumnIndices = getColumnIndices();
     auto relation = schema.lock();
-    vector<shared_ptr<Vertical>> columns;
+    vector<shared_ptr<Column>> columns;
     for (int index = columnIndices.find_first();
          index != -1;//dynamic_bitset<>::npos;
          index = columnIndices.find_next(index)) {
@@ -105,7 +108,7 @@ vector<shared_ptr<Vertical>> Vertical::getColumns() {
     return columns;
 }
 
-string Vertical::toString() {
+string Vertical::toString() const {
     string result = "[";
 
     if ((int)columnIndices.find_first() == -1)
@@ -120,4 +123,18 @@ string Vertical::toString() {
     }
     result[result.size() - 1] = ']';
     return result;
+}
+
+vector<shared_ptr<Vertical>> Vertical::getParents() {
+    if (getArity() < 2) return vector<shared_ptr<Vertical>>();
+    vector<shared_ptr<Vertical>> parents(getArity());
+    int i = 0;
+    for (size_t columnIndex = columnIndices.find_first();
+         columnIndex != dynamic_bitset<>::npos;
+         columnIndex = columnIndices.find_next(columnIndex)) {
+        columnIndices.reset(columnIndex);
+        parents[i++] = std::make_shared<Vertical>(getSchema()->getVertical(columnIndices));
+        columnIndices.set(columnIndex);
+    }
+    return parents;
 }

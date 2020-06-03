@@ -64,9 +64,9 @@ void LatticeLevel::generateNextLevel(vector<shared_ptr<LatticeLevel>>& levels) {
         continue;
       }
 
-      ColumnCombination tmp(vertex1->getVertical().Union(vertex2->getVertical()));
+      Vertical tmp(vertex1->getVertical().Union(vertex2->getVertical()));
      // shared_ptr<ColumnCombination> childColumns = make_shared<ColumnCombination>(ColumnCombination(vertex1->getVertical().Union(vertex2->getVertical())));
-      shared_ptr<ColumnCombination> childColumns = make_shared<ColumnCombination>(tmp);
+      shared_ptr<Vertical> childColumns = make_shared<Vertical>(tmp);
 
         //TODO: check out if this cast is OK - had to add conversion constructor to CC
       shared_ptr<LatticeVertex> childVertex = make_shared<LatticeVertex>(*childColumns);

@@ -8,24 +8,28 @@
 
 #include <boost/dynamic_bitset.hpp>
 
-#include "model/Vertical.h"
+#include "model/RelationalSchema.h"
 
 using std::string, boost::dynamic_bitset;
 
-class RelationalSchema;
-
-class Column : public Vertical {
+class Column {
 friend RelationalSchema;
 
-protected:
+private:
     string name;
     int index;
+    std::weak_ptr<RelationalSchema> schema;
 
 public:
-    Column(shared_ptr<RelationalSchema> schema, string name, int index);
-    Column(shared_ptr<RelationalSchema> schema, string name, int index, int size);       //for TANE implementation (needed: each two vertices have equal bitset sizes
-    int getIndex();
-    string getName();
-    string toString() override;
+    Column(std::shared_ptr<RelationalSchema> schema, const string& name, int index) :
+            name(std::move(name)),
+            index(index),
+            schema(schema) {}
+    explicit operator Vertical() const;
+    int getIndex() const;
+    string getName() const;
+    std::shared_ptr<RelationalSchema> getSchema() const;        // TODO: straight up bad: const-ness may be violated!
+    string toString() const;
+    explicit operator std::string() const { return toString(); }
     bool operator==(const Column& rhs);
 };

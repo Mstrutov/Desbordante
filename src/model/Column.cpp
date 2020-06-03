@@ -2,37 +2,33 @@
 // Created by kek on 18.07.19.
 //
 
-#include "model/Column.h"
 
 #include <utility>
 
-#include "model/RelationalSchema.h"
+#include "model/Column.h"
+#include "model/Vertical.h"
 
 
 using namespace std;
 
-Column::Column(shared_ptr<RelationalSchema> schema, string name, int index):
-    Vertical(schema, schema->getNumColumns()),            //TODO: was: (schema, index + 1) - had problems with intersecting two differently sized bitsets
-    name(std::move(name)),
-    index(index){
-    columnIndices.set(index);
-}
 
-Column::Column(shared_ptr<RelationalSchema> schema, string name, int index, int size):
-        Vertical(schema, size),
-        name(std::move(name)),
-        index(index){
-    columnIndices.set(index);
-}
+int Column::getIndex() const { return index;}
+
+string Column::getName() const { return name; }
 
 
-int Column::getIndex() { return index;}
 
-string Column::getName() { return name; }
-
-string Column::toString() { return "[" + name + "]";}
+string Column::toString() const { return "[" + name + "]";}
 
 bool Column::operator==(const Column &rhs) {
     if (this == &rhs) return true;
     return index == rhs.index && schema.lock().get() == rhs.schema.lock().get();
+}
+
+std::shared_ptr<RelationalSchema> Column::getSchema() const {
+    return schema.lock();
+}
+
+Column::operator Vertical() const {
+    return Vertical(*this);
 }

@@ -12,17 +12,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="fb80a5c4-b662-4c0d-8645-0d9d54369a0b" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/customTargets.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/customTargets.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/clean.sh" beforeDir="false" afterPath="$PROJECT_DIR$/clean.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/algorithms/TaneX.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms/TaneX.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/maino.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/model/Vertical.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/Vertical.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/model/Vertical.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/Vertical.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/tests/Test1.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/tests/Test1.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/tests/TestTane.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/tests/TestTane.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/util/LatticeVertex.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/util/LatticeVertex.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/DependencyStrategy.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/DependencyStrategy.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/SearchSpace.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/SearchSpace.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -65,7 +57,7 @@
     </option>
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="Parser" />
+        <entry key="$PROJECT_DIR$" value="TANE" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -100,19 +92,19 @@
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
-    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
+    <property name="settings.editor.selected.configurable" value="fileTemplates" />
   </component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/tests" />
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/cmake-build-debug" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/algorithms" />
       <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/src" />
       <recent name="$PROJECT_DIR$/model" />
-    </key>
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/src/tests" />
-      <recent name="$PROJECT_DIR$" />
-      <recent name="$PROJECT_DIR$/cmake-build-debug" />
     </key>
   </component>
   <component name="RunManager" selected="CMake Application.cmake">
@@ -436,7 +428,9 @@
     <MESSAGE value="Багфикс; тесты для Тейна" />
     <MESSAGE value="Refactoring" />
     <MESSAGE value="Tane: fixed and tested." />
-    <option name="LAST_COMMIT_MESSAGE" value="Tane: fixed and tested." />
+    <MESSAGE value="Pyro's data structures: AgreeSetSample, PliCache, SetTrie, VerticalMap" />
+    <MESSAGE value="Pyro's profiling base: Dependency strategies, ProfilingContext; implementing SearchSpace" />
+    <option name="LAST_COMMIT_MESSAGE" value="Pyro's profiling base: Dependency strategies, ProfilingContext; implementing SearchSpace" />
   </component>
   <component name="WindowStateProjectService">
     <state x="667" y="276" width="642" height="553" key="#clean" timestamp="1582451274165">
@@ -451,6 +445,10 @@
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
     <state x="320" y="252" width="411" height="601" key="#com.intellij.ide.util.MemberChooser/67.27.1853.1053@67.27.1853.1053" timestamp="1583149720216" />
+    <state x="556" y="96" width="1163" height="912" key="CommitChangelistDialog2" timestamp="1589716130260">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state x="556" y="96" width="1163" height="912" key="CommitChangelistDialog2/67.27.1853.1053@67.27.1853.1053" timestamp="1589716130260" />
     <state x="776" y="310" width="424" height="484" key="FileChooserDialogImpl" timestamp="1585841931032">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
@@ -459,22 +457,22 @@
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
     <state x="827" y="447" width="322" height="210" key="Github.ShareDialog/67.27.1853.1053@67.27.1853.1053" timestamp="1586443446336" />
-    <state width="1807" height="344" key="GridCell.Tab.0.bottom" timestamp="1582873066706">
+    <state width="1807" height="277" key="GridCell.Tab.0.bottom" timestamp="1588686498711">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
-    <state width="1807" height="344" key="GridCell.Tab.0.bottom/67.27.1853.1053@67.27.1853.1053" timestamp="1582873066706" />
-    <state width="1807" height="344" key="GridCell.Tab.0.center" timestamp="1582873066706">
+    <state width="1807" height="277" key="GridCell.Tab.0.bottom/67.27.1853.1053@67.27.1853.1053" timestamp="1588686498711" />
+    <state width="1807" height="277" key="GridCell.Tab.0.center" timestamp="1588686498711">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
-    <state width="1807" height="344" key="GridCell.Tab.0.center/67.27.1853.1053@67.27.1853.1053" timestamp="1582873066706" />
-    <state width="1807" height="344" key="GridCell.Tab.0.left" timestamp="1582873066706">
+    <state width="1807" height="277" key="GridCell.Tab.0.center/67.27.1853.1053@67.27.1853.1053" timestamp="1588686498711" />
+    <state width="1807" height="277" key="GridCell.Tab.0.left" timestamp="1588686498710">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
-    <state width="1807" height="344" key="GridCell.Tab.0.left/67.27.1853.1053@67.27.1853.1053" timestamp="1582873066706" />
-    <state width="1807" height="344" key="GridCell.Tab.0.right" timestamp="1582873066706">
+    <state width="1807" height="277" key="GridCell.Tab.0.left/67.27.1853.1053@67.27.1853.1053" timestamp="1588686498710" />
+    <state width="1807" height="277" key="GridCell.Tab.0.right" timestamp="1588686498711">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
-    <state width="1807" height="344" key="GridCell.Tab.0.right/67.27.1853.1053@67.27.1853.1053" timestamp="1582873066706" />
+    <state width="1807" height="277" key="GridCell.Tab.0.right/67.27.1853.1053@67.27.1853.1053" timestamp="1588686498711" />
     <state width="1807" height="344" key="GridCell.Tab.1.bottom" timestamp="1582873066634">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
@@ -491,30 +489,38 @@
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
     <state width="1807" height="344" key="GridCell.Tab.1.right/67.27.1853.1053@67.27.1853.1053" timestamp="1582873066634" />
-    <state x="853" y="167" key="SettingsEditor" timestamp="1583149371533">
+    <state x="853" y="167" key="SettingsEditor" timestamp="1588581908078">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
-    <state x="853" y="167" key="SettingsEditor/67.27.1853.1053@67.27.1853.1053" timestamp="1583149371533" />
-    <state x="588" y="288" width="800" height="528" key="Vcs.Push.Dialog.v2" timestamp="1586443905405">
+    <state x="853" y="167" key="SettingsEditor/67.27.1853.1053@67.27.1853.1053" timestamp="1588581908078" />
+    <state x="588" y="288" width="800" height="528" key="Vcs.Push.Dialog.v2" timestamp="1590310531180">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
-    <state x="588" y="288" width="800" height="528" key="Vcs.Push.Dialog.v2/67.27.1853.1053@67.27.1853.1053" timestamp="1586443905405" />
-    <state x="644" y="336" key="com.intellij.ide.util.TipDialog" timestamp="1586443859942">
+    <state x="588" y="288" width="800" height="528" key="Vcs.Push.Dialog.v2/67.27.1853.1053@67.27.1853.1053" timestamp="1590310531180" />
+    <state x="644" y="336" key="com.intellij.ide.util.TipDialog" timestamp="1590308639824">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
-    <state x="644" y="336" key="com.intellij.ide.util.TipDialog/67.27.1853.1053@67.27.1853.1053" timestamp="1586443859942" />
-    <state x="715" y="171" width="537" height="674" key="git4idea.branch.GitSmartOperationDialog" timestamp="1581621617708">
+    <state x="644" y="336" key="com.intellij.ide.util.TipDialog/67.27.1853.1053@67.27.1853.1053" timestamp="1590308639824" />
+    <state x="728" y="445" width="454" height="160" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1588500475788">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
-    <state x="715" y="171" width="537" height="674" key="git4idea.branch.GitSmartOperationDialog/67.27.1853.1053@67.27.1853.1053" timestamp="1581621617708" />
+    <state x="728" y="445" width="454" height="160" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/67.27.1853.1053@67.27.1853.1053" timestamp="1588500475788" />
     <state x="763" y="419" width="450" height="267" key="git4idea.rebase.GitRebaseDialog" timestamp="1586443266329">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
     <state x="763" y="419" width="450" height="267" key="git4idea.rebase.GitRebaseDialog/67.27.1853.1053@67.27.1853.1053" timestamp="1586443266329" />
-    <state x="414" y="210" width="672" height="678" key="search.everywhere.popup" timestamp="1583149785674">
+    <state x="704" y="168" width="501" height="713" key="refactoring.ChangeSignatureDialog" timestamp="1588496724032">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
-    <state x="414" y="210" width="672" height="678" key="search.everywhere.popup/67.27.1853.1053@67.27.1853.1053" timestamp="1583149785674" />
+    <state x="704" y="168" width="501" height="713" key="refactoring.ChangeSignatureDialog/67.27.1853.1053@67.27.1853.1053" timestamp="1588496724032" />
+    <state x="657" y="253" width="672" height="677" key="run.anything.popup" timestamp="1589715704869">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state x="657" y="253" width="672" height="677" key="run.anything.popup/67.27.1853.1053@67.27.1853.1053" timestamp="1589715704869" />
+    <state x="414" y="210" width="672" height="678" key="search.everywhere.popup" timestamp="1589713199361">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state x="414" y="210" width="672" height="678" key="search.everywhere.popup/67.27.1853.1053@67.27.1853.1053" timestamp="1589713199361" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand>

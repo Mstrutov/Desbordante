@@ -24,6 +24,7 @@ shared_ptr<Column> ColumnData::getColumn() { return column; }
 
 shared_ptr<PositionListIndex> ColumnData::getPositionListIndex() { return positionListIndex; }
 
+//TODO: Random проверь
 void ColumnData::shuffle() {
     random_device rd;
     mt19937 random(rd());
