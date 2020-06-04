@@ -8,7 +8,7 @@
 
 using namespace std;
 
-int maino(){
+int main(){
     ConfigParser configParser("config.json");
     CSVParser parser(configParser.getInputPath());
     return 0;
