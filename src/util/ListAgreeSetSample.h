@@ -4,7 +4,7 @@
 #include <map>
 #include <utility>
 #include <vector>
-#include "util/AgreeSetSample.h"
+#include "AgreeSetSample.h"
 
 //TODO: Java long ~ C++ long long => consider replacing ints with longlongs
 class ListAgreeSetSample : public AgreeSetSample {

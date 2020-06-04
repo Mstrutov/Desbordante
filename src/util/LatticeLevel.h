@@ -5,7 +5,7 @@
 #include <map>
 #include <vector>
 
-#include "util/LatticeVertex.h"
+#include "LatticeVertex.h"
 
 class LatticeLevel{
 private:

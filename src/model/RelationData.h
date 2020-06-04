@@ -8,8 +8,8 @@
 #include <iostream>
 #include <vector>
 
-#include "model/ColumnData.h"
-#include "model/RelationalSchema.h"
+#include "ColumnData.h"
+#include "RelationalSchema.h"
 
 using std::vector;
 

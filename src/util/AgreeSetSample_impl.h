@@ -1,7 +1,7 @@
 #pragma once
 
 #include <random>
-#include "util/AgreeSetSample.h"
+#include "AgreeSetSample.h"
 //#include <utility>
 //TODO: рандом проверь
 //template<typename T, typename enable_if<is_base_of<AgreeSetSample, T>::value>::type*>

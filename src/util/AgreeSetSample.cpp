@@ -1,4 +1,4 @@
-#include "util/AgreeSetSample.h"
+#include "AgreeSetSample.h"
 
 #include <algorithm>
 #include <exception>

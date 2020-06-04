@@ -1,8 +1,8 @@
 #pragma once
 
 #include <boost/lexical_cast.hpp>
-#include "model/Column.h"
-#include "model/Vertical.h"
+#include "Column.h"
+#include "Vertical.h"
 
 class PartialKey {
 public:

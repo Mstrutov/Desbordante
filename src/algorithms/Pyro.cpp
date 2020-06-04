@@ -1,8 +1,8 @@
 #include <chrono>
 
-#include "core/FdG1Strategy.h"
-#include "core/KeyG1Strategy.h"
-#include "algorithms/Pyro.h"
+#include "FdG1Strategy.h"
+#include "KeyG1Strategy.h"
+#include "Pyro.h"
 
 void Pyro::execute() {
     auto relation = ColumnLayoutRelationData::createFrom(inputGenerator_, configuration_.isNullEqualNull);

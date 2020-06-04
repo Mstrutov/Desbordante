@@ -7,10 +7,10 @@
 
 #include <boost/dynamic_bitset.hpp>
 
-#include "model/RelationalSchema.h"
-#include "util/PositionListIndex.h"
-//#include "../model/Column.h"
-#include "../model/Vertical.h"
+#include "RelationalSchema.h"
+#include "PositionListIndex.h"
+//#include "Column.h"
+#include "Vertical.h"
 
 
 //enable_shared_from_this - if LV needs to create shared_ptr

@@ -1,7 +1,7 @@
 #include <unordered_map>
-#include "core/KeyG1Strategy.h"
-#include "core/SearchSpace.h"
-#include "util/PLICache.h"
+#include "KeyG1Strategy.h"
+#include "SearchSpace.h"
+#include "PLICache.h"
 
 double KeyG1Strategy::calculateKeyError(std::shared_ptr<PositionListIndex> pli) {
     return calculateKeyError(pli->getNepAsLong());

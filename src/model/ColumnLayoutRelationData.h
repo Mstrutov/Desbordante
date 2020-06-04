@@ -8,10 +8,10 @@
 #include <cmath>
 #include <vector>
 
-#include "model/ColumnData.h"
-#include "model/RelationalSchema.h"
-#include "model/RelationData.h"
-#include "parser/CSVParser.h"
+#include "ColumnData.h"
+#include "RelationalSchema.h"
+#include "RelationData.h"
+#include "CSVParser.h"
 
 
 using std::vector;

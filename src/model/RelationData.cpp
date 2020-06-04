@@ -2,7 +2,7 @@
 // Created by kek on 26.07.2019.
 //
 
-#include "model/RelationData.h"
+#include "RelationData.h"
 #include "../util/PositionListIndex.h"
 
 const int RelationData::nullValueId = -1;

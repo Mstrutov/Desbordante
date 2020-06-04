@@ -1,5 +1,5 @@
-#include "core/DependencyStrategy.h"
-#include "util/PLICache.h"
+#include "DependencyStrategy.h"
+#include "PLICache.h"
 
 bool DependencyStrategy::shouldResample(std::shared_ptr<Vertical> vertical, double boostFactor) {
     if (context_->configuration_.sampleSize <= 0 || vertical->getArity() < 1) return false;

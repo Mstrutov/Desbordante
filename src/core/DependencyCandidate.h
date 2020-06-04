@@ -1,7 +1,7 @@
 #pragma once
 #include <functional>
-#include "model/Vertical.h"
-#include "util/ConfidenceInterval.h"
+#include "Vertical.h"
+#include "ConfidenceInterval.h"
 
 class DependencyCandidate {
 private:

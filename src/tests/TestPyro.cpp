@@ -1,9 +1,10 @@
-#include "algorithms/Pyro.h"
+//#include "Pyro.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <iostream>
+#include "algorithms/Pyro.h"
 
 using ::testing::ContainerEq, ::testing::Eq;
 using namespace std;

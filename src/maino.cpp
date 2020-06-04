@@ -3,8 +3,8 @@
 // https://github.com/cupertank
 //
 
-#include "model/ColumnLayoutRelationData.h"
-#include "parser/ConfigParser.h"
+#include "ColumnLayoutRelationData.h"
+#include "ConfigParser.h"
 
 using namespace std;
 

@@ -8,8 +8,8 @@
 
 #include <vector>
 
-#include "model/Column.h"
-#include "util/PositionListIndex.h"
+#include "Column.h"
+#include "PositionListIndex.h"
 
 using std::vector;
 

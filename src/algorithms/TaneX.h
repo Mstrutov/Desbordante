@@ -4,9 +4,9 @@
 
 #include <string>
 
-#include "model/RelationData.h"
-#include "parser/CSVParser.h"
-#include "util/PositionListIndex.h"
+#include "RelationData.h"
+#include "CSVParser.h"
+#include "PositionListIndex.h"
 
 
 class Tane{

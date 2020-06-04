@@ -8,9 +8,9 @@
 #include <map>
 #include <type_traits>
 #include <boost/dynamic_bitset.hpp>
-#include "model/ColumnLayoutRelationData.h"
-#include "model/Vertical.h"
-#include "util/ConfidenceInterval.h"
+#include "ColumnLayoutRelationData.h"
+#include "Vertical.h"
+#include "ConfidenceInterval.h"
 
 using std::enable_if, std::is_base_of, boost::dynamic_bitset, std::map;
 
@@ -61,4 +61,4 @@ private:
 };
 
 //include template implementation
-#include "util/AgreeSetSample_impl.h"
+#include "AgreeSetSample_impl.h"

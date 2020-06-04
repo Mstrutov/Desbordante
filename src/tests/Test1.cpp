@@ -4,7 +4,7 @@
 //
 
 
-#include "model/ColumnLayoutRelationData.h"
+#include "ColumnLayoutRelationData.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

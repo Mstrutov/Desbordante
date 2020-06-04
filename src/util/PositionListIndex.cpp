@@ -1,7 +1,3 @@
-//
-// Created by kek on 30.07.2019.
-//
-
 #include "PositionListIndex.h"
 
 #include <algorithm>
@@ -13,8 +9,8 @@
 
 #include <boost/dynamic_bitset.hpp>
 
-#include "model/ColumnLayoutRelationData.h"
-#include "model/Vertical.h"
+#include "ColumnLayoutRelationData.h"
+#include "Vertical.h"
 
 using namespace std;
 
@@ -239,14 +235,3 @@ bool PositionListIndex::takeProbe(int position, ColumnLayoutRelationData & relat
     return true;
 }
 
-double PositionListIndex::getNep() {
-    return (double) nep;
-}
-
-long PositionListIndex::getNepAsLong() {
-    return nep;
-}
-
-int PositionListIndex::getNumNonSingletonCluster() {
-    return index.size();
-}

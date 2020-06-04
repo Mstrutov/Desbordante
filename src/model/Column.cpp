@@ -5,8 +5,8 @@
 
 #include <utility>
 
-#include "model/Column.h"
-#include "model/Vertical.h"
+#include "Column.h"
+#include "Vertical.h"
 
 
 using namespace std;

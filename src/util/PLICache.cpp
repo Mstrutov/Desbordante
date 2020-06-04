@@ -4,8 +4,8 @@
 
 #include <boost/optional.hpp>
 
-#include "util/PLICache.h"
-#include "util/VerticalMap.h"
+#include "PLICache.h"
+#include "VerticalMap.h"
 
 
 std::shared_ptr<PositionListIndex> PLICache::get(Vertical const &vertical) {

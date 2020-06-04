@@ -1,7 +1,7 @@
 #include <unordered_map>
-#include "core/FdG1Strategy.h"
-#include "core/SearchSpace.h"
-#include "util/PLICache.h"
+#include "FdG1Strategy.h"
+#include "SearchSpace.h"
+#include "PLICache.h"
 double FdG1Strategy::calculateG1(std::shared_ptr<PositionListIndex> lhsPLI) {
     long long numViolations = 0;
     std::map<int, int> valueCounts;

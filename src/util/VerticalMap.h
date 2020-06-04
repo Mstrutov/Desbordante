@@ -8,9 +8,9 @@
 
 #include <boost/dynamic_bitset.hpp>
 
-#include "core/ProfilingContext.h"
-#include "model/RelationalSchema.h"
-#include "model/Vertical.h"
+#include "ProfilingContext.h"
+#include "RelationalSchema.h"
+#include "Vertical.h"
 
 
 //TODO: Expect linking problems. Implement function constructing specific objects to give the compiler necessary info - done at the end of .cpp

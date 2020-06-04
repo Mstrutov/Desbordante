@@ -8,12 +8,12 @@
 #include <list>
 #include <memory>
 
-#include "model/ColumnCombination.h"
-#include "model/ColumnData.h"
-#include "model/ColumnLayoutRelationData.h"
-#include "model/RelationalSchema.h"
-#include "util/LatticeLevel.h"
-#include "util/LatticeVertex.h"
+#include "ColumnCombination.h"
+#include "ColumnData.h"
+#include "ColumnLayoutRelationData.h"
+#include "RelationalSchema.h"
+#include "LatticeLevel.h"
+#include "LatticeVertex.h"
 
 // clearest code doesn't use 'using' at all, but this is highly subjective
 using boost::dynamic_bitset, std::make_shared, std::shared_ptr, std::cout, std::endl, std::setw, std::vector, std::list, std::dynamic_pointer_cast;

@@ -4,9 +4,9 @@
 
 #include <utility>
 
-#include "model/RelationalSchema.h"
-#include "model/Vertical.h"
-#include "util/VerticalMap.h"
+#include "RelationalSchema.h"
+#include "Vertical.h"
+#include "VerticalMap.h"
 
 using namespace std;
 

@@ -2,7 +2,7 @@
 // Created by kek on 26.07.2019.
 //
 
-#include "model/ColumnLayoutRelationData.h"
+#include "ColumnLayoutRelationData.h"
 
 #include <map>
 #include <memory>

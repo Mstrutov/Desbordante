@@ -4,9 +4,9 @@
 #include <exception>
 #include <queue>
 #include <unordered_set>
-#include "util/VerticalMap.h"
-#include "core/VerticalInfo.h"
-#include "core/DependencyCandidate.h"
+#include "VerticalMap.h"
+#include "VerticalInfo.h"
+#include "DependencyCandidate.h"
 /*void linkingProblemsSolver() {
     VerticalMap<std::shared_ptr<Vertical>> obj(nullptr);
 }*/

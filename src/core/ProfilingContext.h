@@ -6,15 +6,15 @@ class PLICache;
 
 template<class Value>
 class VerticalMap;
-#include "core/Configuration.h"
-#include "util/AgreeSetSample.h"
-#include "model/PartialFD.h"
-#include "model/PartialKey.h"
-#include "caching/CacheEvictionMethod.h"
-#include "caching/CachingMethod.h"
-#include "util/AgreeSetSample.h"
-#include "core/DependencyConsumer.h"
-//#include "util/PLICache.h"
+#include "Configuration.h"
+#include "AgreeSetSample.h"
+#include "PartialFD.h"
+#include "PartialKey.h"
+#include "CacheEvictionMethod.h"
+#include "CachingMethod.h"
+#include "AgreeSetSample.h"
+#include "DependencyConsumer.h"
+//#include "PLICache.h"
 
 
 //Dependency Consumer?

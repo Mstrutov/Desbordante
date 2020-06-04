@@ -1,8 +1,8 @@
 #pragma once
 #include <list>
-#include "core/DependencyConsumer.h"
-#include "core/SearchSpace.h"
-#include "parser/CSVParser.h"
+#include "DependencyConsumer.h"
+#include "SearchSpace.h"
+#include "CSVParser.h"
 
 class Pyro : public DependencyConsumer {
 private:

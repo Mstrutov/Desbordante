@@ -1,6 +1,6 @@
 //Strutovsky, 20.08
 
-#include "util/LatticeVertex.h"
+#include "LatticeVertex.h"
 
 using boost::dynamic_bitset, std::vector, std::shared_ptr, std::make_shared, std::string;
 //70% right analogy TODO: double check - had to remake it for Columns!!!

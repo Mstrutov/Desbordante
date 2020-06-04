@@ -1,4 +1,4 @@
-#include "parser/CSVParser.h"
+#include "CSVParser.h"
 
 #include <cassert>
 #include <experimental/filesystem>

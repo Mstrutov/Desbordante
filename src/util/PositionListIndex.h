@@ -9,7 +9,7 @@
 #include <deque>
 #include <vector>
 
-#include "model/Column.h"
+#include "Column.h"
 
 using std::deque, std::vector, std::shared_ptr;
 
@@ -46,7 +46,7 @@ public:
     vector<int> getProbingTable();
     vector<int> getProbingTable(bool isCaching);
     deque<vector<int>> & getIndex();
-    double getNep();
+    double getNep() { return (double) nep; }
     long getNepAsLong() const { return nep; }           //ADDED: getNep()
     int getNumNonSingletonCluster() const { return index.size(); }
     int getFreq() const { return freq_; }
@@ -61,4 +61,5 @@ public:
     shared_ptr<PositionListIndex> intersect(shared_ptr<PositionListIndex> that);
     shared_ptr<PositionListIndex> probe(const vector<int>& probingTable);
     shared_ptr<PositionListIndex> probeAll(Vertical probingColumns, ColumnLayoutRelationData & relationData);
+
 };

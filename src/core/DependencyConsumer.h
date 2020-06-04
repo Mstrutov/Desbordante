@@ -1,7 +1,7 @@
 #pragma once
 #include <functional>
-#include "model/PartialFD.h"
-#include "model/PartialKey.h"
+#include "PartialFD.h"
+#include "PartialKey.h"
 class DependencyConsumer {
 protected:
     std::function<void (PartialFD const&)> fdConsumer_;

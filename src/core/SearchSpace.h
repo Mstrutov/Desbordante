@@ -5,12 +5,12 @@
 #include <memory>
 
 #include <util/VerticalMap.h>
-#include "core/ProfilingContext.h"
-#include "core/DependencyStrategy.h"
-#include "core/VerticalInfo.h"
-#include "core/DependencyCandidate.h"
-#include "model/Vertical.h"
-#include "model/RelationalSchema.h"
+#include "ProfilingContext.h"
+#include "DependencyStrategy.h"
+#include "VerticalInfo.h"
+#include "DependencyCandidate.h"
+#include "Vertical.h"
+#include "RelationalSchema.h"
 class SearchSpace : public std::enable_shared_from_this<SearchSpace> {
 private:
     std::shared_ptr<ProfilingContext> context_;

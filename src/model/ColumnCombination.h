@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "model/Vertical.h"
+#include "Vertical.h"
 
 #include <boost/dynamic_bitset.hpp>
 

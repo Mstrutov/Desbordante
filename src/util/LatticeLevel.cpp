@@ -6,7 +6,7 @@
 #include <chrono>
 #include <iostream>
 
-#include "model/ColumnCombination.h"
+#include "ColumnCombination.h"
 
 
 

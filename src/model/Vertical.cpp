@@ -2,7 +2,7 @@
 // Created by kek on 17.07.19.
 //
 
-#include "model/Vertical.h"
+#include "Vertical.h"
 
 #include <iostream>
 #include <utility>

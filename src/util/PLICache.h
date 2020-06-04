@@ -1,10 +1,10 @@
 #pragma once
 
 class ProfilingContext;
-#include "caching/CacheEvictionMethod.h"
-#include "caching/CachingMethod.h"
-#include "core/ProfilingContext.h"
-#include "model/ColumnLayoutRelationData.h"
+#include "CacheEvictionMethod.h"
+#include "CachingMethod.h"
+#include "ProfilingContext.h"
+#include "ColumnLayoutRelationData.h"
 
 class PLICache {
 private:

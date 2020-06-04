@@ -2,7 +2,7 @@
 // Created by kek on 12.07.19.
 //
 
-#include "model/ColumnData.h"
+#include "ColumnData.h"
 
 #include <algorithm>
 #include <random>

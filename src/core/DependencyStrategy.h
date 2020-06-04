@@ -1,8 +1,8 @@
 #pragma once
-#include "core/ProfilingContext.h"
-#include "core/DependencyCandidate.h"
-#include "core/DependencyConsumer.h"
-#include "model/Vertical.h"
+#include "ProfilingContext.h"
+#include "DependencyCandidate.h"
+#include "DependencyConsumer.h"
+#include "Vertical.h"
 class SearchSpace;
 
 class DependencyStrategy {

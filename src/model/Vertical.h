@@ -12,7 +12,7 @@
 
 #include <boost/dynamic_bitset.hpp>
 
-#include "model/Column.h"
+#include "Column.h"
 
 using boost::dynamic_bitset, std::string, std::weak_ptr, std::shared_ptr, std::vector;
 

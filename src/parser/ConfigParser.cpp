@@ -2,11 +2,11 @@
 // Created by kek on 10.07.19.
 //
 
-#include "parser/ConfigParser.h"
+#include "ConfigParser.h"
 
 #include <fstream>
 
-#include "json/json.hpp"
+#include "json.hpp"
 
 using namespace std;
 using json = nlohmann::json;

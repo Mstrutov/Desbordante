@@ -10,7 +10,7 @@
 
 #include <boost/dynamic_bitset.hpp>
 
-#include "model/RelationalSchema.h"
+#include "RelationalSchema.h"
 
 using std::string, boost::dynamic_bitset;
 

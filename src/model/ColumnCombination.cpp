@@ -2,9 +2,9 @@
 // Created by kek on 16.08.2019.
 //
 
-//#include "model/ColumnCombination.h"
+//#include "ColumnCombination.h"
 
-//#include "model/RelationalSchema.h"
+//#include "RelationalSchema.h"
 
 /*ColumnCombination::ColumnCombination(dynamic_bitset<> columnIndices, shared_ptr<RelationalSchema> schema):
     Vertical(){

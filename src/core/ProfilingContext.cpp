@@ -1,7 +1,7 @@
-#include "core/ProfilingContext.h"
-#include "util/ListAgreeSetSample.h"
-#include "util/PLICache.h"
-#include "util/VerticalMap.h"
+#include "ProfilingContext.h"
+#include "ListAgreeSetSample.h"
+#include "PLICache.h"
+#include "VerticalMap.h"
 
 ProfilingContext::ProfilingContext(Configuration const& configuration, std::shared_ptr<ColumnLayoutRelationData> relationData,
         std::function<void (PartialKey const&)> const& uccConsumer, std::function<void (PartialFD const&)> const& fdConsumer,
