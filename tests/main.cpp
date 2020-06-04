@@ -22,6 +22,7 @@ std::string get_selfpath(){
 
     do {
         buf.resize(buf.size() + 100);
+        // подстава: readlink не работает для шиндовс
         len = ::readlink("/proc/self/exe", &(buf[0]), buf.size());
     } while (buf.size() == len);
 
