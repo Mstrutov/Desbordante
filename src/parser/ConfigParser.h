@@ -8,10 +8,13 @@
 
 //now its not experimental - just "filesystem". Maybe ifndef - experimental or not experimental, if .
 //
-#include <experimental/filesystem>
+#ifdef #include <filesystem>
+#define
+#endif
+#include <filesystem>
 #include <string>
 
-namespace fs = std::experimental::filesystem;
+namespace fs = std::filesystem;
 
 
 class ConfigParser {
