@@ -6,11 +6,7 @@
 
 #pragma once
 
-//now its not experimental - just "filesystem". Maybe ifndef - experimental or not experimental, if .
-//
-#ifdef #include <filesystem>
-#define
-#endif
+// macro: filesystem - defined ? filesystem : experimental/filesystem
 #include <filesystem>
 #include <string>
 
