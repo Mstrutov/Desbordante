@@ -18,9 +18,7 @@
 int main(int argc, char const *argv[]) {
     using std::cout, std::endl;
     std::vector<std::string> strs(argv + 1, argv + argc);
-    for (auto& str : strs) {
-        cout << str << endl;
-    }
+
     std::string alg;
     std::string dataset;
     std::vector<std::string> availableAlgs {"pyro", "tane"};
@@ -36,7 +34,11 @@ int main(int argc, char const *argv[]) {
     transform(alg.begin(), alg.end(), alg.begin(), [](unsigned char c){ return std::tolower(c); });
     cout << "Input: algorithm \"" << alg  << "\" and dataset \"" << dataset << "\"" << endl;
     auto path = std::filesystem::current_path() / dataset;
-    if (alg == "pyro") {
+    if (alg.empty() || dataset.empty()) {
+        cout << "Couldn't recognize the algorithm and the dataset.\n" <<
+                "Try launching with options: -algo=<name> -data=<../relative/path/to/dataset>\n" <<
+                "Available algorithms are:\n\tpyro\n\ttane\n";
+    } else if (alg == "pyro") {
         Pyro algInstance(path);
         try {
             algInstance.execute();
@@ -53,7 +55,7 @@ int main(int argc, char const *argv[]) {
             return 1;
         }
     } else {
-        cout << "Error: available algorithms are: - pyro\n -tane\n" << endl;
+        cout << "Error - no matching algorithm. Available algorithms are:\n\tpyro\n\ttane\n" << endl;
         return 1;
     }
     return 0;

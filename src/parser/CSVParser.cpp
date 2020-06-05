@@ -22,7 +22,7 @@ CSVParser::CSVParser(fs::path path, char separator) :
 
     //Wrong path
     if (!source) {
-        std::runtime_error("Error: couldn't find file " + path.string());
+        throw std::runtime_error("Error: couldn't find file " + path.string());
     }
     // TODO: Настроить Exception
     if (separator == '\0'){

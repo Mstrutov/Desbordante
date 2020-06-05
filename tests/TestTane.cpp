@@ -24,9 +24,16 @@ TEST(TaneTester, first) {
     //CSVParser csvParser(path + "/TestTane.csv");
     //cout << path;
     vector<long> results;
-    Tane algoInstance(path);
-    //Tane algoInstance(path + "/CIPublicHighway50k.csv");
-    results.push_back(algoInstance.execute());
+    try {
+        Tane algoInstance(path);
+        //Tane algoInstance(path + "/CIPublicHighway50k.csv");
+        results.push_back(algoInstance.execute());
+    }
+    catch (std::runtime_error& e) {
+        cout << "Excepion raised in test: " << e.what() << endl;
+        FAIL();
+    }
+
     /*for (int i = 0; i < 10; i++) {
         Tane algoInstance(path + "/neighbors50k.csv");
         //Tane algoInstance(path + "/CIPublicHighway50k.csv");
@@ -56,4 +63,5 @@ TEST(TaneTester, first) {
     for (auto res : results)
         cout << res << " ";
     cout << endl;
+    SUCCEED();
 }

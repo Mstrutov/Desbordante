@@ -19,12 +19,18 @@ TEST(PyroTester, first) {
     auto path = fs::current_path().append("inputData").append("CIPublicHighway50k.csv");
     //CSVParser csvParser(path + "/TestTane.csv");
     //cout << path;
-    vector<long> results;
-    Pyro algoInstance(path);
-    algoInstance.execute();
-
+    try {
+        vector<long> results;
+        Pyro algoInstance(path);
+        algoInstance.execute();
+    }
+    catch (std::runtime_error& e) {
+        cout << "Excepion raised in test: " << e.what() << endl;
+        FAIL();
+    }
 
 //    for (auto res : results)
 //        cout << res << " ";
     cout << endl;
+    SUCCEED();
 }

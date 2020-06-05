@@ -29,7 +29,7 @@ public:
     Vertical() = default;
     explicit Vertical(Column & col);
 
-    Vertical(Vertical& other) = default;
+    //Vertical(Vertical& other) = default;
     Vertical(Vertical const& other) = default;
     Vertical& operator=(const Vertical& rhs) = default;
     Vertical(Vertical&& other) = default;        //just = default

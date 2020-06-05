@@ -12,11 +12,11 @@ add_executable(${BINARY} ${test_sources})
 add_test(NAME ${BINARY} COMMAND ${BINARY})
 
 # linking with gtest and implemented classes
-target_link_libraries(${BINARY} PUBLIC gtest gmock pthread ${CMAKE_PROJECT_NAME}_lib)
+target_link_libraries(${BINARY} PUBLIC gtest gmock ${CMAKE_PROJECT_NAME}_lib)
 
 # copying sample csv's for testing
 add_custom_target(copy-files ALL
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_SOURCE_DIR}/tests/inputData
-        ${CMAKE_BINARY_DIR}/tests/inputData
+        ${CMAKE_CURRENT_BINARY_DIR}/inputData
         )
