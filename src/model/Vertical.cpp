@@ -20,16 +20,16 @@ Vertical::Vertical(Column & col) : schema(col.getSchema()){
     columnIndices.set(col.getIndex());
 }
 
-Vertical::Vertical(Vertical &&other) noexcept :
-    columnIndices(std::move(other.columnIndices)),
-    schema(std::move(other.schema)) {
-}
+//Vertical::Vertical(Vertical &&other) noexcept :
+//    columnIndices(std::move(other.columnIndices)),
+//    schema(std::move(other.schema)) {
+//}
 
-Vertical& Vertical::operator=(Vertical &&rhs) noexcept {
-    columnIndices = std::move(rhs.columnIndices);
-    schema = std::move(rhs.schema);
-    return *this;
-}
+//Vertical& Vertical::operator=(Vertical &&rhs) noexcept {
+//    columnIndices = std::move(rhs.columnIndices);
+//    schema = std::move(rhs.schema);
+//    return *this;
+//}
 
 dynamic_bitset<> Vertical::getColumnIndices() const { return columnIndices; }
 

@@ -18,11 +18,11 @@ CSVParser::CSVParser(fs::path path, char separator) :
     nextLine(),
     numberOfColumns(),
     columnNames(),
-    relationName(path.filename()){
+    relationName(path.filename().string()){
 
     //Wrong path
     if (!source) {
-        assert(0);
+        std::runtime_error("Error: couldn't find file " + path.string());
     }
     // TODO: Настроить Exception
     if (separator == '\0'){

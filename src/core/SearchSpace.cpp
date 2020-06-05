@@ -249,7 +249,7 @@ void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPea
     // i.e. such a candidate that arityComparator returns false for every other candidate => peaksComparator should return !(candidate1 < candidate2)
     // In one word, Java priority queue highlights the least element, C++ - the largest
     std::function<bool(std::shared_ptr<DependencyCandidate>, std::shared_ptr<DependencyCandidate>)> peaksComparator =
-            [](auto candidate1, auto candidate2) -> bool { return !DependencyCandidate::arityComparator(*candidate1, *candidate2); };
+            [](auto candidate1, auto candidate2) -> bool { return DependencyCandidate::arityComparator(*candidate1, *candidate2); };
     std::vector<std::shared_ptr<DependencyCandidate>> peaks;
     std::make_heap(peaks.begin(), peaks.end(), peaksComparator);
     peaks.push_back(std::make_shared<DependencyCandidate>(mainPeak, ConfidenceInterval(mainPeakError), true));
@@ -425,7 +425,7 @@ SearchSpace::trickleDownFrom(DependencyCandidate &minDepCandidate, std::shared_p
         std::priority_queue<std::shared_ptr<DependencyCandidate>, std::vector<std::shared_ptr<DependencyCandidate>>,
             std::function<bool (std::shared_ptr<DependencyCandidate>, std::shared_ptr<DependencyCandidate>)>>
             parentCandidates([](auto candidate1, auto candidate2)
-                {return !DependencyCandidate::minErrorComparator(*candidate1, *candidate2); });
+                {return DependencyCandidate::minErrorComparator(*candidate1, *candidate2); });
         for (auto parentVertical : minDepCandidate.vertical_->getParents()) {
             if (isKnownNonDependency(parentVertical, localVisitees)
                     || isKnownNonDependency(parentVertical, globalVisitees))

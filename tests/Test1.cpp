@@ -27,7 +27,7 @@ TEST(pliChecker, first){
             {10, 17} //null
     };
 
-    string path = fs::path(get_selfpath()).parent_path().string() + "/inputData/Test1.csv";
+    auto path = fs::current_path().append("inputData").append("Test1.csv");
     CSVParser csvParser(path);
     auto test = ColumnLayoutRelationData::createFrom(csvParser, true);
     auto columnData = test->getColumnData(0);
@@ -43,7 +43,7 @@ TEST(pliChecker, second){
             {6, 7, 18},
     };
 
-    string path = fs::path(get_selfpath()).parent_path().string()  + "/inputData/Test1.csv";
+    auto path = fs::current_path().append("inputData").append("Test1.csv");
     CSVParser csvParser(path);
     auto test = ColumnLayoutRelationData::createFrom(csvParser, false);
     auto columnData = test->getColumnData(0);
@@ -56,9 +56,9 @@ TEST(pliIntersectChecker, first){
             {2, 5}
     };
 
-    string path = fs::path(get_selfpath()).parent_path().string() + "/inputData";
-    CSVParser csvParser1(path + "/ProbeTest1.csv");
-    CSVParser csvParser2(path + "/ProbeTest2.csv");
+    auto path = fs::current_path().append("inputData");
+    CSVParser csvParser1(path / "ProbeTest1.csv");
+    CSVParser csvParser2(path / "ProbeTest2.csv");
     auto test1 = ColumnLayoutRelationData::createFrom(csvParser1, false);
     auto test2 = ColumnLayoutRelationData::createFrom(csvParser2, false);
 

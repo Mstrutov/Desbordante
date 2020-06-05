@@ -17,15 +17,14 @@ std::string get_selfpath();
 extern string path;
 
 //TODO: wrong file => WARNING
-//TODO: NO ABSOLUTE PATHS!!
 TEST(TaneTester, first) {
 
     //string path = "/home/maxim/Study/Metanome-coding/metanome_git/src/tests";
-    string path = fs::path(get_selfpath()).parent_path().string() + "/inputData";
+    auto path = fs::current_path().append("inputData").append("CIPublicHighway50k.csv");
     //CSVParser csvParser(path + "/TestTane.csv");
     //cout << path;
     vector<long> results;
-    Tane algoInstance(path + "/CIPublicHighway50k.csv");
+    Tane algoInstance(path);
     //Tane algoInstance(path + "/CIPublicHighway50k.csv");
     results.push_back(algoInstance.execute());
     /*for (int i = 0; i < 10; i++) {

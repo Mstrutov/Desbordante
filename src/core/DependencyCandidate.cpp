@@ -2,19 +2,20 @@
 
 #include "DependencyCandidate.h"
 
+// TODO: these methods are used in priority_queues, where operator> is needed. (>) !<=> (>=) due to strict weak ordering
 bool DependencyCandidate::arityComparator(DependencyCandidate const & dc1, DependencyCandidate const & dc2) {
-    if (dc1.vertical_->getArity() < dc2.vertical_->getArity())
+    if (dc1.vertical_->getArity() > dc2.vertical_->getArity())
         return true;
     else if (dc1.vertical_->getArity() == dc2.vertical_->getArity())
-        return (dc1.error_.getMean() < dc2.error_.getMean());
+        return (dc1.error_.getMean() > dc2.error_.getMean());
     return false;
 }
 
 bool DependencyCandidate::minErrorComparator(DependencyCandidate const & dc1, DependencyCandidate const & dc2) {
-    if (dc1.error_.getMin() < dc2.error_.getMin())
+    if (dc1.error_.getMin() > dc2.error_.getMin())
         return true;
     else if (dc1.error_.getMin() == dc2.error_.getMin())
-        return (dc1.vertical_->getArity() < dc2.vertical_->getArity());
+        return (dc1.vertical_->getArity() > dc2.vertical_->getArity());
     return false;
 }
 

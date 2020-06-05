@@ -32,8 +32,8 @@ public:
     Vertical(Vertical& other) = default;
     Vertical(Vertical const& other) = default;
     Vertical& operator=(const Vertical& rhs) = default;
-    Vertical(Vertical&& other) noexcept;        //just = default
-    Vertical& operator=(Vertical&& rhs) noexcept;
+    Vertical(Vertical&& other) = default;        //just = default
+    Vertical& operator=(Vertical&& rhs) = default;
     virtual ~Vertical() = default;
     bool operator==(Vertical const& other) const { return columnIndices == other.columnIndices; }
 
