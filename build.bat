@@ -6,5 +6,5 @@ cd ..
 mkdir build
 cd build
 cmake ..
-devenv /build Release metanome_cpp.sln 
+devenv /build Release fdtester.sln 
 
