@@ -2,9 +2,14 @@ cmake_minimum_required(VERSION 3.10)
 project(metanome_cpp)
 
 # setting up a compiler
-set(CMAKE_CXX_STANDARD 17)
-SET(CMAKE_CXX_FLAGS "-O0")
-SET(CMAKE_C_FLAGS "-O0")
+if (MSVC)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MTd /EHsc")
+        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2")
+else()
+        set(CMAKE_CXX_STANDARD 17)
+        set(CMAKE_CXX_FLAGS_DEBUG  "-O0")
+        set(CMAKE_CXX_FLAGS_RELEASE  "-O3")
+endif()
 
 # configuring boost
 set(Boost_USE_STATIC_LIBS ON)
