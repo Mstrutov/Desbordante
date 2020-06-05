@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(metanome_cpp)
+project(fdtester)
 
 # compiler and platform-dependent settings
 set(CMAKE_CXX_STANDARD 17)
