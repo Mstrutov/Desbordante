@@ -4,12 +4,12 @@
 //
 
 
-#include "ColumnLayoutRelationData.h"
-
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-
 #include <iostream>
+
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+
+#include "ColumnLayoutRelationData.h"
 
 using ::testing::ContainerEq, ::testing::Eq;
 using namespace std;

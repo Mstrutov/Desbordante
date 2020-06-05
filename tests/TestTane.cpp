@@ -2,12 +2,12 @@
 // Created by maxim on 18.10.2019.
 //
 
-#include "algorithms/TaneX.h"
-
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-
 #include <iostream>
+
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+
+#include "algorithms/TaneX.h"
 
 using ::testing::ContainerEq, ::testing::Eq;
 using namespace std;

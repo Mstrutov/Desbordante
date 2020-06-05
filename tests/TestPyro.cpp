@@ -1,9 +1,10 @@
 //#include "Pyro.h"
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-
 #include <iostream>
+
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+
 #include "algorithms/Pyro.h"
 
 using ::testing::ContainerEq, ::testing::Eq;

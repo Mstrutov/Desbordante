@@ -31,8 +31,8 @@ include_directories(
 
 # adding submodules
 add_subdirectory("src")
+add_subdirectory("lib/googletest")
 add_subdirectory("tests")
-
 
 #target_link_libraries(metanome_cpp PRIVATE "stdc++fs" gmock)
 #target_link_libraries(metanome_cpp PRIVATE "stdc++fs" Boost::container)
