@@ -2,7 +2,14 @@
 <project version="4">
   <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
     <generated>
-      <config projectName="metanome_cpp" targetName="metanome_cpp" />
+      <config projectName="metanome_cpp" targetName="metanome_cpp_run" />
+      <config projectName="metanome_cpp" targetName="metanome_cpp_test" />
+      <config projectName="metanome_cpp" targetName="gtest_main" />
+      <config projectName="metanome_cpp" targetName="copy-files" />
+      <config projectName="metanome_cpp" targetName="gmock" />
+      <config projectName="metanome_cpp" targetName="metanome_cpp_lib" />
+      <config projectName="metanome_cpp" targetName="gmock_main" />
+      <config projectName="metanome_cpp" targetName="gtest" />
     </generated>
   </component>
   <component name="CMakeSettings" AUTO_RELOAD="true">
@@ -11,10 +18,12 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="fb80a5c4-b662-4c0d-8645-0d9d54369a0b" name="Default Changelist" comment="">
+    <list default="true" id="fb80a5c4-b662-4c0d-8645-0d9d54369a0b" name="Default Changelist" comment="Windows flags in CMake">
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/DependencyStrategy.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/DependencyStrategy.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/SearchSpace.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/SearchSpace.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/googletest" beforeDir="false" afterPath="$PROJECT_DIR$/lib/googletest" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/tests/main.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -62,9 +71,16 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GithubPullRequestsUISettings">
+    <option name="hiddenUrls">
+      <set>
+        <option value="https://github.com/google/googletest" />
+      </set>
+    </option>
+  </component>
   <component name="OCFindUsagesOptions" text="false" ivars="false" properties="true" derivedClasses="false" />
   <component name="ProjectId" id="1OT0GnMyYRyn02VZBswYsEmlmUz" />
-  <component name="ProjectLevelVcsManager">
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <ConfirmationsSetting value="1" id="Add" />
   </component>
   <component name="ProjectViewState">
@@ -107,7 +123,7 @@
       <recent name="$PROJECT_DIR$/model" />
     </key>
   </component>
-  <component name="RunManager" selected="CMake Application.cmake">
+  <component name="RunManager" selected="CMake Application.metanome_cpp_run">
     <configuration default="true" type="js.build_tools.grunt">
       <node-interpreter value="project" />
       <envs />
@@ -138,6 +154,12 @@
         <option name="BeforeTestRunTask" enabled="true" />
       </method>
     </configuration>
+    <configuration name="PyroTester.first" type="CMakeGoogleTestRunConfigurationType" factoryName="Google Test" temporary="true" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="metanome_cpp_test" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="metanome_cpp" RUN_TARGET_NAME="metanome_cpp_test" TEST_CLASS="PyroTester" TEST_METHOD="first" TEST_MODE="SUITE_TEST">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+        <option name="BeforeTestRunTask" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="TaneTester.first" type="CMakeGoogleTestRunConfigurationType" factoryName="Google Test" temporary="true" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="metanome_cpp" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="metanome_cpp" RUN_TARGET_NAME="metanome_cpp" TEST_CLASS="TaneTester" TEST_METHOD="first" TEST_MODE="SUITE_TEST">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -150,19 +172,53 @@
         <option name="BeforeTestRunTask" enabled="true" />
       </method>
     </configuration>
-    <configuration name="pliChecker.second" type="CMakeGoogleTestRunConfigurationType" factoryName="Google Test" temporary="true" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="metanome_cpp" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="metanome_cpp" RUN_TARGET_NAME="metanome_cpp" TEST_CLASS="pliChecker" TEST_METHOD="second" TEST_MODE="SUITE_TEST">
-      <method v="2">
-        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
-        <option name="BeforeTestRunTask" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="pliIntersectChecker.first" type="CMakeGoogleTestRunConfigurationType" factoryName="Google Test" temporary="true" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="metanome_cpp" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="metanome_cpp" RUN_TARGET_NAME="metanome_cpp" TEST_CLASS="pliIntersectChecker" TEST_METHOD="first" TEST_MODE="SUITE_TEST">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
         <option name="BeforeTestRunTask" enabled="true" />
       </method>
     </configuration>
-    <configuration name="cmake" type="CMakeRunConfiguration" factoryName="Application" WORKING_DIR="file://$PROJECT_DIR$/src" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="metanome_cpp" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="metanome_cpp" RUN_TARGET_NAME="metanome_cpp">
+    <configuration name="cmake" type="CMakeRunConfiguration" factoryName="Application" WORKING_DIR="file://$PROJECT_DIR$/src" PASS_PARENT_ENVS_2="true" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="metanome_cpp" RUN_TARGET_NAME="metanome_cpp_test" EXPLICIT_BUILD_TARGET_NAME="all">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="copy-files" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="copy-files" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="gmock" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="gmock" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="gmock_main" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="gmock_main" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="gtest" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="gtest" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="gtest_main" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="gtest_main" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="metanome_cpp_lib" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="metanome_cpp_lib" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="metanome_cpp_run" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="metanome_cpp_run" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="metanome_cpp" RUN_TARGET_NAME="metanome_cpp_run">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="metanome_cpp_test" type="CMakeRunConfiguration" factoryName="Application" temporary="true" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metanome_cpp" TARGET_NAME="metanome_cpp_test" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="metanome_cpp" RUN_TARGET_NAME="metanome_cpp_test">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
@@ -177,21 +233,30 @@
     </configuration>
     <list>
       <item itemvalue="CMake Application.cmake" />
+      <item itemvalue="CMake Application.gmock" />
+      <item itemvalue="CMake Application.gmock_main" />
+      <item itemvalue="CMake Application.gtest" />
+      <item itemvalue="CMake Application.gtest_main" />
+      <item itemvalue="CMake Application.metanome_cpp_lib" />
+      <item itemvalue="CMake Application.metanome_cpp_run" />
+      <item itemvalue="CMake Application.copy-files" />
+      <item itemvalue="CMake Application.metanome_cpp_test" />
       <item itemvalue="Custom Build Application.Scons tests" />
       <item itemvalue="Custom Build Application.Scons" />
       <item itemvalue="Google Test.All in metanome_cpp" />
       <item itemvalue="Google Test.TaneTester.first" />
       <item itemvalue="Google Test.pliChecker.first" />
-      <item itemvalue="Google Test.pliChecker.second" />
       <item itemvalue="Google Test.pliIntersectChecker.first" />
+      <item itemvalue="Google Test.PyroTester.first" />
       <item itemvalue="Shell Script.clean" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="CMake Application.metanome_cpp_test" />
+        <item itemvalue="Google Test.PyroTester.first" />
         <item itemvalue="Google Test.TaneTester.first" />
         <item itemvalue="Google Test.pliIntersectChecker.first" />
         <item itemvalue="Google Test.pliChecker.first" />
-        <item itemvalue="Google Test.pliChecker.second" />
       </list>
     </recent_temporary>
   </component>
@@ -430,25 +495,25 @@
     <MESSAGE value="Tane: fixed and tested." />
     <MESSAGE value="Pyro's data structures: AgreeSetSample, PliCache, SetTrie, VerticalMap" />
     <MESSAGE value="Pyro's profiling base: Dependency strategies, ProfilingContext; implementing SearchSpace" />
-    <option name="LAST_COMMIT_MESSAGE" value="Pyro's profiling base: Dependency strategies, ProfilingContext; implementing SearchSpace" />
+    <MESSAGE value="minor Windows-related bux fixes; main.cpp" />
+    <MESSAGE value="Windows flags in CMake" />
+    <MESSAGE value="minor fixes; tests exceptions" />
+    <MESSAGE value="target directory for CMake" />
+    <option name="LAST_COMMIT_MESSAGE" value="target directory for CMake" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="667" y="276" width="642" height="553" key="#clean" timestamp="1582451274165">
+    <state x="451" y="210" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1591355148232">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
-    <state x="667" y="276" width="642" height="553" key="#clean/67.27.1853.1053@67.27.1853.1053" timestamp="1582451274165" />
-    <state x="451" y="210" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1582871168238">
-      <screen x="67" y="27" width="1853" height="1053" />
-    </state>
-    <state x="451" y="210" key="#com.intellij.execution.impl.EditConfigurationsDialog/67.27.1853.1053@67.27.1853.1053" timestamp="1582871168238" />
+    <state x="451" y="210" key="#com.intellij.execution.impl.EditConfigurationsDialog/67.27.1853.1053@67.27.1853.1053" timestamp="1591355148232" />
     <state x="320" y="252" width="411" height="601" key="#com.intellij.ide.util.MemberChooser" timestamp="1583149720216">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
     <state x="320" y="252" width="411" height="601" key="#com.intellij.ide.util.MemberChooser/67.27.1853.1053@67.27.1853.1053" timestamp="1583149720216" />
-    <state x="556" y="96" width="1163" height="912" key="CommitChangelistDialog2" timestamp="1589716130260">
+    <state x="556" y="96" width="1163" height="912" key="CommitChangelistDialog2" timestamp="1591359402874">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
-    <state x="556" y="96" width="1163" height="912" key="CommitChangelistDialog2/67.27.1853.1053@67.27.1853.1053" timestamp="1589716130260" />
+    <state x="556" y="96" width="1163" height="912" key="CommitChangelistDialog2/67.27.1853.1053@67.27.1853.1053" timestamp="1591359402874" />
     <state x="776" y="310" width="424" height="484" key="FileChooserDialogImpl" timestamp="1585841931032">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
@@ -457,54 +522,62 @@
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
     <state x="827" y="447" width="322" height="210" key="Github.ShareDialog/67.27.1853.1053@67.27.1853.1053" timestamp="1586443446336" />
-    <state width="1807" height="277" key="GridCell.Tab.0.bottom" timestamp="1588686498711">
+    <state width="1807" height="231" key="GridCell.Tab.0.bottom" timestamp="1591358824316">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
-    <state width="1807" height="277" key="GridCell.Tab.0.bottom/67.27.1853.1053@67.27.1853.1053" timestamp="1588686498711" />
-    <state width="1807" height="277" key="GridCell.Tab.0.center" timestamp="1588686498711">
+    <state width="1807" height="231" key="GridCell.Tab.0.bottom/67.27.1853.1053@67.27.1853.1053" timestamp="1591358824316" />
+    <state width="1807" height="231" key="GridCell.Tab.0.center" timestamp="1591358824316">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
-    <state width="1807" height="277" key="GridCell.Tab.0.center/67.27.1853.1053@67.27.1853.1053" timestamp="1588686498711" />
-    <state width="1807" height="277" key="GridCell.Tab.0.left" timestamp="1588686498710">
+    <state width="1807" height="231" key="GridCell.Tab.0.center/67.27.1853.1053@67.27.1853.1053" timestamp="1591358824316" />
+    <state width="1807" height="231" key="GridCell.Tab.0.left" timestamp="1591358824316">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
-    <state width="1807" height="277" key="GridCell.Tab.0.left/67.27.1853.1053@67.27.1853.1053" timestamp="1588686498710" />
-    <state width="1807" height="277" key="GridCell.Tab.0.right" timestamp="1588686498711">
+    <state width="1807" height="231" key="GridCell.Tab.0.left/67.27.1853.1053@67.27.1853.1053" timestamp="1591358824316" />
+    <state width="1807" height="231" key="GridCell.Tab.0.right" timestamp="1591358824316">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
-    <state width="1807" height="277" key="GridCell.Tab.0.right/67.27.1853.1053@67.27.1853.1053" timestamp="1588686498711" />
-    <state width="1807" height="344" key="GridCell.Tab.1.bottom" timestamp="1582873066634">
+    <state width="1807" height="231" key="GridCell.Tab.0.right/67.27.1853.1053@67.27.1853.1053" timestamp="1591358824316" />
+    <state width="1807" height="379" key="GridCell.Tab.1.bottom" timestamp="1591355319251">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
-    <state width="1807" height="344" key="GridCell.Tab.1.bottom/67.27.1853.1053@67.27.1853.1053" timestamp="1582873066634" />
-    <state width="1807" height="344" key="GridCell.Tab.1.center" timestamp="1582873066634">
+    <state width="1807" height="379" key="GridCell.Tab.1.bottom/67.27.1853.1053@67.27.1853.1053" timestamp="1591355319251" />
+    <state width="1807" height="379" key="GridCell.Tab.1.center" timestamp="1591355319251">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
-    <state width="1807" height="344" key="GridCell.Tab.1.center/67.27.1853.1053@67.27.1853.1053" timestamp="1582873066634" />
-    <state width="1807" height="344" key="GridCell.Tab.1.left" timestamp="1582873066634">
+    <state width="1807" height="379" key="GridCell.Tab.1.center/67.27.1853.1053@67.27.1853.1053" timestamp="1591355319251" />
+    <state width="1807" height="379" key="GridCell.Tab.1.left" timestamp="1591355319251">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
-    <state width="1807" height="344" key="GridCell.Tab.1.left/67.27.1853.1053@67.27.1853.1053" timestamp="1582873066634" />
-    <state width="1807" height="344" key="GridCell.Tab.1.right" timestamp="1582873066634">
+    <state width="1807" height="379" key="GridCell.Tab.1.left/67.27.1853.1053@67.27.1853.1053" timestamp="1591355319251" />
+    <state width="1807" height="379" key="GridCell.Tab.1.right" timestamp="1591355319251">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
-    <state width="1807" height="344" key="GridCell.Tab.1.right/67.27.1853.1053@67.27.1853.1053" timestamp="1582873066634" />
+    <state width="1807" height="379" key="GridCell.Tab.1.right/67.27.1853.1053@67.27.1853.1053" timestamp="1591355319251" />
     <state x="853" y="167" key="SettingsEditor" timestamp="1588581908078">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
     <state x="853" y="167" key="SettingsEditor/67.27.1853.1053@67.27.1853.1053" timestamp="1588581908078" />
-    <state x="588" y="288" width="800" height="528" key="Vcs.Push.Dialog.v2" timestamp="1590310531180">
+    <state x="588" y="288" width="800" height="528" key="Vcs.Push.Dialog.v2" timestamp="1591359404415">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
-    <state x="588" y="288" width="800" height="528" key="Vcs.Push.Dialog.v2/67.27.1853.1053@67.27.1853.1053" timestamp="1590310531180" />
-    <state x="644" y="336" key="com.intellij.ide.util.TipDialog" timestamp="1590308639824">
+    <state x="588" y="288" width="800" height="528" key="Vcs.Push.Dialog.v2/67.27.1853.1053@67.27.1853.1053" timestamp="1591359404415" />
+    <state x="644" y="336" key="com.intellij.ide.util.TipDialog" timestamp="1591354496983">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
-    <state x="644" y="336" key="com.intellij.ide.util.TipDialog/67.27.1853.1053@67.27.1853.1053" timestamp="1590308639824" />
+    <state x="644" y="336" key="com.intellij.ide.util.TipDialog/67.27.1853.1053@67.27.1853.1053" timestamp="1591354496983" />
     <state x="728" y="445" width="454" height="160" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1588500475788">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
     <state x="728" y="445" width="454" height="160" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/67.27.1853.1053@67.27.1853.1053" timestamp="1588500475788" />
+    <state x="543" y="240" width="891" height="624" key="com.intellij.xdebugger.impl.breakpoints.ui.BreakpointsDialogFactory$2" timestamp="1591354568872">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state x="543" y="240" width="891" height="624" key="com.intellij.xdebugger.impl.breakpoints.ui.BreakpointsDialogFactory$2/67.27.1853.1053@67.27.1853.1053" timestamp="1591354568872" />
+    <state x="640" y="264" width="707" height="576" key="find.popup" timestamp="1591355361813">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state x="640" y="264" width="707" height="576" key="find.popup/67.27.1853.1053@67.27.1853.1053" timestamp="1591355361813" />
     <state x="763" y="419" width="450" height="267" key="git4idea.rebase.GitRebaseDialog" timestamp="1586443266329">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
@@ -513,14 +586,45 @@
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
     <state x="704" y="168" width="501" height="713" key="refactoring.ChangeSignatureDialog/67.27.1853.1053@67.27.1853.1053" timestamp="1588496724032" />
-    <state x="657" y="253" width="672" height="677" key="run.anything.popup" timestamp="1589715704869">
+    <state x="657" y="253" width="672" height="677" key="run.anything.popup" timestamp="1591350727625">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
-    <state x="657" y="253" width="672" height="677" key="run.anything.popup/67.27.1853.1053@67.27.1853.1053" timestamp="1589715704869" />
-    <state x="414" y="210" width="672" height="678" key="search.everywhere.popup" timestamp="1589713199361">
+    <state x="657" y="253" width="672" height="677" key="run.anything.popup/67.27.1853.1053@67.27.1853.1053" timestamp="1591350727625" />
+    <state x="414" y="210" width="672" height="678" key="search.everywhere.popup" timestamp="1591354074167">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
-    <state x="414" y="210" width="672" height="678" key="search.everywhere.popup/67.27.1853.1053@67.27.1853.1053" timestamp="1589713199361" />
+    <state x="414" y="210" width="672" height="678" key="search.everywhere.popup/67.27.1853.1053@67.27.1853.1053" timestamp="1591354074167" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/tests/Test1.cpp</url>
+          <line>19</line>
+          <option name="timeStamp" value="3" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/tests/Test1.cpp</url>
+          <line>43</line>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/tests/Test1.cpp</url>
+          <line>65</line>
+          <option name="timeStamp" value="5" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/main.cpp</url>
+          <line>19</line>
+          <option name="timeStamp" value="8" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/main.cpp</url>
+          <line>17</line>
+          <option name="timeStamp" value="9" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand>

@@ -11,7 +11,6 @@
 std::string get_selfpath();
 
 int main(int argc, char **argv) {
-    std::cout << "????????\n";
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

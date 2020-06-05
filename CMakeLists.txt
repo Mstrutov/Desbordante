@@ -3,6 +3,7 @@ project(metanome_cpp)
 
 # compiler and platform-dependent settings
 set(CMAKE_CXX_STANDARD 17)
+set( CMAKE_RUNTIME_OUTPUT_DIRECTORY  "${CMAKE_BINARY_DIR}/target" )
 if (MSVC)
         set(additional_flags "/MT /MTd /EHsc")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${additional_flags}")
@@ -15,7 +16,6 @@ else()
         set(CMAKE_CXX_FLAGS_DEBUG  "-O0")
         set(CMAKE_CXX_FLAGS_RELEASE  "-O3")
 
-        set( CMAKE_RUNTIME_OUTPUT_DIRECTORY  "${CMAKE_BINARY_DIR}/target" )
 endif()
 
 # configuring boost
