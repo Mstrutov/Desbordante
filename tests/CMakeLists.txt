@@ -18,5 +18,5 @@ target_link_libraries(${BINARY} PUBLIC gtest gmock ${CMAKE_PROJECT_NAME}_lib)
 add_custom_target(copy-files ALL
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_SOURCE_DIR}/tests/inputData
-        ${CMAKE_CURRENT_BINARY_DIR}/inputData
+        ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/inputData
         )

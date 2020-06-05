@@ -1,16 +1,21 @@
 cmake_minimum_required(VERSION 3.10)
 project(metanome_cpp)
 
-# setting up a compiler
+# compiler and platform-dependent settings
 set(CMAKE_CXX_STANDARD 17)
 if (MSVC)
         set(additional_flags "/MT /MTd /EHsc")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${additional_flags}")
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${additional_flags}")
         set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${additional_flags} /O2")
+
+        set( CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG  "${CMAKE_BINARY_DIR}/target" )
+        set( CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE  "${CMAKE_BINARY_DIR}/target" )
 else()
         set(CMAKE_CXX_FLAGS_DEBUG  "-O0")
         set(CMAKE_CXX_FLAGS_RELEASE  "-O3")
+
+        set( CMAKE_RUNTIME_OUTPUT_DIRECTORY  "${CMAKE_BINARY_DIR}/target" )
 endif()
 
 # configuring boost
