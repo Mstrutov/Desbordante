@@ -5,4 +5,5 @@ BUILD/
 bUILD/
 Datasets/
 .sconsign.dblite
-.idea
+lib/
+
