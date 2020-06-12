@@ -52,9 +52,11 @@ void Pyro::execute() {
         }
     }
     for (auto& searchSpace : searchSpaces_) {
+        auto startTraversalTime = std::chrono::system_clock::now();
         searchSpace->setContext(profilingContext);
         searchSpace->ensureInitialized();
         searchSpace->discover();
+        std::cout << "-----------in" << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTraversalTime).count() << std::endl;
     }
     auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
 

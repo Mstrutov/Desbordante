@@ -18,9 +18,9 @@ extern string path;
 
 //TODO: wrong file => WARNING
 TEST(TaneTester, first) {
-
+    vector<string> datasets = {"CIPublicHighway50k.csv", "neighbors100k.csv"};
     //string path = "/home/maxim/Study/Metanome-coding/metanome_git/src/tests";
-    auto path = fs::current_path().append("inputData").append("CIPublicHighway50k.csv");
+    auto path = fs::current_path().append("inputData").append(datasets[1]);
     //CSVParser csvParser(path + "/TestTane.csv");
     //cout << path;
     vector<long> results;

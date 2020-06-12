@@ -12,7 +12,7 @@
 // TODO: consider storing only containers of shared_ptrs
 
 void SearchSpace::discover(std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees) {
-    while (true) {  // на второй итерации дропается
+    while (true) {
         std::shared_ptr<DependencyCandidate> launchPad = pollLaunchPad(localVisitees);
         if (launchPad == nullptr) break;
 
@@ -378,6 +378,7 @@ void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPea
         double newSampleBoost = sampleBoost_ * sampleBoost_;
 
         auto scopeVerticals  = newScope->keySet();
+        std::cout << "Building ..." << std::endl;
         auto nestedSearchSpace = std::make_shared<SearchSpace> (
                 -1, strategy_, std::move(newScope), globalVisitees_, context_->getSchema(),
                 launchPads_.key_comp(), recursionDepth_ + 1,

@@ -68,6 +68,7 @@ long long ListAgreeSetSample::getNumAgreeSupersets(std::shared_ptr<Vertical> agr
             i++;
         }
         //check the disagreement
+        i = 0;
         minFields = std::min(agreeSet.size(), minDisagreeSet.size());
         while (i < minFields) {
             if ((agreeSet[i] & minDisagreeSet[i]) != 0) goto Entries;

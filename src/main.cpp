@@ -33,7 +33,7 @@ int main(int argc, char const *argv[]) {
     }
     transform(alg.begin(), alg.end(), alg.begin(), [](unsigned char c){ return std::tolower(c); });
     cout << "Input: algorithm \"" << alg  << "\" and dataset \"" << dataset << "\"" << endl;
-    auto path = std::filesystem::current_path() / dataset;
+    auto path = std::filesystem::current_path() / "inputData" / dataset;
     if (alg.empty() || dataset.empty()) {
         cout << "Couldn't recognize the algorithm and the dataset.\n" <<
                 "Try launching with options: -algo=<name> -data=<../relative/path/to/dataset>\n" <<

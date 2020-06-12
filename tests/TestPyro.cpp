@@ -14,9 +14,9 @@ std::string get_selfpath();
 
 //TODO: wrong file => WARNING
 TEST(PyroTester, first) {
-
-    //string path = "/home/maxim/Study/Metanome-coding/metanome_git/src/tests";
-    auto path = fs::current_path().append("inputData").append("CIPublicHighway50k.csv");
+    vector<string> datasets = {"CIPublicHighway50k.csv", "neighbors100k.csv"};
+    // string data = "CIPublicHighway50k.csv";
+    auto path = fs::current_path().append("inputData").append(datasets[1]);
     //CSVParser csvParser(path + "/TestTane.csv");
     //cout << path;
     try {

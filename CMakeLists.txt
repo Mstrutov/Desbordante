@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(fdtester)
 
+set(CMAKE_BUILD_TYPE Debug)
+
 # compiler and platform-dependent settings
 set(CMAKE_CXX_STANDARD 17)
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY  "${CMAKE_BINARY_DIR}/target" )
@@ -13,8 +15,9 @@ if (MSVC)
         set( CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG  "${CMAKE_BINARY_DIR}/target" )
         set( CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE  "${CMAKE_BINARY_DIR}/target" )
 else()
-        set(CMAKE_CXX_FLAGS_DEBUG  "-O0")
-        set(CMAKE_CXX_FLAGS_RELEASE  "-O3")
+        set(CMAKE_CXX_FLAGS_DEBUG "-g")
+        set(CMAKE_CXX_FLAGS_DEBUG  "${CMAKE_CXX_FLAGS_DEBUG} -O0")
+        set(CMAKE_CXX_FLAGS_RELEASE  "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
 endif()
 
