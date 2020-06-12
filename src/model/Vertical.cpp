@@ -53,20 +53,20 @@ bool Vertical::intersects(Vertical &that) {
     return thisIndices.intersects(thatIndices);
 }
 
-Vertical Vertical::Union(Vertical const &that) {
+std::shared_ptr<Vertical> Vertical::Union(Vertical const &that) {
     dynamic_bitset<> retainedColumnIndices(columnIndices);
     retainedColumnIndices |= that.columnIndices;
     return schema.lock()->getVertical(retainedColumnIndices);
 }
 
-Vertical Vertical::project(Vertical &that) {
+std::shared_ptr<Vertical> Vertical::project(Vertical &that) {
     dynamic_bitset<> retainedColumnIndices(columnIndices);
     retainedColumnIndices &= that.columnIndices;
     return schema.lock()->getVertical(retainedColumnIndices);
 }
 
 //TODO: check
-Vertical Vertical::without(Vertical const & that) const {
+std::shared_ptr<Vertical> Vertical::without(Vertical const & that) const {
     dynamic_bitset<> retainedColumnIndices(columnIndices);
     retainedColumnIndices &= ~that.columnIndices;
     //retainedColumnIndices = ~retainedColumnIndices;
@@ -74,7 +74,7 @@ Vertical Vertical::without(Vertical const & that) const {
 }
 
 //TODO: UNUSED METHOD - CHECK ITS VALIDITY
-Vertical Vertical::invert() {
+std::shared_ptr<Vertical> Vertical::invert() {
     auto relation = schema.lock();
     dynamic_bitset<> flippedIndices(columnIndices);
     flippedIndices.resize(relation->getNumColumns());
@@ -82,7 +82,7 @@ Vertical Vertical::invert() {
     return relation->getVertical(flippedIndices);
 }
 
-Vertical Vertical::invert(Vertical &scope) {
+std::shared_ptr<Vertical> Vertical::invert(Vertical &scope) {
     dynamic_bitset<> flippedIndices(columnIndices);
     flippedIndices ^= scope.columnIndices;
     return schema.lock()->getVertical(flippedIndices);
@@ -133,7 +133,7 @@ vector<shared_ptr<Vertical>> Vertical::getParents() {
          columnIndex != dynamic_bitset<>::npos;
          columnIndex = columnIndices.find_next(columnIndex)) {
         columnIndices.reset(columnIndex);
-        parents[i++] = std::make_shared<Vertical>(getSchema()->getVertical(columnIndices));
+        parents[i++] = getSchema()->getVertical(columnIndices);
         columnIndices.set(columnIndex);
     }
     return parents;

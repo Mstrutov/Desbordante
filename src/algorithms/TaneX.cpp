@@ -221,7 +221,7 @@ long Tane::execute() {
                             if (!columns.contains(rhs)) {         //TODO: again this conversion (P.S. was)
                                 bool isRhsCandidate = true;
                                 for (const auto& column : columns.getColumns()) { //TODO: implement getColumns - DONE, but it returns v<Vertical>
-                                    Vertical sibling = columns.without(static_cast<Vertical>(*column)).Union(rhs);   //check types carfully
+                                    Vertical sibling = *columns.without(static_cast<Vertical>(*column))->Union(rhs);   //check types carfully
                                     shared_ptr<LatticeVertex> siblingVertex = level->getLatticeVertex(sibling.getColumnIndices());
                                     if (siblingVertex == nullptr || !siblingVertex->getRhsCandidates()[rhs.getColumnIndices().find_first()]) { //TODO: KOSTYL'
                                         isRhsCandidate = false;

@@ -202,8 +202,8 @@ bool VerticalMap<Value>::SetTrie::collectRestrictedSupersetKeys(bitset const&key
 }
 
 template<class Value>
-std::vector<Vertical> VerticalMap<Value>::getSubsetKeys(const Vertical &vertical) {
-    std::vector<Vertical> subsetKeys;
+std::vector<std::shared_ptr<Vertical>> VerticalMap<Value>::getSubsetKeys(const Vertical &vertical) {
+    std::vector<std::shared_ptr<Vertical>> subsetKeys;
     std::shared_ptr<RelationalSchema> relation = relation_.lock();
     bitset subsetKey(relation->getNumColumns());
     setTrie_.collectSubsetKeys(
@@ -255,7 +255,7 @@ typename VerticalMap<Value>::Entry VerticalMap<Value>::getAnySubsetEntry(const V
 }
 
 template<class Value>
-typename VerticalMap<Value>::Entry VerticalMap<Value>::getAnySubsetEntry(const Vertical &vertical, std::function<bool(Vertical, Value)> const& condition) {
+typename VerticalMap<Value>::Entry VerticalMap<Value>::getAnySubsetEntry(const Vertical &vertical, std::function<bool(Vertical*, Value)> const& condition) {
     typename VerticalMap<Value>::Entry entry;
     std::shared_ptr<RelationalSchema> relation = relation_.lock();
     bitset subsetKey(relation->getNumColumns());
@@ -264,8 +264,8 @@ typename VerticalMap<Value>::Entry VerticalMap<Value>::getAnySubsetEntry(const V
             0,
             subsetKey,
             [&entry, relation, &condition](auto indices, auto value) {
-                Vertical kv = relation->getVertical(indices);
-                if (condition(kv, value)) {
+                auto kv = relation->getVertical(indices);
+                if (condition(kv.get(), value)) {
                     entry = {kv, value};
                     return false;
                 }
@@ -313,7 +313,7 @@ typename VerticalMap<Value>::Entry VerticalMap<Value>::getAnySupersetEntry(Verti
 
 template<class Value>
 typename VerticalMap<Value>::Entry
-VerticalMap<Value>::getAnySupersetEntry(Vertical const &vertical, std::function<bool(Vertical, Value)> condition) {
+VerticalMap<Value>::getAnySupersetEntry(Vertical const &vertical, std::function<bool(Vertical*, Value)> condition) {
     typename VerticalMap<Value>::Entry entry;
     std::shared_ptr<RelationalSchema> relation = relation_.lock();
     bitset supersetKey(relation->getNumColumns());
@@ -322,8 +322,8 @@ VerticalMap<Value>::getAnySupersetEntry(Vertical const &vertical, std::function<
             0,
             supersetKey,
             [&entry, relation, &condition](auto indices, auto value) {
-                Vertical kv = relation->getVertical(indices);
-                if (condition(kv, value)) {
+                auto kv = relation->getVertical(indices);
+                if (condition(kv.get(), value)) {
                     entry = {kv, value};
                     return false;
                 }
@@ -360,7 +360,7 @@ template<class Value>
 bool VerticalMap<Value>::removeSupersetEntries(Vertical const& key) {
     std::vector<typename VerticalMap<Value>::Entry> supersetEntries = getSupersetEntries(key);
     for (auto supersetEntry : supersetEntries) {
-        remove(supersetEntry.first);
+        remove(*supersetEntry.first);
     }
     return !supersetEntries.empty();
 }
@@ -369,7 +369,7 @@ template<class Value>
 bool VerticalMap<Value>::removeSubsetEntries(Vertical const& key) {
     std::vector<typename VerticalMap<Value>::Entry> subsetEntries = getSubsetEntries(key);
     for (auto subsetEntry : subsetEntries) {
-        remove(subsetEntry.first);
+        remove(*subsetEntry.first);
     }
     return !subsetEntries.empty();
 }
@@ -382,7 +382,7 @@ std::unordered_set<std::shared_ptr<Vertical>> VerticalMap<Value>::keySet() {
     bitset subsetKey(relation_ptr->getNumColumns());
     setTrie_.traverseEntries(
             subsetKey,
-            [&keySet, relation_ptr](auto k, auto v) { keySet.insert(std::make_shared<Vertical>(relation_ptr->getVertical(k))); }
+            [&keySet, relation_ptr](auto k, auto v) { keySet.insert(relation_ptr->getVertical(k)); }
             );
     return keySet;
 }
@@ -450,13 +450,13 @@ void VerticalMap<Value>::shrink(double factor, std::function<bool(Entry, Entry)>
     unsigned int numOfRemoved = 0;
     unsigned int targetSize = size_ * factor;
     while (!keyQueue.empty() && size_ > targetSize) {
-        Vertical key = keyQueue.top().first;
+        auto key = keyQueue.top().first;
         keyQueue.pop();
 
         //insert additional logging
 
         numOfRemoved++;
-        remove(key);
+        remove(*key);
     }
     shrinkInvocations_++;
     timeSpentOnShrinking_+= 1; //haven't implemented time measuring yet
@@ -482,21 +482,21 @@ void VerticalMap<Value>::shrink(std::unordered_map<Vertical, int> &usageCounter,
     setTrie_.traverseEntries(
             subsetKey,
             [&keyQueue, relation_ptr, &canRemove, &usageCounter, medianOfUsage](auto k, auto v) -> void {
-                if (Entry entry(relation_ptr->getVertical(k), v); canRemove(entry) && usageCounter.at(entry.first) <= medianOfUsage) {
+                if (Entry entry(relation_ptr->getVertical(k), v); canRemove(entry) && usageCounter.at(*entry.first) <= medianOfUsage) {
                     keyQueue.push(entry);
                 }
             }
     );
     unsigned int numOfRemoved = 0;
     while (!keyQueue.empty()) {
-        Vertical key = keyQueue.front().first;
+        auto key = keyQueue.front().first;
         keyQueue.pop();
 
         //insert additional logging
 
         numOfRemoved++;
-        remove(key);
-        removeFromUsageCounter(usageCounter, key);
+        remove(*key);
+        removeFromUsageCounter(usageCounter, *key);
     }
 
     //TODO: what do we want to accomplish here? - looks ok btw

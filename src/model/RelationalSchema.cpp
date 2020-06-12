@@ -29,13 +29,13 @@ void RelationalSchema::init() {
 }
 
 //TODO: В оригинале тут какая-то срань
-Vertical RelationalSchema::getVertical(dynamic_bitset<> indices) {
-    if (indices.empty()) return *(this->emptyVertical);
+std::shared_ptr<Vertical> RelationalSchema::getVertical(dynamic_bitset<> indices) {
+    if (indices.empty()) return this->emptyVertical;
 
     if (indices.count() == 1){
-        return static_cast<Vertical>(*this->columns[indices.find_first()]);          //TODO: TEMPORAL KOSTYL'
+        return std::make_unique<Vertical>(static_cast<Vertical>(*this->columns[indices.find_first()]));          //TODO: TEMPORAL KOSTYL'
     }
-    return Vertical(shared_from_this(), indices);
+    return std::make_unique<Vertical>(shared_from_this(), indices);
 }
 
 string RelationalSchema::getName() { return name; }
@@ -87,12 +87,12 @@ std::unordered_set<std::shared_ptr<Vertical>> RelationalSchema::calculateHitting
         }
         consolidatedVerticals.put(*vertical_ptr, vertical_ptr);
 
-        auto invalidHittingSetMembers = hittingSet.getSubsetKeys(vertical_ptr->invert());
+        auto invalidHittingSetMembers = hittingSet.getSubsetKeys(*vertical_ptr->invert());
         std::sort(invalidHittingSetMembers.begin(), invalidHittingSetMembers.end(),
-                [](auto vertical1, auto vertical2) { return vertical1.getArity() < vertical2.getArity(); });
+                [](auto vertical1, auto vertical2) { return vertical1->getArity() < vertical2->getArity(); });
 
         for (auto& invalidHittingSetMember : invalidHittingSetMembers) {
-            hittingSet.remove(invalidHittingSetMember);
+            hittingSet.remove(*invalidHittingSetMember);
         }
 
         for (auto& invalidMember : invalidHittingSetMembers) {
@@ -101,16 +101,16 @@ std::unordered_set<std::shared_ptr<Vertical>> RelationalSchema::calculateHitting
                  correctiveColumnIndex = vertical_ptr->getColumnIndices().find_next(correctiveColumnIndex)) {
 
                 auto correctiveColumn = *getColumn(correctiveColumnIndex);
-                Vertical correctedMember = invalidMember.Union(static_cast<Vertical>(correctiveColumn));
+                auto correctedMember = invalidMember->Union(static_cast<Vertical>(correctiveColumn));
 
-                if (hittingSet.getAnySubsetEntry(correctedMember).second == nullptr) {
+                if (hittingSet.getAnySubsetEntry(*correctedMember).second == nullptr) {
                     if (pruningFunction) {
-                        bool isPruned = (*pruningFunction)(correctedMember);
+                        bool isPruned = (*pruningFunction)(*correctedMember);
                         if (isPruned) {
                             continue;
                         }
                     }
-                    hittingSet.put(correctedMember, std::make_shared<Vertical>(correctedMember));
+                    hittingSet.put(*correctedMember, correctedMember);
                 }
             }
         }

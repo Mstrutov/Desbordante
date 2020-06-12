@@ -24,6 +24,15 @@ private:
     int recursionDepth_;
     bool isAscendRandomly_ = false;
 
+    unsigned long long nanosSmartConstructing = 0;
+    unsigned long long pollingLaunchPads = 0;
+    unsigned long long ascending = 0;
+    unsigned long long tricklingDown = 0;
+    unsigned long long tricklingDownPart = 0;
+    unsigned long long tricklingDownFrom = 0;
+    int numNested = 0;
+
+
     void discover(std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees);
     std::shared_ptr<DependencyCandidate> pollLaunchPad(std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees);
     void escapeLaunchPad(std::shared_ptr<Vertical> lanchPad, std::list<std::shared_ptr<Vertical>>&& pruningSupersets, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees);
@@ -69,4 +78,5 @@ public:
         strategy_->context_ = context;
     }
     std::shared_ptr<ProfilingContext> getContext() { return context_; }
+    void printStats();
 };

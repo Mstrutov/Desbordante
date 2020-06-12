@@ -64,7 +64,7 @@ void LatticeLevel::generateNextLevel(vector<shared_ptr<LatticeLevel>>& levels) {
         continue;
       }
 
-      Vertical tmp(vertex1->getVertical().Union(vertex2->getVertical()));
+      Vertical tmp(*vertex1->getVertical().Union(vertex2->getVertical()));
      // shared_ptr<ColumnCombination> childColumns = make_shared<ColumnCombination>(ColumnCombination(vertex1->getVertical().Union(vertex2->getVertical())));
       shared_ptr<Vertical> childColumns = make_shared<Vertical>(tmp);
 
