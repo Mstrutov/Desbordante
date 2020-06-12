@@ -41,11 +41,11 @@ public:
     shared_ptr<RelationalSchema> getSchema();
     bool contains(Vertical& that);
     bool intersects(Vertical& that);
-    Vertical Union(Vertical const& that);
-    Vertical project(Vertical& that);
-    Vertical without (Vertical const & that) const;
-    Vertical invert();
-    Vertical invert(Vertical& scope);
+    std::shared_ptr<Vertical> Union(Vertical const& that);
+    std::shared_ptr<Vertical> project(Vertical& that);
+    std::shared_ptr<Vertical> without (Vertical const & that) const;
+    std::shared_ptr<Vertical> invert();
+    std::shared_ptr<Vertical> invert(Vertical& scope);
     static Vertical emptyVertical(shared_ptr<RelationalSchema> relSchema);
     int getArity() const;
     vector<shared_ptr<Column>> getColumns() const;

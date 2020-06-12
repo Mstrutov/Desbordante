@@ -41,7 +41,7 @@ public:
     void appendColumn(const string& colName);
     void appendColumn(std::shared_ptr<Column> column);
     int getNumColumns();
-    Vertical getVertical(dynamic_bitset<> indices);
+    std::shared_ptr<Vertical> getVertical(dynamic_bitset<> indices);
     bool isNullEqualNull();
 
     std::unordered_set<std::shared_ptr<Vertical>> calculateHittingSet(std::list<std::shared_ptr<Vertical>>&& verticals,

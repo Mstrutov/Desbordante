@@ -12,15 +12,20 @@
 // TODO: consider storing only containers of shared_ptrs
 
 void SearchSpace::discover(std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees) {
+    std::cout << "Discovering in: " << static_cast<std::string>(*strategy_) << std::endl;
     while (true) {  // на второй итерации дропается
+        auto now = std::chrono::system_clock::now();
         std::shared_ptr<DependencyCandidate> launchPad = pollLaunchPad(localVisitees);
         if (launchPad == nullptr) break;
 
         localVisitees = localVisitees != nullptr ? localVisitees : std::make_shared<VerticalMap<std::shared_ptr<VerticalInfo>>>(context_->getSchema());
+
         bool isDependencyFound = ascend(*launchPad, localVisitees);
 
         returnLaunchPad(*launchPad, !isDependencyFound);
+        pollingLaunchPads += std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - now).count();
     }
+    // std::cout << "+++++++++++" << nanosSmartConstructing << std::endl;
 }
 
 // этот метод больше для распараллеленного варианта
@@ -33,7 +38,9 @@ std::shared_ptr<DependencyCandidate> SearchSpace::pollLaunchPad(
             launchPads_.insert(deferredLaunchPads_.begin(), deferredLaunchPads_.end());
             deferredLaunchPads_.clear();
         }
+
         auto launchPad = std::make_shared<DependencyCandidate>(*launchPads_.begin());
+
         launchPads_.erase(launchPads_.begin());
         launchPadIndex_.remove(*launchPad->vertical_);
 
@@ -55,9 +62,11 @@ std::shared_ptr<DependencyCandidate> SearchSpace::pollLaunchPad(
         std::list<std::shared_ptr<Vertical>> supersetVerticals;
         //std::transform(supersetEntries.begin(), supersetEntries.end(), supersetVerticals.begin(),
         //        [](auto entry) {return std::make_shared<Vertical>(entry.first); });
+
         for (auto& entry : supersetEntries) {
-            supersetVerticals.push_back(std::make_shared<Vertical>(entry.first));
+            supersetVerticals.push_back(entry.first);
         }
+
         escapeLaunchPad(launchPad->vertical_, std::move(supersetVerticals), localVisitees);
         //continue;
 
@@ -71,24 +80,25 @@ void SearchSpace::escapeLaunchPad(std::shared_ptr<Vertical> launchPad,
                                   std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees) {
     // TODO: list<не shared_ptr>, чтобы не создавать новые поинтеры? Мб создать новый лист list<Vertical>
     // на второй итерации тут третий элемент какой-то неинициализированный - чекай, откуда он взялся.
+
     std::transform(pruningSupersets.begin(), pruningSupersets.end(), pruningSupersets.begin(),
-            [this](auto superset) { return std::make_shared<Vertical>(superset->invert().without(strategy_->getIrrelevantColumns())); } );
+            [this](auto superset) { return superset->invert()->without(strategy_->getIrrelevantColumns()); } );
 
     std::function<bool (Vertical const&)> pruningFunction = [this, &launchPad, &localVisitees] (auto const& hittingSetCandidate) -> bool {
         if (scope_ != nullptr && scope_->getAnySupersetEntry(hittingSetCandidate).second == nullptr) {
             return true;
         }
 
-        Vertical launchPadCandidate = launchPad->Union(hittingSetCandidate);
+        auto launchPadCandidate_ptr = launchPad->Union(hittingSetCandidate);
 
         // после создания такого поинтера может произойти непреднамеренное удаление объекта при удалении поинтера? - нет, тк новый создаётся
-        auto launchPadCandidate_ptr = std::make_shared<Vertical>(launchPadCandidate);
+
         if ((localVisitees == nullptr && isImpliedByMinDep(launchPadCandidate_ptr, localVisitees))
             || isImpliedByMinDep(launchPadCandidate_ptr, globalVisitees_)) {
             return true;
         }
 
-        if (launchPadIndex_.getAnySubsetEntry(launchPadCandidate).second != nullptr) {
+        if (launchPadIndex_.getAnySubsetEntry(*launchPadCandidate_ptr).second != nullptr) {
             return true;
         }
 
@@ -100,7 +110,9 @@ void SearchSpace::escapeLaunchPad(std::shared_ptr<Vertical> launchPad,
         );
 
     for (auto& escaping : hittingSet) {
-        auto escapedLaunchPadVertical = std::make_shared<Vertical>(launchPad->Union(*escaping));
+
+        auto escapedLaunchPadVertical = launchPad->Union(*escaping);
+
         // assert, который не имплементнуть из-за трансформа
         DependencyCandidate escapedLaunchPad = strategy_->createDependencyCandidate(escapedLaunchPadVertical);
         launchPads_.insert(escapedLaunchPad);
@@ -125,6 +137,8 @@ void SearchSpace::returnLaunchPad(DependencyCandidate const &launchPad, bool isD
 
 bool SearchSpace::ascend(DependencyCandidate const &launchPad,
                          std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees) {
+    auto now = std::chrono::system_clock::now();
+
     if (strategy_->shouldResample(launchPad.vertical_, sampleBoost_)) {
         context_->createFocusedSample(launchPad.vertical_, sampleBoost_);
     }
@@ -184,8 +198,7 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad,
                     || strategy_->isIrrelevantColumn(extensionColumn)) {
                 continue;
             }
-            auto extendedVertical = std::make_shared<Vertical>(
-                    traversalCandidate.vertical_->Union(static_cast<Vertical>(*extensionColumn)));
+            auto extendedVertical = traversalCandidate.vertical_->Union(static_cast<Vertical>(*extensionColumn));
 
             if (scope_ != nullptr && scope_->getSupersetEntries(*extendedVertical).empty()) {
                 continue;
@@ -216,6 +229,7 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad,
         double errorDiff = *error - traversalCandidate.error_.getMean();
     }
 
+    ascending += std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - now).count();
     if (*error <= strategy_->maxDependencyError_) {
         trickleDown(traversalCandidate.vertical_, *error, localVisitees);
 
@@ -243,6 +257,7 @@ void SearchSpace::checkEstimate(std::shared_ptr<DependencyStrategy> strategy,
 
 void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPeakError,
                               std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees) {
+
     std::unordered_set<Vertical> maximalNonDeps;
     auto allegedMinDeps = std::make_shared<VerticalMap<std::shared_ptr<VerticalInfo>>>(context_->getSchema());
     // arityComparator returns true if candidate1 < candidate2. We need a candidate with the smallest arity to be the highest value in the heap,
@@ -255,6 +270,8 @@ void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPea
     peaks.push_back(std::make_shared<DependencyCandidate>(mainPeak, ConfidenceInterval(mainPeakError), true));
     std::push_heap(peaks.begin(), peaks.end(), peaksComparator);
     std::unordered_set<Vertical> allegedNonDeps;
+
+    auto now = std::chrono::system_clock::now();
 
     while (!peaks.empty()) {
         // пока ситуация такая: при спуске из АС правильно считает C за не-ФЗ, АС за ФЗ, но не выходит из этого цикла,
@@ -271,14 +288,14 @@ void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPea
             std::unordered_set<std::shared_ptr<Vertical>> escapedPeakVerticals;
 
             for (auto vertical : peakHittingSet) {
-                escapedPeakVerticals.insert(std::make_shared<Vertical>(peak->vertical_->without(*vertical)));
+                escapedPeakVerticals.insert(peak->vertical_->without(*vertical));
             }
 //            std::transform(peakHittingSet.begin(), peakHittingSet.end(), escapedPeakVerticals.begin(),
 //                [&peak](auto vertical) { return std::make_shared<Vertical>(peak->vertical_->without(*vertical)); });
 
             for (auto& escapedPeakVertical : escapedPeakVerticals) {
                 if (escapedPeakVertical->getArity() > 0
-                        && allegedNonDeps.find(*escapedPeakVertical) == allegedNonDeps.end()) {
+                    && allegedNonDeps.find(*escapedPeakVertical) == allegedNonDeps.end()) {
                     // TODO: escapedPeakVertical, [](Vertical* v) {} ?
                     //auto escapedPeakVertical_ptr = std::make_shared<Vertical>(escapedPeakVertical);
                     auto escapedPeak = strategy_->createDependencyCandidate(escapedPeakVertical);
@@ -288,7 +305,7 @@ void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPea
                         continue;
                     }
                     if (isKnownNonDependency(escapedPeakVertical, localVisitees)
-                            || isKnownNonDependency(escapedPeakVertical, globalVisitees_)) {
+                        || isKnownNonDependency(escapedPeakVertical, globalVisitees_)) {
                         continue;
                     }
                     peaks.push_back(std::make_shared<DependencyCandidate>(escapedPeak));
@@ -298,17 +315,18 @@ void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPea
             continue;
         }
         auto allegedMinDep = trickleDownFrom(*peak, strategy_,
-                allegedMinDeps, allegedNonDeps, localVisitees, globalVisitees_, sampleBoost_);
+                                             allegedMinDeps, allegedNonDeps, localVisitees, globalVisitees_, sampleBoost_);
         if (allegedMinDep == nullptr) {
             std::pop_heap(peaks.begin(), peaks.end(), peaksComparator);
             peaks.pop_back();
         }
     }
+
     int numUncertainMinDeps = 0;
     for (auto& [allegedMinDep, info] : allegedMinDeps->entrySet()) {
-        if (info->isExtremal_ && !globalVisitees_->containsKey(allegedMinDep)) {
-            globalVisitees_->put(allegedMinDep, info);
-            strategy_->registerDependency(std::make_shared<Vertical>(allegedMinDep), info->error_, *context_);  // TODO: is it expensive to dereference ptr like this?
+        if (info->isExtremal_ && !globalVisitees_->containsKey(*allegedMinDep)) {
+            globalVisitees_->put(*allegedMinDep, info);
+            strategy_->registerDependency(allegedMinDep, info->error_, *context_);  // TODO: is it expensive to dereference ptr like this?
         }
         if (!info->isExtremal_) {
             numUncertainMinDeps++;
@@ -322,7 +340,7 @@ void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPea
             boost::optional<std::function<bool (Vertical const&)>>());
     std::unordered_set<std::shared_ptr<Vertical>> allegedMaxNonDeps;
     for (auto minLeaveOutVertical : allegedMaxNonDepsHS) {
-        allegedMaxNonDeps.insert(std::make_shared<Vertical>(minLeaveOutVertical->invert(*mainPeak)));
+        allegedMaxNonDeps.insert(minLeaveOutVertical->invert(*mainPeak));
     }
     //std::transform(allegedMaxNonDepsHS.begin(), allegedMaxNonDepsHS.end(), allegedMaxNonDeps.begin(),
     //        [mainPeak](auto minLeaveOutVertical) { return minLeaveOutVertical->invert(*mainPeak); });
@@ -359,13 +377,14 @@ void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPea
             std::push_heap(peaks.begin(), peaks.end(), peaksComparator);
         }
     }
+    //tricklingDownPart += std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - now).count();
 
     if (peaks.empty()) {
         for (auto& [allegedMinDep, info] : allegedMinDeps->entrySet()) {
-            if (!info->isExtremal_ && !globalVisitees_->containsKey(allegedMinDep)) {
+            if (!info->isExtremal_ && !globalVisitees_->containsKey(*allegedMinDep)) {
                 info->isExtremal_ = true;
-                globalVisitees_->put(allegedMinDep, info);
-                strategy_->registerDependency(std::make_shared<Vertical>(allegedMinDep), info->error_, *context_);
+                globalVisitees_->put(*allegedMinDep, info);
+                strategy_->registerDependency(allegedMinDep, info->error_, *context_);
             }
         }
     } else {
@@ -377,6 +396,7 @@ void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPea
 
         double newSampleBoost = sampleBoost_ * sampleBoost_;
 
+        // Nested слишком часто создаётся - что-то не так
         auto scopeVerticals  = newScope->keySet();
         auto nestedSearchSpace = std::make_shared<SearchSpace> (
                 -1, strategy_, std::move(newScope), globalVisitees_, context_->getSchema(),
@@ -397,17 +417,22 @@ void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPea
                     std::make_shared<Vertical>(static_cast<Vertical>(*scopeColumn))
                     ));
         }
+        auto prev = std::chrono::system_clock::now();
+        numNested++;
+        //std::cout << static_cast<std::string>(*strategy_) << ' ';
+        //std::cout << numNested << std::endl;
         nestedSearchSpace->discover(localVisitees);
+        tricklingDownPart += std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - prev).count();
 
         for (auto& [allegedMinDep, info] : allegedMinDeps->entrySet()) {
-            if (auto allegedMinDep_ptr = std::make_shared<Vertical>(allegedMinDep);
-                        !isImpliedByMinDep(allegedMinDep_ptr, globalVisitees_)) {
+            if (!isImpliedByMinDep(allegedMinDep, globalVisitees_)) {
                 info->isExtremal_ = true;
-                globalVisitees_->put(allegedMinDep, info);
-                strategy_->registerDependency(allegedMinDep_ptr, info->error_, *context_);
+                globalVisitees_->put(*allegedMinDep, info);
+                strategy_->registerDependency(allegedMinDep, info->error_, *context_);
             }
         }
     }
+    tricklingDown += std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - now).count();
 }
 
 std::shared_ptr<Vertical>
@@ -417,6 +442,7 @@ SearchSpace::trickleDownFrom(DependencyCandidate &minDepCandidate, std::shared_p
                              std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees,
                              std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> globalVisitees,
                              double boostFactor) {
+    auto now = std::chrono::system_clock::now();
     if (minDepCandidate.error_.getMin() > strategy->maxDependencyError_)
         throw std::runtime_error("Error in trickleDownFrom: minDepCandidate's error should be <= maxError");
 
@@ -468,7 +494,10 @@ SearchSpace::trickleDownFrom(DependencyCandidate &minDepCandidate, std::shared_p
                     globalVisitees,
                     boostFactor
                     );
-            if (allegedMinDep != nullptr) return allegedMinDep;
+            if (allegedMinDep != nullptr){
+                tricklingDownFrom += std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - now).count();
+                return allegedMinDep;
+            }
 
             if (!minDepCandidate.isExact()) {
                 double error = strategy->calculateError(minDepCandidate.vertical_);
@@ -490,6 +519,7 @@ SearchSpace::trickleDownFrom(DependencyCandidate &minDepCandidate, std::shared_p
         if (areAllParentsKnownNonDeps && context_->configuration_.isCheckEstimates) {
             requireMinimalDependency(strategy, minDepCandidate.vertical_);
         }
+        tricklingDownFrom += std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - now).count();
         return minDepCandidate.vertical_;
     } else {
         localVisitees->put(*minDepCandidate.vertical_, std::make_shared<VerticalInfo>(VerticalInfo::forNonDependency()));
@@ -497,6 +527,7 @@ SearchSpace::trickleDownFrom(DependencyCandidate &minDepCandidate, std::shared_p
         if (strategy->shouldResample(minDepCandidate.vertical_, boostFactor)) {
             context_->createFocusedSample(minDepCandidate.vertical_, boostFactor);
         }
+        tricklingDownFrom += std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - now).count();
         return nullptr;
     }
 }
@@ -527,7 +558,7 @@ std::list<std::shared_ptr<Vertical>> SearchSpace::getSubsetDeps(std::shared_ptr<
 
     std::transform(subsetEntries.begin(), subsetEntriesEnd, std::inserter(subsetDeps, subsetDeps.begin()),
             [](auto& entry){
-        return std::make_shared<Vertical>(entry.first);
+        return entry.first;
     });
 
     return subsetDeps;
@@ -544,6 +575,17 @@ bool SearchSpace::isKnownNonDependency(std::shared_ptr<Vertical> vertical,
                                        std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> verticalInfos) {
     return verticalInfos->getAnySupersetEntry(*vertical,
                                             [](auto vertical, auto info) -> bool { return !info->isDependency_; }).second != nullptr;
+}
+
+void SearchSpace::printStats() {
+    using std::cout, std::endl;
+    cout << "Trickling down from: " << tricklingDownFrom << endl;
+    cout << "Trickling down: " << tricklingDown << endl;
+    cout << "Trickling down nested:" << tricklingDownPart << endl;
+    cout << "Num nested: " << numNested << endl;
+    cout << "Ascending: " << ascending << endl;
+    cout << "Polling: " << pollingLaunchPads << endl;
+
 }
 
 

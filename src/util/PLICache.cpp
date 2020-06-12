@@ -50,7 +50,7 @@ PLICache::getOrCreateFor(Vertical const &vertical, ProfilingContext const &profi
     std::vector<PositionListIndexRank> ranks;
     ranks.reserve(subsetEntries.size());
     for (auto& [subVertical, subPLI_ptr] : subsetEntries) {
-        PositionListIndexRank pliRank(std::make_shared<Vertical>(subVertical), subPLI_ptr, subVertical.getArity());
+        PositionListIndexRank pliRank(subVertical, subPLI_ptr, subVertical->getArity());
         ranks.push_back(pliRank);
         if (!smallestPliRank
             || smallestPliRank->pli_->getSize() > pliRank.pli_->getSize()
@@ -109,7 +109,7 @@ PLICache::getOrCreateFor(Vertical const &vertical, ProfilingContext const &profi
     // Intersect and cache
     if (operands.size() >= profilingContext.configuration_.naryIntersectionSize) {
         PositionListIndexRank basePliRank = operands[0];
-        pli = basePliRank.pli_->probeAll(vertical.without(*basePliRank.vertical_), *relationData_.lock());
+        pli = basePliRank.pli_->probeAll(*vertical.without(*basePliRank.vertical_), *relationData_.lock());
         cachingProcess(vertical, pli);
     } else {
         std::shared_ptr<Vertical> currentVertical = nullptr;
@@ -118,7 +118,7 @@ PLICache::getOrCreateFor(Vertical const &vertical, ProfilingContext const &profi
                 currentVertical = operand.vertical_;
                 pli = operand.pli_;
             } else {
-                currentVertical = std::make_shared<Vertical>(currentVertical->Union(*operand.vertical_));
+                currentVertical = currentVertical->Union(*operand.vertical_);
                 pli = pli->intersect(operand.pli_);
                 cachingProcess(*currentVertical, pli);
             }

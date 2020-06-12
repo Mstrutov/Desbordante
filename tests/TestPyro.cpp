@@ -16,7 +16,8 @@ std::string get_selfpath();
 TEST(PyroTester, first) {
 
     //string path = "/home/maxim/Study/Metanome-coding/metanome_git/src/tests";
-    auto path = fs::current_path().append("inputData").append("CIPublicHighway50k.csv");
+    string dataset = "neighbors100k.csv";
+    auto path = fs::current_path().append("inputData").append(dataset);
     //CSVParser csvParser(path + "/TestTane.csv");
     //cout << path;
     try {

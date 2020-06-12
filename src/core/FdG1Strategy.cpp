@@ -61,7 +61,7 @@ double FdG1Strategy::calculateError(std::shared_ptr<Vertical> lhs) {
         error = calculateG1(rhsPli->getNip());
     } else {
         auto lhsPli = context_->pliCache_->getOrCreateFor(*lhs, *context_);
-        auto jointPli = context_->pliCache_->get(lhs->Union(static_cast<Vertical>(*rhs_)));
+        auto jointPli = context_->pliCache_->get(*lhs->Union(static_cast<Vertical>(*rhs_)));
         error = jointPli == nullptr ? calculateG1(lhsPli) : calculateG1(lhsPli->getNepAsLong() - jointPli->getNepAsLong());
     }
     return error;

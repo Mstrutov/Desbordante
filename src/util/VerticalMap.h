@@ -61,7 +61,7 @@ private:
     int removeFromUsageCounter (std::unordered_map<Vertical, int>& usageCounter, Vertical key);
 public:
     //key = shared_ptr<const Vertical>?? Attempt to achieve const Vertical?
-    using Entry = std::pair<Vertical, Value>;
+    using Entry = std::pair<std::shared_ptr<Vertical>, Value>;
     explicit VerticalMap(std::shared_ptr<RelationalSchema> relation) : relation_(relation), setTrie_(relation->getNumColumns()) {}
     size_t getSize() const { return size_; }
     bool isEmpty() const { return size_ == 0; }
@@ -75,13 +75,13 @@ public:
     Value remove(Vertical const& key);
     Value remove(bitset const& key);
 
-    std::vector<Vertical> getSubsetKeys(Vertical const& vertical);
+    std::vector<std::shared_ptr<Vertical>> getSubsetKeys(Vertical const& vertical);
     std::vector<Entry> getSubsetEntries(Vertical const& vertical);
     Entry getAnySubsetEntry(Vertical const& vertical);
-    Entry getAnySubsetEntry(Vertical const& vertical, std::function<bool(Vertical, Value)> const& condition);
+    Entry getAnySubsetEntry(Vertical const& vertical, std::function<bool(Vertical*, Value)> const& condition);
     std::vector<Entry> getSupersetEntries(Vertical const& vertical);
     Entry getAnySupersetEntry(Vertical const& vertical);
-    Entry getAnySupersetEntry(Vertical const& vertical, std::function<bool(Vertical, Value)> condition);
+    Entry getAnySupersetEntry(Vertical const& vertical, std::function<bool(Vertical*, Value)> condition);
     std::vector<Entry> getRestrictedSupersetEntries(Vertical const& vertical, Vertical const& exclusion);
     bool removeSupersetEntries(Vertical const& key);
     bool removeSubsetEntries(Vertical const& key);
@@ -120,10 +120,26 @@ namespace std {
         }
     };
 
+    template<>
+    struct hash<std::shared_ptr<Column>> {
+        size_t operator()(std::shared_ptr<Column> const& k) const {
+            boost::dynamic_bitset<> columnIndex(k->getSchema()->getNumColumns());
+            columnIndex.set(k->getIndex());
+            return columnIndex.to_ulong();
+        }
+    };
+
     template<class T>
     struct hash<std::pair<Vertical, T>> {
         size_t operator()(std::pair<Vertical, T> const& k) const {
             return k.first.getColumnIndices().to_ulong();
+        }
+    };
+
+    template<class T>
+    struct hash<std::pair<std::shared_ptr<Vertical>, T>> {
+        size_t operator()(std::pair<std::shared_ptr<Vertical>, T> const& k) const {
+            return k.first->getColumnIndices().to_ulong();
         }
     };
 }

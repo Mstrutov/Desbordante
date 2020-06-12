@@ -7,4 +7,5 @@ mkdir build
 cd build
 cmake ..
 devenv /build Release fdtester.sln 
+cd ..
 

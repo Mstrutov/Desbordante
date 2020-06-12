@@ -55,6 +55,7 @@ void Pyro::execute() {
         searchSpace->setContext(profilingContext);
         searchSpace->ensureInitialized();
         searchSpace->discover();
+        searchSpace->printStats();
     }
     auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
 
