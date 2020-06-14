@@ -20,8 +20,9 @@ int PositionListIndex::millis = 0;
 int PositionListIndex::intersectionCount = 0;
 
 // use r-value references, DO NOT copy
-PositionListIndex::PositionListIndex(deque<vector<int>> index, vector<int> nullCluster, int size, double entropy,
-                                     long nep, unsigned int relationSize, unsigned int originalRelationSize, double invertedEntropy, double giniImpurity):
+PositionListIndex::PositionListIndex(deque<vector<int>> index, vector<int> nullCluster, unsigned int size, double entropy,
+                                     unsigned long long nep, unsigned int relationSize, unsigned int originalRelationSize,
+                                     double invertedEntropy, double giniImpurity):
                                      index(std::move(index)),
                                      nullCluster(std::move(nullCluster)),
                                      size(size),
@@ -51,8 +52,8 @@ shared_ptr<PositionListIndex> PositionListIndex::createFor(vector<int>& data, bo
     double keyGap = 0.0;
     double invEnt = 0;
     double giniGap = 0;
-    long nep = 0;
-    int size = 0;
+    unsigned long long nep = 0;
+    unsigned int size = 0;
     deque<vector<int>> clusters;
 
     for (auto & iter : index){
@@ -81,8 +82,8 @@ shared_ptr<PositionListIndex> PositionListIndex::createFor(vector<int>& data, bo
     return pli;
 }
 
-long PositionListIndex::calculateNep(long numElements) {
-    return numElements * (numElements - 1) / 2;
+unsigned long long PositionListIndex::calculateNep(unsigned int numElements) {
+    return static_cast<unsigned long long>(numElements) * (numElements - 1) / 2;
 }
 
 void PositionListIndex::sortClusters(deque<vector<int>> &clusters) {
@@ -129,9 +130,9 @@ shared_ptr<PositionListIndex> PositionListIndex::intersect(shared_ptr<PositionLi
 shared_ptr<PositionListIndex> PositionListIndex::probe(const vector<int>& probingTable) {
     assert(this->relationSize == probingTable.size());
     deque<vector<int>> newIndex;
-    int newSize = 0;
+    unsigned int newSize = 0;
     double newKeyGap = 0.0;
-    long newNep = 0;
+    unsigned long long newNep = 0;
     vector<int> nullCluster;
 
     map<int, vector<int>> partialIndex;
@@ -185,9 +186,9 @@ shared_ptr<PositionListIndex> PositionListIndex::probeAll(Vertical probingColumn
     assert(this->relationSize == relationData.getNumRows());
 
     deque<vector<int>> newIndex;
-    int newSize = 0;
+    unsigned int newSize = 0;
     double newKeyGap = 0.0;
-    long newNep = 0;
+    unsigned long long newNep = 0;
 
     map<vector<int>, vector<int>> partialIndex;
     vector<int> nullCluster;

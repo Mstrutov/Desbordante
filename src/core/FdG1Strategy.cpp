@@ -3,7 +3,7 @@
 #include "SearchSpace.h"
 #include "PLICache.h"
 double FdG1Strategy::calculateG1(std::shared_ptr<PositionListIndex> lhsPLI) {
-    long long numViolations = 0;
+    unsigned long long numViolations = 0;
     std::map<int, int> valueCounts;
     std::vector<int> probingTable = context_->relationData_->getColumnData(rhs_->getIndex())->getProbingTable();
 
@@ -21,9 +21,9 @@ double FdG1Strategy::calculateG1(std::shared_ptr<PositionListIndex> lhsPLI) {
             }
         }
 
-        long long numViolationsInCluster = cluster.size() * (cluster.size() - 1) >> 1;
+        unsigned long long numViolationsInCluster = cluster.size() * (cluster.size() - 1) / 2;
         for (auto const& [key, refinedClusterSize] : valueCounts) {
-            numViolationsInCluster -= refinedClusterSize * (refinedClusterSize - 1) >> 1;
+            numViolationsInCluster -= static_cast<unsigned long long>(refinedClusterSize) * (refinedClusterSize - 1) / 2;
         }
         numViolations += numViolationsInCluster;
     }
@@ -64,6 +64,7 @@ double FdG1Strategy::calculateError(std::shared_ptr<Vertical> lhs) {
         auto jointPli = context_->pliCache_->get(*lhs->Union(static_cast<Vertical>(*rhs_)));
         error = jointPli == nullptr ? calculateG1(lhsPli) : calculateG1(lhsPli->getNepAsLong() - jointPli->getNepAsLong());
     }
+    calcCount_++;
     return error;
 }
 

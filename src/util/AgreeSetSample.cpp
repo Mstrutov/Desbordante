@@ -11,8 +11,8 @@ using namespace std;
 
 double AgreeSetSample::stdDevSmoothing = 1;
 
-AgreeSetSample::AgreeSetSample(shared_ptr<ColumnLayoutRelationData> relationData, shared_ptr<Vertical> focus, int sampleSize,
-                               long populationSize):
+AgreeSetSample::AgreeSetSample(shared_ptr<ColumnLayoutRelationData> relationData, shared_ptr<Vertical> focus, unsigned int sampleSize,
+                               unsigned long long populationSize):
         relationData(std::move(relationData)),
         focus(std::move(focus)),
         sampleSize(sampleSize),
@@ -72,7 +72,7 @@ ConfidenceInterval AgreeSetSample::estimateMixed(std::shared_ptr<Vertical> agree
     return estimateGivenNumHits(numHits, confidence);
 }
 
-ConfidenceInterval AgreeSetSample::estimateGivenNumHits(long long numHits, double confidence) {
+ConfidenceInterval AgreeSetSample::estimateGivenNumHits(unsigned long long numHits, double confidence) {
     double sampleRatio = numHits / static_cast<double>(sampleSize);
     double relationRatio = ratioToRelationRatio(sampleRatio);
     if (this->isExact() || confidence == -1) {       //TODO: check all the stuff with confidence interval and what confidence is; possibility to use boost::optional

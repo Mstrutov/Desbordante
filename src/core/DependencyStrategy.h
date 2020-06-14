@@ -13,6 +13,7 @@ public:
     double minNonDependencyError_;
     double maxDependencyError_;
     std::shared_ptr<ProfilingContext> context_;
+    unsigned int calcCount_ = 0;
     /*
      * Create the initial candidate for the given SearchSpace
      * */

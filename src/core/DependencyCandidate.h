@@ -27,4 +27,6 @@ public:
     //static bool maxErrorComparator(DependencyCandidate const &, DependencyCandidate const &);
     static bool fullArityErrorComparator(DependencyCandidate const &, DependencyCandidate const &);
     static bool fullErrorArityComparator(DependencyCandidate const &, DependencyCandidate const &);
+    explicit operator std::string() const
+        { return "Candidate " + static_cast<std::string>(*vertical_) + static_cast<std::string>(error_); }
 };

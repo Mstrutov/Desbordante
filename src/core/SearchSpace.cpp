@@ -21,9 +21,10 @@ void SearchSpace::discover(std::shared_ptr<VerticalMap<std::shared_ptr<VerticalI
         localVisitees = localVisitees != nullptr ? localVisitees : std::make_shared<VerticalMap<std::shared_ptr<VerticalInfo>>>(context_->getSchema());
 
         bool isDependencyFound = ascend(*launchPad, localVisitees);
-
+        pollingLaunchPads += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - now).count();
+        // now = std::chrono::system_clock::now();
         returnLaunchPad(*launchPad, !isDependencyFound);
-        pollingLaunchPads += std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - now).count();
+        // returningLaunchPad += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - now).count();
     }
     // std::cout << "+++++++++++" << nanosSmartConstructing << std::endl;
 }
@@ -137,7 +138,6 @@ void SearchSpace::returnLaunchPad(DependencyCandidate const &launchPad, bool isD
 
 bool SearchSpace::ascend(DependencyCandidate const &launchPad,
                          std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees) {
-    auto now = std::chrono::system_clock::now();
 
     if (strategy_->shouldResample(launchPad.vertical_, sampleBoost_)) {
         context_->createFocusedSample(launchPad.vertical_, sampleBoost_);
@@ -145,7 +145,10 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad,
 
     DependencyCandidate traversalCandidate = launchPad;
     boost::optional<double> error;
+
+    auto now = std::chrono::system_clock::now();
     while (true) {
+
         if (context_->configuration_.isCheckEstimates) {
             checkEstimate(strategy_, traversalCandidate);
         }
@@ -223,13 +226,15 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad,
             break;
         }
     }
+    
+    std::cout << static_cast<std::string>(traversalCandidate) << std::endl;
 
     if (!error) {
         error = strategy_->calculateError(traversalCandidate.vertical_);
         double errorDiff = *error - traversalCandidate.error_.getMean();
     }
+    ascending += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - now).count();
 
-    ascending += std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - now).count();
     if (*error <= strategy_->maxDependencyError_) {
         trickleDown(traversalCandidate.vertical_, *error, localVisitees);
 
@@ -377,7 +382,7 @@ void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPea
             std::push_heap(peaks.begin(), peaks.end(), peaksComparator);
         }
     }
-    //tricklingDownPart += std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - now).count();
+    //tricklingDownPart += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - now).count();
 
     if (peaks.empty()) {
         for (auto& [allegedMinDep, info] : allegedMinDeps->entrySet()) {
@@ -423,7 +428,7 @@ void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPea
         //std::cout << static_cast<std::string>(*strategy_) << ' ';
         //std::cout << numNested << std::endl;
         nestedSearchSpace->discover(localVisitees);
-        tricklingDownPart += std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - prev).count();
+        tricklingDownPart += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - prev).count();
 
         for (auto& [allegedMinDep, info] : allegedMinDeps->entrySet()) {
             if (!isImpliedByMinDep(allegedMinDep, globalVisitees_)) {
@@ -433,7 +438,7 @@ void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPea
             }
         }
     }
-    tricklingDown += std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - now).count();
+    tricklingDown += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - now).count();
 }
 
 std::shared_ptr<Vertical>
@@ -486,6 +491,8 @@ SearchSpace::trickleDownFrom(DependencyCandidate &minDepCandidate, std::shared_p
                 break;
             }
 
+            tricklingDownFrom += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - now).count();
+
             auto allegedMinDep = trickleDownFrom(
                     *parentCandidate,
                     strategy,
@@ -495,8 +502,10 @@ SearchSpace::trickleDownFrom(DependencyCandidate &minDepCandidate, std::shared_p
                     globalVisitees,
                     boostFactor
                     );
+
+            now = std::chrono::system_clock::now();
+
             if (allegedMinDep != nullptr){
-                tricklingDownFrom += std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - now).count();
                 return allegedMinDep;
             }
 
@@ -520,7 +529,7 @@ SearchSpace::trickleDownFrom(DependencyCandidate &minDepCandidate, std::shared_p
         if (areAllParentsKnownNonDeps && context_->configuration_.isCheckEstimates) {
             requireMinimalDependency(strategy, minDepCandidate.vertical_);
         }
-        tricklingDownFrom += std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - now).count();
+        tricklingDownFrom += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - now).count();
         return minDepCandidate.vertical_;
     } else {
         localVisitees->put(*minDepCandidate.vertical_, std::make_shared<VerticalInfo>(VerticalInfo::forNonDependency()));
@@ -528,7 +537,7 @@ SearchSpace::trickleDownFrom(DependencyCandidate &minDepCandidate, std::shared_p
         if (strategy->shouldResample(minDepCandidate.vertical_, boostFactor)) {
             context_->createFocusedSample(minDepCandidate.vertical_, boostFactor);
         }
-        tricklingDownFrom += std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - now).count();
+        tricklingDownFrom += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - now).count();
         return nullptr;
     }
 }
@@ -580,13 +589,13 @@ bool SearchSpace::isKnownNonDependency(std::shared_ptr<Vertical> vertical,
 
 void SearchSpace::printStats() {
     using std::cout, std::endl;
-    cout << "Trickling down from: " << tricklingDownFrom << endl;
-    cout << "Trickling down: " << tricklingDown << endl;
-    cout << "Trickling down nested:" << tricklingDownPart << endl;
-    cout << "Num nested: " << numNested << endl;
-    cout << "Ascending: " << ascending << endl;
-    cout << "Polling: " << pollingLaunchPads << endl;
-
+    cout << "Trickling down from: " << tricklingDownFrom / 1000000 << endl;
+    cout << "Trickling down: " << tricklingDown / 1000000 - tricklingDownFrom / 1000000 << endl;
+    cout << "Trickling down nested:" << tricklingDownPart / 1000000 << endl;
+    cout << "Num nested: " << numNested / 1000000 << endl;
+    cout << "Ascending: " << ascending / 1000000<< endl;
+    cout << "Polling: " << pollingLaunchPads / 1000000 << endl;
+    cout << "Returning launch pad: " << returningLaunchPad / 1000000 << endl;
 }
 
 

@@ -3,11 +3,10 @@
 std::shared_ptr<ListAgreeSetSample> ListAgreeSetSample::createFocusedFor(std::shared_ptr<ColumnLayoutRelationData> relation,
                                                         std::shared_ptr<Vertical> restrictionVertical,
                                                         std::shared_ptr<PositionListIndex> restrictionPLi,
-                                                        int sampleSize) {
+                                                        unsigned int sampleSize) {
     return AgreeSetSample::createFocusedFor<ListAgreeSetSample>(relation, restrictionVertical, restrictionPLi, sampleSize);
 }
 
-//TODO: test this hard AF!!
 std::shared_ptr<std::vector<long long>> ListAgreeSetSample::bitSetToLongLongVector(boost::dynamic_bitset<> const& bitset) {
     auto result = std::make_shared<std::vector<long long>>(std::vector<long long>( (bitset.size() + 63 ) / 64, 0));
     for (size_t i = 0; i < bitset.size(); i++) {
@@ -16,7 +15,8 @@ std::shared_ptr<std::vector<long long>> ListAgreeSetSample::bitSetToLongLongVect
     return result;
 }
 
-ListAgreeSetSample::ListAgreeSetSample(std::shared_ptr<ColumnLayoutRelationData> relation, std::shared_ptr<Vertical> focus, int sampleSize, int populationSize,
+ListAgreeSetSample::ListAgreeSetSample(std::shared_ptr<ColumnLayoutRelationData> relation, std::shared_ptr<Vertical> focus,
+        unsigned int sampleSize, unsigned long long populationSize,
         std::map<boost::dynamic_bitset<>, int> const & agreeSetCounters) : AgreeSetSample(relation, focus, sampleSize, populationSize) {
     for(auto el : agreeSetCounters) {
         agreeSetCounters_.emplace_back(Entry(bitSetToLongLongVector(el.first), el.second));
@@ -53,8 +53,11 @@ long long ListAgreeSetSample::getNumAgreeSupersets(std::shared_ptr<Vertical> agr
     long long count = 0;
     std::vector<long long> minAgreeSet = *bitSetToLongLongVector(agreement->getColumnIndices());
     std::vector<long long> minDisagreeSet = *bitSetToLongLongVector(disagreement->getColumnIndices());
-
+    //std::cout << "-----------------------------------\n";
     for (const auto& agreeSetCounter : agreeSetCounters_) {
+        /*for (auto const& el : *agreeSetCounter.agreeSet_)
+            std::cout << el << ' ';
+        std::cout << agreeSetCounter.count_ << "\n";*/
         std::vector<long long> agreeSet = *agreeSetCounter.agreeSet_;
         //check the agreement
         int i = 0;
@@ -79,6 +82,7 @@ long long ListAgreeSetSample::getNumAgreeSupersets(std::shared_ptr<Vertical> agr
     Entries:
         continue;
     }
+    //std::cout << '\n';
     //_numQueries
     //_nanoQueries
     return count;
@@ -105,6 +109,7 @@ std::shared_ptr<std::vector<long long>> ListAgreeSetSample::getNumAgreeSupersets
         }
         countAgreements += agreeSetCounter.count_;
         //check the disagreement
+        i = 0;
         minFields = std::min(agreeSet.size(), minDisagreeSet.size());
         while (i < minFields) {
             if ((agreeSet[i] & minDisagreeSet[i]) != 0) goto Entries;

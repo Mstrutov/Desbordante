@@ -51,15 +51,25 @@ void Pyro::execute() {
             searchSpaces_.push_back(std::make_shared<SearchSpace>(nextId++, strategy, schema, launchPadOrder));
         }
     }
+    unsigned int totalErrorCalcCount = 0;
+    unsigned long long totalAscension = 0;
+    unsigned long long totalTrickle = 0;
     for (auto& searchSpace : searchSpaces_) {
         searchSpace->setContext(profilingContext);
         searchSpace->ensureInitialized();
         searchSpace->discover();
         searchSpace->printStats();
+        totalErrorCalcCount += searchSpace->getErrorCalcCount();
+        totalAscension += searchSpace->ascending / 1000000;
+        totalTrickle += searchSpace->tricklingDownFrom / 1000000;
     }
     auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
 
     std::cout << "Time: " << elapsed_milliseconds.count() << " milliseconds" << std::endl;
+    std::cout << "Error calculation count: " << totalErrorCalcCount << std::endl;
+    std::cout << "Total ascension: " << totalAscension << std::endl;
+    std::cout << "Total trickle: " << totalTrickle << std::endl;
+
 }
 
 Pyro::Pyro(fs::path const &path) : inputGenerator_(path) {

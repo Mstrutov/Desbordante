@@ -29,6 +29,7 @@ void KeyG1Strategy::ensureInitialized(std::shared_ptr<SearchSpace> searchSpace) 
 double KeyG1Strategy::calculateError(std::shared_ptr<Vertical> keyCandidate) {
     auto pli = context_->pliCache_->getOrCreateFor(*keyCandidate, *context_);
     double error = calculateKeyError(pli);
+    calcCount_++;
     return error;
 }
 

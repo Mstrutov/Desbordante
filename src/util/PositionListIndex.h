@@ -19,21 +19,21 @@ class PositionListIndex {
 private:
     deque<vector<int>> index;
     vector<int> nullCluster;
-    int size;
+    unsigned int size;
     double entropy;
     double invertedEntropy;
     double giniImpurity;
-    long nep;
+    unsigned long long nep;
     unsigned int relationSize;
     unsigned int originalRelationSize;
     vector<int> probingTableCache;
-    int freq_ = 0;
+    unsigned int freq_ = 0;
 
-    PositionListIndex(deque<vector<int>> index, vector<int> nullCluster, int size, double entropy,
-                      long nep, unsigned int relationSize, unsigned int originalRelationSize,
+    PositionListIndex(deque<vector<int>> index, vector<int> nullCluster, unsigned int size, double entropy,
+                      unsigned long long nep, unsigned int relationSize, unsigned int originalRelationSize,
                       double invertedEntropy = 0, double giniImpurity = 0);
 
-    static long calculateNep(long numElements);
+    static unsigned long long calculateNep(unsigned int numElements);
     static void sortClusters(deque<vector<int>> & clusters);
     static bool takeProbe(int position, ColumnLayoutRelationData & relationData, Vertical & probingColumns, vector<int> & probe);
 
@@ -47,9 +47,9 @@ public:
     vector<int> getProbingTable(bool isCaching);
     deque<vector<int>> & getIndex();
     double getNep() { return (double) nep; }
-    long getNepAsLong() const { return nep; }           //ADDED: getNep()
-    int getNumNonSingletonCluster() const { return index.size(); }
-    int getFreq() const { return freq_; }
+    unsigned long long getNepAsLong() const { return nep; }           //ADDED: getNep()
+    unsigned int getNumNonSingletonCluster() const { return index.size(); }
+    unsigned int getFreq() const { return freq_; }
     void incFreq() { freq_++; }
     int getSize() { return size; }
     double getEntropy() const { return entropy; }

@@ -24,11 +24,11 @@ public:
     static std::shared_ptr<ListAgreeSetSample> createFocusedFor(std::shared_ptr<ColumnLayoutRelationData> relation,
                                                 std::shared_ptr<Vertical> restrictionVertical,
                                                 std::shared_ptr<PositionListIndex> restrictionPLi,
-                                                int sampleSize);
+                                                unsigned int sampleSize);
 
     //100% should use move semantics on agreeSetCounters.
     //in Java code relation is a reference to base class RelationData, but in fact it references to CLRD, so here latter is used
-    ListAgreeSetSample(std::shared_ptr<ColumnLayoutRelationData> relation, std::shared_ptr<Vertical> focus, int sampleSize, int populationSize,
+    ListAgreeSetSample(std::shared_ptr<ColumnLayoutRelationData> relation, std::shared_ptr<Vertical> focus, unsigned int sampleSize, unsigned long long populationSize,
                         std::map<boost::dynamic_bitset<>, int> const & agreeSetCounters);
 
     long long getNumAgreeSupersets(std::shared_ptr<Vertical> agreement) override;

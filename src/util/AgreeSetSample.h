@@ -34,9 +34,9 @@ public:
 protected:
     shared_ptr<ColumnLayoutRelationData> relationData;
     shared_ptr<Vertical> focus;
-    int sampleSize;
-    long populationSize;
-    AgreeSetSample(shared_ptr<ColumnLayoutRelationData> relationData, shared_ptr<Vertical> focus, int sampleSize, long populationSize);
+    unsigned int sampleSize;
+    unsigned long long populationSize;
+    AgreeSetSample(shared_ptr<ColumnLayoutRelationData> relationData, shared_ptr<Vertical> focus, unsigned int sampleSize, unsigned long long populationSize);
 
     //template<typename T, typename enable_if<is_base_of<AgreeSetSample, T>::value>::type* = nullptr> //- TODO: SFINAE???
     template<typename T>
@@ -47,7 +47,7 @@ protected:
     static shared_ptr<T> createFocusedFor(shared_ptr<ColumnLayoutRelationData> relation,
                                           shared_ptr<Vertical> restrictionVertical,
                                           shared_ptr<PositionListIndex> restrictionPli,
-                                          int sampleSize);
+                                          unsigned int sampleSize);
 private:
     static double stdDevSmoothing;
 
@@ -55,7 +55,7 @@ private:
     double observationsToRelationRatio(double numObservations) { return ratioToRelationRatio(numObservations / sampleSize); }
     static double calculateNonNegativeFraction(double a, double b);
 
-    ConfidenceInterval estimateGivenNumHits(long long numHits, double confidence);
+    ConfidenceInterval estimateGivenNumHits(unsigned long long numHits, double confidence);
     // Inverse cumulative distribution function (aka the probit function)
     double probitFunction(double quantile) const;
 };

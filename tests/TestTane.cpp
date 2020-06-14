@@ -18,9 +18,9 @@ extern string path;
 
 //TODO: wrong file => WARNING
 TEST(TaneTester, first) {
-    vector<string> datasets = {"CIPublicHighway50k.csv", "neighbors100k.csv"};
+    vector<string> datasets = {"CIPublicHighway50k.csv", "CIPublicHighway100k.csv", "CIPublicHighway200k.csv", "neighbors100k.csv"};
     //string path = "/home/maxim/Study/Metanome-coding/metanome_git/src/tests";
-    auto path = fs::current_path().append("inputData").append(datasets[1]);
+    auto path = fs::current_path().append("inputData").append(datasets[2]);
     //CSVParser csvParser(path + "/TestTane.csv");
     //cout << path;
     vector<long> results;
@@ -30,7 +30,7 @@ TEST(TaneTester, first) {
         results.push_back(algoInstance.execute());
     }
     catch (std::runtime_error& e) {
-        cout << "Excepion raised in test: " << e.what() << endl;
+        cout << "Exception raised in test: " << e.what() << endl;
         FAIL();
     }
 

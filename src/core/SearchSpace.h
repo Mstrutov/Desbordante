@@ -24,12 +24,6 @@ private:
     int recursionDepth_;
     bool isAscendRandomly_ = false;
 
-    unsigned long long nanosSmartConstructing = 0;
-    unsigned long long pollingLaunchPads = 0;
-    unsigned long long ascending = 0;
-    unsigned long long tricklingDown = 0;
-    unsigned long long tricklingDownPart = 0;
-    unsigned long long tricklingDownFrom = 0;
     int numNested = 0;
 
 
@@ -52,6 +46,14 @@ private:
     static std::string formatArityHistogram(VerticalMap<int*>) = delete;
 
 public:
+    unsigned long long nanosSmartConstructing = 0;
+    unsigned long long pollingLaunchPads = 0;
+    unsigned long long ascending = 0;
+    unsigned long long tricklingDown = 0;
+    unsigned long long tricklingDownPart = 0;
+    unsigned long long tricklingDownFrom = 0;
+    unsigned long long returningLaunchPad = 0;
+
     bool isInitialized_ = false;
     int id_;
 
@@ -78,5 +80,6 @@ public:
         strategy_->context_ = context;
     }
     std::shared_ptr<ProfilingContext> getContext() { return context_; }
+    unsigned int getErrorCalcCount() { return strategy_->calcCount_; }
     void printStats();
 };

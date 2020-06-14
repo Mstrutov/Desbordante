@@ -1,4 +1,6 @@
 #pragma once
+#include <boost/format.hpp>
+#include <string>
 class ConfidenceInterval {
 private:
     double min_;
@@ -20,4 +22,5 @@ public:
 
     ConfidenceInterval multiply(double scalar) { return ConfidenceInterval(min_ * scalar, mean_ * scalar, max_ * scalar); }
     bool isPoint() const { return min_ == max_; }
+    explicit operator std::string() const { return (boost::format("error=(%.3f, %.3f, %.3f)") % min_ % mean_ % max_).str(); }
 };
