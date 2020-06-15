@@ -20,7 +20,7 @@ extern string path;
 TEST(TaneTester, first) {
     vector<string> datasets = {"CIPublicHighway50k.csv", "CIPublicHighway100k.csv", "CIPublicHighway200k.csv", "neighbors100k.csv"};
     //string path = "/home/maxim/Study/Metanome-coding/metanome_git/src/tests";
-    auto path = fs::current_path().append("inputData").append(datasets[2]);
+    auto path = fs::current_path().append("inputData").append(datasets[1]);
     //CSVParser csvParser(path + "/TestTane.csv");
     //cout << path;
     vector<long> results;

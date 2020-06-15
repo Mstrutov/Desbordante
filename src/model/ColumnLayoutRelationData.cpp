@@ -102,6 +102,5 @@ shared_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::createFrom(CSVPar
     // TODO: тут костыль: в RelationalSchema::create происходит инициализация битсета нулевого размера. Можно обойти через resize
     schema->init();
 
-    auto ans = shared_ptr<ColumnLayoutRelationData>(new ColumnLayoutRelationData(schema, columnData));
-    return ans;
+    return make_shared<ColumnLayoutRelationData>(schema, columnData);
 }

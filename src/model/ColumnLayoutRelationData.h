@@ -19,7 +19,6 @@ using std::vector;
 class ColumnLayoutRelationData : public RelationData {
 private:
     vector<shared_ptr<ColumnData>> columnData;
-    ColumnLayoutRelationData(shared_ptr<RelationalSchema>& schema, vector<shared_ptr<ColumnData>> columnData);
 
 public:
     vector<shared_ptr<ColumnData>> getColumnData() override;
@@ -28,6 +27,8 @@ public:
     vector<int> getTuple(int tupleIndex) override;
     void shuffleColumns() override;
     double getMaximumEntropy() { return std::log(getNumRows()); }
+
+    ColumnLayoutRelationData(shared_ptr<RelationalSchema>& schema, vector<shared_ptr<ColumnData>> columnData);
 
     static shared_ptr<ColumnLayoutRelationData> createFrom(CSVParser& fileInput, bool isNullEqNull);
     static shared_ptr<ColumnLayoutRelationData> createFrom(CSVParser& fileInput, bool isNullEqNull, int maxCols, long maxRows);

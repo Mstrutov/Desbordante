@@ -29,15 +29,15 @@ private:
     vector<int> probingTableCache;
     unsigned int freq_ = 0;
 
-    PositionListIndex(deque<vector<int>> index, vector<int> nullCluster, unsigned int size, double entropy,
-                      unsigned long long nep, unsigned int relationSize, unsigned int originalRelationSize,
-                      double invertedEntropy = 0, double giniImpurity = 0);
 
     static unsigned long long calculateNep(unsigned int numElements);
     static void sortClusters(deque<vector<int>> & clusters);
     static bool takeProbe(int position, ColumnLayoutRelationData & relationData, Vertical & probingColumns, vector<int> & probe);
 
 public:
+    PositionListIndex(deque<vector<int>> index, vector<int> nullCluster, unsigned int size, double entropy,
+                      unsigned long long nep, unsigned int relationSize, unsigned int originalRelationSize,
+                      double invertedEntropy = 0, double giniImpurity = 0);
     //TODO: for optimization needs
     static int intersectionCount;
     static int millis;
@@ -45,7 +45,7 @@ public:
     static shared_ptr<PositionListIndex> createFor(vector<int>& data, bool isNullEqNull);
     vector<int> getProbingTable();
     vector<int> getProbingTable(bool isCaching);
-    deque<vector<int>> & getIndex();
+    deque<vector<int>> const & getIndex();
     double getNep() { return (double) nep; }
     unsigned long long getNepAsLong() const { return nep; }           //ADDED: getNep()
     unsigned int getNumNonSingletonCluster() const { return index.size(); }

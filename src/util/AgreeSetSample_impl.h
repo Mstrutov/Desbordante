@@ -103,7 +103,7 @@ shared_ptr<T> AgreeSetSample::createFocusedFor(shared_ptr<ColumnLayoutRelationDa
             /*if (clusterIndex >= clusterSizes.size()) {
                 clusterIndex = clusterSizes.size() - 1;
             }*/
-            auto cluster = restrictionPli->getIndex()[clusterIndex];
+            auto& cluster = restrictionPli->getIndex()[clusterIndex];
             std::uniform_int_distribution<> random_int(0, cluster.size() - 1);
 
             int tupleIndex1 = random_int(gen);

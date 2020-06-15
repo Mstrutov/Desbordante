@@ -114,7 +114,7 @@ vector<int> PositionListIndex::getProbingTable(bool isCaching) {
     return probingTable;
 }
 
-deque<vector<int>> & PositionListIndex::getIndex() {
+deque<vector<int>> const & PositionListIndex::getIndex() {
     return index;
 }
 
@@ -176,8 +176,7 @@ shared_ptr<PositionListIndex> PositionListIndex::probe(const vector<int>& probin
 
     //sortClusters(newIndex);         //!! ~100-200ms
 
-    shared_ptr<PositionListIndex> ans = make_shared<PositionListIndex>(PositionListIndex(newIndex, nullCluster, newSize, newEntropy, newNep, relationSize, relationSize));
-    return ans;
+    return make_shared<PositionListIndex>(newIndex, nullCluster, newSize, newEntropy, newNep, relationSize, relationSize);
 }
 
 
@@ -222,8 +221,9 @@ shared_ptr<PositionListIndex> PositionListIndex::probeAll(Vertical probingColumn
 
     sortClusters(newIndex);
 
-    auto ans = shared_ptr<PositionListIndex>(new PositionListIndex(newIndex, nullCluster, newSize, newEntropy, newNep, this->relationSize, this->relationSize));
-    return ans;
+    return std::make_shared<PositionListIndex>(
+            newIndex, nullCluster, newSize, newEntropy, newNep, this->relationSize, this->relationSize
+            );
 }
 
 bool PositionListIndex::takeProbe(int position, ColumnLayoutRelationData & relationData, Vertical & probingColumns, vector<int> & probe){

@@ -139,6 +139,7 @@ void SearchSpace::returnLaunchPad(DependencyCandidate const &launchPad, bool isD
 bool SearchSpace::ascend(DependencyCandidate const &launchPad,
                          std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees) {
 
+    auto now = std::chrono::system_clock::now();
     if (strategy_->shouldResample(launchPad.vertical_, sampleBoost_)) {
         context_->createFocusedSample(launchPad.vertical_, sampleBoost_);
     }
@@ -146,7 +147,6 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad,
     DependencyCandidate traversalCandidate = launchPad;
     boost::optional<double> error;
 
-    auto now = std::chrono::system_clock::now();
     while (true) {
 
         if (context_->configuration_.isCheckEstimates) {
@@ -392,6 +392,7 @@ void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPea
                 strategy_->registerDependency(allegedMinDep, info->error_, *context_);
             }
         }
+        tricklingDown += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - now).count();
     } else {
         auto newScope = std::make_unique<VerticalMap<std::shared_ptr<Vertical>>>(context_->getSchema());
         std::sort_heap(peaks.begin(), peaks.end(), peaksComparator);
@@ -427,6 +428,7 @@ void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPea
         numNested++;
         //std::cout << static_cast<std::string>(*strategy_) << ' ';
         //std::cout << numNested << std::endl;
+        tricklingDown += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - now).count();
         nestedSearchSpace->discover(localVisitees);
         tricklingDownPart += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - prev).count();
 
@@ -438,7 +440,6 @@ void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPea
             }
         }
     }
-    tricklingDown += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - now).count();
 }
 
 std::shared_ptr<Vertical>

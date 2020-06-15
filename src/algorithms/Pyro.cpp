@@ -61,7 +61,7 @@ void Pyro::execute() {
         searchSpace->printStats();
         totalErrorCalcCount += searchSpace->getErrorCalcCount();
         totalAscension += searchSpace->ascending / 1000000;
-        totalTrickle += searchSpace->tricklingDownFrom / 1000000;
+        totalTrickle += searchSpace->tricklingDown/ 1000000;
     }
     auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
 
