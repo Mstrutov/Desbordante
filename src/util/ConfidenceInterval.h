@@ -22,5 +22,7 @@ public:
 
     ConfidenceInterval multiply(double scalar) { return ConfidenceInterval(min_ * scalar, mean_ * scalar, max_ * scalar); }
     bool isPoint() const { return min_ == max_; }
-    explicit operator std::string() const { return (boost::format("error=(%.3f, %.3f, %.3f)") % min_ % mean_ % max_).str(); }
+    explicit operator std::string() const { return (boost::format("error=(%f, %f, %f)") % min_ % mean_ % max_).str(); }
+
+    friend std::ostream& operator<<(std::ostream&, ConfidenceInterval const&);
 };

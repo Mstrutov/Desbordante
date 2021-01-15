@@ -11,7 +11,7 @@ double KeyG1Strategy::calculateKeyError(double numViolatingTuplePairs) {
     unsigned long long numTuplePairs = context_->relationData_->getNumTuplePairs();
     if (numTuplePairs == 0) return 0;
     double g1 = numViolatingTuplePairs / numTuplePairs;
-    return g1;
+    return round(g1);
 }
 
 void KeyG1Strategy::ensureInitialized(std::shared_ptr<SearchSpace> searchSpace) {

@@ -24,7 +24,7 @@ public:
     static std::shared_ptr<ListAgreeSetSample> createFocusedFor(std::shared_ptr<ColumnLayoutRelationData> relation,
                                                 std::shared_ptr<Vertical> restrictionVertical,
                                                 std::shared_ptr<PositionListIndex> restrictionPLi,
-                                                unsigned int sampleSize);
+                                                unsigned int sampleSize, CustomRandom& random);
 
     //100% should use move semantics on agreeSetCounters.
     //in Java code relation is a reference to base class RelationData, but in fact it references to CLRD, so here latter is used

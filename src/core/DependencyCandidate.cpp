@@ -64,6 +64,10 @@ bool DependencyCandidate::operator<(DependencyCandidate const & other) const {
     return false;
 }
 
+std::ostream& operator<< (std::ostream& ofs, DependencyCandidate const& dependencyCandidate) {
+    return ofs << static_cast<std::string>(dependencyCandidate);
+}
+
 /*bool DependencyCandidate::operator==(DependencyCandidate const & other) const {
     return (*vertical_ == *(other.vertical_) && )
 }*/

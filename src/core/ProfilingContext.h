@@ -1,12 +1,15 @@
 #pragma once
 
+#include <iostream>
 #include <random>
+#include <string>
 //forward declaration
 class PLICache;
 
 template<class Value>
 class VerticalMap;
 #include "Configuration.h"
+#include "custom/CustomRandom.h"
 #include "AgreeSetSample.h"
 #include "PartialFD.h"
 #include "PartialKey.h"
@@ -15,6 +18,7 @@ class VerticalMap;
 #include "AgreeSetSample.h"
 #include "DependencyConsumer.h"
 //#include "PLICache.h"
+
 
 
 //Dependency Consumer?
@@ -31,6 +35,8 @@ public:
 
     std::shared_ptr<ColumnLayoutRelationData> relationData_;
     std::mt19937 random_;
+    CustomRandom customRandom_;
+
 
     //std::function<void (PartialFD const&)> fdConsumer_;
     //std::function<void (PartialKey const&)> uccConsumer_;
@@ -46,7 +52,8 @@ public:
     std::shared_ptr<RelationalSchema> getSchema() { return relationData_->getSchema(); }
 
     // get int in range [0, upperBound) from the uniform distribution
-    int nextInt(int upperBound) { return std::uniform_int_distribution<int>{0, upperBound}(random_); }
+    // int nextInt(int upperBound) { return std::uniform_int_distribution<int>{0, upperBound}(random_); }
+    int nextInt(int upperBound) { return customRandom_.nextInt(upperBound); }
 
     static double getMaximumEntropy(std::shared_ptr<ColumnLayoutRelationData> relationData);
     static double getMinEntropy(std::shared_ptr<ColumnLayoutRelationData> relationData);
@@ -55,5 +62,6 @@ public:
     static double getMeanEntropy(std::shared_ptr<ColumnLayoutRelationData> relationData);
     static double getMedianGini(std::shared_ptr<ColumnLayoutRelationData> relationData);
 private:
+    static double getMedianValue(std::vector<double> && values, std::string const& measureName);
     static double setMaximumEntropy(std::shared_ptr<ColumnLayoutRelationData> relationData, CachingMethod const & cachingMethod);
 };

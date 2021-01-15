@@ -1,5 +1,6 @@
 #include "CSVParser.h"
 
+#include <algorithm>
 #include <cassert>
 #include <filesystem>
 #include <fstream>
@@ -9,12 +10,18 @@
 
 using namespace std;
 
-CSVParser::CSVParser(fs::path path): CSVParser(path, ',') {}
+inline std::string & CSVParser::rtrim(std::string &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](int c) {return !std::isspace(c);}).base(), s.end());
+    return s;
+}
 
-CSVParser::CSVParser(fs::path path, char separator) :
+CSVParser::CSVParser(fs::path path): CSVParser(path, ',', true) {}
+
+CSVParser::CSVParser(fs::path path, char separator, bool hasHeader) :
     source(path),
     separator(separator),
     hasNext(true),
+    hasHeader(hasHeader),
     nextLine(),
     numberOfColumns(),
     columnNames(),
@@ -28,10 +35,19 @@ CSVParser::CSVParser(fs::path path, char separator) :
     if (separator == '\0'){
         assert(0);
     }
-    getNext();
+    if (hasHeader) {
+        getNext();
+    } else {
+        peekNext();
+    }
     vector<string> nextParsed = std::move(parseNext());
     numberOfColumns = nextParsed.size();
     columnNames = std::move(nextParsed);
+    if (!hasHeader) {
+        for (int i = 0; i < numberOfColumns; i++){
+            columnNames[i] = std::to_string(i);
+        }
+    }
 }
 
 /*
@@ -43,6 +59,13 @@ bool CSVParser::isSameChar(char separator, char escape) {
 void CSVParser::getNext(){
     nextLine = "";
     getline(source, nextLine);
+    rtrim(nextLine);
+}
+
+void CSVParser::peekNext(){
+    int len = source.tellg();
+    getNext();
+    source.seekg(len, std::ios_base::beg);
 }
 
 vector<string> CSVParser::parseNext() {

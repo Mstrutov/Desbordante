@@ -4,9 +4,11 @@
 #include "KeyG1Strategy.h"
 #include "Pyro.h"
 
-void Pyro::execute() {
+double Pyro::execute() {
+
     auto relation = ColumnLayoutRelationData::createFrom(inputGenerator_, configuration_.isNullEqualNull);
     auto schema = relation->getSchema();
+
     auto profilingContext = std::make_shared<ProfilingContext>(
             configuration_,
             relation,
@@ -17,7 +19,6 @@ void Pyro::execute() {
             cachingMethodValue
             );
 
-    auto startTime = std::chrono::system_clock::now();
 
     std::function<bool(DependencyCandidate const&, DependencyCandidate const&)> launchPadOrder;
     if (configuration_.launchPadOrder == "arity") {
@@ -51,6 +52,7 @@ void Pyro::execute() {
             searchSpaces_.push_back(std::make_shared<SearchSpace>(nextId++, strategy, schema, launchPadOrder));
         }
     }
+    auto startTime = std::chrono::system_clock::now();
     unsigned int totalErrorCalcCount = 0;
     unsigned long long totalAscension = 0;
     unsigned long long totalTrickle = 0;
@@ -61,7 +63,7 @@ void Pyro::execute() {
         searchSpace->printStats();
         totalErrorCalcCount += searchSpace->getErrorCalcCount();
         totalAscension += searchSpace->ascending / 1000000;
-        totalTrickle += searchSpace->tricklingDown/ 1000000;
+        totalTrickle += searchSpace->tricklingDown / 1000000;
     }
     auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
 
@@ -69,10 +71,26 @@ void Pyro::execute() {
     std::cout << "Error calculation count: " << totalErrorCalcCount << std::endl;
     std::cout << "Total ascension: " << totalAscension << std::endl;
     std::cout << "Total trickle: " << totalTrickle << std::endl;
-
+    std::cout << "====RESULTS-FD====\r\n" << fdsToString();
+    std::cout << "====RESULTS-UCC====\r\n" << uccsToString();
+    return elapsed_milliseconds.count();
 }
 
-Pyro::Pyro(fs::path const &path) : inputGenerator_(path) {
-    uccConsumer_ = [](auto const& key) { std::cout << "Found ucc: " << key.toString() << std::endl; };
-    fdConsumer_ = [](auto const& key) { std::cout << "Found fd: " << key.toString() << std::endl; };
+Pyro::Pyro(fs::path const &path, char separator = ',', bool hasHeader = true) :
+        inputGenerator_(path, separator, hasHeader),
+        cachingMethod_(CachingMethod::NOCACHING),
+        evictionMethod_(CacheEvictionMethod::DEFAULT) {
+    uccConsumer_ = [this](auto const& key) { this->discoveredUCCs_.push_back(key); };
+    fdConsumer_ = [this](auto const& fd) { this->discoveredFDs_.push_back(fd); };
+    configuration_.seed = 0;
+}
+
+
+Pyro::Pyro(fs::path const &path, char separator = ',', bool hasHeader = true, int seed = 0) :
+        inputGenerator_(path, separator, hasHeader),
+        cachingMethod_(CachingMethod::NOCACHING),
+        evictionMethod_(CacheEvictionMethod::DEFAULT) {
+    uccConsumer_ = [this](auto const& key) { this->discoveredUCCs_.push_back(key); };
+    fdConsumer_ = [this](auto const& fd) { this->discoveredFDs_.push_back(fd); };
+    configuration_.seed = seed;
 }

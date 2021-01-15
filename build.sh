@@ -4,5 +4,5 @@ git clone https://github.com/google/googletest/
 cd ..
 mkdir build
 cd build
-cmake ..
+cmake .. -DCMAKE_BUILD_TYPE=RELEASE
 make

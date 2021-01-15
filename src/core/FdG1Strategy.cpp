@@ -35,7 +35,7 @@ double FdG1Strategy::calculateG1(double numViolatingTuplePairs) {
     unsigned long long numTuplePairs = context_->relationData_->getNumTuplePairs();
     if (numTuplePairs == 0) return 0;
     double g1 = numViolatingTuplePairs / numTuplePairs;
-    return g1;
+    return round(g1);
 }
 
 void FdG1Strategy::ensureInitialized(std::shared_ptr<SearchSpace> searchSpace) {

@@ -31,4 +31,6 @@ public:
 
     bool shouldResample(std::shared_ptr<Vertical> vertical, double boostFactor);
     bool isIrrelevantColumn(std::shared_ptr<Column> column) { return this->isIrrelevantColumn(column->getIndex()); }
+
+    static double round(double error) { return std::ceil(error * 32768) / 32768; }
 };

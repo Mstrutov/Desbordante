@@ -13,4 +13,19 @@ PartialKey DependencyConsumer::registerUcc(std::shared_ptr<Vertical> keyVertical
     return partialKey;
 }
 
+std::string DependencyConsumer::fdsToString() const {
+    std::string result;
+    for (auto const& fd : discoveredFDs_) {
+        result += fd.toString() + "\n\r";
+    }
+    return result;
+}
+
+std::string DependencyConsumer::uccsToString() const {
+    std::string result;
+    for (auto const& ucc : discoveredUCCs_) {
+        result += ucc.toString() + "\n\r";
+    }
+    return result;
+}
 

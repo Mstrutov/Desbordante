@@ -29,4 +29,6 @@ public:
     static bool fullErrorArityComparator(DependencyCandidate const &, DependencyCandidate const &);
     explicit operator std::string() const
         { return "Candidate " + static_cast<std::string>(*vertical_) + static_cast<std::string>(error_); }
+
+    friend std::ostream& operator<< (std::ostream&, DependencyCandidate const&);
 };

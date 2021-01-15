@@ -18,16 +18,19 @@ class CSVParser {
 private:
     std::ifstream source;
     char separator;
+    bool hasHeader;
     bool hasNext;
     std::string nextLine;
     int numberOfColumns;
     vector<string> columnNames;
     string relationName;
     void getNext();
+    void peekNext();
 
+    static inline std::string & rtrim(std::string &s);
 public:
     CSVParser(fs::path path);
-    CSVParser(fs::path path, char separator);
+    CSVParser(fs::path path, char separator, bool hasHeader);
     //bool isSameChar(char separator, char escape);
     vector<string> parseNext();
     bool getHasNext();

@@ -3,8 +3,8 @@
 std::shared_ptr<ListAgreeSetSample> ListAgreeSetSample::createFocusedFor(std::shared_ptr<ColumnLayoutRelationData> relation,
                                                         std::shared_ptr<Vertical> restrictionVertical,
                                                         std::shared_ptr<PositionListIndex> restrictionPLi,
-                                                        unsigned int sampleSize) {
-    return AgreeSetSample::createFocusedFor<ListAgreeSetSample>(relation, restrictionVertical, restrictionPLi, sampleSize);
+                                                        unsigned int sampleSize, CustomRandom& random) {
+    return AgreeSetSample::createFocusedFor<ListAgreeSetSample>(relation, restrictionVertical, restrictionPLi, sampleSize, random);
 }
 
 std::shared_ptr<std::vector<long long>> ListAgreeSetSample::bitSetToLongLongVector(boost::dynamic_bitset<> const& bitset) {

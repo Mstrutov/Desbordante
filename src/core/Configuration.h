@@ -22,7 +22,7 @@ struct Configuration {
     //Sampling settings
     int sampleSize = 10000;
     double sampleBooster = 10;
-    unsigned int seed = 0; //check seed, mb use boost::optional
+    int seed = 0; //check seed, mb use boost::optional
     double estimateConfidence = 0; //       -||-
     int randomAscendThreads = 2;
 

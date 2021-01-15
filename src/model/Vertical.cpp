@@ -112,16 +112,21 @@ string Vertical::toString() const {
     string result = "[";
 
     if ((int)columnIndices.find_first() == -1)
-        return "Empty Vertical";
+        return "[]";
 
     auto relation = schema.lock();
     int i = columnIndices.find_next(0);
     for (int index = columnIndices.find_first();
          index != -1;//dynamic_bitset<>::npos;
          index = columnIndices.find_next(index)) {
-        result += relation->getColumn(index)->getName() + " ";   //to_string(index) + " ";
+        result += relation->getColumn(index)->getName();
+        if (columnIndices.find_next(index) != -1) {
+            result += ' ';
+        }
     }
-    result[result.size() - 1] = ']';
+
+    result += ']';
+
     return result;
 }
 

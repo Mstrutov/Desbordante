@@ -11,6 +11,7 @@
 #include "ColumnLayoutRelationData.h"
 #include "Vertical.h"
 #include "ConfidenceInterval.h"
+#include "custom/CustomRandom.h"
 
 using std::enable_if, std::is_base_of, boost::dynamic_bitset, std::map;
 
@@ -47,7 +48,7 @@ protected:
     static shared_ptr<T> createFocusedFor(shared_ptr<ColumnLayoutRelationData> relation,
                                           shared_ptr<Vertical> restrictionVertical,
                                           shared_ptr<PositionListIndex> restrictionPli,
-                                          unsigned int sampleSize);
+                                          unsigned int sampleSize, CustomRandom& random);
 private:
     static double stdDevSmoothing;
 

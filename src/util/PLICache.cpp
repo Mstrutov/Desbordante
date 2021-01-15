@@ -4,6 +4,8 @@
 
 #include <boost/optional.hpp>
 
+#include "logging/easylogging++.h"
+
 #include "PLICache.h"
 #include "VerticalMap.h"
 
@@ -37,10 +39,13 @@ PLICache::PLICache(std::shared_ptr<ColumnLayoutRelationData> relationData, Cachi
 // obtains or calculates a PositionListIndex using cache
 std::shared_ptr<PositionListIndex>
 PLICache::getOrCreateFor(Vertical const &vertical, ProfilingContext const &profilingContext) {
+    LOG(DEBUG) << boost::format{"PLI for %1% requested: "} % vertical.toString();
+
     // is PLI already cached?
     std::shared_ptr<PositionListIndex> pli = get(vertical);
     if (pli != nullptr) {
         pli->incFreq();
+        LOG(DEBUG) << boost::format{"Served from PLI cache."};
         //addToUsageCounter
         return pli;
     }
@@ -106,6 +111,8 @@ PLICache::getOrCreateFor(Vertical const &vertical, ProfilingContext const &profi
     // sort operands by ascending order
     std::sort(operands.begin(), operands.end(), [](auto& el1, auto& el2) { return el1.pli_->getSize() < el2.pli_->getSize(); });
     // TODO: Profiling context stuff
+
+    LOG(DEBUG) << boost::format {"Intersecting %1%."} % "[UNIMPLEMENTED]";
     // Intersect and cache
     if (operands.size() >= profilingContext.configuration_.naryIntersectionSize) {
         PositionListIndexRank basePliRank = operands[0];
@@ -124,6 +131,10 @@ PLICache::getOrCreateFor(Vertical const &vertical, ProfilingContext const &profi
             }
         }
     }
+
+    LOG(DEBUG) << boost::format {"Calculated from %1% sub-PLIs (saved %2% intersections)."}
+        % operands.size() % (vertical.getArity() - operands.size());
+
     return pli;
 }
 

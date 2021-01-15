@@ -4,6 +4,7 @@
 #include <random>
 
 #include "AgreeSetSample.h"
+
 //#include <utility>
 //TODO: рандом проверь
 //template<typename T, typename enable_if<is_base_of<AgreeSetSample, T>::value>::type*>
@@ -44,11 +45,12 @@ shared_ptr<T> AgreeSetSample::createFor(shared_ptr<ColumnLayoutRelationData> rel
 template<typename T>
 shared_ptr<T> AgreeSetSample::createFocusedFor(shared_ptr<ColumnLayoutRelationData> relation,
                                                shared_ptr<Vertical> restrictionVertical,
-                                               shared_ptr<PositionListIndex> restrictionPli, unsigned int sampleSize) {
+                                               shared_ptr<PositionListIndex> restrictionPli, unsigned int sampleSize,
+                                               CustomRandom& random) {
     static_assert(std::is_base_of<AgreeSetSample, T>::value);
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<> random_double;
+    //std::random_device rd;
+    //std::mt19937 gen(rd());
+    //std::uniform_real_distribution<> random_double;
 
     dynamic_bitset<> freeColumnIndices(relation->getNumColumns());
     freeColumnIndices.set();
@@ -98,18 +100,18 @@ shared_ptr<T> AgreeSetSample::createFocusedFor(shared_ptr<ColumnLayoutRelationDa
         }
 
         for (int i = 0; i < sampleSize; i++){
-            auto clusterIndexIter = std::lower_bound(clusterSizes.begin(), clusterSizes.end(), (unsigned long long) (restrictionNep * random_double(gen)));
+            auto clusterIndexIter = std::lower_bound(clusterSizes.begin(), clusterSizes.end(),
+                                                     random.nextULL() % restrictionNep);
             unsigned int clusterIndex = std::distance(clusterSizes.begin(), clusterIndexIter);
             /*if (clusterIndex >= clusterSizes.size()) {
                 clusterIndex = clusterSizes.size() - 1;
             }*/
             auto& cluster = restrictionPli->getIndex()[clusterIndex];
-            std::uniform_int_distribution<> random_int(0, cluster.size() - 1);
 
-            int tupleIndex1 = random_int(gen);
-            int tupleIndex2 = random_int(gen);
+            int tupleIndex1 = random.nextInt(cluster.size());
+            int tupleIndex2 = random.nextInt(cluster.size());
             while (tupleIndex1 == tupleIndex2) {
-                tupleIndex2 = random_int(gen);
+                tupleIndex2 = random.nextInt(cluster.size());
             }
             tupleIndex1 = cluster[tupleIndex1];
             tupleIndex2 = cluster[tupleIndex2];

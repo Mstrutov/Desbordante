@@ -1,6 +1,6 @@
 set(BINARY ${CMAKE_PROJECT_NAME})
 
-file(GLOB_RECURSE lib_sources "*/*.h*" "*/*.cpp*")
+file(GLOB_RECURSE lib_sources "*/*.h*" "*/*.cpp*" "*/*.cc*")
 
 add_library(${BINARY}_lib STATIC ${lib_sources})
 

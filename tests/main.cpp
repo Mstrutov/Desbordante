@@ -6,7 +6,10 @@
 #include <filesystem>
 #include <string>
 
+#include "logging/easylogging++.h"
 #include "gtest/gtest.h"
+
+INITIALIZE_EASYLOGGINGPP
 
 std::string get_selfpath();
 
