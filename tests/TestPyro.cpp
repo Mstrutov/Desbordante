@@ -16,9 +16,9 @@ std::string get_selfpath();
 
 //TODO: wrong file => WARNING
 TEST(PyroTester, first) {
-    vector<string> datasets = {//"CIPublicHighway50k.csv"//,
+    vector<string> datasets = {"CIPublicHighway50k.csv",
                                //"CIPublicHighway100k.csv",
-                               "iowa50k.csv"//,
+                               //"iowa50k.csv"//,
                                //"neighbors100k.csv",
                                /*"WDC_astronomical.csv",
                                "WDC_age.csv",
@@ -64,18 +64,18 @@ TEST(PyroTester, first) {
     SUCCEED();
 }
 
-TEST(PyroPerformanceTest, first) {
+/*TEST(PyroPerformanceTest, first) {
     vector<tuple<string, char, bool>> datasets = {
-            /*{"CIPublicHighway50k.csv", ',', true},
-            {"CIPublicHighway100k.csv", ',', true},
-            {"CIPublicHighway200k.csv", ',', true},*/
+            //{"CIPublicHighway50k.csv", ',', true},
+            //{"CIPublicHighway100k.csv", ',', true},
+            //{"CIPublicHighway200k.csv", ',', true},
             {"adult.csv", ';', false},
             {"breast_cancer.csv", ',', true},
             {"CIPublicHighway.csv", ',', true},
             {"EpicMeds.csv", '|', true},
             {"EpicVitals.csv", '|', true},
             {"iowa1kk.csv", ',', true},
-            //{"iowa100k.csv", ',', true},    // с этими что-то не так - \n в csv посреди строки
+            //{"iowa100k.csv", ',', true},
             {"LegacyPayors.csv", '|', true},
             {"neighbors100k.csv", ',', true}
             //{"digits.csv", ',', true},
@@ -98,8 +98,8 @@ TEST(PyroPerformanceTest, first) {
                 results[j].push_back(algoInstance.execute());
             }
         }
-        /*Pyro algoInstance(path / "adult.csv", ';', false);
-        results.push_back(algoInstance.execute());*/
+        //Pyro algoInstance(path / "adult.csv", ';', false);
+        //results.push_back(algoInstance.execute());
         cout << "==============PYRO RESULTS============\n";
         for (auto const& algo : results) {
             for (auto time : algo) {
@@ -117,4 +117,4 @@ TEST(PyroPerformanceTest, first) {
 //        cout << res << " ";
     cout << endl;
     SUCCEED();
-}
+}*/
