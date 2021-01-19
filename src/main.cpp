@@ -10,6 +10,8 @@
 #include <vector>
 #include <string>
 
+#include <boost/program_options.hpp>
+
 #include "logging/easylogging++.h"
 
 #include "ColumnLayoutRelationData.h"
@@ -17,55 +19,58 @@
 #include "algorithms/Pyro.h"
 #include "algorithms/TaneX.h"
 
+namespace po = boost::program_options;
+
 INITIALIZE_EASYLOGGINGPP
 
 int main(int argc, char const *argv[]) {
-    el::Loggers::configureFromGlobal("logging.conf");
-
-    using std::cout, std::endl;
-    std::vector<std::string> strs(argv + 1, argv + argc);
-
     std::string alg;
     std::string dataset;
     char separator = ',';
     bool hasHeader = true;
     int seed = 0;
-    std::vector<std::string> availableAlgs {"pyro", "tane"};
-    for (auto& str : strs) {
-        if (str.size() > 2) {
-            if (str.find("--algo=") == 0) {
-                alg = str.substr(7);
-            } else if (str.find("--data=") == 0) {
-                dataset = str.substr(7);
-            } else if (str.find("--sep=") == 0) {
-                separator = str[6];
-            } else if (str.find("--hasHeader=") == 0) {
-                hasHeader = (std::tolower(str[12]) == 't');
-            } else if (str.find("--seed=") == 0) {
-                seed = std::stoi(str.substr(7));
-            }
-        }
+
+    po::options_description desc("Allowed options");
+    desc.add_options()
+        ("help", "print help")
+        ("algo", po::value<string>(&alg), "algorithm [pyro|tane]")
+        ("data", po::value<string>(&dataset), "path to dataset CSV file")
+        ("sep", po::value<char>(&separator), "CSV separator")
+        ("hasHeader", po::value<bool>(&hasHeader), "CSV header presence flag [true|false]. Default true")
+        ("seed", po::value<int>(&seed), "RNG seed")
+    ;
+
+    po::variables_map vm;
+    try {
+        po::store(po::parse_command_line(argc, argv, desc), vm);
+        po::notify(vm);
+    } catch (po::error &e) {
+        std::cout << e.what() << std::endl;
+        return 0;
     }
-    transform(alg.begin(), alg.end(), alg.begin(), [](unsigned char c){ return std::tolower(c); });
-    cout << "Input: algorithm \"" << alg
-         << "\" with seed " << std::to_string(seed)
-         << " and dataset \"" << dataset
-         << "\" with separator \'" << separator
-         << "\'. Header is " << (hasHeader ? "" : "not ") << "present. " << endl;
+
+    if (vm.count("help"))
+    {
+        std::cout << desc << std::endl;
+        return 0;
+    }
+
+    el::Loggers::configureFromGlobal("logging.conf");
+
+    std::transform(alg.begin(), alg.end(), alg.begin(), [](unsigned char c){ return std::tolower(c); });
+    std::cout << "Input: algorithm \"" << alg
+              << "\" with seed " << std::to_string(seed)
+              << " and dataset \"" << dataset
+              << "\" with separator \'" << separator
+              << "\'. Header is " << (hasHeader ? "" : "not ") << "present. " << std::endl;
     auto path = std::filesystem::current_path() / "inputData" / dataset;
-    if (alg.empty() || dataset.empty()) {
-        cout << "Couldn't recognize the algorithm and the dataset.\n" <<
-                "Try launching with options: --algo=<name>    --data=<../relative/path/to/dataset>\n" <<
-                "                            --sep='<symbol>' --hasHeader=[t|f|T|F] \n" <<
-                "                            --seed='<int>' \n" <<
-                "Available algorithms are:\n\tpyro\n\ttane\n";
-    } else if (alg == "pyro") {
+    if (alg == "pyro") {
         try {
             Pyro algInstance(path, separator, hasHeader, seed);
             double elapsedTime = algInstance.execute();
-            cout << "> ELAPSED TIME: " << elapsedTime << endl;
+            std::cout << "> ELAPSED TIME: " << elapsedTime << std::endl;
         } catch (std::runtime_error& e) {
-            cout << e.what() << endl;
+            std::cout << e.what() << std::endl;
             return 1;
         }
     } else if (alg == "tane"){
@@ -73,11 +78,12 @@ int main(int argc, char const *argv[]) {
             Tane algInstance(path, separator, hasHeader);
             algInstance.execute();
         } catch (std::runtime_error& e) {
-            cout << e.what() << endl;
+            std::cout << e.what() << std::endl;
             return 1;
         }
     } else {
-        cout << "Error - no matching algorithm. Available algorithms are:\n\tpyro\n\ttane\n" << endl;
+        std::cout << "Error - no matching algorithm. Available algorithms are:\n\tpyro\n\ttane\n" << std::endl;
+        std::cout << desc << std::endl;
         return 1;
     }
     return 0;
