@@ -42,7 +42,7 @@ https://github.com/cupertank реализовал части проекта, п�
   ```
   The tool itself is launched via the following line:
   ```
-  ./fdtester_run -algo=tane -data=<dataset_name>.csv
+  ./fdtester_run --algo=tane --data=<dataset_name>.csv
   ```
   The `<dataset_name>.csv`, which is a user-provided dataset, should be placed in the `/path/to/Desbordante/build/target` directory.
 * ## Windows 
@@ -81,7 +81,7 @@ https://github.com/cupertank реализовал части проекта, п�
   ```
   The tool itself is launched via the following line:
   ```
-  fdtester_run.exe -algo=tane -data=<dataset_name>.csv
+  fdtester_run.exe --algo=tane --data=<dataset_name>.csv
   ```
   The `<dataset_name>.csv`, which is a user-provided dataset, should be placed in the `\path\to\Desbordante\build\target` directory.
     

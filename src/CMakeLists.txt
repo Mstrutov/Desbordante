@@ -8,3 +8,4 @@ set(run_sources "main.cpp")
 
 add_executable(${BINARY}_run ${run_sources})
 target_link_libraries(${BINARY}_run PUBLIC ${CMAKE_PROJECT_NAME}_lib)
+target_link_libraries(${BINARY}_run LINK_PUBLIC ${Boost_LIBRARIES} )
