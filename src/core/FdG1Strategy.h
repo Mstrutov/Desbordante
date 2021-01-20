@@ -20,7 +20,7 @@ public:
     explicit operator std::string() const override
         { return (boost::format("FD[RHS=%s, g1\u2264(%.3f..%.3f)]") % rhs_->getName() % minNonDependencyError_ % maxDependencyError_).str(); }
     void registerDependency(std::shared_ptr<Vertical> vertical, double error, const DependencyConsumer &discoveryUnit) override;
-    bool isIrrelevantColumn(int columnIndex) override { return rhs_->getIndex() == columnIndex; }
+    bool isIrrelevantColumn(unsigned int columnIndex) override { return rhs_->getIndex() == columnIndex; }
     unsigned int getNumIrrelevantColumns() override { return 1; }
     Vertical getIrrelevantColumns() override { return static_cast<Vertical>(*rhs_); }
 };

@@ -24,7 +24,7 @@ public:
     virtual std::string format(std::shared_ptr<Vertical> vertical) = 0;
     explicit virtual operator std::string() const = 0;
     virtual void registerDependency(std::shared_ptr<Vertical> vertical, double error, DependencyConsumer const& discoveryUnit) = 0;
-    virtual bool isIrrelevantColumn(int columnIndex) = 0;
+    virtual bool isIrrelevantColumn(unsigned int columnIndex) = 0;
     virtual unsigned int getNumIrrelevantColumns() = 0;
     virtual Vertical getIrrelevantColumns() = 0;
 
