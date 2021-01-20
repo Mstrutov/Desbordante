@@ -21,7 +21,7 @@ public:
     static const int nullValueId;
 
     virtual unsigned int getNumRows()=0;
-    int getNumColumns();
+    unsigned int getNumColumns();
     virtual vector<shared_ptr<ColumnData>> getColumnData()=0;
     virtual shared_ptr<ColumnData> getColumnData(int columnIndex)=0;
     virtual vector<int> getTuple(int tupleIndex)=0;

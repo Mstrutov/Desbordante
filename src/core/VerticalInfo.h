@@ -7,7 +7,7 @@ public:
     bool isDependency_;
     bool isExtremal_;
     VerticalInfo(bool isDependency, bool isExtremal, double error = 0) :
-        isDependency_(isDependency), isExtremal_(isExtremal), error_(error) {}
+        error_(error), isDependency_(isDependency), isExtremal_(isExtremal) {}
 
     static VerticalInfo forMinimalDependency() { return VerticalInfo(true, true); }
     static VerticalInfo forNonDependency() { return VerticalInfo(false, false); }

@@ -38,8 +38,8 @@ TEST(PyroTester, first) {
     try {
         vector<vector<double>> results(1);
         for (int j = 0; j < 1; j++) {
-            for (int i = 0; i < datasets.size(); i++) {
-                Pyro algoInstance(path / datasets[i], ',', true);
+            for (auto & dataset : datasets) {
+                Pyro algoInstance(path / dataset, ',', true);
                 results[0].push_back(algoInstance.execute());
             }
         }

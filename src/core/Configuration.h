@@ -20,7 +20,7 @@ struct Configuration {
     std::string launchPadOrder = "error";
 
     //Sampling settings
-    int sampleSize = 10000;
+    unsigned int sampleSize = 10000;
     double sampleBooster = 10;
     int seed = 0; //check seed, mb use boost::optional
     double estimateConfidence = 0; //       -||-
@@ -28,7 +28,7 @@ struct Configuration {
 
     //Cache settings
     double cachingProbability = 0.5;
-    int naryIntersectionSize = 4;
+    unsigned int naryIntersectionSize = 4;
 
     //Miscellaneous settings
     bool isCheckEstimates = false;

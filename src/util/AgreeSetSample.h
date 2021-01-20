@@ -19,9 +19,9 @@ using std::enable_if, std::is_base_of, boost::dynamic_bitset, std::map;
 class AgreeSetSample {
 public:
 
-    virtual long long getNumAgreeSupersets(std::shared_ptr<Vertical> agreement) = 0;
-    virtual long long getNumAgreeSupersets(std::shared_ptr<Vertical> agreement, std::shared_ptr<Vertical> disagreement) = 0;
-    virtual std::shared_ptr<std::vector<long long>> getNumAgreeSupersetsExt(std::shared_ptr<Vertical> agreement, std::shared_ptr<Vertical> disagreement);
+    virtual unsigned long long getNumAgreeSupersets(std::shared_ptr<Vertical> agreement) = 0;
+    virtual unsigned long long getNumAgreeSupersets(std::shared_ptr<Vertical> agreement, std::shared_ptr<Vertical> disagreement) = 0;
+    virtual std::shared_ptr<std::vector<unsigned long long>> getNumAgreeSupersetsExt(std::shared_ptr<Vertical> agreement, std::shared_ptr<Vertical> disagreement);
 
     double estimateAgreements(std::shared_ptr<Vertical> agreement);
     ConfidenceInterval estimateAgreements(std::shared_ptr<Vertical> agreement, double confidence);

@@ -1,12 +1,16 @@
 #include "ProfilingContext.h"
+
+#include <utility>
 #include "ListAgreeSetSample.h"
 #include "PLICache.h"
 #include "VerticalMap.h"
 
+#include "logging/easylogging++.h"
+
 ProfilingContext::ProfilingContext(Configuration const& configuration, std::shared_ptr<ColumnLayoutRelationData> relationData,
         std::function<void (PartialKey const&)> const& uccConsumer, std::function<void (PartialFD const&)> const& fdConsumer,
         CachingMethod const& cachingMethod, CacheEvictionMethod const& evictionMethod, double cachingMethodValue) :
-configuration_(configuration), relationData_(relationData),
+configuration_(configuration), relationData_(std::move(relationData)),
 random_(configuration_.seed == 0 ? std::mt19937() : std::mt19937(configuration_.seed)),
 customRandom_(configuration_.seed == 0 ? CustomRandom() : CustomRandom(configuration_.seed)) {
     uccConsumer_ = uccConsumer;
@@ -131,6 +135,7 @@ ProfilingContext::createFocusedSample(std::shared_ptr<Vertical> focus, double bo
             configuration_.sampleSize * boostFactor,
             customRandom_
             );
+    LOG(TRACE) << boost::format {"Creating sample focused on: %1%"} % focus->toString();
     agreeSetSamples_->put(*focus, sample);
     return sample;
 }

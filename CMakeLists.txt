@@ -16,7 +16,7 @@ if (MSVC)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG  "${CMAKE_BINARY_DIR}/target")
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE  "${CMAKE_BINARY_DIR}/target")
 else()
-    add_compile_options("$<$<CONFIG:Debug>:-no-pie;-fno-omit-frame-pointer>")
+    add_compile_options("$<$<CONFIG:Debug>:-Wall;-Wextra;-fno-omit-frame-pointer>")
 endif()
 
 # configuring boost

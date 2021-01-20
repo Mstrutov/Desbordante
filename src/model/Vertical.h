@@ -47,7 +47,7 @@ public:
     std::shared_ptr<Vertical> invert();
     std::shared_ptr<Vertical> invert(Vertical& scope);
     static Vertical emptyVertical(shared_ptr<RelationalSchema> relSchema);
-    int getArity() const;
+    unsigned int getArity() const;
     vector<shared_ptr<Column>> getColumns() const;
     vector<shared_ptr<Vertical>> getParents();
     //possible to use list or set?

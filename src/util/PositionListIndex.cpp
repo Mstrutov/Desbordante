@@ -103,7 +103,7 @@ vector<int> PositionListIndex::getProbingTable(bool isCaching) {
     for (auto & cluster : index){
         int valueId = nextClusterId++;
         assert(valueId != singletonValueId);
-        for(int & position : cluster){
+        for(int position : cluster){
             probingTable[position] = valueId;
         }
     }
@@ -139,7 +139,7 @@ shared_ptr<PositionListIndex> PositionListIndex::probe(const vector<int>& probin
     //vector<int> newCluster;
 
     for (auto & positions : index){
-        for (int & position : positions){
+        for (int position : positions){
             int probingTableValueId = probingTable[position];
             if (probingTableValueId == singletonValueId)
                 continue;
@@ -194,7 +194,7 @@ shared_ptr<PositionListIndex> PositionListIndex::probeAll(Vertical probingColumn
     vector<int> probe;
 
     for (auto & cluster : this->index){
-        for (int & position : cluster){
+        for (int position : cluster){
             if (!takeProbe(position, relationData, probingColumns, probe)){
                 probe.clear();
                 continue;
@@ -236,3 +236,20 @@ bool PositionListIndex::takeProbe(int position, ColumnLayoutRelationData & relat
     return true;
 }
 
+string PositionListIndex::toString() const {
+    string res = "[";
+    for (auto& cluster : index) {
+        res.push_back('[');
+        for (int v : cluster) {
+            res.append(std::to_string(v) + ",");
+        }
+        if (res.find(',') != string::npos)
+            res.erase(res.find_last_of(','));
+        res.push_back(']');
+        res.push_back(',');
+    }
+    if (res.find(',') != string::npos)
+        res.erase(res.find_last_of(','));
+    res.push_back(']');
+    return res;
+}

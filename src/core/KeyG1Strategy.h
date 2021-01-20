@@ -17,7 +17,8 @@ public:
     explicit operator std::string() const override
     { return (boost::format("key[g1\u2264(%.3f..%.3f)]") % minNonDependencyError_ % maxDependencyError_).str(); }
     void registerDependency(std::shared_ptr<Vertical> vertical, double error, const DependencyConsumer &discoveryUnit) override;
+    // TODO: how to get rid of unused parameter?
     bool isIrrelevantColumn(int columnIndex) override { return false; }
-    int getNumIrrelevantColumns() override { return 0; }
+    unsigned int getNumIrrelevantColumns() override { return 0; }
     Vertical getIrrelevantColumns() override { return *context_->relationData_->getSchema()->emptyVertical; }
 };

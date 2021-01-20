@@ -92,7 +92,7 @@ Vertical Vertical::emptyVertical(shared_ptr<RelationalSchema> relSchema) {
     return Vertical(relSchema, dynamic_bitset<>(relSchema->getNumColumns()));
 }
 
-int Vertical::getArity() const {
+unsigned int Vertical::getArity() const {
     return columnIndices.count();
 }
 
@@ -116,11 +116,11 @@ string Vertical::toString() const {
 
     auto relation = schema.lock();
     int i = columnIndices.find_next(0);
-    for (int index = columnIndices.find_first();
-         index != -1;//dynamic_bitset<>::npos;
+    for (size_t index = columnIndices.find_first();
+         index != dynamic_bitset<>::npos;
          index = columnIndices.find_next(index)) {
         result += relation->getColumn(index)->getName();
-        if (columnIndices.find_next(index) != -1) {
+        if (columnIndices.find_next(index) != dynamic_bitset<>::npos) {
             result += ' ';
         }
     }

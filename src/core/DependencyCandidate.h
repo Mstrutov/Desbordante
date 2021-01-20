@@ -1,5 +1,6 @@
 #pragma once
 #include <functional>
+#include <utility>
 #include "Vertical.h"
 #include "ConfidenceInterval.h"
 
@@ -12,7 +13,7 @@ public:
     std::shared_ptr<Vertical> vertical_;
 
     DependencyCandidate(std::shared_ptr<Vertical> vertical, ConfidenceInterval error, bool isExact) :
-        vertical_(vertical), error_(error), isExact_(isExact) {}
+            isExact_(isExact), error_(error), vertical_(std::move(vertical)) {}
     bool operator<(DependencyCandidate const& other) const;
     
     //TODO: implement if used

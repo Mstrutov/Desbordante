@@ -5,6 +5,8 @@
 
 #include "AgreeSetSample.h"
 
+#include "easylogging++.h"
+
 //#include <utility>
 //TODO: рандом проверь
 //template<typename T, typename enable_if<is_base_of<AgreeSetSample, T>::value>::type*>
@@ -57,7 +59,7 @@ shared_ptr<T> AgreeSetSample::createFocusedFor(shared_ptr<ColumnLayoutRelationDa
     //auto restrictionVerticalNotIndices = ~restrictionVertical->getColumnIndices();    // ВОТ ТУТ ПОМЕНЯЛ. БЫЛО freeColumnIndices &=...; freeColumnIndices ~= freeColumnIndices
     freeColumnIndices &= ~restrictionVertical->getColumnIndices();
     vector<shared_ptr<ColumnData>> relevantColumnData;
-    for (int columnIndex = freeColumnIndices.find_first(); columnIndex < freeColumnIndices.size(); columnIndex = freeColumnIndices.find_next(columnIndex)){
+    for (size_t columnIndex = freeColumnIndices.find_first(); columnIndex < freeColumnIndices.size(); columnIndex = freeColumnIndices.find_next(columnIndex)){
         relevantColumnData.push_back(relation->getColumnData(columnIndex));
     }
     dynamic_bitset<> agreeSetPrototype(restrictionVertical->getColumnIndices());
@@ -67,9 +69,9 @@ shared_ptr<T> AgreeSetSample::createFocusedFor(shared_ptr<ColumnLayoutRelationDa
     sampleSize = std::min(static_cast<unsigned long long>(sampleSize), restrictionNep);
     if (sampleSize >= restrictionNep){
         for (auto & cluster : restrictionPli->getIndex()){
-            for (int i = 0; i < cluster.size(); i++){
+            for (unsigned int i = 0; i < cluster.size(); i++){
                 int tupleIndex1 = cluster[i];
-                for (int j = i + 1; j < cluster.size(); j++){
+                for (unsigned int j = i + 1; j < cluster.size(); j++){
                     int tupleIndex2 = cluster[j];
 
                     dynamic_bitset<> agreeSet(agreeSetPrototype);
@@ -89,7 +91,7 @@ shared_ptr<T> AgreeSetSample::createFocusedFor(shared_ptr<ColumnLayoutRelationDa
         }
     } else {
         vector<unsigned long long> clusterSizes(restrictionPli->getNumNonSingletonCluster() - 1);
-        for (int i = 0; i < clusterSizes.size(); i++){
+        for (unsigned int i = 0; i < clusterSizes.size(); i++){
             unsigned long long clusterSize = restrictionPli->getIndex()[i].size();
             unsigned long long numTuplePairs = clusterSize * (clusterSize - 1) / 2;
             if (i > 0){
@@ -99,7 +101,7 @@ shared_ptr<T> AgreeSetSample::createFocusedFor(shared_ptr<ColumnLayoutRelationDa
             }
         }
 
-        for (int i = 0; i < sampleSize; i++){
+        for (unsigned int i = 0; i < sampleSize; i++){
             auto clusterIndexIter = std::lower_bound(clusterSizes.begin(), clusterSizes.end(),
                                                      random.nextULL() % restrictionNep);
             unsigned int clusterIndex = std::distance(clusterSizes.begin(), clusterIndexIter);
@@ -132,17 +134,20 @@ shared_ptr<T> AgreeSetSample::createFocusedFor(shared_ptr<ColumnLayoutRelationDa
             }
         }
     }
-    /*std::cout << "-----------------\n";
+    //std::cout << "-----------------\n";
+    string agreeSetCountersStr = "{";
     for (auto& [key, value] : agreeSetCounters) {
-        //std::string tmp;
-        //boost::to_string(key, tmp);
-        //std::cout << '{';
-        for (int columnIndex = key.find_first(); columnIndex < key.size(); columnIndex = key.find_next(columnIndex)){
-            std::cout << columnIndex << ' ';
+        agreeSetCountersStr += '\"';
+        for (unsigned int columnIndex = key.find_first(); columnIndex < key.size(); columnIndex = key.find_next(columnIndex)){
+            agreeSetCountersStr += std::to_string(columnIndex) + ' ';
         }
-        std::cout << '}';
-        std::cout << '-' << value << '\n';
-    }*/
+        agreeSetCountersStr += '\"';
+        agreeSetCountersStr += " : "+ std::to_string(value) + ',';
+    }
+    agreeSetCountersStr.erase(agreeSetCountersStr.end()-1);
+    agreeSetCountersStr += '}';
+
+    LOG(DEBUG) << boost::format {"Created sample focused on %1%: %2%"} % restrictionVertical->toString() % agreeSetCountersStr;
 
     shared_ptr<T> sample = std::make_shared<T>(relation, restrictionVertical, sampleSize, restrictionNep, agreeSetCounters);
     return sample;

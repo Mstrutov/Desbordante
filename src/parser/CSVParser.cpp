@@ -20,8 +20,8 @@ CSVParser::CSVParser(fs::path path): CSVParser(path, ',', true) {}
 CSVParser::CSVParser(fs::path path, char separator, bool hasHeader) :
     source(path),
     separator(separator),
-    hasNext(true),
     hasHeader(hasHeader),
+    hasNext(true),
     nextLine(),
     numberOfColumns(),
     columnNames(),

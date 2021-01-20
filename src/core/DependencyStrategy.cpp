@@ -2,6 +2,7 @@
 #include "PLICache.h"
 
 bool DependencyStrategy::shouldResample(std::shared_ptr<Vertical> vertical, double boostFactor) {
+
     if (context_->configuration_.sampleSize <= 0 || vertical->getArity() < 1) return false;
 
     // Do we have an exact sample already?
@@ -12,7 +13,7 @@ bool DependencyStrategy::shouldResample(std::shared_ptr<Vertical> vertical, doub
     std::shared_ptr<PositionListIndex> pli = context_->pliCache_->get(*vertical);
     double nep = pli != nullptr ?
                 pli->getNepAsLong() :       // TODO: getNepAsDouble; long -> long long
-                currentSample->estimateAgreements(vertical) * boostFactor;
+                currentSample->estimateAgreements(vertical) * context_->relationData_->getNumTuplePairs();
 
     // Should the new sample be exact?
     if (nep <= context_->configuration_.sampleSize * boostFactor) return true;

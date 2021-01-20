@@ -5,7 +5,7 @@ dataset=CIPublicHighway
 
 cd build/target
 
-declare experiment_name=01_14_seed
+declare experiment_name=01_16_seed
 mkdir $experiment_name
 for j in "${seeds[@]}"
 do

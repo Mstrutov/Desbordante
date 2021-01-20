@@ -2,6 +2,9 @@
 #include "FdG1Strategy.h"
 #include "SearchSpace.h"
 #include "PLICache.h"
+
+#include "logging/easylogging++.h"
+
 double FdG1Strategy::calculateG1(std::shared_ptr<PositionListIndex> lhsPLI) {
     unsigned long long numViolations = 0;
     std::map<int, int> valueCounts;
@@ -81,7 +84,11 @@ DependencyCandidate FdG1Strategy::createDependencyCandidate(std::shared_ptr<Vert
     ConfidenceInterval numViolatingTuplePairs = agreeSetSample
             ->estimateMixed(vertical, std::make_shared<Vertical>(static_cast<Vertical>(*rhs_)),context_->configuration_.estimateConfidence)
             .multiply(context_->relationData_->getNumTuplePairs());
+    //LOG(DEBUG) << boost::format{"Creating dependency candidate %1% with %2% violating pairs"}
+    //    % vertical->toString() % numViolatingTuplePairs;
     ConfidenceInterval g1 = calculateG1(numViolatingTuplePairs);
+    //LOG(DEBUG) << boost::format {"Creating dependency candidate %1% with error ~ %2%"}
+    //    % vertical->toString() % g1;
     return DependencyCandidate(vertical, g1, false);
 }
 

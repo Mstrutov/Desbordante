@@ -14,7 +14,12 @@ INITIALIZE_EASYLOGGINGPP
 std::string get_selfpath();
 
 int main(int argc, char **argv) {
-    el::Loggers::configureFromGlobal("logging.conf");
+    el::Configurations defaultConf;
+    defaultConf.setToDefault();
+    defaultConf.set(el::Level::Global,
+                    el::ConfigurationType::Enabled, "false");
+    el::Loggers::reconfigureAllLoggers(defaultConf);
+
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

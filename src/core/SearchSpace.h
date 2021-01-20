@@ -3,6 +3,7 @@
 #include <list>
 #include <set>
 #include <memory>
+#include <utility>
 
 #include <util/VerticalMap.h>
 #include "ProfilingContext.h"
@@ -62,8 +63,8 @@ public:
             std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> globalVisitees, std::shared_ptr<RelationalSchema> schema,
             std::function<bool (DependencyCandidate const&, DependencyCandidate const&)> const& dependencyCandidateComparator,
             int recursionDepth, double sampleBoost) :
-                id_(id), strategy_(strategy), scope_(std::move(scope)), globalVisitees_(globalVisitees), recursionDepth_(recursionDepth),
-                sampleBoost_(sampleBoost), launchPadIndex_(schema), launchPads_(dependencyCandidateComparator) {}
+                strategy_(std::move(strategy)), globalVisitees_(std::move(globalVisitees)), launchPads_(dependencyCandidateComparator),
+                launchPadIndex_(std::move(schema)), scope_(std::move(scope)), sampleBoost_(sampleBoost), recursionDepth_(recursionDepth), id_(id) {}
 
     // shared_ptr<RelationalSchema> --constructor--> VerticalMap<...> --make_shared--> shared_ptr<VerticalInfo<...>>
     SearchSpace(int id, std::shared_ptr<DependencyStrategy> strategy, std::shared_ptr<RelationalSchema> schema,

@@ -1,6 +1,7 @@
 #pragma once
 #include <boost/format.hpp>
 #include <string>
+
 class ConfidenceInterval {
 private:
     double min_;
@@ -11,7 +12,7 @@ public:
     ConfidenceInterval(double min, double mean, double max) :
         min_(min), mean_(mean), max_(max) {}
 
-    ConfidenceInterval(double value) : ConfidenceInterval(value, value, value) {}
+    explicit ConfidenceInterval(double value) : ConfidenceInterval(value, value, value) {}
 
     double getMin() const { return min_; }
     double getMax() const { return max_; }

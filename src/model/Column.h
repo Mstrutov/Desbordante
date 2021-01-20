@@ -9,6 +9,7 @@
 #include <string>
 
 #include <boost/dynamic_bitset.hpp>
+#include <utility>
 
 #include "RelationalSchema.h"
 
@@ -19,16 +20,16 @@ friend RelationalSchema;
 
 private:
     string name;
-    int index;
+    unsigned int index;
     std::weak_ptr<RelationalSchema> schema;
 
 public:
-    Column(std::shared_ptr<RelationalSchema> schema, const string& name, int index) :
+    Column(std::shared_ptr<RelationalSchema> schema, string name, int index) :
             name(std::move(name)),
             index(index),
             schema(schema) {}
     explicit operator Vertical() const;
-    int getIndex() const;
+    unsigned int getIndex() const;
     string getName() const;
     std::shared_ptr<RelationalSchema> getSchema() const;        // TODO: straight up bad: const-ness may be violated!
     string toString() const;

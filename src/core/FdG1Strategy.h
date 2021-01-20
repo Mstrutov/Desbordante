@@ -21,6 +21,6 @@ public:
         { return (boost::format("FD[RHS=%s, g1\u2264(%.3f..%.3f)]") % rhs_->getName() % minNonDependencyError_ % maxDependencyError_).str(); }
     void registerDependency(std::shared_ptr<Vertical> vertical, double error, const DependencyConsumer &discoveryUnit) override;
     bool isIrrelevantColumn(int columnIndex) override { return rhs_->getIndex() == columnIndex; }
-    int getNumIrrelevantColumns() override { return 1; }
+    unsigned int getNumIrrelevantColumns() override { return 1; }
     Vertical getIrrelevantColumns() override { return static_cast<Vertical>(*rhs_); }
 };

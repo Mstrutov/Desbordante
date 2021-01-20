@@ -10,7 +10,7 @@ const int RelationData::singletonValueId = PositionListIndex::singletonValueId;
 
 RelationData::RelationData(shared_ptr<RelationalSchema>& schema): schema(schema) {}
 
-int RelationData::getNumColumns() {
+unsigned int RelationData::getNumColumns() {
     return schema->getNumColumns();
 }
 

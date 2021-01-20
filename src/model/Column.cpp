@@ -12,7 +12,7 @@
 using namespace std;
 
 
-int Column::getIndex() const { return index;}
+unsigned int Column::getIndex() const { return index;}
 
 string Column::getName() const { return name; }
 

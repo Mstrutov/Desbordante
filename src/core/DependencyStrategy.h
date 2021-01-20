@@ -8,7 +8,8 @@ class SearchSpace;
 class DependencyStrategy {
 protected:
 
-    DependencyStrategy(double maxError, double deviation) : maxDependencyError_(maxError + deviation), minNonDependencyError_(maxError - deviation) {}
+    DependencyStrategy(double maxError, double deviation) :
+        minNonDependencyError_(maxError - deviation), maxDependencyError_(maxError + deviation) {}
 public:
     double minNonDependencyError_;
     double maxDependencyError_;
@@ -24,7 +25,7 @@ public:
     explicit virtual operator std::string() const = 0;
     virtual void registerDependency(std::shared_ptr<Vertical> vertical, double error, DependencyConsumer const& discoveryUnit) = 0;
     virtual bool isIrrelevantColumn(int columnIndex) = 0;
-    virtual int getNumIrrelevantColumns() = 0;
+    virtual unsigned int getNumIrrelevantColumns() = 0;
     virtual Vertical getIrrelevantColumns() = 0;
 
     virtual ~DependencyStrategy() = default;

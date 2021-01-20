@@ -62,4 +62,5 @@ public:
     shared_ptr<PositionListIndex> probe(const vector<int>& probingTable);
     shared_ptr<PositionListIndex> probeAll(Vertical probingColumns, ColumnLayoutRelationData & relationData);
 
+    std::string toString() const;
 };

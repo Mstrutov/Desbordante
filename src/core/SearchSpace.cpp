@@ -105,11 +105,26 @@ void SearchSpace::escapeLaunchPad(std::shared_ptr<Vertical> launchPad,
 
         return false;
     };
+    {
+        string pruningSupersetsStr = "[";
+        for (auto pruningSuperset : pruningSupersets) {
+            pruningSupersetsStr += pruningSuperset->toString();
+        }
+        pruningSupersetsStr += "]";
+        LOG(TRACE) << boost::format{"Escaping %1% pruned by %2%"} % launchPad->toString() % pruningSupersetsStr;
+    }
     auto hittingSet = context_->getSchema()->calculateHittingSet(
             std::move(pruningSupersets),
             boost::make_optional(pruningFunction)
         );
-
+    {
+        string hittingSetStr = "[";
+        for (auto el : hittingSet) {
+            hittingSetStr += el->toString();
+        }
+        hittingSetStr += "]";
+        LOG(TRACE) << boost::format{"* Evaluated hitting set: %1%"} % hittingSetStr;
+    }
     for (auto& escaping : hittingSet) {
 
         auto escapedLaunchPadVertical = launchPad->Union(*escaping);
@@ -146,6 +161,7 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad,
     LOG(DEBUG) << boost::format{"===== Ascending from %1% ======"} % launchPad.vertical_->toString();
 
     if (strategy_->shouldResample(launchPad.vertical_, sampleBoost_)) {
+        LOG(TRACE) << "Resampling.";
         context_->createFocusedSample(launchPad.vertical_, sampleBoost_);
     }
 
@@ -181,7 +197,7 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad,
                 error = context_->configuration_.isEstimateOnly
                         ? traversalCandidate.error_.getMean()
                         : strategy_->calculateError(traversalCandidate.vertical_);
-                double errorDiff = *error - traversalCandidate.error_.getMean();
+                // double errorDiff = *error - traversalCandidate.error_.getMean();
                 // TODO:: context_->profilingData is only for logging, right?
 
                 localVisitees->put(*traversalCandidate.vertical_, std::make_shared<VerticalInfo>(

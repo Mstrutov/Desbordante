@@ -18,18 +18,17 @@ std::shared_ptr<PositionListIndex> PLICache::get(Vertical const &vertical) {
 PLICache::PLICache(std::shared_ptr<ColumnLayoutRelationData> relationData, CachingMethod cachingMethod,
                    CacheEvictionMethod evictionMethod, double cachingMethodValue, double minEntropy, double meanEntropy,
                    double medianEntropy, double maximumEntropy, double medianGini, double medianInvertedEntropy) :
-                   cachingMethod_(cachingMethod),
-                   evictionMethod_(evictionMethod),
-                   cachingMethodValue_(cachingMethodValue),
-                   minEntropy_(minEntropy),
-                   meanEntropy_(meanEntropy),
-                   medianEntropy_(medianEntropy),
-                   maximumEntropy_(maximumEntropy),
-                   medianGini_(medianGini),
-                   medianInvertedEntropy_(medianInvertedEntropy),
-                   relationData_(relationData),
-                   index_(std::make_shared<CacheMap>(relationData->getSchema()))    // synchronised => SynchronizedVMap
-                   {
+        relationData_(relationData),
+        index_(std::make_shared<CacheMap>(relationData->getSchema())),
+        cachingMethod_(cachingMethod),
+        evictionMethod_(evictionMethod),
+        cachingMethodValue_(cachingMethodValue),
+        maximumEntropy_(maximumEntropy),
+        meanEntropy_(meanEntropy),
+        minEntropy_(minEntropy),
+        medianEntropy_(medianEntropy),
+        medianGini_(medianGini),
+        medianInvertedEntropy_(medianInvertedEntropy) {
     for (auto& column_ptr : relationData->getSchema()->getColumns()) {
         index_->put(static_cast<Vertical>(*column_ptr), relationData->getColumnData(column_ptr->getIndex())->getPositionListIndex());
     }
