@@ -16,8 +16,9 @@ private:
 
     Configuration configuration_;
 public:
-    explicit Pyro(fs::path const& path, char separator, bool hasHeader);
-    explicit Pyro(fs::path const& path, char separator, bool hasHeader, int seed);
+    //explicit Pyro(fs::path const& path, char separator, bool hasHeader);
+    explicit Pyro(fs::path const& path, char separator = ',', bool hasHeader = true,
+                  int seed = 0, double maxError = 0.01);
 
     double execute();
 };

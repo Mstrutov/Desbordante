@@ -1,8 +1,3 @@
-//
-// Created by Ilya Vologin
-// https://github.com/cupertank
-//
-
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
@@ -29,6 +24,7 @@ int main(int argc, char const *argv[]) {
     char separator = ',';
     bool hasHeader = true;
     int seed = 0;
+    double error = 0.01;
 
     po::options_description desc("Allowed options");
     desc.add_options()
@@ -38,6 +34,7 @@ int main(int argc, char const *argv[]) {
         ("sep", po::value<char>(&separator), "CSV separator")
         ("hasHeader", po::value<bool>(&hasHeader), "CSV header presence flag [true|false]. Default true")
         ("seed", po::value<int>(&seed), "RNG seed")
+        ("error", po::value<double>(&error), "error for AFD algorithms. Default 0.01")
     ;
 
     po::variables_map vm;
@@ -60,13 +57,14 @@ int main(int argc, char const *argv[]) {
     std::transform(alg.begin(), alg.end(), alg.begin(), [](unsigned char c){ return std::tolower(c); });
     std::cout << "Input: algorithm \"" << alg
               << "\" with seed " << std::to_string(seed)
-              << " and dataset \"" << dataset
+              << ", error \"" << std::to_string(error)
+              << "\" and dataset \"" << dataset
               << "\" with separator \'" << separator
               << "\'. Header is " << (hasHeader ? "" : "not ") << "present. " << std::endl;
     auto path = std::filesystem::current_path() / "inputData" / dataset;
     if (alg == "pyro") {
         try {
-            Pyro algInstance(path, separator, hasHeader, seed);
+            Pyro algInstance(path, separator, hasHeader, seed, error);
             double elapsedTime = algInstance.execute();
             std::cout << "> ELAPSED TIME: " << elapsedTime << std::endl;
         } catch (std::runtime_error& e) {

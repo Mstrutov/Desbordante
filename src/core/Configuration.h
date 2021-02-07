@@ -11,7 +11,7 @@ struct Configuration {
     //Error settings
     double errorDev = 0;
     bool isEstimateOnly = false;
-    double maxUccError = 0.01;
+    double maxUccError = 0.01;          // both for FD and UCC actually
 
     //Traversal settings
     int parallelism = 0;

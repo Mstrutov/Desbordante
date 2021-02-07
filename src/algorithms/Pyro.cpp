@@ -81,21 +81,13 @@ double Pyro::execute() {
     return elapsed_milliseconds.count();
 }
 
-Pyro::Pyro(fs::path const &path, char separator = ',', bool hasHeader = true) :
-        inputGenerator_(path, separator, hasHeader),
-        cachingMethod_(CachingMethod::NOCACHING),
-        evictionMethod_(CacheEvictionMethod::DEFAULT) {
-    uccConsumer_ = [this](auto const& key) { this->discoveredUCCs_.push_back(key); };
-    fdConsumer_ = [this](auto const& fd) { this->discoveredFDs_.push_back(fd); };
-    configuration_.seed = 0;
-}
-
-
-Pyro::Pyro(fs::path const &path, char separator = ',', bool hasHeader = true, int seed = 0) :
+Pyro::Pyro(fs::path const &path, char separator, bool hasHeader, int seed, double maxError) :
         inputGenerator_(path, separator, hasHeader),
         cachingMethod_(CachingMethod::NOCACHING),
         evictionMethod_(CacheEvictionMethod::DEFAULT) {
     uccConsumer_ = [this](auto const& key) { this->discoveredUCCs_.push_back(key); };
     fdConsumer_ = [this](auto const& fd) { this->discoveredFDs_.push_back(fd); };
     configuration_.seed = seed;
+    configuration_.maxUccError = maxError;
+    configuration_.maxUccError = maxError;
 }
