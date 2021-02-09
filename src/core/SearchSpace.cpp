@@ -214,7 +214,9 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad,
             }
         }
 
-        if (traversalCandidate.vertical_->getArity() >= context_->relationData_->getNumColumns() - strategy_->getNumIrrelevantColumns()) {
+        if (traversalCandidate.vertical_->getArity() >=
+            context_->relationData_->getNumColumns() - strategy_->getNumIrrelevantColumns()
+            || traversalCandidate.vertical_->getArity() == context_->configuration_.maxLHS) {
             break;
         }
 

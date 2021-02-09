@@ -143,15 +143,18 @@ size_t PLICache::size() const {
 
 void PLICache::cachingProcess(Vertical const &vertical, std::shared_ptr<PositionListIndex> pli) {
     switch (cachingMethod_) {
-//        case CachingMethod::COIN:
-//            index_->put(vertical, pli);
-//            // newUsageInfo - parallel
-//            break;
-        default:
-            index_->put(vertical, pli);
-            // doubts on necessity of statistics => no implementation yet
-            //throw std::exception();
+        case CachingMethod::NOCACHING:
+            //index_->put(vertical, pli);
+            // newUsageInfo - parallel
             break;
+        case CachingMethod::ALLCACHING:
+            index_->put(vertical, pli);
+            break;
+        default:
+            //index_->put(vertical, pli);
+            // doubts on necessity of statistics => no implementation yet
+            throw std::runtime_error("Only NOCACHING and ALLCACHING strategies are currently available");
+            //break;
     }
 }
 

@@ -135,7 +135,7 @@ shared_ptr<T> AgreeSetSample::createFocusedFor(shared_ptr<ColumnLayoutRelationDa
         }
     }
     //std::cout << "-----------------\n";
-    string agreeSetCountersStr = "{";
+    /*string agreeSetCountersStr = "{";
     for (auto& [key, value] : agreeSetCounters) {
         agreeSetCountersStr += '\"';
         for (unsigned int columnIndex = key.find_first(); columnIndex < key.size(); columnIndex = key.find_next(columnIndex)){
@@ -148,7 +148,7 @@ shared_ptr<T> AgreeSetSample::createFocusedFor(shared_ptr<ColumnLayoutRelationDa
     agreeSetCountersStr += '}';
 
     LOG(DEBUG) << boost::format {"Created sample focused on %1%: %2%"} % restrictionVertical->toString() % agreeSetCountersStr;
-
+    */
     shared_ptr<T> sample = std::make_shared<T>(relation, restrictionVertical, sampleSize, restrictionNep, agreeSetCounters);
     return sample;
 }

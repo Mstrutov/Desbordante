@@ -35,12 +35,12 @@ private:
     static bool takeProbe(int position, ColumnLayoutRelationData & relationData, Vertical & probingColumns, vector<int> & probe);
 
 public:
-    PositionListIndex(deque<vector<int>> index, vector<int> nullCluster, unsigned int size, double entropy,
+    PositionListIndex(deque<vector<int>>&& index, vector<int>&& nullCluster, unsigned int size, double entropy,
                       unsigned long long nep, unsigned int relationSize, unsigned int originalRelationSize,
                       double invertedEntropy = 0, double giniImpurity = 0);
     //TODO: for optimization needs
     static int intersectionCount;
-    static int millis;
+    static unsigned long long micros;
     static const int singletonValueId;
     static shared_ptr<PositionListIndex> createFor(vector<int>& data, bool isNullEqNull);
     vector<int> getProbingTable();

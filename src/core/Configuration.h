@@ -1,4 +1,5 @@
 #pragma once
+
 #include <string>
 
 struct Configuration {
@@ -18,6 +19,9 @@ struct Configuration {
     int maxThreadsPerSearchSpace = -1;
     bool isDeferFailedLaunchPads = true;
     std::string launchPadOrder = "error";
+
+    unsigned int maxLHS = -1;
+
 
     //Sampling settings
     unsigned int sampleSize = 10000;

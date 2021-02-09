@@ -5,6 +5,7 @@
 #include <cmath>
 #include <deque>
 #include <map>
+#include <memory>
 #include <utility>
 
 #include <boost/dynamic_bitset.hpp>
@@ -16,15 +17,15 @@ using namespace std;
 
 const int PositionListIndex::singletonValueId = 0;
 
-int PositionListIndex::millis = 0;
+unsigned long long PositionListIndex::micros = 0;
 int PositionListIndex::intersectionCount = 0;
 
 // use r-value references, DO NOT copy
-PositionListIndex::PositionListIndex(deque<vector<int>> index, vector<int> nullCluster, unsigned int size, double entropy,
+PositionListIndex::PositionListIndex(deque<vector<int>>&& index, vector<int>&& nullCluster, unsigned int size, double entropy,
                                      unsigned long long nep, unsigned int relationSize, unsigned int originalRelationSize,
                                      double invertedEntropy, double giniImpurity):
-                                     index(std::move(index)),
-                                     nullCluster(std::move(nullCluster)),
+                                     index(index),
+                                     nullCluster(nullCluster),
                                      size(size),
                                      entropy(entropy),
                                      invertedEntropy(invertedEntropy),
@@ -78,7 +79,7 @@ shared_ptr<PositionListIndex> PositionListIndex::createFor(vector<int>& data, bo
     }
 
     sortClusters(clusters);
-    auto pli = shared_ptr<PositionListIndex>(new PositionListIndex(clusters, nullCluster, size, entropy, nep, data.size(), data.size(), invEnt, giniImpurity));
+    auto pli = std::make_shared<PositionListIndex>(std::move(clusters), std::move(nullCluster), size, entropy, nep, data.size(), data.size(), invEnt, giniImpurity);
     return pli;
 }
 
@@ -120,9 +121,11 @@ deque<vector<int>> const & PositionListIndex::getIndex() {
 
 shared_ptr<PositionListIndex> PositionListIndex::intersect(shared_ptr<PositionListIndex> that) {
     assert(this->relationSize == that->relationSize);
+        auto startTime = std::chrono::system_clock::now();
     auto result = this->size > that->size ?
             that->probe(this->getProbingTable()) :
             this->probe(that->getProbingTable());
+        micros += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - startTime).count();
     return result;
 }
 
@@ -176,13 +179,15 @@ shared_ptr<PositionListIndex> PositionListIndex::probe(const vector<int>& probin
 
     //sortClusters(newIndex);         //!! ~100-200ms
 
-    return make_shared<PositionListIndex>(newIndex, nullCluster, newSize, newEntropy, newNep, relationSize, relationSize);
+    return make_shared<PositionListIndex>(std::move(newIndex), std::move(nullCluster), newSize, newEntropy, newNep, relationSize, relationSize);
 }
 
 
 //TODO: nullCluster не поддерживается
 shared_ptr<PositionListIndex> PositionListIndex::probeAll(Vertical probingColumns, ColumnLayoutRelationData & relationData) {
     assert(this->relationSize == relationData.getNumRows());
+
+        auto startTime = std::chrono::system_clock::now();
 
     deque<vector<int>> newIndex;
     unsigned int newSize = 0;
@@ -221,8 +226,10 @@ shared_ptr<PositionListIndex> PositionListIndex::probeAll(Vertical probingColumn
 
     sortClusters(newIndex);
 
+        micros += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - startTime).count();
+
     return std::make_shared<PositionListIndex>(
-            newIndex, nullCluster, newSize, newEntropy, newNep, this->relationSize, this->relationSize
+            std::move(newIndex), std::move(nullCluster), newSize, newEntropy, newNep, this->relationSize, this->relationSize
             );
 }
 

@@ -9,10 +9,10 @@ double Pyro::execute() {
     auto relation = ColumnLayoutRelationData::createFrom(inputGenerator_, configuration_.isNullEqualNull);
     auto schema = relation->getSchema();
 
-    for (auto col : schema->getColumns()) {
+    /*for (auto col : schema->getColumns()) {
         LOG(DEBUG) << boost::format{"PLI for %1%: %2%"}
             % col->toString() % relation->getColumnData(col->getIndex())->getPositionListIndex()->toString();
-    }
+    }*/
 
     auto profilingContext = std::make_shared<ProfilingContext>(
             configuration_,
@@ -72,22 +72,29 @@ double Pyro::execute() {
     }
     auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
 
+    unsigned long long totalPLIintersectTimeMicros = 0;
+    for (auto& vertical : relation->getColumnData()) {
+        totalPLIintersectTimeMicros += vertical->getPositionListIndex()->micros;
+    }
+
     std::cout << "Time: " << elapsed_milliseconds.count() << " milliseconds" << std::endl;
     std::cout << "Error calculation count: " << totalErrorCalcCount << std::endl;
-    std::cout << "Total ascension: " << totalAscension << std::endl;
-    std::cout << "Total trickle: " << totalTrickle << std::endl;
+    std::cout << "Total ascension time: " << totalAscension << "ms" << std::endl;
+    std::cout << "Total trickle time: " << totalTrickle << "ms" << std::endl;
+    std::cout << "Total intersection time: " << totalPLIintersectTimeMicros / 1000 << "ms" << std::endl;
     std::cout << "====RESULTS-FD====\r\n" << fdsToString();
     std::cout << "====RESULTS-UCC====\r\n" << uccsToString();
     return elapsed_milliseconds.count();
 }
 
-Pyro::Pyro(fs::path const &path, char separator, bool hasHeader, int seed, double maxError) :
+Pyro::Pyro(fs::path const &path, char separator, bool hasHeader, int seed, double maxError, unsigned int maxLHS) :
         inputGenerator_(path, separator, hasHeader),
-        cachingMethod_(CachingMethod::NOCACHING),
+        cachingMethod_(CachingMethod::ALLCACHING),
         evictionMethod_(CacheEvictionMethod::DEFAULT) {
     uccConsumer_ = [this](auto const& key) { this->discoveredUCCs_.push_back(key); };
     fdConsumer_ = [this](auto const& fd) { this->discoveredFDs_.push_back(fd); };
     configuration_.seed = seed;
     configuration_.maxUccError = maxError;
     configuration_.maxUccError = maxError;
+    configuration_.maxLHS = maxLHS;
 }

@@ -258,7 +258,7 @@ long Tane::execute() {
     aprioriMillis += elapsed_milliseconds.count();
 
     cout << "Time: " << aprioriMillis << " milliseconds" << endl;
-    cout << "Intersection time: " << PositionListIndex::millis << " nanoseconds" << endl;
+    cout << "Intersection time: " << PositionListIndex::micros / 1000 << "ms" << endl;
     cout << "Total intersections: " << PositionListIndex::intersectionCount << endl;
     cout << "Total FD count: " << countOfFD << endl;
     cout << "Total UCC count: " << countOfUCC << endl;
