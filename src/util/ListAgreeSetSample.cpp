@@ -18,7 +18,7 @@ std::shared_ptr<std::vector<unsigned long long>> ListAgreeSetSample::bitSetToLon
 
 ListAgreeSetSample::ListAgreeSetSample(std::shared_ptr<ColumnLayoutRelationData> relation, std::shared_ptr<Vertical> focus,
         unsigned int sampleSize, unsigned long long populationSize,
-        std::map<boost::dynamic_bitset<>, int> const & agreeSetCounters) : AgreeSetSample(relation, focus, sampleSize, populationSize) {
+        std::unordered_map<boost::dynamic_bitset<>, int> const & agreeSetCounters) : AgreeSetSample(relation, focus, sampleSize, populationSize) {
     for(auto el : agreeSetCounters) {
         agreeSetCounters_.emplace_back(Entry(bitSetToLongLongVector(el.first), el.second));
     }

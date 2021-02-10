@@ -5,6 +5,7 @@
 #include "Pyro.h"
 
 double Pyro::execute() {
+    auto startTime = std::chrono::system_clock::now();
 
     auto relation = ColumnLayoutRelationData::createFrom(inputGenerator_, configuration_.isNullEqualNull);
     auto schema = relation->getSchema();
@@ -57,7 +58,9 @@ double Pyro::execute() {
             searchSpaces_.push_back(std::make_shared<SearchSpace>(nextId++, strategy, schema, launchPadOrder));
         }
     }
-    auto startTime = std::chrono::system_clock::now();
+    unsigned long long initTimeMillis = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime).count();
+
+    startTime = std::chrono::system_clock::now();
     unsigned int totalErrorCalcCount = 0;
     unsigned long long totalAscension = 0;
     unsigned long long totalTrickle = 0;
@@ -72,16 +75,13 @@ double Pyro::execute() {
     }
     auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
 
-    unsigned long long totalPLIintersectTimeMicros = 0;
-    for (auto& vertical : relation->getColumnData()) {
-        totalPLIintersectTimeMicros += vertical->getPositionListIndex()->micros;
-    }
-
+    LOG(DEBUG) << boost::format{"FdG1 error calculation: %1% ms"} % (FdG1Strategy::nanos_ / 1000000);
+    std::cout << "Init time: " << initTimeMillis << "ms" << std::endl;
     std::cout << "Time: " << elapsed_milliseconds.count() << " milliseconds" << std::endl;
     std::cout << "Error calculation count: " << totalErrorCalcCount << std::endl;
     std::cout << "Total ascension time: " << totalAscension << "ms" << std::endl;
     std::cout << "Total trickle time: " << totalTrickle << "ms" << std::endl;
-    std::cout << "Total intersection time: " << totalPLIintersectTimeMicros / 1000 << "ms" << std::endl;
+    std::cout << "Total intersection time: " << PositionListIndex::micros / 1000 << "ms" << std::endl;
     std::cout << "====RESULTS-FD====\r\n" << fdsToString();
     std::cout << "====RESULTS-UCC====\r\n" << uccsToString();
     return elapsed_milliseconds.count();
@@ -89,7 +89,7 @@ double Pyro::execute() {
 
 Pyro::Pyro(fs::path const &path, char separator, bool hasHeader, int seed, double maxError, unsigned int maxLHS) :
         inputGenerator_(path, separator, hasHeader),
-        cachingMethod_(CachingMethod::ALLCACHING),
+        cachingMethod_(CachingMethod::COIN),
         evictionMethod_(CacheEvictionMethod::DEFAULT) {
     uccConsumer_ = [this](auto const& key) { this->discoveredUCCs_.push_back(key); };
     fdConsumer_ = [this](auto const& fd) { this->discoveredFDs_.push_back(fd); };

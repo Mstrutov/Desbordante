@@ -115,7 +115,6 @@ string Vertical::toString() const {
         return "[]";
 
     auto relation = schema.lock();
-    int i = columnIndices.find_next(0);
     for (size_t index = columnIndices.find_first();
          index != dynamic_bitset<>::npos;
          index = columnIndices.find_next(index)) {

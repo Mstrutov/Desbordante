@@ -12,23 +12,15 @@ using namespace std;
 
 ColumnData::ColumnData(shared_ptr<Column>& column, vector<int> probingTable, shared_ptr<PositionListIndex>& positionListIndex):
     column(column),
-    probingTable(std::move(probingTable)),
+    probingTable(std::make_unique<vector<int>>(std::move(probingTable))),
     positionListIndex(positionListIndex)
     {}
-
-vector<int> ColumnData::getProbingTable() { return probingTable; }
-
-int ColumnData::getProbingTableValue(int tupleIndex) { return probingTable[tupleIndex]; }
-
-shared_ptr<Column> ColumnData::getColumn() { return column; }
-
-shared_ptr<PositionListIndex> ColumnData::getPositionListIndex() { return positionListIndex; }
 
 //TODO: Random проверь
 void ColumnData::shuffle() {
     random_device rd;
     mt19937 random(rd());
-    std::shuffle(probingTable.begin(), probingTable.end(), random);
+    std::shuffle(probingTable->begin(), probingTable->end(), random);
 }
 
 string ColumnData::toString() { return "Data for " + column->toString(); }

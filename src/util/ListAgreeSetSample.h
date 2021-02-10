@@ -30,7 +30,7 @@ public:
     //100% should use move semantics on agreeSetCounters.
     //in Java code relation is a reference to base class RelationData, but in fact it references to CLRD, so here latter is used
     ListAgreeSetSample(std::shared_ptr<ColumnLayoutRelationData> relation, std::shared_ptr<Vertical> focus, unsigned int sampleSize, unsigned long long populationSize,
-                        std::map<boost::dynamic_bitset<>, int> const & agreeSetCounters);
+                        std::unordered_map<boost::dynamic_bitset<>, int> const & agreeSetCounters);
 
     unsigned long long getNumAgreeSupersets(std::shared_ptr<Vertical> agreement) override;
     unsigned long long getNumAgreeSupersets(std::shared_ptr<Vertical> agreement, std::shared_ptr<Vertical> disagreement) override;

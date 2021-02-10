@@ -37,7 +37,7 @@ PLICache::PLICache(std::shared_ptr<ColumnLayoutRelationData> relationData, Cachi
 
 // obtains or calculates a PositionListIndex using cache
 std::shared_ptr<PositionListIndex>
-PLICache::getOrCreateFor(Vertical const &vertical, ProfilingContext const &profilingContext) {
+PLICache::getOrCreateFor(Vertical const &vertical, ProfilingContext* profilingContext) {
     LOG(DEBUG) << boost::format{"PLI for %1% requested: "} % vertical.toString();
 
     // is PLI already cached?
@@ -113,10 +113,10 @@ PLICache::getOrCreateFor(Vertical const &vertical, ProfilingContext const &profi
 
     LOG(DEBUG) << boost::format {"Intersecting %1%."} % "[UNIMPLEMENTED]";
     // Intersect and cache
-    if (operands.size() >= profilingContext.configuration_.naryIntersectionSize) {
+    if (operands.size() >= profilingContext->configuration_.naryIntersectionSize) {
         PositionListIndexRank basePliRank = operands[0];
         pli = basePliRank.pli_->probeAll(*vertical.without(*basePliRank.vertical_), *relationData_.lock());
-        cachingProcess(vertical, pli);
+        cachingProcess(vertical, pli, profilingContext);
     } else {
         std::shared_ptr<Vertical> currentVertical = nullptr;
         for (auto& operand : operands) {
@@ -126,7 +126,7 @@ PLICache::getOrCreateFor(Vertical const &vertical, ProfilingContext const &profi
             } else {
                 currentVertical = currentVertical->Union(*operand.vertical_);
                 pli = pli->intersect(operand.pli_);
-                cachingProcess(*currentVertical, pli);
+                cachingProcess(*currentVertical, pli, profilingContext);
             }
         }
     }
@@ -141,8 +141,13 @@ size_t PLICache::size() const {
     return index_->getSize();
 }
 
-void PLICache::cachingProcess(Vertical const &vertical, std::shared_ptr<PositionListIndex> pli) {
+void PLICache::cachingProcess(Vertical const &vertical, std::shared_ptr<PositionListIndex> pli, ProfilingContext* profilingContext) {
     switch (cachingMethod_) {
+        case CachingMethod::COIN:
+            if (profilingContext->customRandom_.nextDouble() < profilingContext->configuration_.cachingProbability) {
+                index_->put(vertical, pli);
+            }
+            break;
         case CachingMethod::NOCACHING:
             //index_->put(vertical, pli);
             // newUsageInfo - parallel

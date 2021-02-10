@@ -35,13 +35,13 @@ private:
     double medianGini_;
     double medianInvertedEntropy_;
 
-    void cachingProcess(Vertical const& vertical, std::shared_ptr<PositionListIndex> pli);//, std::shared_ptr<ProfilingContext> profilingContext, )
+    void cachingProcess(Vertical const& vertical, std::shared_ptr<PositionListIndex> pli, ProfilingContext* profilingContext);
 public:
     PLICache(std::shared_ptr<ColumnLayoutRelationData> relationData, CachingMethod cachingMethod, CacheEvictionMethod evictionMethod,
              double cachingMethodValue, double minEntropy, double meanEntropy, double medianEntropy, double maximumEntropy, double medianGini, double medianInvertedEntropy);
 
     std::shared_ptr<PositionListIndex> get(Vertical const& vertical);
-    std::shared_ptr<PositionListIndex> getOrCreateFor(Vertical const& vertical, ProfilingContext const& profilingContext);
+    std::shared_ptr<PositionListIndex> getOrCreateFor(Vertical const& vertical, ProfilingContext* profilingContext);
 
     void setMaximumEntropy(double e) { maximumEntropy_ = e; }
 

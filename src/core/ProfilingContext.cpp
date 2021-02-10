@@ -131,7 +131,7 @@ ProfilingContext::createFocusedSample(std::shared_ptr<Vertical> focus, double bo
     std::shared_ptr<ListAgreeSetSample> sample = ListAgreeSetSample::createFocusedFor(
             relationData_,
             focus,
-            pliCache_->getOrCreateFor(*focus, *this),
+            pliCache_->getOrCreateFor(*focus, this),
             configuration_.sampleSize * boostFactor,
             customRandom_
             );

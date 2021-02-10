@@ -17,7 +17,7 @@ shared_ptr<T> AgreeSetSample::createFor(shared_ptr<ColumnLayoutRelationData> rel
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> random(0, relationData->getNumRows());
 
-    map<dynamic_bitset<>, int> agreeSetCounters;
+    std::unordered_map<dynamic_bitset<>, int> agreeSetCounters;
     sampleSize = std::min((unsigned long long)sampleSize, relationData->getNumTuplePairs());
 
     for (long i = 0; i < sampleSize; i++){
@@ -63,7 +63,7 @@ shared_ptr<T> AgreeSetSample::createFocusedFor(shared_ptr<ColumnLayoutRelationDa
         relevantColumnData.push_back(relation->getColumnData(columnIndex));
     }
     dynamic_bitset<> agreeSetPrototype(restrictionVertical->getColumnIndices());
-    map<dynamic_bitset<>, int> agreeSetCounters;
+    std::unordered_map<dynamic_bitset<>, int> agreeSetCounters;
 
     unsigned long long restrictionNep = restrictionPli->getNepAsLong();
     sampleSize = std::min(static_cast<unsigned long long>(sampleSize), restrictionNep);
@@ -81,10 +81,11 @@ shared_ptr<T> AgreeSetSample::createFocusedFor(shared_ptr<ColumnLayoutRelationDa
                             agreeSet.set(columnData->getColumn()->getIndex());
                         }
                     }
-                    if (agreeSetCounters.find(agreeSet) == agreeSetCounters.end()) {          // тут изменил
-                        agreeSetCounters[agreeSet] = 1;
+                    auto location = agreeSetCounters.find(agreeSet);
+                    if (location == agreeSetCounters.end()) {
+                        agreeSetCounters.emplace_hint(location, agreeSet, 1);
                     } else {
-                        agreeSetCounters[agreeSet]++;
+                        location->second += 1;
                     }
                 }
             }
@@ -127,10 +128,11 @@ shared_ptr<T> AgreeSetSample::createFocusedFor(shared_ptr<ColumnLayoutRelationDa
                 }
             }
 
-            if (agreeSetCounters.find(agreeSet) == agreeSetCounters.end()) {          // тут изменил
-                agreeSetCounters[agreeSet] = 1;
+            auto location = agreeSetCounters.find(agreeSet);
+            if (location == agreeSetCounters.end()) {
+                agreeSetCounters.emplace_hint(location, agreeSet, 1);
             } else {
-                agreeSetCounters[agreeSet]++;
+                location->second += 1;
             }
         }
     }
@@ -149,6 +151,6 @@ shared_ptr<T> AgreeSetSample::createFocusedFor(shared_ptr<ColumnLayoutRelationDa
 
     LOG(DEBUG) << boost::format {"Created sample focused on %1%: %2%"} % restrictionVertical->toString() % agreeSetCountersStr;
     */
-    shared_ptr<T> sample = std::make_shared<T>(relation, restrictionVertical, sampleSize, restrictionNep, agreeSetCounters);
+    shared_ptr<T> sample = std::make_shared<T>(relation, restrictionVertical, sampleSize, restrictionNep, std::move(agreeSetCounters));
     return sample;
 }
