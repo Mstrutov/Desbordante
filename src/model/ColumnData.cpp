@@ -23,7 +23,6 @@ void ColumnData::shuffle() {
     std::shuffle(probingTable->begin(), probingTable->end(), random);
 }
 
-string ColumnData::toString() { return "Data for " + column->toString(); }
 
 bool ColumnData::operator==(const ColumnData &rhs) {
     if (this == &rhs) return true;

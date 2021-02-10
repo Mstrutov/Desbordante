@@ -64,7 +64,7 @@ void RelationalSchema::appendColumn(shared_ptr<Column> column) {
     columns.push_back(column);
 }
 
-int RelationalSchema::getNumColumns() {
+int RelationalSchema::getNumColumns() const {
     return columns.size();
 }
 

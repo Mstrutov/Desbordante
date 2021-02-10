@@ -24,8 +24,8 @@ public:
     vector<int>* getProbingTable() { return probingTable.get(); }
     int getProbingTableValue(int tupleIndex) { return (*probingTable)[tupleIndex]; }
     shared_ptr<Column> getColumn() { return column; }
-    shared_ptr<PositionListIndex> getPositionListIndex() { return positionListIndex; };
+    shared_ptr<PositionListIndex> getPositionListIndex() { return positionListIndex; }
     void shuffle();
-    string toString();
+    string toString() { return "Data for " + column->toString(); }
     bool operator==(const ColumnData& rhs);
 };
