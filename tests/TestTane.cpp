@@ -18,16 +18,30 @@ extern string path;
 
 //TODO: wrong file => WARNING
 TEST(TaneTester, first) {
-    vector<string> datasets = {"CIPublicHighway50k.csv", "CIPublicHighway100k.csv", "CIPublicHighway200k.csv", "neighbors100k.csv"};
-    //string path = "/home/maxim/Study/Metanome-coding/metanome_git/src/tests";
-    auto path = fs::current_path().append("inputData").append(datasets[1]);
-    //CSVParser csvParser(path + "/TestTane.csv");
-    //cout << path;
+    vector<string> datasets = {"CIPublicHighway50k.csv",
+                               "CIPublicHighway100k.csv",
+                               "CIPublicHighway200k.csv",
+                               "neighbors100k.csv",
+                               "WDC_astronomical.csv",
+                               "WDC_age.csv",
+                               "WDC_appearances.csv",
+                               "WDC_astrology.csv",
+                               "WDC_game.csv",
+                               "WDC_science.csv",
+                               "WDC_symbols.csv",
+                               "WDC_kepler.csv"};
+    auto path = fs::current_path().append("inputData");
     vector<long> results;
     try {
-        Tane algoInstance(path);
-        //Tane algoInstance(path + "/CIPublicHighway50k.csv");
-        results.push_back(algoInstance.execute());
+        /*for (int i = 0; i < datasets.size(); i++) {
+            Tane algoInstance(path / datasets[i]);
+            results.push_back(algoInstance.execute());
+        }*/
+        cout << "==============TANE RESULTS============\n";
+        for (auto time : results) {
+            cout << time << ' ';
+        }
+        cout << "\n=====================================\n";
     }
     catch (std::runtime_error& e) {
         cout << "Exception raised in test: " << e.what() << endl;

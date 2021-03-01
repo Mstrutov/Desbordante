@@ -30,15 +30,15 @@ bool LatticeVertex::comesBeforeAndSharePrefixWith(LatticeVertex& that) {
 
 //same here
 bool LatticeVertex::operator> (LatticeVertex& that) {
-  int result = vertical.getArity() - that.vertical.getArity();
-  if (result)
-    return (result > 0);
+  if (vertical.getArity() != that.vertical.getArity())
+    return vertical.getArity() > that.vertical.getArity();
 
   dynamic_bitset thisIndices = vertical.getColumnIndices();
   int thisIndex = thisIndices.find_first();
   dynamic_bitset thatIndices = that.vertical.getColumnIndices();
   int thatIndex = thatIndices.find_first();
 
+  int result;
   while (true){
     result = thisIndex - thatIndex;
     if (result)
@@ -57,8 +57,8 @@ std::ostream& operator<<(std::ostream& os, LatticeVertex& lv) {
     os << "Vertex: " << lv.vertical.toString() << endl;
 
     string rhs;
-    for (int index = lv.rhsCandidates.find_first();
-         index != -1;//dynamic_bitset<>::npos;
+    for (size_t index = lv.rhsCandidates.find_first();
+         index != dynamic_bitset<>::npos;
          index = lv.rhsCandidates.find_next(index)) {
         rhs += std::to_string(index) + " ";
     }

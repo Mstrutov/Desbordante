@@ -24,7 +24,7 @@ shared_ptr<ColumnData> ColumnLayoutRelationData::getColumnData(int columnIndex) 
 }
 
 unsigned int ColumnLayoutRelationData::getNumRows() {
-    return columnData[0]->getProbingTable().size();
+    return columnData[0]->getProbingTable()->size();
 }
 
 vector<int> ColumnLayoutRelationData::getTuple(int tupleIndex) {
@@ -49,10 +49,9 @@ shared_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::createFrom(CSVPar
 shared_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::createFrom(CSVParser &fileInput, bool isNullEqNull, int maxCols,
                                                               long maxRows) {
     auto schema =  RelationalSchema::create(fileInput.getRelationName(), isNullEqNull);
-    map<string, int> valueDictionary;
+    unordered_map<string, int> valueDictionary;
     int nextValueId = 1;
     const int nullValueId = -1;
-    const int unknownValueId = 0;
     int numColumns = fileInput.getNumberOfColumns();
     if (maxCols > 0) numColumns = min(numColumns, maxCols);
     vector<vector<int>> columnVectors = vector<vector<int>>(numColumns);
@@ -73,11 +72,14 @@ shared_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::createFrom(CSVPar
                 if (field.empty()){
                     columnVectors[index].push_back(nullValueId);
                 } else {
-                    int valueId = valueDictionary[field];
-                    if (valueId == 0){
+                    auto location = valueDictionary.find(field);
+                    int valueId;
+                    if (location == valueDictionary.end()){
                         valueDictionary[field] = nextValueId;
                         valueId = nextValueId;
                         nextValueId++;
+                    } else {
+                        valueId = location->second;
                     }
                     columnVectors[index].push_back(valueId);
                 }

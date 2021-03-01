@@ -58,7 +58,7 @@ private:
     //std::unordered_map<Vertical, Value> map_;
     SetTrie setTrie_;
 
-    int removeFromUsageCounter (std::unordered_map<Vertical, int>& usageCounter, Vertical key);
+    unsigned int removeFromUsageCounter (std::unordered_map<Vertical, unsigned int>& usageCounter, Vertical key);
 public:
     //key = shared_ptr<const Vertical>?? Attempt to achieve const Vertical?
     using Entry = std::pair<std::shared_ptr<Vertical>, Value>;
@@ -89,7 +89,7 @@ public:
     std::vector<Value> values();
     std::unordered_set<Entry> entrySet();
     void shrink(double factor, std::function<bool(Entry, Entry)> const& compare, std::function<bool (Entry)> const& canRemove, ProfilingContext::ObjectToCache cacheObject);
-    void shrink(std::unordered_map<Vertical, int>& usageCounter, std::function<bool (Entry)> const& canRemove);
+    void shrink(std::unordered_map<Vertical, unsigned int>& usageCounter, std::function<bool (Entry)> const& canRemove);
     void shrink() = delete; //concurrent shrink?
 
     long long getShrinkInvocations() { return shrinkInvocations_; }

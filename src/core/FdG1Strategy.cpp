@@ -2,23 +2,34 @@
 #include "FdG1Strategy.h"
 #include "SearchSpace.h"
 #include "PLICache.h"
+
+#include "logging/easylogging++.h"
+
+unsigned long long FdG1Strategy::nanos_ = 0;
+
 double FdG1Strategy::calculateG1(std::shared_ptr<PositionListIndex> lhsPLI) {
     unsigned long long numViolations = 0;
-    std::map<int, int> valueCounts;
-    std::vector<int> probingTable = context_->relationData_->getColumnData(rhs_->getIndex())->getProbingTable();
+    std::unordered_map<int, int> valueCounts;
+    std::vector<int>* probingTable = context_->relationData_->getColumnData(rhs_->getIndex())->getProbingTable();
+
+    LOG(DEBUG) << boost::format{"Probing table size for %1%: %2%"} % rhs_->toString() % std::to_string(probingTable->size());
 
     // Perform probing
+    int probingTableValueId;
     for (auto const& cluster : lhsPLI->getIndex()) {
         valueCounts.clear();
         for (auto const& position : cluster) {
-            int probingTableValueId = probingTable[position];
-
+            probingTableValueId = (*probingTable)[position];
+            //    auto now = std::chrono::system_clock::now();
             if (probingTableValueId != PositionListIndex::singletonValueId) {
-                if (valueCounts.find(probingTableValueId) == valueCounts.end()) {
-                    valueCounts.emplace(probingTableValueId, 0);
+                auto location = valueCounts.find(probingTableValueId);
+                if (location == valueCounts.end()) {
+                    valueCounts.emplace_hint(location, probingTableValueId, 1);
+                } else {
+                    location->second += 1;
                 }
-                valueCounts[probingTableValueId] += 1;
             }
+            //    nanos_ += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - now).count();
         }
 
         unsigned long long numViolationsInCluster = cluster.size() * (cluster.size() - 1) / 2;
@@ -35,7 +46,7 @@ double FdG1Strategy::calculateG1(double numViolatingTuplePairs) {
     unsigned long long numTuplePairs = context_->relationData_->getNumTuplePairs();
     if (numTuplePairs == 0) return 0;
     double g1 = numViolatingTuplePairs / numTuplePairs;
-    return g1;
+    return round(g1);
 }
 
 void FdG1Strategy::ensureInitialized(std::shared_ptr<SearchSpace> searchSpace) {
@@ -60,7 +71,7 @@ double FdG1Strategy::calculateError(std::shared_ptr<Vertical> lhs) {
         if (rhsPli == nullptr) throw std::runtime_error("Couldn't get rhsPLI from PLICache while calculating FD error");
         error = calculateG1(rhsPli->getNip());
     } else {
-        auto lhsPli = context_->pliCache_->getOrCreateFor(*lhs, *context_);
+        auto lhsPli = context_->pliCache_->getOrCreateFor(*lhs, context_.get());
         auto jointPli = context_->pliCache_->get(*lhs->Union(static_cast<Vertical>(*rhs_)));
         error = jointPli == nullptr ? calculateG1(lhsPli) : calculateG1(lhsPli->getNepAsLong() - jointPli->getNepAsLong());
     }
@@ -81,7 +92,11 @@ DependencyCandidate FdG1Strategy::createDependencyCandidate(std::shared_ptr<Vert
     ConfidenceInterval numViolatingTuplePairs = agreeSetSample
             ->estimateMixed(vertical, std::make_shared<Vertical>(static_cast<Vertical>(*rhs_)),context_->configuration_.estimateConfidence)
             .multiply(context_->relationData_->getNumTuplePairs());
+    //LOG(DEBUG) << boost::format{"Creating dependency candidate %1% with %2% violating pairs"}
+    //    % vertical->toString() % numViolatingTuplePairs;
     ConfidenceInterval g1 = calculateG1(numViolatingTuplePairs);
+    //LOG(DEBUG) << boost::format {"Creating dependency candidate %1% with error ~ %2%"}
+    //    % vertical->toString() % g1;
     return DependencyCandidate(vertical, g1, false);
 }
 

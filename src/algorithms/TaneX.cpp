@@ -34,7 +34,7 @@ double Tane::calculateUccError(shared_ptr<PositionListIndex> pli, shared_ptr<Col
 void Tane::registerFD(Vertical& lhs, shared_ptr<Column> rhs, double error, shared_ptr<RelationalSchema> schema) {
     dynamic_bitset<> lhs_bitset = lhs.getColumnIndices();
     cout << "Discovered FD: ";
-    for (int i = lhs_bitset.find_first(); i != -1; i = lhs_bitset.find_next(i)) {
+    for (size_t i = lhs_bitset.find_first(); i != dynamic_bitset<>::npos; i = lhs_bitset.find_next(i)) {
         cout << schema->getColumn(i)->getName() << " ";
     }
     cout << "-> " << rhs->getName() << " - error equals " << error << endl;
@@ -258,7 +258,7 @@ long Tane::execute() {
     aprioriMillis += elapsed_milliseconds.count();
 
     cout << "Time: " << aprioriMillis << " milliseconds" << endl;
-    cout << "Intersection time: " << PositionListIndex::millis << " nanoseconds" << endl;
+    cout << "Intersection time: " << PositionListIndex::micros / 1000 << "ms" << endl;
     cout << "Total intersections: " << PositionListIndex::intersectionCount << endl;
     cout << "Total FD count: " << countOfFD << endl;
     cout << "Total UCC count: " << countOfUCC << endl;

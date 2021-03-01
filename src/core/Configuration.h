@@ -1,4 +1,5 @@
 #pragma once
+
 #include <string>
 
 struct Configuration {
@@ -11,7 +12,7 @@ struct Configuration {
     //Error settings
     double errorDev = 0;
     bool isEstimateOnly = false;
-    double maxUccError = 0.01;
+    double maxUccError = 0.01;          // both for FD and UCC actually
 
     //Traversal settings
     int parallelism = 0;
@@ -19,16 +20,19 @@ struct Configuration {
     bool isDeferFailedLaunchPads = true;
     std::string launchPadOrder = "error";
 
+    unsigned int maxLHS = -1;
+
+
     //Sampling settings
-    int sampleSize = 10000;
+    unsigned int sampleSize = 10000;
     double sampleBooster = 10;
-    unsigned int seed = 0; //check seed, mb use boost::optional
+    int seed = 0; //check seed, mb use boost::optional
     double estimateConfidence = 0; //       -||-
     int randomAscendThreads = 2;
 
     //Cache settings
     double cachingProbability = 0.5;
-    int naryIntersectionSize = 4;
+    unsigned int naryIntersectionSize = 4;
 
     //Miscellaneous settings
     bool isCheckEstimates = false;

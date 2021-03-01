@@ -56,11 +56,8 @@ Value VerticalMap<Value>::SetTrie::remove(bitset const&key, size_t nextBit) {
 template <class Value>
 bool VerticalMap<Value>::SetTrie::isEmpty() const {
     if (value_ == nullptr) return false;
-    if (subtries_.empty()) return true;
-    for (std::shared_ptr<SetTrie> subtrie : subtries_) {
-        if (subtrie == nullptr) return false;
-    }
-    return true;
+    return std::all_of(subtries_.begin(), subtries_.end(),
+                       [](auto subtrie_ptr) { return subtrie_ptr == nullptr; });
 }
 
 template <class Value>
@@ -412,7 +409,7 @@ std::unordered_set<typename VerticalMap<Value>::Entry> VerticalMap<Value>::entry
 }
 
 template<class Value>
-int VerticalMap<Value>::removeFromUsageCounter(std::unordered_map<Vertical, int>& usageCounter, Vertical key) {
+unsigned int VerticalMap<Value>::removeFromUsageCounter(std::unordered_map<Vertical, unsigned int>& usageCounter, Vertical key) {
     return usageCounter.erase(key);
 }
 
@@ -463,7 +460,7 @@ void VerticalMap<Value>::shrink(double factor, std::function<bool(Entry, Entry)>
 }
 
 template<class Value>
-void VerticalMap<Value>::shrink(std::unordered_map<Vertical, int> &usageCounter,
+void VerticalMap<Value>::shrink(std::unordered_map<Vertical, unsigned int> &usageCounter,
                                 std::function<bool(Entry)> const &canRemove) {
     //some logging
 

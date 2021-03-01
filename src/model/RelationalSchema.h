@@ -40,7 +40,7 @@ public:
     std::shared_ptr<Column> getColumn(int index);
     void appendColumn(const string& colName);
     void appendColumn(std::shared_ptr<Column> column);
-    int getNumColumns();
+    int getNumColumns() const;
     std::shared_ptr<Vertical> getVertical(dynamic_bitset<> indices);
     bool isNullEqualNull();
 

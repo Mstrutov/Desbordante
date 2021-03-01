@@ -3,6 +3,7 @@
 #include <list>
 #include <set>
 #include <memory>
+#include <utility>
 
 #include <util/VerticalMap.h>
 #include "ProfilingContext.h"
@@ -62,8 +63,8 @@ public:
             std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> globalVisitees, std::shared_ptr<RelationalSchema> schema,
             std::function<bool (DependencyCandidate const&, DependencyCandidate const&)> const& dependencyCandidateComparator,
             int recursionDepth, double sampleBoost) :
-                id_(id), strategy_(strategy), scope_(std::move(scope)), globalVisitees_(globalVisitees), recursionDepth_(recursionDepth),
-                sampleBoost_(sampleBoost), launchPadIndex_(schema), launchPads_(dependencyCandidateComparator) {}
+                strategy_(std::move(strategy)), globalVisitees_(std::move(globalVisitees)), launchPads_(dependencyCandidateComparator),
+                launchPadIndex_(std::move(schema)), scope_(std::move(scope)), sampleBoost_(sampleBoost), recursionDepth_(recursionDepth), id_(id) {}
 
     // shared_ptr<RelationalSchema> --constructor--> VerticalMap<...> --make_shared--> shared_ptr<VerticalInfo<...>>
     SearchSpace(int id, std::shared_ptr<DependencyStrategy> strategy, std::shared_ptr<RelationalSchema> schema,
@@ -72,7 +73,7 @@ public:
                     std::make_shared<VerticalMap<std::shared_ptr<VerticalInfo>>>(static_cast<VerticalMap<std::shared_ptr<VerticalInfo>>>(schema)),
                             schema, dependencyCandidateComparator, 0, 1) {}
 
-    void ensureInitialized() { strategy_->ensureInitialized(shared_from_this()); }
+    void ensureInitialized();
     void discover() { discover(nullptr); }
     void addLaunchPad(DependencyCandidate const& launchPad);
     void setContext(std::shared_ptr<ProfilingContext> context)  {
@@ -81,5 +82,5 @@ public:
     }
     std::shared_ptr<ProfilingContext> getContext() { return context_; }
     unsigned int getErrorCalcCount() { return strategy_->calcCount_; }
-    void printStats();
+    void printStats() const;
 };

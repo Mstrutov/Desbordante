@@ -5,6 +5,7 @@
 #include <cmath>
 #include <deque>
 #include <map>
+#include <memory>
 #include <utility>
 
 #include <boost/dynamic_bitset.hpp>
@@ -16,15 +17,15 @@ using namespace std;
 
 const int PositionListIndex::singletonValueId = 0;
 
-int PositionListIndex::millis = 0;
+unsigned long long PositionListIndex::micros = 0;
 int PositionListIndex::intersectionCount = 0;
 
 // use r-value references, DO NOT copy
-PositionListIndex::PositionListIndex(deque<vector<int>> index, vector<int> nullCluster, unsigned int size, double entropy,
+PositionListIndex::PositionListIndex(deque<vector<int>>&& index, vector<int>&& nullCluster, unsigned int size, double entropy,
                                      unsigned long long nep, unsigned int relationSize, unsigned int originalRelationSize,
                                      double invertedEntropy, double giniImpurity):
-                                     index(std::move(index)),
-                                     nullCluster(std::move(nullCluster)),
+                                     index(index),
+                                     nullCluster(nullCluster),
                                      size(size),
                                      entropy(entropy),
                                      invertedEntropy(invertedEntropy),
@@ -35,7 +36,7 @@ PositionListIndex::PositionListIndex(deque<vector<int>> index, vector<int> nullC
                                      probingTableCache(){}
 
 shared_ptr<PositionListIndex> PositionListIndex::createFor(vector<int>& data, bool isNullEqNull) {
-    map<int, vector<int>> index;
+    unordered_map<int, vector<int>> index;
     for (unsigned long position = 0; position < data.size(); ++position){
         int valueId = data[position];
         index[valueId].push_back(position);
@@ -78,7 +79,7 @@ shared_ptr<PositionListIndex> PositionListIndex::createFor(vector<int>& data, bo
     }
 
     sortClusters(clusters);
-    auto pli = shared_ptr<PositionListIndex>(new PositionListIndex(clusters, nullCluster, size, entropy, nep, data.size(), data.size(), invEnt, giniImpurity));
+    auto pli = std::make_shared<PositionListIndex>(std::move(clusters), std::move(nullCluster), size, entropy, nep, data.size(), data.size(), invEnt, giniImpurity);
     return pli;
 }
 
@@ -95,6 +96,8 @@ vector<int> PositionListIndex::getProbingTable() {
     return getProbingTable(false);
 }
 
+// Это используется один раз, там, по-идее, срабатывает RVO
+// Но, вообще, это опасное место -- TODO: переделать
 vector<int> PositionListIndex::getProbingTable(bool isCaching) {
 
     if (!probingTableCache.empty()) return probingTableCache;
@@ -103,7 +106,7 @@ vector<int> PositionListIndex::getProbingTable(bool isCaching) {
     for (auto & cluster : index){
         int valueId = nextClusterId++;
         assert(valueId != singletonValueId);
-        for(int & position : cluster){
+        for(int position : cluster){
             probingTable[position] = valueId;
         }
     }
@@ -120,9 +123,11 @@ deque<vector<int>> const & PositionListIndex::getIndex() {
 
 shared_ptr<PositionListIndex> PositionListIndex::intersect(shared_ptr<PositionListIndex> that) {
     assert(this->relationSize == that->relationSize);
+        //auto startTime = std::chrono::system_clock::now();
     auto result = this->size > that->size ?
             that->probe(this->getProbingTable()) :
             this->probe(that->getProbingTable());
+        //micros += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - startTime).count();
     return result;
 }
 
@@ -135,18 +140,17 @@ shared_ptr<PositionListIndex> PositionListIndex::probe(const vector<int>& probin
     unsigned long long newNep = 0;
     vector<int> nullCluster;
 
-    map<int, vector<int>> partialIndex;
+    unordered_map<int, vector<int>> partialIndex;
     //vector<int> newCluster;
 
     for (auto & positions : index){
-        for (int & position : positions){
+        for (int position : positions){
             int probingTableValueId = probingTable[position];
             if (probingTableValueId == singletonValueId)
                 continue;
     intersectionCount++;
-    //auto startTime = std::chrono::system_clock::now();
+
                  partialIndex[probingTableValueId].push_back(position);      //~500ms
-           // millis += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - startTime).count();
 
         }
 
@@ -176,13 +180,15 @@ shared_ptr<PositionListIndex> PositionListIndex::probe(const vector<int>& probin
 
     //sortClusters(newIndex);         //!! ~100-200ms
 
-    return make_shared<PositionListIndex>(newIndex, nullCluster, newSize, newEntropy, newNep, relationSize, relationSize);
+    return make_shared<PositionListIndex>(std::move(newIndex), std::move(nullCluster), newSize, newEntropy, newNep, relationSize, relationSize);
 }
 
 
 //TODO: nullCluster не поддерживается
 shared_ptr<PositionListIndex> PositionListIndex::probeAll(Vertical probingColumns, ColumnLayoutRelationData & relationData) {
     assert(this->relationSize == relationData.getNumRows());
+
+        //auto startTime = std::chrono::system_clock::now();
 
     deque<vector<int>> newIndex;
     unsigned int newSize = 0;
@@ -194,7 +200,7 @@ shared_ptr<PositionListIndex> PositionListIndex::probeAll(Vertical probingColumn
     vector<int> probe;
 
     for (auto & cluster : this->index){
-        for (int & position : cluster){
+        for (int position : cluster){
             if (!takeProbe(position, relationData, probingColumns, probe)){
                 probe.clear();
                 continue;
@@ -221,8 +227,10 @@ shared_ptr<PositionListIndex> PositionListIndex::probeAll(Vertical probingColumn
 
     sortClusters(newIndex);
 
+        //micros += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - startTime).count();
+
     return std::make_shared<PositionListIndex>(
-            newIndex, nullCluster, newSize, newEntropy, newNep, this->relationSize, this->relationSize
+            std::move(newIndex), std::move(nullCluster), newSize, newEntropy, newNep, this->relationSize, this->relationSize
             );
 }
 
@@ -236,3 +244,20 @@ bool PositionListIndex::takeProbe(int position, ColumnLayoutRelationData & relat
     return true;
 }
 
+string PositionListIndex::toString() const {
+    string res = "[";
+    for (auto& cluster : index) {
+        res.push_back('[');
+        for (int v : cluster) {
+            res.append(std::to_string(v) + ",");
+        }
+        if (res.find(',') != string::npos)
+            res.erase(res.find_last_of(','));
+        res.push_back(']');
+        res.push_back(',');
+    }
+    if (res.find(',') != string::npos)
+        res.erase(res.find_last_of(','));
+    res.push_back(']');
+    return res;
+}

@@ -16,16 +16,16 @@ using std::vector;
 class ColumnData {
 private:
     shared_ptr<Column> column;
-    vector<int> probingTable;
+    std::unique_ptr<vector<int>> probingTable;
     shared_ptr<PositionListIndex> positionListIndex;
 
 public:
     ColumnData(shared_ptr<Column>& column, vector<int> probingTable, shared_ptr<PositionListIndex>& positionListIndex);
-    vector<int> getProbingTable();
-    int getProbingTableValue(int tupleIndex);
-    shared_ptr<Column> getColumn();
-    shared_ptr<PositionListIndex> getPositionListIndex();
+    vector<int>* getProbingTable() { return probingTable.get(); }
+    int getProbingTableValue(int tupleIndex) { return (*probingTable)[tupleIndex]; }
+    shared_ptr<Column> getColumn() { return column; }
+    shared_ptr<PositionListIndex> getPositionListIndex() { return positionListIndex; }
     void shuffle();
-    string toString();
+    string toString() { return "Data for " + column->toString(); }
     bool operator==(const ColumnData& rhs);
 };

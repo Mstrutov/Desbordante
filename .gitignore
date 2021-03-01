@@ -6,4 +6,5 @@ bUILD/
 Datasets/
 .sconsign.dblite
 lib/
-
+.csv
+.idea/

@@ -9,15 +9,15 @@
 
 class LatticeLevel{
 private:
-  int arity;
+  unsigned int arity;
   //TODO: store by value only if LatticeVertex exists only as a member of Level
   //vertices are used once to get some data from LatticeLevel
   //but in main algorithm vertices are firstly created, then added to a level =>
   //perhaps, use unique + std::move
   std::map<boost::dynamic_bitset<>, std::shared_ptr<LatticeVertex>> vertices;
 public:
-  explicit LatticeLevel(int m_arity) { arity = m_arity; }
-  int getArity() const { return arity; }
+  explicit LatticeLevel(unsigned int m_arity) : arity(m_arity) {}
+  unsigned int getArity() const { return arity; }
 
   std::map<boost::dynamic_bitset<>, std::shared_ptr<LatticeVertex>>& getVertices() { return vertices; }
   std::shared_ptr<LatticeVertex> getLatticeVertex(const boost::dynamic_bitset<>& columnIndices);

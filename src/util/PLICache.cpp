@@ -4,6 +4,8 @@
 
 #include <boost/optional.hpp>
 
+#include "logging/easylogging++.h"
+
 #include "PLICache.h"
 #include "VerticalMap.h"
 
@@ -16,18 +18,17 @@ std::shared_ptr<PositionListIndex> PLICache::get(Vertical const &vertical) {
 PLICache::PLICache(std::shared_ptr<ColumnLayoutRelationData> relationData, CachingMethod cachingMethod,
                    CacheEvictionMethod evictionMethod, double cachingMethodValue, double minEntropy, double meanEntropy,
                    double medianEntropy, double maximumEntropy, double medianGini, double medianInvertedEntropy) :
-                   cachingMethod_(cachingMethod),
-                   evictionMethod_(evictionMethod),
-                   cachingMethodValue_(cachingMethodValue),
-                   minEntropy_(minEntropy),
-                   meanEntropy_(meanEntropy),
-                   medianEntropy_(medianEntropy),
-                   maximumEntropy_(maximumEntropy),
-                   medianGini_(medianGini),
-                   medianInvertedEntropy_(medianInvertedEntropy),
-                   relationData_(relationData),
-                   index_(std::make_shared<CacheMap>(relationData->getSchema()))    // synchronised => SynchronizedVMap
-                   {
+        relationData_(relationData),
+        index_(std::make_shared<CacheMap>(relationData->getSchema())),
+        cachingMethod_(cachingMethod),
+        evictionMethod_(evictionMethod),
+        cachingMethodValue_(cachingMethodValue),
+        maximumEntropy_(maximumEntropy),
+        meanEntropy_(meanEntropy),
+        minEntropy_(minEntropy),
+        medianEntropy_(medianEntropy),
+        medianGini_(medianGini),
+        medianInvertedEntropy_(medianInvertedEntropy) {
     for (auto& column_ptr : relationData->getSchema()->getColumns()) {
         index_->put(static_cast<Vertical>(*column_ptr), relationData->getColumnData(column_ptr->getIndex())->getPositionListIndex());
     }
@@ -36,11 +37,14 @@ PLICache::PLICache(std::shared_ptr<ColumnLayoutRelationData> relationData, Cachi
 
 // obtains or calculates a PositionListIndex using cache
 std::shared_ptr<PositionListIndex>
-PLICache::getOrCreateFor(Vertical const &vertical, ProfilingContext const &profilingContext) {
+PLICache::getOrCreateFor(Vertical const &vertical, ProfilingContext* profilingContext) {
+    LOG(DEBUG) << boost::format{"PLI for %1% requested: "} % vertical.toString();
+
     // is PLI already cached?
     std::shared_ptr<PositionListIndex> pli = get(vertical);
     if (pli != nullptr) {
         pli->incFreq();
+        LOG(DEBUG) << boost::format{"Served from PLI cache."};
         //addToUsageCounter
         return pli;
     }
@@ -106,11 +110,13 @@ PLICache::getOrCreateFor(Vertical const &vertical, ProfilingContext const &profi
     // sort operands by ascending order
     std::sort(operands.begin(), operands.end(), [](auto& el1, auto& el2) { return el1.pli_->getSize() < el2.pli_->getSize(); });
     // TODO: Profiling context stuff
+
+    LOG(DEBUG) << boost::format {"Intersecting %1%."} % "[UNIMPLEMENTED]";
     // Intersect and cache
-    if (operands.size() >= profilingContext.configuration_.naryIntersectionSize) {
+    if (operands.size() >= profilingContext->configuration_.naryIntersectionSize) {
         PositionListIndexRank basePliRank = operands[0];
         pli = basePliRank.pli_->probeAll(*vertical.without(*basePliRank.vertical_), *relationData_.lock());
-        cachingProcess(vertical, pli);
+        cachingProcess(vertical, pli, profilingContext);
     } else {
         std::shared_ptr<Vertical> currentVertical = nullptr;
         for (auto& operand : operands) {
@@ -120,10 +126,14 @@ PLICache::getOrCreateFor(Vertical const &vertical, ProfilingContext const &profi
             } else {
                 currentVertical = currentVertical->Union(*operand.vertical_);
                 pli = pli->intersect(operand.pli_);
-                cachingProcess(*currentVertical, pli);
+                cachingProcess(*currentVertical, pli, profilingContext);
             }
         }
     }
+
+    LOG(DEBUG) << boost::format {"Calculated from %1% sub-PLIs (saved %2% intersections)."}
+        % operands.size() % (vertical.getArity() - operands.size());
+
     return pli;
 }
 
@@ -131,17 +141,25 @@ size_t PLICache::size() const {
     return index_->getSize();
 }
 
-void PLICache::cachingProcess(Vertical const &vertical, std::shared_ptr<PositionListIndex> pli) {
+void PLICache::cachingProcess(Vertical const &vertical, std::shared_ptr<PositionListIndex> pli, ProfilingContext* profilingContext) {
     switch (cachingMethod_) {
-//        case CachingMethod::COIN:
-//            index_->put(vertical, pli);
-//            // newUsageInfo - parallel
-//            break;
-        default:
-            index_->put(vertical, pli);
-            // doubts on necessity of statistics => no implementation yet
-            //throw std::exception();
+        case CachingMethod::COIN:
+            if (profilingContext->customRandom_.nextDouble() < profilingContext->configuration_.cachingProbability) {
+                index_->put(vertical, pli);
+            }
             break;
+        case CachingMethod::NOCACHING:
+            //index_->put(vertical, pli);
+            // newUsageInfo - parallel
+            break;
+        case CachingMethod::ALLCACHING:
+            index_->put(vertical, pli);
+            break;
+        default:
+            //index_->put(vertical, pli);
+            // doubts on necessity of statistics => no implementation yet
+            throw std::runtime_error("Only NOCACHING and ALLCACHING strategies are currently available");
+            //break;
     }
 }
 

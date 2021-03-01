@@ -28,7 +28,8 @@ std::shared_ptr<LatticeVertex> LatticeLevel::getLatticeVertex(const boost::dynam
 }
 
 void LatticeLevel::generateNextLevel(vector<shared_ptr<LatticeLevel>>& levels) {
-  int arity = (int)levels.size() - 1;
+  unsigned int arity = levels.size() - 1;
+  assert(arity >= 1);
   cout << "-------------Creating level " << arity + 1 << "...-----------------" << endl;
   shared_ptr<LatticeLevel> currentLevel = levels[arity];
 
@@ -36,7 +37,7 @@ void LatticeLevel::generateNextLevel(vector<shared_ptr<LatticeLevel>>& levels) {
 
   //using vector because of 'get()''
   vector<shared_ptr<LatticeVertex>> currentLevelVertices;
-  for (const auto& [map_key, vertice] : currentLevel->getVertices()){
+  for (const auto& [map_key, vertice] : currentLevel->getVertices()) {
       currentLevelVertices.push_back(vertice);
   }
 
@@ -81,7 +82,7 @@ void LatticeLevel::generateNextLevel(vector<shared_ptr<LatticeLevel>>& levels) {
       childVertex->setKeyCandidate(vertex1->getIsKeyCandidate() && vertex2->getIsKeyCandidate());
       childVertex->setInvalid(vertex1->getIsInvalid() || vertex2->getIsInvalid());
 
-      for (int i = 0, skipIndex = parentIndices.find_first(); i < arity - 1; i++, skipIndex = parentIndices.find_next(skipIndex)) {
+      for (unsigned int i = 0, skipIndex = parentIndices.find_first(); i < arity - 1; i++, skipIndex = parentIndices.find_next(skipIndex)) {
         parentIndices[skipIndex] = false;
         shared_ptr<LatticeVertex> parentVertex = currentLevel->getLatticeVertex(parentIndices);
        // cout << "--------------------------" << endl << "Loop: " << *parentVertex;

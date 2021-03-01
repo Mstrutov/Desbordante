@@ -11,7 +11,7 @@ double KeyG1Strategy::calculateKeyError(double numViolatingTuplePairs) {
     unsigned long long numTuplePairs = context_->relationData_->getNumTuplePairs();
     if (numTuplePairs == 0) return 0;
     double g1 = numViolatingTuplePairs / numTuplePairs;
-    return g1;
+    return round(g1);
 }
 
 void KeyG1Strategy::ensureInitialized(std::shared_ptr<SearchSpace> searchSpace) {
@@ -27,7 +27,7 @@ void KeyG1Strategy::ensureInitialized(std::shared_ptr<SearchSpace> searchSpace) 
 }
 
 double KeyG1Strategy::calculateError(std::shared_ptr<Vertical> keyCandidate) {
-    auto pli = context_->pliCache_->getOrCreateFor(*keyCandidate, *context_);
+    auto pli = context_->pliCache_->getOrCreateFor(*keyCandidate, context_.get());
     double error = calculateKeyError(pli);
     calcCount_++;
     return error;
@@ -41,7 +41,7 @@ ConfidenceInterval KeyG1Strategy::calculateKeyError(ConfidenceInterval const &es
 
 DependencyCandidate KeyG1Strategy::createDependencyCandidate(std::shared_ptr<Vertical> vertical) {
     if (vertical->getArity() == 1) {
-        auto pli = context_->pliCache_->getOrCreateFor(*vertical, *context_);
+        auto pli = context_->pliCache_->getOrCreateFor(*vertical, context_.get());
         double keyError = calculateKeyError(pli->getNepAsLong());
         return DependencyCandidate(vertical, ConfidenceInterval(keyError), true);
     }

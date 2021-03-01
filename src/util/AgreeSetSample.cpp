@@ -22,15 +22,20 @@ AgreeSetSample::AgreeSetSample(shared_ptr<ColumnLayoutRelationData> relationData
 
 
 double AgreeSetSample::calculateNonNegativeFraction(double a, double b) {
+    // TODO: checking 0/b, comparing double to 0.
     if (a == 0)
         return 0;
     return max(std::numeric_limits<double>::min(), a / b);
 }
 
 //TODO: is this manipulation with virtual and pure virtual methods even legal?
-std::shared_ptr<std::vector<long long>>
+std::shared_ptr<std::vector<unsigned long long>>
 AgreeSetSample::getNumAgreeSupersetsExt(std::shared_ptr<Vertical> agreement, std::shared_ptr<Vertical> disagreement) {
-    return std::make_shared<std::vector<long long>> (std::vector<long long> {this->getNumAgreeSupersets(agreement), this->getNumAgreeSupersets(agreement, disagreement)});
+    return std::make_shared<std::vector<unsigned long long>> (
+            std::vector<unsigned long long> {
+                this->getNumAgreeSupersets(agreement), this->getNumAgreeSupersets(agreement, disagreement)
+            }
+        );
 }
 
 double AgreeSetSample::estimateAgreements(std::shared_ptr<Vertical> agreement) {

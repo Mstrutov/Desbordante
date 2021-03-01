@@ -20,3 +20,5 @@ add_custom_target(copy-files ALL
         ${CMAKE_SOURCE_DIR}/tests/inputData
         ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/inputData
         )
+
+

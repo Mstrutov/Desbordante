@@ -28,7 +28,7 @@ void RelationalSchema::init() {
     emptyVertical.reset(new Vertical(std::move(Vertical::emptyVertical(shared_from_this()))));
 }
 
-//TODO: В оригинале тут какая-то срань
+//TODO: В оригинале тут что-то непонятное
 std::shared_ptr<Vertical> RelationalSchema::getVertical(dynamic_bitset<> indices) {
     if (indices.empty()) return this->emptyVertical;
 
@@ -64,7 +64,7 @@ void RelationalSchema::appendColumn(shared_ptr<Column> column) {
     columns.push_back(column);
 }
 
-int RelationalSchema::getNumColumns() {
+int RelationalSchema::getNumColumns() const {
     return columns.size();
 }
 

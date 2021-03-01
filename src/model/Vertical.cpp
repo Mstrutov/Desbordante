@@ -20,20 +20,6 @@ Vertical::Vertical(Column & col) : schema(col.getSchema()){
     columnIndices.set(col.getIndex());
 }
 
-//Vertical::Vertical(Vertical &&other) noexcept :
-//    columnIndices(std::move(other.columnIndices)),
-//    schema(std::move(other.schema)) {
-//}
-
-//Vertical& Vertical::operator=(Vertical &&rhs) noexcept {
-//    columnIndices = std::move(rhs.columnIndices);
-//    schema = std::move(rhs.schema);
-//    return *this;
-//}
-
-dynamic_bitset<> Vertical::getColumnIndices() const { return columnIndices; }
-
-shared_ptr<RelationalSchema> Vertical::getSchema() { return schema.lock(); }
 
 //TODO: перепроверь цикл
 //TODO: перепроверь все операции с Джавой
@@ -92,9 +78,6 @@ Vertical Vertical::emptyVertical(shared_ptr<RelationalSchema> relSchema) {
     return Vertical(relSchema, dynamic_bitset<>(relSchema->getNumColumns()));
 }
 
-int Vertical::getArity() const {
-    return columnIndices.count();
-}
 
 vector<shared_ptr<Column>> Vertical::getColumns() const {
     //dynamic_bitset<> returnColumnIndices = getColumnIndices();
@@ -112,16 +95,20 @@ string Vertical::toString() const {
     string result = "[";
 
     if ((int)columnIndices.find_first() == -1)
-        return "Empty Vertical";
+        return "[]";
 
     auto relation = schema.lock();
-    int i = columnIndices.find_next(0);
-    for (int index = columnIndices.find_first();
-         index != -1;//dynamic_bitset<>::npos;
+    for (size_t index = columnIndices.find_first();
+         index != dynamic_bitset<>::npos;
          index = columnIndices.find_next(index)) {
-        result += relation->getColumn(index)->getName() + " ";   //to_string(index) + " ";
+        result += relation->getColumn(index)->getName();
+        if (columnIndices.find_next(index) != dynamic_bitset<>::npos) {
+            result += ' ';
+        }
     }
-    result[result.size() - 1] = ']';
+
+    result += ']';
+
     return result;
 }
 

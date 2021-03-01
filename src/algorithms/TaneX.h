@@ -27,6 +27,7 @@ public:
   long aprioriMillis = 0;
   explicit Tane(fs::path& path) : inputGenerator(path) {}
   explicit Tane(fs::path&& path) : inputGenerator(path) {} //std::move(path)
+  explicit Tane(fs::path const& path, char separator, bool hasHeader) : inputGenerator(path, separator, hasHeader) {}
   long execute();
 
   static double calculateZeroAryFdError(shared_ptr<ColumnData> rhs, shared_ptr<ColumnLayoutRelationData> relationData);

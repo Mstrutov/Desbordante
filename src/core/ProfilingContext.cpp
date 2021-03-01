@@ -1,13 +1,18 @@
 #include "ProfilingContext.h"
+
+#include <utility>
 #include "ListAgreeSetSample.h"
 #include "PLICache.h"
 #include "VerticalMap.h"
 
+#include "logging/easylogging++.h"
+
 ProfilingContext::ProfilingContext(Configuration const& configuration, std::shared_ptr<ColumnLayoutRelationData> relationData,
         std::function<void (PartialKey const&)> const& uccConsumer, std::function<void (PartialFD const&)> const& fdConsumer,
         CachingMethod const& cachingMethod, CacheEvictionMethod const& evictionMethod, double cachingMethodValue) :
-configuration_(configuration), relationData_(relationData),
-random_(configuration_.seed == 0 ? std::mt19937() : std::mt19937(configuration_.seed)) {
+configuration_(configuration), relationData_(std::move(relationData)),
+random_(configuration_.seed == 0 ? std::mt19937() : std::mt19937(configuration_.seed)),
+customRandom_(configuration_.seed == 0 ? CustomRandom() : CustomRandom(configuration_.seed)) {
     uccConsumer_ = uccConsumer;
     fdConsumer_ = fdConsumer;
     pliCache_ = std::make_shared<PLICache>(
@@ -63,10 +68,7 @@ double ProfilingContext::getMedianEntropy(std::shared_ptr<ColumnLayoutRelationDa
         }
     }
 
-    std::sort(vals.begin(), vals.end());
-    return (vals.size() % 2 == 0) ?
-           ((vals[vals.size() / 2] + vals[vals.size() / 2 - 1]) / 2) :
-           (vals[vals.size() / 2]);
+    return getMedianValue(std::move(vals), "MedianEntropy");
 }
 
 double ProfilingContext::getMedianInvertedEntropy(std::shared_ptr<ColumnLayoutRelationData> relationData) {
@@ -78,10 +80,7 @@ double ProfilingContext::getMedianInvertedEntropy(std::shared_ptr<ColumnLayoutRe
         }
     }
 
-    std::sort(vals.begin(), vals.end());
-    return (vals.size() % 2 == 0) ?
-           ((vals[vals.size() / 2] + vals[vals.size() / 2 - 1]) / 2) :
-           (vals[vals.size() / 2]);
+    return getMedianValue(std::move(vals), "MedianInvertedEntropy");
 }
 
 double ProfilingContext::getMeanEntropy(std::shared_ptr<ColumnLayoutRelationData> relationData) {
@@ -102,10 +101,7 @@ double ProfilingContext::getMedianGini(std::shared_ptr<ColumnLayoutRelationData>
         }
     }
 
-    std::sort(vals.begin(), vals.end());
-    return (vals.size() % 2 == 0) ?
-           ((vals[vals.size() / 2] + vals[vals.size() / 2 - 1]) / 2) :
-           (vals[vals.size() / 2]);
+    return getMedianValue(std::move(vals), "MedianGini");
 }
 
 double ProfilingContext::setMaximumEntropy(std::shared_ptr<ColumnLayoutRelationData> relationData,
@@ -135,9 +131,11 @@ ProfilingContext::createFocusedSample(std::shared_ptr<Vertical> focus, double bo
     std::shared_ptr<ListAgreeSetSample> sample = ListAgreeSetSample::createFocusedFor(
             relationData_,
             focus,
-            pliCache_->getOrCreateFor(*focus, *this),
-            configuration_.sampleSize * boostFactor
+            pliCache_->getOrCreateFor(*focus, this),
+            configuration_.sampleSize * boostFactor,
+            customRandom_
             );
+    LOG(TRACE) << boost::format {"Creating sample focused on: %1%"} % focus->toString();
     agreeSetSamples_->put(*focus, sample);
     return sample;
 }
@@ -151,5 +149,17 @@ std::shared_ptr<AgreeSetSample> ProfilingContext::getAgreeSetSample(std::shared_
         }
     }
     return sample;
+}
+
+double ProfilingContext::getMedianValue(std::vector<double> && values, const string & measureName) {
+    if (values.size() <= 1) {
+        std::cout << "WARNING: got " << measureName << " == 0\n";
+        return 0;
+    }
+
+    std::sort(values.begin(), values.end());
+    return (values.size() % 2 == 0) ?
+           ((values[values.size() / 2] + values[values.size() / 2 - 1]) / 2) :
+           (values[values.size() / 2]);
 }
 
