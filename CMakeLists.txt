@@ -17,6 +17,7 @@ if (MSVC)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE  "${CMAKE_BINARY_DIR}/target")
 else()
     add_compile_options("$<$<CONFIG:Debug>:-Wall;-Wextra;-fno-omit-frame-pointer>")
+    add_compile_options("$<$<CONFIG:Release>:-O3>")
 endif()
 
 # configuring boost
@@ -43,7 +44,7 @@ add_subdirectory("src")
 add_subdirectory("lib/googletest")
 add_subdirectory("tests")
 add_subdirectory("datasets")
-
+add_subdirectory("cfg")
 
 #target_link_libraries(metanome_cpp PRIVATE "stdc++fs" gmock)
 #target_link_libraries(metanome_cpp PRIVATE "stdc++fs" Boost::container)

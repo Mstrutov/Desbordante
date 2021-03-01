@@ -73,7 +73,7 @@ public:
                     std::make_shared<VerticalMap<std::shared_ptr<VerticalInfo>>>(static_cast<VerticalMap<std::shared_ptr<VerticalInfo>>>(schema)),
                             schema, dependencyCandidateComparator, 0, 1) {}
 
-    void ensureInitialized() { strategy_->ensureInitialized(shared_from_this()); }
+    void ensureInitialized();
     void discover() { discover(nullptr); }
     void addLaunchPad(DependencyCandidate const& launchPad);
     void setContext(std::shared_ptr<ProfilingContext> context)  {
@@ -82,5 +82,5 @@ public:
     }
     std::shared_ptr<ProfilingContext> getContext() { return context_; }
     unsigned int getErrorCalcCount() { return strategy_->calcCount_; }
-    void printStats();
+    void printStats() const;
 };

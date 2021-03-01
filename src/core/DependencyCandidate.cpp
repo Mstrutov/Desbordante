@@ -25,9 +25,9 @@ bool DependencyCandidate::fullErrorArityComparator(DependencyCandidate const & d
 
 //TODO: perhaps in Java code they meant to implement error -> arity -> lexicographical? Check usages
 bool DependencyCandidate::fullArityErrorComparator(DependencyCandidate const & dc1, DependencyCandidate const & dc2) {
-    if (dc1.error_.getMin() < dc2.error_.getMin())
+    if (dc1.error_.getMean() < dc2.error_.getMean())
         return true;
-    else if (dc1.error_.getMin() == dc2.error_.getMin()) {
+    else if (dc1.error_.getMean() == dc2.error_.getMean()) {
         if (dc1.vertical_->getArity() < dc2.vertical_->getArity())
             return true;
         else if (dc1.vertical_->getArity() == dc2.vertical_->getArity()) {
@@ -45,9 +45,9 @@ bool DependencyCandidate::fullArityErrorComparator(DependencyCandidate const & d
 }
 
 bool DependencyCandidate::operator<(DependencyCandidate const & other) const {
-    if (error_.getMin() < other.error_.getMin())
+    if (error_.getMean() < other.error_.getMean())
         return true;
-    else if (error_.getMin() == other.error_.getMin()) {
+    else if (error_.getMean() == other.error_.getMean()) {
         if (vertical_->getArity() < other.vertical_->getArity())
             return true;
         else if (vertical_->getArity() == other.vertical_->getArity()) {

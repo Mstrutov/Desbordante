@@ -18,7 +18,7 @@ private:
 public:
     //explicit Pyro(fs::path const& path, char separator, bool hasHeader);
     explicit Pyro(fs::path const& path, char separator = ',', bool hasHeader = true,
-                  int seed = 0, double maxError = 0.01, unsigned int = -1);
+                  int seed = 0, double maxError = 0.01, unsigned int maxLHS = -1);
 
     double execute();
 };

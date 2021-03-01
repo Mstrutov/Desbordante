@@ -30,9 +30,10 @@ void SearchSpace::discover(std::shared_ptr<VerticalMap<std::shared_ptr<VerticalI
     // std::cout << "+++++++++++" << nanosSmartConstructing << std::endl;
 }
 
-// этот метод больше для распараллеленного варианта
+
 std::shared_ptr<DependencyCandidate> SearchSpace::pollLaunchPad(
         std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees) {
+
     while (true) {
         if (launchPads_.empty()) {
             if (deferredLaunchPads_.empty()) return nullptr;
@@ -74,7 +75,8 @@ std::shared_ptr<DependencyCandidate> SearchSpace::pollLaunchPad(
         //continue;
 
         //launchPads_.insert(*launchPad);
-    LOG(DEBUG) << boost::format{"Giving up on %1%."} % launchPad->vertical_->toString();
+        //LOG(DEBUG) << boost::format{"Giving up on %1%."} % launchPad->vertical_->toString();
+        //return nullptr;
     }
 }
 
@@ -130,10 +132,15 @@ void SearchSpace::escapeLaunchPad(std::shared_ptr<Vertical> launchPad,
         auto escapedLaunchPadVertical = launchPad->Union(*escaping);
 
         // assert, который не имплементнуть из-за трансформа
+        LOG(TRACE) << "createDependencyCandidate while escaping launch pad";
         DependencyCandidate escapedLaunchPad = strategy_->createDependencyCandidate(escapedLaunchPadVertical);
         LOG(TRACE) << boost::format{"  Escaped: %1%"} % escapedLaunchPadVertical->toString();
-        launchPads_.insert(escapedLaunchPad);
-        launchPadIndex_.put(*escapedLaunchPad.vertical_, std::make_shared<DependencyCandidate>(escapedLaunchPad));
+        LOG(DEBUG) << boost::format{"  Proposed launch pad arity: %1% should be <= maxLHS: %2%"}
+            % escapedLaunchPad.vertical_->getArity() % context_->configuration_.maxLHS;
+        if (escapedLaunchPad.vertical_->getArity() <= context_->configuration_.maxLHS) {
+            launchPads_.insert(escapedLaunchPad);
+            launchPadIndex_.put(*escapedLaunchPad.vertical_, std::make_shared<DependencyCandidate>(escapedLaunchPad));
+        }
     }
 }
 
@@ -158,7 +165,7 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad,
 
     auto now = std::chrono::system_clock::now();
 
-    LOG(DEBUG) << boost::format{"===== Ascending from %1% ======"} % launchPad.vertical_->toString();
+    LOG(DEBUG) << boost::format{"===== Ascending from %1% ======"} % strategy_->format(launchPad.vertical_);
 
     if (strategy_->shouldResample(launchPad.vertical_, sampleBoost_)) {
         LOG(TRACE) << "Resampling.";
@@ -198,7 +205,6 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad,
                         ? traversalCandidate.error_.getMean()
                         : strategy_->calculateError(traversalCandidate.vertical_);
                 // double errorDiff = *error - traversalCandidate.error_.getMean();
-                // TODO:: context_->profilingData is only for logging, right?
 
                 localVisitees->put(*traversalCandidate.vertical_, std::make_shared<VerticalInfo>(
                         error <= strategy_->maxDependencyError_,
@@ -209,6 +215,7 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad,
                 if (*error <= strategy_->maxDependencyError_) break;
 
                 if (strategy_->shouldResample(traversalCandidate.vertical_, sampleBoost_)) {
+                    LOG(TRACE) << "Resampling.";
                     context_->createFocusedSample(traversalCandidate.vertical_, sampleBoost_);
                 }
             }
@@ -216,7 +223,7 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad,
 
         if (traversalCandidate.vertical_->getArity() >=
             context_->relationData_->getNumColumns() - strategy_->getNumIrrelevantColumns()
-            || traversalCandidate.vertical_->getArity() == context_->configuration_.maxLHS) {
+            || traversalCandidate.vertical_->getArity() >= context_->configuration_.maxLHS) {
             break;
         }
 
@@ -237,6 +244,7 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad,
             if (isSubsetPruned) {
                 continue;
             }
+            LOG(TRACE) << "createDependencyCandidate while ascending";
             DependencyCandidate extendedCandidate = strategy_->createDependencyCandidate(extendedVertical);
 
             if (!nextCandidate
@@ -338,6 +346,7 @@ void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPea
                     && allegedNonDeps.find(*escapedPeakVertical) == allegedNonDeps.end()) {
                     // TODO: escapedPeakVertical, [](Vertical* v) {} ?
                     //auto escapedPeakVertical_ptr = std::make_shared<Vertical>(escapedPeakVertical);
+                    LOG(TRACE) << "createDependencyCandidate as an escaped peak while trickling down";
                     auto escapedPeak = strategy_->createDependencyCandidate(escapedPeakVertical);
 
                     if (escapedPeak.error_.getMean() > strategy_->minNonDependencyError_) {
@@ -473,6 +482,7 @@ void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPea
             }
         }
         for (auto scopeColumn : scopeColumns) {
+            LOG(TRACE) << "createDependencyCandidate while building a nested search space";
             // TODO: again problems with conversion: Column* -> Vertical*. If this is too inefficient, consider refactoring
             nestedSearchSpace->addLaunchPad(strategy_->createDependencyCandidate(
                     std::make_shared<Vertical>(static_cast<Vertical>(*scopeColumn))
@@ -524,6 +534,7 @@ SearchSpace::trickleDownFrom(DependencyCandidate &minDepCandidate, std::shared_p
                 continue;
             }
             // TODO: construction methods should return unique_ptr<...>
+            LOG(TRACE) << "createDependencyCandidate while trickling down from";
             parentCandidates.push(std::make_shared<DependencyCandidate>(strategy->createDependencyCandidate(parentVertical)));
         }
 
@@ -648,7 +659,7 @@ bool SearchSpace::isKnownNonDependency(std::shared_ptr<Vertical> vertical,
                                             [](auto vertical, auto info) -> bool { return !info->isDependency_; }).second != nullptr;
 }
 
-void SearchSpace::printStats() {
+void SearchSpace::printStats() const {
     using std::cout, std::endl;
     cout << "Trickling down from: " << tricklingDownFrom / 1000000 << endl;
     cout << "Trickling down: " << tricklingDown / 1000000 - tricklingDownFrom / 1000000 << endl;
@@ -657,6 +668,15 @@ void SearchSpace::printStats() {
     cout << "Ascending: " << ascending / 1000000<< endl;
     cout << "Polling: " << pollingLaunchPads / 1000000 << endl;
     cout << "Returning launch pad: " << returningLaunchPad / 1000000 << endl;
+}
+
+void SearchSpace::ensureInitialized() {
+    strategy_->ensureInitialized(shared_from_this());
+    std::string initializedLaunchPads;
+    for (auto const& pad : launchPads_) {
+        initializedLaunchPads += std::string(pad) + " ";
+    }
+    LOG(TRACE) << "Initialized with launch pads: " + initializedLaunchPads;
 }
 
 
