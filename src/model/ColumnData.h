@@ -3,7 +3,6 @@
 // https://github.com/cupertank
 //
 
-
 #pragma once
 
 #include <vector>
@@ -11,21 +10,24 @@
 #include "Column.h"
 #include "PositionListIndex.h"
 
-using std::vector;
-
 class ColumnData {
 private:
-    shared_ptr<Column> column;
-    std::unique_ptr<vector<int>> probingTable;
-    shared_ptr<PositionListIndex> positionListIndex;
+    Column const* column;
+    std::unique_ptr<PositionListIndex> positionListIndex;
 
 public:
-    ColumnData(shared_ptr<Column>& column, vector<int> probingTable, shared_ptr<PositionListIndex>& positionListIndex);
-    vector<int>* getProbingTable() { return probingTable.get(); }
-    int getProbingTableValue(int tupleIndex) { return (*probingTable)[tupleIndex]; }
-    shared_ptr<Column> getColumn() { return column; }
-    shared_ptr<PositionListIndex> getPositionListIndex() { return positionListIndex; }
-    void shuffle();
-    string toString() { return "Data for " + column->toString(); }
+    ColumnData(Column const* column, std::unique_ptr<PositionListIndex> positionListIndex);
+    std::vector<int> const& getProbingTable() const { return (*positionListIndex->getProbingTable()); }
+    int getProbingTableValue(int tupleIndex) const { return (*positionListIndex->getProbingTable())[tupleIndex]; }
+    Column const* getColumn() const { return column; }
+    PositionListIndex const* getPositionListIndex() const { return positionListIndex.get(); }
+
+    // Transfers positionListIndex ownership to the outside world. BE CAREFUL - other methods
+    // of ColumnData get invalidated while the PLI is moved out
+    // std::unique_ptr<PositionListIndex> movePositionListIndex() { return std::move(positionListIndex); }
+
+    //void shuffle();
+
+    std::string toString() { return "Data for " + column->toString(); }
     bool operator==(const ColumnData& rhs);
 };

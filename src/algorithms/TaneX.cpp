@@ -13,110 +13,105 @@
 #include "LatticeLevel.h"
 #include "LatticeVertex.h"
 
-// clearest code doesn't use 'using' at all, but this is highly subjective
-using boost::dynamic_bitset, std::make_shared, std::shared_ptr, std::cout, std::endl, std::setw, std::vector, std::list, std::dynamic_pointer_cast;
-
-double Tane::calculateZeroAryFdError(shared_ptr<ColumnData> rhs, shared_ptr<ColumnLayoutRelationData> relationData) {
+double Tane::calculateZeroAryFdError(ColumnData const* rhs, ColumnLayoutRelationData const* relationData) {
      return 1 - rhs->getPositionListIndex()->getNepAsLong() / static_cast<double>(relationData->getNumTuplePairs());
 }
 
-double Tane::calculateFdError(shared_ptr<PositionListIndex> lhsPli, shared_ptr<PositionListIndex> jointPli, shared_ptr<ColumnLayoutRelationData> relationData) {
+double Tane::calculateFdError(PositionListIndex const* lhsPli, PositionListIndex const* jointPli,
+                              ColumnLayoutRelationData const* relationData) {
     return (double) (lhsPli->getNepAsLong() - jointPli->getNepAsLong()) / static_cast<double>(relationData->getNumTuplePairs());
 }
 
 
-double Tane::calculateUccError(shared_ptr<PositionListIndex> pli, shared_ptr<ColumnLayoutRelationData> relationData) {
+double Tane::calculateUccError(PositionListIndex const* pli, ColumnLayoutRelationData const* relationData) {
     return pli->getNepAsLong() / static_cast<double>(relationData->getNumTuplePairs());
 }
 
-void Tane::registerFD(Vertical& lhs, shared_ptr<Column> rhs, double error, shared_ptr<RelationalSchema> schema) {
+void Tane::registerFD(Vertical const& lhs, Column const* rhs, double error, RelationalSchema const* schema) {
     dynamic_bitset<> lhs_bitset = lhs.getColumnIndices();
-    cout << "Discovered FD: ";
+    std::cout << "Discovered FD: ";
     for (size_t i = lhs_bitset.find_first(); i != dynamic_bitset<>::npos; i = lhs_bitset.find_next(i)) {
-        cout << schema->getColumn(i)->getName() << " ";
+        std::cout << schema->getColumn(i)->getName() << " ";
     }
-    cout << "-> " << rhs->getName() << " - error equals " << error << endl;
+    std::cout << "-> " << rhs->getName() << " - error equals " << error << std::endl;
     FDAlgorithm::registerFD(lhs, *rhs);
     countOfFD++;
 }
 
-void Tane::registerFD(shared_ptr<Vertical> lhs, shared_ptr<Column> rhs, double error, shared_ptr<RelationalSchema> schema) {
+/*void Tane::registerFD(Vertical const* lhs, Column const* rhs, double error, RelationalSchema const* schema) {
     registerFD(*lhs, rhs, error, schema);
-}
+}*/
 
-void Tane::registerUCC(Vertical& key, double error, shared_ptr<RelationalSchema> schema) {
+void Tane::registerUCC(Vertical const& key, double error, RelationalSchema const* schema)  {
     dynamic_bitset<> key_bitset = key.getColumnIndices();
-    /*cout << "Discovered UCC: ";
+    std::cout << "Discovered UCC: ";
     for (int i = key_bitset.find_first(); i != -1; i = key_bitset.find_next(i)) {
-        cout << schema->getColumn(i)->getName() << " ";
+        std::cout << schema->getColumn(i)->getName() << " ";
     }
-    cout << "- error equals " << error << endl;*/
+    std::cout << "- error equals " << error << std::endl;
     countOfUCC++;
 }
 
 
-unsigned long long Tane::execute() {
-    shared_ptr<ColumnLayoutRelationData> relation = ColumnLayoutRelationData::createFrom(inputGenerator_, true);
-    shared_ptr<RelationalSchema> schema = relation->getSchema();
-    if (relation->getColumnData().empty()) {
-        throw std::runtime_error("Got an empty .csv file: FD mining is meaningless.");
-    }
-    cout << schema->getName() << " has " << relation->getNumColumns() << " columns, "
-         << relation->getNumRows() << " rows, and a maximum NIP of " << setw(2)
-         << relation->getMaximumNip() << "." << endl;
 
-    for (auto column : schema->getColumns()) {
-        shared_ptr<ColumnData> columnData = relation->getColumnData(column->getIndex());
-        double avgPartners = columnData->getPositionListIndex()->getNepAsLong() * 2.0 / relation->getNumRows();
-        cout << "* " << column->toString() << ": every tuple has " << setw(2)
-             << avgPartners << " partners on average." << endl;
+unsigned long long Tane::execute() {
+    std::unique_ptr<ColumnLayoutRelationData> relation = ColumnLayoutRelationData::createFrom(inputGenerator_, true);
+    RelationalSchema const* schema = relation->getSchema();
+    std::cout << schema->getName() << " has " << relation->getNumColumns() << " columns, "
+         << relation->getNumRows() << " rows, and a maximum NIP of " << std::setw(2)
+         << relation->getMaximumNip() << "." << std::endl;
+
+    for (auto& column : schema->getColumns()) {
+        double avgPartners = relation->getColumnData(column->getIndex()).
+                getPositionListIndex()->getNepAsLong() * 2.0 / relation->getNumRows();
+        std::cout << "* " << column->toString() << ": every tuple has " << std::setw(2)
+             << avgPartners << " partners on average." << std::endl;
     }
     auto startTime = std::chrono::system_clock::now();
 
     //Initialize level 0
-    vector<shared_ptr<LatticeLevel>> levels;
-    shared_ptr<LatticeLevel> level0 = make_shared<LatticeLevel>(0);
-    shared_ptr<LatticeVertex> emptyVertex = make_shared<LatticeVertex>(*(schema->emptyVertical)); //TODO: resolve design conflict (func accepts ref, gets pointer)
-    level0->add(emptyVertex);
-    levels.push_back(level0);
+    std::vector<std::unique_ptr<LatticeLevel>> levels;
+    std::unique_ptr<LatticeLevel> level0 = std::make_unique<LatticeLevel>(0);
+    // TODO: через указатели кажется надо переделать
+    level0->add(std::make_unique<LatticeVertex>(*(schema->emptyVertical)));
+    LatticeVertex const* emptyVertex = level0->getVertices().begin()->second.get();
+    levels.push_back(std::move(level0));
 
     //Initialize level1
     dynamic_bitset<> zeroaryFdRhs(schema->getNumColumns());
-    shared_ptr<LatticeLevel> level1 = make_shared<LatticeLevel>(1);
-    for (auto column : schema->getColumns()) {
+    std::unique_ptr<LatticeLevel> level1 = std::make_unique<LatticeLevel>(1);
+    for (auto& column : schema->getColumns()) {
         //for each attribute set vertex
-        shared_ptr<ColumnData> columnData = relation->getColumnData(column->getIndex());
-        shared_ptr<LatticeVertex> vertex = make_shared<LatticeVertex>(LatticeVertex(static_cast<Vertical>(*column)));          //Column->Vertical--copy_constr->LV?
-        //TODO: ^ is required to be constructed from column - check column in the next for - perhaps implement LV(shared_ptr<Vertical>), this ptr points to Column?
-        vertex->addRhsCandidates(schema->getColumns());                 //Had to remake addRhsCandidates to accept Columns
+        ColumnData const& columnData = relation->getColumnData(column->getIndex());
+        auto vertex = std::make_unique<LatticeVertex>(static_cast<Vertical>(*column));
+
+        vertex->addRhsCandidates(schema->getColumns());
         vertex->getParents().push_back(emptyVertex);
         vertex->setKeyCandidate(true);
-        vertex->setPositionListIndex(columnData->getPositionListIndex());
-        level1->add(vertex);
+        vertex->setPositionListIndex(columnData.getPositionListIndex());
 
         //check FDs: 0->A
-        double fdError = calculateZeroAryFdError(columnData, relation);
+        double fdError = calculateZeroAryFdError(&columnData, relation.get());
         if (fdError <= maxFdError) {  //TODO: max_error
             zeroaryFdRhs.set(column->getIndex());
-            registerFD(schema->emptyVertical, column, fdError, schema);
-            //cout << "AAAA" << endl;
+            registerFD(*schema->emptyVertical, column.get(), fdError, schema);
+
             vertex->getRhsCandidates().set(column->getIndex(), false);
             if (fdError == 0) {
                 vertex->getRhsCandidates().reset();
             }
         }
+
+        level1->add(std::move(vertex));
     }
 
-    for (auto [key_map, vertex] : level1->getVertices()) {
-        //Originally column is of type Column
-        Vertical column = vertex->getVertical();               //TODO: perhaps store V as pointer in LV??
-        //TODO: tricky conversion: it looks like we originally constructed  vertex using columns - deprecated for now,
-        //so level1 has pointer to Vertices that actually point to columns, therefore we should be able to cast them somehow back to *columns
-        //would be possible if vertical had been an abstract class - I suppose, it is possible by using downcast with static_pointer_cast
+    for (auto& [key_map, vertex] : level1->getVertices()) {
+        Vertical column = vertex->getVertical();
         vertex->getRhsCandidates() &= ~zeroaryFdRhs;  //~ returns flipped copy <- removed already discovered zeroary FDs
 
-        shared_ptr<ColumnData> columnData = relation->getColumnData(column.getColumnIndices().find_first());    //KOCTbIJlN!!! - this column has only one index
-        double uccError = calculateUccError(columnData->getPositionListIndex(), relation);
+        // вот тут костыль, чтобы вытянуть индекс колонки из вершины, в которой только один индекс
+        ColumnData const& columnData = relation->getColumnData(column.getColumnIndices().find_first());
+        double uccError = calculateUccError(columnData.getPositionListIndex(), relation.get());
         if (uccError <= maxUccError) {
             registerUCC(column, uccError, schema);
             vertex->setKeyCandidate(false);
@@ -124,7 +119,7 @@ unsigned long long Tane::execute() {
                 for (unsigned long rhsIndex = vertex->getRhsCandidates().find_first();
                      rhsIndex < vertex->getRhsCandidates().size();
                      rhsIndex = vertex->getRhsCandidates().find_next(rhsIndex)){
-                    if (rhsIndex != column.getColumnIndices().find_first()){                          //KOSTYL'!!
+                    if (rhsIndex != column.getColumnIndices().find_first()){
                         registerFD(column, schema->getColumn(rhsIndex), 0, schema);
                     }
                 }
@@ -138,40 +133,37 @@ unsigned long long Tane::execute() {
     }
     levels.push_back(level1);
 
-    for (int arity = 2; arity <= maxArity || maxArity <= 0; arity++) {
+    for (unsigned int arity = 2; arity <= maxArity; arity++) {
         //auto startTime = std::chrono::system_clock::now();
         LatticeLevel::clearLevelsBelow(levels, arity - 1);
         LatticeLevel::generateNextLevel(levels);
         //std::chrono::duration<double> elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
         //aprioriMillis += elapsed_milliseconds.count();
 
-        shared_ptr<LatticeLevel> level = levels[arity];
-        cout << "Checking " << level->getVertices().size() << " " << arity << "-ary lattice vertices." << endl;
+        LatticeLevel* level = levels[arity].get();
+        std::cout << "Checking " << level->getVertices().size() << " " << arity << "-ary lattice vertices." << std::endl;
         if (level->getVertices().empty()) {
             break;
         }
 
-        for (auto [key_map, xaVertex] : level->getVertices()) {
+        for (auto& [key_map, xaVertex] : level->getVertices()) {
             if (xaVertex->getIsInvalid()){
                 continue;
             }
 
-            //TODO: check the following conversion:
-            Vertical& xa = xaVertex->getVertical();       //- previously it was a ColumnCombination
+            Vertical xa = xaVertex->getVertical();
             //Calculate XA PLI
             if (xaVertex->getPositionListIndex() == nullptr) {
-                //TODO: Can parents be implemented as std::pair??
-                shared_ptr<PositionListIndex> parentPLI1 = xaVertex->getParents()[0]->getPositionListIndex();   //OK??
-                shared_ptr<PositionListIndex> parentPLI2 = xaVertex->getParents()[1]->getPositionListIndex();
-                xaVertex->setPositionListIndex(parentPLI1->intersect(parentPLI2));
+                auto parentPLI1 = xaVertex->getParents()[0]->getPositionListIndex();
+                auto parentPLI2 = xaVertex->getParents()[1]->getPositionListIndex();
+                xaVertex->acquirePositionListIndex(parentPLI1->intersect(parentPLI2));
             }
 
             dynamic_bitset<> xaIndices = xa.getColumnIndices();
             dynamic_bitset<> aCandidates = xaVertex->getRhsCandidates();
 
             for (const auto& xVertex : xaVertex->getParents()) {
-                Vertical lhs = xVertex->getVertical();
-                //TODO: faster to return shared_ptr to a lhs and use it afterwards or to return a & and call getVertical every time?
+                Vertical const& lhs = xVertex->getVertical();
 
                 // Find index of A in XA. If a is not a candidate, continue. TODO: possible to do it easier??
                 //like "aIndex = xaIndices - xIndices;"
@@ -188,14 +180,15 @@ unsigned long long Tane::execute() {
                 double error = calculateFdError(
                         xVertex->getPositionListIndex(),
                         xaVertex->getPositionListIndex(),
-                        relation);
-                if (error <= maxFdError) {  //TODO: and again...
-                    shared_ptr<Column> rhs = schema->getColumns()[aIndex];
-                    //TODO: register FD
+                        relation.get());
+                if (error <= maxFdError) {
+                    Column const* rhs = schema->getColumns()[aIndex].get();
+
+                    //TODO: register FD to a file or something
                     registerFD(lhs, rhs, error, schema);
                     xaVertex->getRhsCandidates().set(rhs->getIndex(), false);
                     if (error == 0) {
-                        xaVertex->getRhsCandidates() &= lhs.getColumnIndices(); //Can't figure out what it is for
+                        xaVertex->getRhsCandidates() &= lhs.getColumnIndices();
                     }
                 }
             }
@@ -203,29 +196,29 @@ unsigned long long Tane::execute() {
 
         //Prune
         //cout << "Pruning level: " << level->getArity() << ". " << level->getVertices().size() << " vertices" << endl;
-        list<shared_ptr<LatticeVertex>> keyVertices;
-        for (auto [map_key, vertex] : level->getVertices()) {
+        std::list<LatticeVertex *> keyVertices;
+        for (auto& [map_key, vertex] : level->getVertices()) {
             Vertical columns = vertex->getVertical();            //Originally it's a ColumnCombination
 
             if (vertex->getIsKeyCandidate()) {
-                double uccError = calculateUccError(vertex->getPositionListIndex(), relation);
+                double uccError = calculateUccError(vertex->getPositionListIndex(), relation.get());
                 if (uccError <= maxUccError) {       //If a key candidate is an approx UCC
                     //TODO: do smth with UCC
 
                     registerUCC(columns, uccError, schema);
                     vertex->setKeyCandidate(false);
                     if (uccError == 0) {
-                        // Look at 185 for this cycle description in a nutshell
-                        for (unsigned long rhsIndex = vertex->getRhsCandidates().find_first();
-                             rhsIndex < vertex->getRhsCandidates().size();      //TODO: check that it's a correct way to traverse bitset
+                        for (size_t rhsIndex = vertex->getRhsCandidates().find_first();
+                             rhsIndex != boost::dynamic_bitset<>::npos;
                              rhsIndex = vertex->getRhsCandidates().find_next(rhsIndex)) {
                             Vertical rhs = static_cast<Vertical>(*schema->getColumn((int)rhsIndex));
-                            if (!columns.contains(rhs)) {         //TODO: again this conversion (P.S. was)
+                            if (!columns.contains(rhs)) {
                                 bool isRhsCandidate = true;
-                                for (const auto& column : columns.getColumns()) { //TODO: implement getColumns - DONE, but it returns v<Vertical>
-                                    Vertical sibling = *columns.without(static_cast<Vertical>(*column))->Union(rhs);   //check types carfully
-                                    shared_ptr<LatticeVertex> siblingVertex = level->getLatticeVertex(sibling.getColumnIndices());
-                                    if (siblingVertex == nullptr || !siblingVertex->getRhsCandidates()[rhs.getColumnIndices().find_first()]) { //TODO: KOSTYL'
+                                for (const auto& column : columns.getColumns()) {
+                                    Vertical sibling = columns.without(static_cast<Vertical>(*column)).Union(rhs);
+                                    auto siblingVertex = level->getLatticeVertex(sibling.getColumnIndices());
+                                    if (siblingVertex == nullptr ||
+                                         !siblingVertex->getConstRhsCandidates()[rhs.getColumnIndices().find_first()]) {
                                         isRhsCandidate = false;
                                         break;
                                     }
@@ -233,12 +226,11 @@ unsigned long long Tane::execute() {
                                 }
                                 //Found fd: vertex->rhs => register it
                                 if (isRhsCandidate){
-                                    //TODO: smth with FD
                                     registerFD(columns, schema->getColumn(rhsIndex), 0, schema);
                                 }
                             }
                         }
-                        keyVertices.push_back(vertex);
+                        keyVertices.push_back(vertex.get());
                         //cout << "--------------------------" << endl << "KeyVert: " << *vertex;
                     }
                 }
@@ -259,14 +251,13 @@ unsigned long long Tane::execute() {
     std::chrono::milliseconds elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
     aprioriMillis += elapsed_milliseconds.count();
 
-    cout << "Time: " << aprioriMillis << " milliseconds" << endl;
-    cout << "Intersection time: " << PositionListIndex::micros / 1000 << "ms" << endl;
-    cout << "Total intersections: " << PositionListIndex::intersectionCount << endl;
-    cout << "Total FD count: " << countOfFD << endl;
-    cout << "Total UCC count: " << countOfUCC << endl;
-
-    /*cout << "===== FD JSON ========" << getJsonFDs() << endl; */
-    cout << "HASH: " << fletcher16() << endl;
+    std::cout << "Time: " << aprioriMillis << " milliseconds" << std::endl;
+    std::cout << "Intersection time: " << PositionListIndex::micros / 1000 << "ms" << std::endl;
+    std::cout << "Total intersections: " << PositionListIndex::intersectionCount << std::endl;
+    std::cout << "Total FD count: " << countOfFD << std::endl;
+    std::cout << "Total UCC count: " << countOfUCC << std::endl;
+    // std::cout << "===== FD JSON ========" << getJsonFDs() << std::endl;
+    std::cout << "HASH: " << fletcher16() << std::endl;
 
     return aprioriMillis;
 }

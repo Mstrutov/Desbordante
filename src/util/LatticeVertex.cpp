@@ -1,15 +1,14 @@
 #include "LatticeVertex.h"
 
 using boost::dynamic_bitset, std::vector, std::shared_ptr, std::make_shared, std::string;
-//70% right analogy TODO: double check - had to remake it for Columns!!!
-void LatticeVertex::addRhsCandidates(vector<shared_ptr<Column>>&& candidates) {
-    for (auto const& candPtr : candidates){
+
+void LatticeVertex::addRhsCandidates(vector<std::unique_ptr<Column>> const& candidates) {
+    for (auto& candPtr : candidates){
         rhsCandidates.set(candPtr->getIndex());
     }
 }
 
-//need to make getColumnIndices a const method => pass 'const& that'
-bool LatticeVertex::comesBeforeAndSharePrefixWith(LatticeVertex& that) {
+bool LatticeVertex::comesBeforeAndSharePrefixWith(LatticeVertex const& that) const {
     dynamic_bitset<> thisIndices = vertical.getColumnIndices();
     dynamic_bitset<> thatIndices = that.vertical.getColumnIndices();
 
@@ -26,8 +25,8 @@ bool LatticeVertex::comesBeforeAndSharePrefixWith(LatticeVertex& that) {
     return thisIndex < thatIndex;
 }
 
-//same here
-bool LatticeVertex::operator> (LatticeVertex& that) {
+
+bool LatticeVertex::operator> (LatticeVertex const& that) const {
     if (vertical.getArity() != that.vertical.getArity())
         return vertical.getArity() > that.vertical.getArity();
 
@@ -62,10 +61,15 @@ std::ostream& operator<<(std::ostream& os, LatticeVertex& lv) {
     }
     os << "Rhs Candidates: " << rhs << endl;
     os << "IsKeyCandidate, IsInvalid: " << lv.isKeyCandidate << ", " << lv.isInvalid << endl;
-    /*os << "Parents: ";
-    for (auto par : lv.parents) {
-        os << par->vertical.toString() << " ";
-    }*/
+
     os << endl;
     return os;
+}
+
+PositionListIndex const *LatticeVertex::getPositionListIndex() const {
+    if (std::holds_alternative<std::unique_ptr<PositionListIndex>>(positionListIndex_)) {
+        return std::get<std::unique_ptr<PositionListIndex>>(positionListIndex_).get();
+    } else {
+        return std::get<PositionListIndex const *>(positionListIndex_);
+    }
 }

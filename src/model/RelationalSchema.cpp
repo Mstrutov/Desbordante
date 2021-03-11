@@ -1,70 +1,60 @@
+#include <memory>
 #include <utility>
 
 #include "RelationalSchema.h"
 #include "Vertical.h"
 #include "VerticalMap.h"
 
-using namespace std;
-
-RelationalSchema::RelationalSchema(string name, bool isNullEqNull) :
+RelationalSchema::RelationalSchema(std::string name, bool isNullEqNull) :
         columns(),
         name(std::move(name)),
         isNullEqNull(isNullEqNull),
         emptyVertical() {
-}
-// good practice is using std::make_shared instead
-shared_ptr<RelationalSchema> RelationalSchema::create(string name, bool isNullEqNull) {
-    auto schema = shared_ptr<RelationalSchema>(new RelationalSchema(std::move(name), isNullEqNull));
-    schema->init();
-    return schema;
+    init();
 }
 
-// this is hard to comprehend
 void RelationalSchema::init() {
-    emptyVertical.reset(new Vertical(std::move(Vertical::emptyVertical(shared_from_this()))));
+    emptyVertical = Vertical::emptyVertical(this);
 }
 
-//TODO: В оригинале тут что-то непонятное
-std::shared_ptr<Vertical> RelationalSchema::getVertical(dynamic_bitset<> indices) {
-    if (indices.empty()) return this->emptyVertical;
+//TODO: В оригинале тут что-то непонятное + приходится пересоздавать emptyVertical -- тут
+//должен быть unique_ptr, тк создаём в остальных случаях новую вершину и выдаём наружу с овнершипом
+Vertical RelationalSchema::getVertical(boost::dynamic_bitset<> indices) const {
+    if (indices.empty()) return *Vertical::emptyVertical(this);
 
     if (indices.count() == 1){
-        return std::make_unique<Vertical>(static_cast<Vertical>(*this->columns[indices.find_first()]));          //TODO: TEMPORAL KOSTYL'
+        return Vertical(this, std::move(indices));
     }
-    return std::make_unique<Vertical>(shared_from_this(), indices);
+    return Vertical(this, std::move(indices));
 }
 
-string RelationalSchema::getName() { return name; }
+Column const* RelationalSchema::getColumn(const std::string &colName) const {
+    auto foundEntryIterator = std::find_if(columns.begin(), columns.end(),
+                                           [&colName](auto& column) { return column->name == colName; });
+    if (foundEntryIterator != columns.end()) return foundEntryIterator->get();
 
-vector<shared_ptr<Column>> RelationalSchema::getColumns() { return columns; }
-
-//TODO: assert'ы пофиксить на нормальные эксепшены
-shared_ptr<Column> RelationalSchema::getColumn(const string &colName) {
-    for (auto &column : columns){
-        if (column->name == colName)
-            return column;
-    }
-    assert(0);
+    throw std::invalid_argument("Couldn't match column name \'"
+        + colName
+        + "\' to any of the schema's column names");
 }
 
-shared_ptr<Column> RelationalSchema::getColumn(int index) {
-    return columns[index];
+Column const* RelationalSchema::getColumn(int index) const {
+    return columns.at(index).get();
 }
 
-void RelationalSchema::appendColumn(const string& colName) {
-    columns.push_back(make_shared<Column>(shared_from_this(), colName, columns.size()));
+void RelationalSchema::appendColumn(const std::string& colName) {
+    columns.push_back(std::make_unique<Column>(this, colName, columns.size()));
 }
 
-// if you have nothing else to do: push_back through move semantics
-void RelationalSchema::appendColumn(shared_ptr<Column> column) {
-    columns.push_back(column);
+void RelationalSchema::appendColumn(Column column) {
+    columns.push_back(std::make_unique<Column>(std::move(column)));
 }
 
 int RelationalSchema::getNumColumns() const {
     return columns.size();
 }
 
-bool RelationalSchema::isNullEqualNull() { return isNullEqNull; }
+bool RelationalSchema::isNullEqualNull() const { return isNullEqNull; }
 
 // TODO: critical part - consider optimization
 // TODO: list -> vector as list doesn't have RAIterators therefore can't be sorted
