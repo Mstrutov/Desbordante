@@ -19,29 +19,30 @@
 class Column;
 class Vertical;
 
-using boost::dynamic_bitset, std::string, std::vector;
 
-class RelationalSchema : public std::enable_shared_from_this<RelationalSchema> {
+class RelationalSchema {
 private:
-    RelationalSchema(string name, bool isNullEqNull);
-    vector<std::shared_ptr<Column>> columns;
-    string name;
+    std::vector<std::unique_ptr<Column>> columns;
+    std::string name;
     bool isNullEqNull;
 
-public:
-    std::shared_ptr<Vertical> emptyVertical;
 
+
+public:
+    std::unique_ptr<Vertical> emptyVertical;
+
+    RelationalSchema(std::string name, bool isNullEqNull);
     void init();
-    static std::shared_ptr<RelationalSchema> create(string name, bool isNullEqNull);
-    string getName();
-    vector<std::shared_ptr<Column>> getColumns();
-    std::shared_ptr<Column> getColumn(const string &colName);
-    std::shared_ptr<Column> getColumn(int index);
-    void appendColumn(const string& colName);
-    void appendColumn(std::shared_ptr<Column> column);
+    std::string getName() const { return name; }
+    std::vector<std::unique_ptr<Column>> const& getColumns() const { return columns; };
+    Column const* getColumn(const std::string &colName) const;
+    Column const* getColumn(int index) const;
     int getNumColumns() const;
-    std::shared_ptr<Vertical> getVertical(dynamic_bitset<> indices);
-    bool isNullEqualNull();
+    Vertical getVertical(boost::dynamic_bitset<> indices) const;
+    bool isNullEqualNull() const;
+
+    void appendColumn(const std::string& colName);
+    void appendColumn(Column column);
 
     std::unordered_set<std::shared_ptr<Vertical>> calculateHittingSet(std::list<std::shared_ptr<Vertical>>&& verticals,
             boost::optional<std::function<bool (Vertical const&)>> pruningFunction);

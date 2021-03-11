@@ -1,7 +1,3 @@
-//
-// Created by maxim on 14.05.2020.
-//
-
 #include <boost/optional.hpp>
 
 #include "logging/easylogging++.h"
