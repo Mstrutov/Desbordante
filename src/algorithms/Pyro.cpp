@@ -10,11 +10,6 @@ double Pyro::execute() {
     auto relation = ColumnLayoutRelationData::createFrom(inputGenerator_, configuration_.isNullEqualNull);
     auto schema = relation->getSchema();
 
-    /*for (auto col : schema->getColumns()) {
-        LOG(DEBUG) << boost::format{"PLI for %1%: %2%"}
-            % col->toString() % relation->getColumnData(col->getIndex())->getPositionListIndex()->toString();
-    }*/
-
     auto profilingContext = std::make_shared<ProfilingContext>(
             configuration_,
             relation,
