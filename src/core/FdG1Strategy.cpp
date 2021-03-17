@@ -1,4 +1,5 @@
 #include <unordered_map>
+
 #include "FdG1Strategy.h"
 #include "SearchSpace.h"
 #include "PLICache.h"
@@ -10,7 +11,7 @@ unsigned long long FdG1Strategy::nanos_ = 0;
 double FdG1Strategy::calculateG1(std::shared_ptr<PositionListIndex> lhsPLI) {
     unsigned long long numViolations = 0;
     std::unordered_map<int, int> valueCounts;
-    std::vector<int>* probingTable = context_->relationData_->getColumnData(rhs_->getIndex())->getProbingTable();
+    std::vector<int> const& probingTable = context_->relationData_->getColumnData(rhs_->getIndex()).getProbingTable();
 
     LOG(DEBUG) << boost::format{"Probing table size for %1%: %2%"} % rhs_->toString() % std::to_string(probingTable->size());
 
@@ -19,7 +20,7 @@ double FdG1Strategy::calculateG1(std::shared_ptr<PositionListIndex> lhsPLI) {
     for (auto const& cluster : lhsPLI->getIndex()) {
         valueCounts.clear();
         for (auto const& position : cluster) {
-            probingTableValueId = (*probingTable)[position];
+            probingTableValueId = probingTable[position];
             //    auto now = std::chrono::system_clock::now();
             if (probingTableValueId != PositionListIndex::singletonValueId) {
                 auto location = valueCounts.find(probingTableValueId);

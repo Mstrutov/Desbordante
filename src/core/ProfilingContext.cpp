@@ -7,10 +7,12 @@
 
 #include "logging/easylogging++.h"
 
-ProfilingContext::ProfilingContext(Configuration const& configuration, std::shared_ptr<ColumnLayoutRelationData> relationData,
-        std::function<void (PartialKey const&)> const& uccConsumer, std::function<void (PartialFD const&)> const& fdConsumer,
-        CachingMethod const& cachingMethod, CacheEvictionMethod const& evictionMethod, double cachingMethodValue) :
-configuration_(configuration), relationData_(std::move(relationData)),
+ProfilingContext::ProfilingContext(Configuration configuration, ColumnLayoutRelationData const* relationData,
+                                   std::function<void(const PartialKey &)> const& uccConsumer,
+                                   std::function<void(const PartialFD &)> const& fdConsumer,
+                                   CachingMethod const& cachingMethod, CacheEvictionMethod const& evictionMethod,
+                                   double cachingMethodValue) :
+configuration_(std::move(configuration)), relationData_(relationData),
 random_(configuration_.seed == 0 ? std::mt19937() : std::mt19937(configuration_.seed)),
 customRandom_(configuration_.seed == 0 ? CustomRandom() : CustomRandom(configuration_.seed)) {
     uccConsumer_ = uccConsumer;
@@ -30,7 +32,7 @@ customRandom_(configuration_.seed == 0 ? CustomRandom() : CustomRandom(configura
     pliCache_->setMaximumEntropy(getMaximumEntropy(relationData_));
     if (configuration_.sampleSize > 0) {
         auto schema = relationData_->getSchema();
-        agreeSetSamples_ = std::make_shared<VerticalMap<std::shared_ptr<AgreeSetSample>>>(schema);
+        agreeSetSamples_ = std::make_unique<VerticalMap<std::shared_ptr<AgreeSetSample>>>(schema);
         for (auto& column : schema->getColumns()) {
             auto sample = createFocusedSample(std::make_shared<Vertical>(static_cast<Vertical>(*column)), 1);
             agreeSetSamples_->put(static_cast<Vertical>(*column), sample);
@@ -41,70 +43,70 @@ customRandom_(configuration_.seed == 0 ? CustomRandom() : CustomRandom(configura
     // TODO: partialFDScoring - for FD registration
 }
 
-double ProfilingContext::getMaximumEntropy(std::shared_ptr<ColumnLayoutRelationData> relationData) {
+double ProfilingContext::getMaximumEntropy(ColumnLayoutRelationData const* relationData) {
     auto columns = relationData->getColumnData();
     auto maxColumn = std::max_element(columns.begin(), columns.end(),
-            [](auto ptr1, auto ptr2) {
-        return ptr1->getPositionListIndex()->getEntropy() < ptr2->getPositionListIndex()->getEntropy();
+            [](auto& cd1, auto& cd2) {
+        return cd1.getPositionListIndex()->getEntropy() < cd2.getPositionListIndex()->getEntropy();
     });
-    return (*maxColumn)->getPositionListIndex()->getEntropy();
+    return maxColumn->getPositionListIndex()->getEntropy();
 }
 
-double ProfilingContext::getMinEntropy(std::shared_ptr<ColumnLayoutRelationData> relationData) {
-    auto columns = relationData->getColumnData();
+double ProfilingContext::getMinEntropy(ColumnLayoutRelationData const* relationData) {
+    auto& columns = relationData->getColumnData();
     auto minColumn = std::min_element(columns.begin(), columns.end(),
-                                      [](auto ptr1, auto ptr2) {
-                                          return ptr1->getPositionListIndex()->getEntropy() < ptr2->getPositionListIndex()->getEntropy();
+                                      [](auto& cd1, auto& cd2) {
+                                          return cd1.getPositionListIndex()->getEntropy() < cd2.getPositionListIndex()->getEntropy();
                                       });
-    return (*minColumn)->getPositionListIndex()->getEntropy();
+    return minColumn->getPositionListIndex()->getEntropy();
 }
 
-double ProfilingContext::getMedianEntropy(std::shared_ptr<ColumnLayoutRelationData> relationData) {
+double ProfilingContext::getMedianEntropy(ColumnLayoutRelationData const* relationData) {
     std::vector<double> vals;
 
     for (auto& column : relationData->getColumnData()) {
-        if (column->getPositionListIndex()->getEntropy() >= 0.001) {
-            vals.push_back(column->getPositionListIndex()->getEntropy());
+        if (column.getPositionListIndex()->getEntropy() >= 0.001) {
+            vals.push_back(column.getPositionListIndex()->getEntropy());
         }
     }
 
     return getMedianValue(std::move(vals), "MedianEntropy");
 }
 
-double ProfilingContext::getMedianInvertedEntropy(std::shared_ptr<ColumnLayoutRelationData> relationData) {
+double ProfilingContext::getMedianInvertedEntropy(ColumnLayoutRelationData const* relationData) {
     std::vector<double> vals;
 
     for (auto& column : relationData->getColumnData()) {
-        if (column->getPositionListIndex()->getInvertedEntropy() >= 0.001) {
-            vals.push_back(column->getPositionListIndex()->getInvertedEntropy());
+        if (column.getPositionListIndex()->getInvertedEntropy() >= 0.001) {
+            vals.push_back(column.getPositionListIndex()->getInvertedEntropy());
         }
     }
 
     return getMedianValue(std::move(vals), "MedianInvertedEntropy");
 }
 
-double ProfilingContext::getMeanEntropy(std::shared_ptr<ColumnLayoutRelationData> relationData) {
+double ProfilingContext::getMeanEntropy(ColumnLayoutRelationData const* relationData) {
     double e = 0;
 
     for (auto& column : relationData->getColumnData()) {
-        e += column->getPositionListIndex()->getEntropy();
+        e += column.getPositionListIndex()->getEntropy();
     }
     return e / relationData->getColumnData().size();
 }
 
-double ProfilingContext::getMedianGini(std::shared_ptr<ColumnLayoutRelationData> relationData) {
+double ProfilingContext::getMedianGini(ColumnLayoutRelationData const* relationData) {
     std::vector<double> vals;
 
     for (auto& column : relationData->getColumnData()) {
-        if (column->getPositionListIndex()->getEntropy() >= 0.001) {    // getGini?
-            vals.push_back(column->getPositionListIndex()->getGiniImpurity());
+        if (column.getPositionListIndex()->getEntropy() >= 0.001) {    // getGini?
+            vals.push_back(column.getPositionListIndex()->getGiniImpurity());
         }
     }
 
     return getMedianValue(std::move(vals), "MedianGini");
 }
 
-double ProfilingContext::setMaximumEntropy(std::shared_ptr<ColumnLayoutRelationData> relationData,
+double ProfilingContext::setMaximumEntropy(ColumnLayoutRelationData const* relationData,
                                            CachingMethod const &cachingMethod) {
     switch (cachingMethod) {
         case CachingMethod::ENTROPY:
@@ -151,9 +153,9 @@ std::shared_ptr<AgreeSetSample> ProfilingContext::getAgreeSetSample(std::shared_
     return sample;
 }
 
-double ProfilingContext::getMedianValue(std::vector<double> && values, const string & measureName) {
+double ProfilingContext::getMedianValue(std::vector<double> && values, std::string const& measureName) {
     if (values.size() <= 1) {
-        std::cout << "WARNING: got " << measureName << " == 0\n";
+        LOG(WARNING) << "Got " << measureName << " == 0\n";
         return 0;
     }
 

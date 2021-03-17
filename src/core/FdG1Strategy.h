@@ -5,7 +5,7 @@
 
 class FdG1Strategy : public DependencyStrategy {
 private:
-    std::shared_ptr<Column> rhs_;
+    Column const* rhs_;
 
     double calculateG1(std::shared_ptr<PositionListIndex> lhsPLI);
     double calculateG1(double numViolatingTuplePairs);
@@ -13,7 +13,7 @@ private:
 public:
     static unsigned long long nanos_;
 
-    FdG1Strategy(std::shared_ptr<Column> rhs, double maxError, double deviation) : DependencyStrategy(maxError, deviation), rhs_(rhs) {}
+    FdG1Strategy(Column const* rhs, double maxError, double deviation) : DependencyStrategy(maxError, deviation), rhs_(rhs) {}
 
     void ensureInitialized(std::shared_ptr<SearchSpace> searchSpace) override;
     double calculateError(std::shared_ptr<Vertical> lhs) override;

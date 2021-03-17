@@ -62,10 +62,10 @@ std::unordered_set<std::shared_ptr<Vertical>> RelationalSchema::calculateHitting
     using std::shared_ptr;
     //auto arityComparator = [](auto vertical1, auto vertical2) { return vertical1->getArity() < vertical2->getArity(); };
     verticals.sort([](auto vertical1, auto vertical2) { return vertical1->getArity() < vertical2->getArity(); });
-    VerticalMap<shared_ptr<Vertical>> consolidatedVerticals(shared_from_this());
+    VerticalMap<Vertical> consolidatedVerticals(this);
 
-    VerticalMap<shared_ptr<Vertical>> hittingSet(shared_from_this());
-    hittingSet.put(*emptyVertical, emptyVertical);
+    VerticalMap<Vertical> hittingSet(this);
+    hittingSet.put(*emptyVertical, Vertical::emptyVertical(this));
 
     for (auto vertical_ptr : verticals) {
         if (consolidatedVerticals.getAnySubsetEntry(*vertical_ptr).second != nullptr) {
