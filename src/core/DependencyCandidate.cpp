@@ -4,9 +4,9 @@
 
 // TODO: these methods are used in priority_queues, where operator> is needed. (>) !<=> (>=) due to strict weak ordering
 bool DependencyCandidate::arityComparator(DependencyCandidate const & dc1, DependencyCandidate const & dc2) {
-    if (dc1.vertical_->getArity() > dc2.vertical_->getArity())
+    if (dc1.vertical_.getArity() > dc2.vertical_.getArity())
         return true;
-    else if (dc1.vertical_->getArity() == dc2.vertical_->getArity())
+    else if (dc1.vertical_.getArity() == dc2.vertical_.getArity())
         return (dc1.error_.getMean() > dc2.error_.getMean());
     return false;
 }
@@ -15,7 +15,7 @@ bool DependencyCandidate::minErrorComparator(DependencyCandidate const & dc1, De
     if (dc1.error_.getMin() > dc2.error_.getMin())
         return true;
     else if (dc1.error_.getMin() == dc2.error_.getMin())
-        return (dc1.vertical_->getArity() > dc2.vertical_->getArity());
+        return (dc1.vertical_.getArity() > dc2.vertical_.getArity());
     return false;
 }
 
@@ -28,11 +28,11 @@ bool DependencyCandidate::fullArityErrorComparator(DependencyCandidate const & d
     if (dc1.error_.getMean() < dc2.error_.getMean())
         return true;
     else if (dc1.error_.getMean() == dc2.error_.getMean()) {
-        if (dc1.vertical_->getArity() < dc2.vertical_->getArity())
+        if (dc1.vertical_.getArity() < dc2.vertical_.getArity())
             return true;
-        else if (dc1.vertical_->getArity() == dc2.vertical_->getArity()) {
-            boost::dynamic_bitset<> dc1Cols = dc1.vertical_->getColumnIndices();
-            boost::dynamic_bitset<> dc2Cols = dc2.vertical_->getColumnIndices();
+        else if (dc1.vertical_.getArity() == dc2.vertical_.getArity()) {
+            boost::dynamic_bitset<> dc1Cols = dc1.vertical_.getColumnIndices();
+            boost::dynamic_bitset<> dc2Cols = dc2.vertical_.getColumnIndices();
 
             for (size_t a = dc1Cols.find_first(), b = dc2Cols.find_first();
                  a < dc1Cols.size();
@@ -48,11 +48,11 @@ bool DependencyCandidate::operator<(DependencyCandidate const & other) const {
     if (error_.getMean() < other.error_.getMean())
         return true;
     else if (error_.getMean() == other.error_.getMean()) {
-        if (vertical_->getArity() < other.vertical_->getArity())
+        if (vertical_.getArity() < other.vertical_.getArity())
             return true;
-        else if (vertical_->getArity() == other.vertical_->getArity()) {
-            boost::dynamic_bitset<> dc1Cols = vertical_->getColumnIndices();
-            boost::dynamic_bitset<> dc2Cols = other.vertical_->getColumnIndices();
+        else if (vertical_.getArity() == other.vertical_.getArity()) {
+            boost::dynamic_bitset<> dc1Cols = vertical_.getColumnIndices();
+            boost::dynamic_bitset<> dc2Cols = other.vertical_.getColumnIndices();
 
             for (size_t a = dc1Cols.find_first(), b = dc2Cols.find_first();
                  a < dc1Cols.size();

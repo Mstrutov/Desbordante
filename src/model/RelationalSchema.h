@@ -44,6 +44,6 @@ public:
     void appendColumn(const std::string& colName);
     void appendColumn(Column column);
 
-    std::unordered_set<std::shared_ptr<Vertical>> calculateHittingSet(std::list<std::shared_ptr<Vertical>>&& verticals,
-            boost::optional<std::function<bool (Vertical const&)>> pruningFunction);
+    std::unordered_set<Vertical> calculateHittingSet(std::vector<Vertical> verticals,
+            boost::optional<std::function<bool (Vertical const&)>> pruningFunction) const;
 };

@@ -16,11 +16,11 @@ class SearchSpace : public std::enable_shared_from_this<SearchSpace> {
 private:
     ProfilingContext* context_;
     std::unique_ptr<DependencyStrategy> strategy_;
-    std::unique_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> globalVisitees_;              //should be stored as unique_ptr to avoid huge memory chunk allocation problems?
+    std::unique_ptr<VerticalMap<VerticalInfo>> globalVisitees_;
     std::set<DependencyCandidate, std::function<bool (DependencyCandidate const&, DependencyCandidate const&)>> launchPads_;
-    std::unique_ptr<VerticalMap<std::shared_ptr<DependencyCandidate>>> launchPadIndex_;
+    std::unique_ptr<VerticalMap<DependencyCandidate>> launchPadIndex_;
     std::list<DependencyCandidate> deferredLaunchPads_;
-    std::unique_ptr<VerticalMap<std::shared_ptr<Vertical>>> scope_;
+    std::unique_ptr<VerticalMap<Vertical>> scope_;
     double sampleBoost_;
     int recursionDepth_;
     bool isAscendRandomly_ = false;
@@ -28,10 +28,11 @@ private:
     int numNested = 0;
 
 
-    void discover(std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees);
-    std::shared_ptr<DependencyCandidate> pollLaunchPad(std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees);
-    void escapeLaunchPad(std::shared_ptr<Vertical> lanchPad, std::list<std::shared_ptr<Vertical>>&& pruningSupersets, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees);
+    void discover(std::unique_ptr<VerticalMap<VerticalInfo>> localVisitees);
+    std::optional<DependencyCandidate> pollLaunchPad(VerticalMap<VerticalInfo>* localVisitees);
+    void escapeLaunchPad(Vertical const& launchPad, std::vector<Vertical> pruningSupersets, VerticalMap<VerticalInfo>* localVisitees);
     void returnLaunchPad(DependencyCandidate const& launchPad, bool isDefer);
+
     bool ascend(DependencyCandidate const& launchPad, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees);
     void checkEstimate(std::shared_ptr<DependencyStrategy> strategy, DependencyCandidate const& traversalCandidate);
     void trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPeakError, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees);
@@ -40,9 +41,9 @@ private:
             std::unordered_set<Vertical> & allegedNonDeps, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees,
             std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> globalVisitees, double boostFactor);
     static void requireMinimalDependency(std::shared_ptr<DependencyStrategy> strategy, std::shared_ptr<Vertical> minDependency);
-    static std::list<std::shared_ptr<Vertical>> getSubsetDeps(std::shared_ptr<Vertical> vertical, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> verticalInfos); // no idea of return type
-    static bool isImpliedByMinDep(std::shared_ptr<Vertical> vertical, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> verticalInfos);
-    static bool isKnownNonDependency(std::shared_ptr<Vertical> vertical, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> verticalInfos);
+    static std::list<std::shared_ptr<Vertical>> getSubsetDeps(Vertical const& vertical, VerticalMap<VerticalInfo>* verticalInfos); // no idea of return type
+    static bool isImpliedByMinDep(Vertical const& vertical, VerticalMap<VerticalInfo>* verticalInfos);
+    static bool isKnownNonDependency(Vertical const& vertical, VerticalMap<VerticalInfo>* verticalInfos);
     static std::string formatArityHistogram() = delete;
     static std::string formatArityHistogram(VerticalMap<int*>) = delete;
 

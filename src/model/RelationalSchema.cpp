@@ -58,45 +58,46 @@ bool RelationalSchema::isNullEqualNull() const { return isNullEqNull; }
 
 // TODO: critical part - consider optimization
 // TODO: list -> vector as list doesn't have RAIterators therefore can't be sorted
-std::unordered_set<std::shared_ptr<Vertical>> RelationalSchema::calculateHittingSet(std::list<std::shared_ptr<Vertical>>&& verticals, boost::optional<std::function<bool (Vertical const&)>> pruningFunction) {
-    using std::shared_ptr;
-    //auto arityComparator = [](auto vertical1, auto vertical2) { return vertical1->getArity() < vertical2->getArity(); };
-    verticals.sort([](auto vertical1, auto vertical2) { return vertical1->getArity() < vertical2->getArity(); });
+std::unordered_set<Vertical> RelationalSchema::calculateHittingSet(
+        std::vector<Vertical> verticals, boost::optional<std::function<bool (Vertical const&)>> pruningFunction) const {
+    std::sort(verticals.begin(), verticals.end(),
+              [](auto vertical1, auto vertical2) { return vertical1->getArity() < vertical2->getArity(); });
     VerticalMap<Vertical> consolidatedVerticals(this);
 
     VerticalMap<Vertical> hittingSet(this);
     hittingSet.put(*emptyVertical, Vertical::emptyVertical(this));
 
-    for (auto vertical_ptr : verticals) {
-        if (consolidatedVerticals.getAnySubsetEntry(*vertical_ptr).second != nullptr) {
+    for (auto& vertical : verticals) {
+        if (consolidatedVerticals.getAnySubsetEntry(vertical).second != nullptr) {
             continue;
         }
-        consolidatedVerticals.put(*vertical_ptr, vertical_ptr);
+        // TODO: костыль, тк VerticalMap хранит unique_ptr - лишнее копирование
+        consolidatedVerticals.put(vertical, std::make_unique<Vertical>(vertical));
 
-        auto invalidHittingSetMembers = hittingSet.getSubsetKeys(*vertical_ptr->invert());
+        auto invalidHittingSetMembers = hittingSet.getSubsetKeys(vertical.invert());
         std::sort(invalidHittingSetMembers.begin(), invalidHittingSetMembers.end(),
-                [](auto vertical1, auto vertical2) { return vertical1->getArity() < vertical2->getArity(); });
+                [](auto& vertical1, auto& vertical2) { return vertical1.getArity() < vertical2.getArity(); });
 
         for (auto& invalidHittingSetMember : invalidHittingSetMembers) {
-            hittingSet.remove(*invalidHittingSetMember);
+            hittingSet.remove(invalidHittingSetMember);
         }
 
         for (auto& invalidMember : invalidHittingSetMembers) {
-            for (size_t correctiveColumnIndex = vertical_ptr->getColumnIndices().find_first();
+            for (size_t correctiveColumnIndex = vertical.getColumnIndices().find_first();
                  correctiveColumnIndex != boost::dynamic_bitset<>::npos;
-                 correctiveColumnIndex = vertical_ptr->getColumnIndices().find_next(correctiveColumnIndex)) {
+                 correctiveColumnIndex = vertical.getColumnIndices().find_next(correctiveColumnIndex)) {
 
                 auto correctiveColumn = *getColumn(correctiveColumnIndex);
-                auto correctedMember = invalidMember->Union(static_cast<Vertical>(correctiveColumn));
+                auto correctedMember = invalidMember.Union(static_cast<Vertical>(correctiveColumn));
 
-                if (hittingSet.getAnySubsetEntry(*correctedMember).second == nullptr) {
+                if (hittingSet.getAnySubsetEntry(correctedMember).second == nullptr) {
                     if (pruningFunction) {
-                        bool isPruned = (*pruningFunction)(*correctedMember);
+                        bool isPruned = (*pruningFunction)(correctedMember);
                         if (isPruned) {
                             continue;
                         }
                     }
-                    hittingSet.put(*correctedMember, correctedMember);
+                    hittingSet.put(correctedMember, std::make_unique<Vertical>(correctedMember));
                 }
             }
         }
