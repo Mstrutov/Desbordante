@@ -10,9 +10,9 @@ private:
 
 public:
     ConfidenceInterval error_;
-    std::shared_ptr<Vertical> vertical_;
+    Vertical vertical_;
 
-    DependencyCandidate(std::shared_ptr<Vertical> vertical, ConfidenceInterval error, bool isExact) :
+    DependencyCandidate(Vertical vertical, ConfidenceInterval error, bool isExact) :
             isExact_(isExact), error_(error), vertical_(std::move(vertical)) {}
     bool operator<(DependencyCandidate const& other) const;
     
@@ -29,7 +29,7 @@ public:
     static bool fullArityErrorComparator(DependencyCandidate const &, DependencyCandidate const &);
     static bool fullErrorArityComparator(DependencyCandidate const &, DependencyCandidate const &);
     explicit operator std::string() const
-        { return "Candidate " + static_cast<std::string>(*vertical_) + static_cast<std::string>(error_); }
+        { return "Candidate " + static_cast<std::string>(vertical_) + static_cast<std::string>(error_); }
 
     friend std::ostream& operator<< (std::ostream&, DependencyCandidate const&);
 };

@@ -12,78 +12,67 @@
 
 // TODO: consider storing only containers of shared_ptrs
 
-void SearchSpace::discover(std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees) {
+void SearchSpace::discover(std::unique_ptr<VerticalMap<VerticalInfo>> localVisitees) {
     std::cout << "Discovering in: " << static_cast<std::string>(*strategy_) << std::endl;
     while (true) {  // на второй итерации дропается
         auto now = std::chrono::system_clock::now();
-        std::shared_ptr<DependencyCandidate> launchPad = pollLaunchPad(localVisitees);
-        if (launchPad == nullptr) break;
+        std::optional<DependencyCandidate> launchPad = pollLaunchPad(localVisitees.get());
+        if (!launchPad.has_value()) break;
 
-        localVisitees = localVisitees != nullptr ? localVisitees : std::make_shared<VerticalMap<std::shared_ptr<VerticalInfo>>>(context_->getSchema());
+        if (localVisitees == nullptr)
+            localVisitees = std::make_unique<VerticalMap<VerticalInfo>>(context_->getSchema());
 
-        bool isDependencyFound = ascend(*launchPad, localVisitees);
+        bool isDependencyFound = ascend(*launchPad, localVisitees.get());
         pollingLaunchPads += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - now).count();
-        // now = std::chrono::system_clock::now();
         returnLaunchPad(*launchPad, !isDependencyFound);
-        // returningLaunchPad += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - now).count();
     }
-    // std::cout << "+++++++++++" << nanosSmartConstructing << std::endl;
 }
 
-
-std::shared_ptr<DependencyCandidate> SearchSpace::pollLaunchPad(
-        std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees) {
-
+std::optional<DependencyCandidate> SearchSpace::pollLaunchPad(
+        VerticalMap<VerticalInfo>* localVisitees) {
     while (true) {
         if (launchPads_.empty()) {
-            if (deferredLaunchPads_.empty()) return nullptr;
+            if (deferredLaunchPads_.empty()) return std::optional<DependencyCandidate>();
 
             launchPads_.insert(deferredLaunchPads_.begin(), deferredLaunchPads_.end());
             deferredLaunchPads_.clear();
         }
 
-        auto launchPad = std::make_shared<DependencyCandidate>(*launchPads_.begin());
+        auto launchPad = launchPads_.extract(launchPads_.begin()).value();
 
         launchPads_.erase(launchPads_.begin());
-        launchPadIndex_.remove(*launchPad->vertical_);
+        launchPadIndex_->remove(launchPad.vertical_);
 
-        if (isImpliedByMinDep(launchPad->vertical_, globalVisitees_)
-            || (localVisitees != nullptr && isImpliedByMinDep(launchPad->vertical_, localVisitees))) {
-            launchPadIndex_.remove(*launchPad->vertical_);
-            LOG(TRACE) << "* Removing subset-pruned launch pad {" << launchPad->vertical_->toString() << '}';
+        if (isImpliedByMinDep(launchPad.vertical_, globalVisitees_.get())
+            || (localVisitees != nullptr && isImpliedByMinDep(launchPad.vertical_, localVisitees))) {
+            launchPadIndex_->remove(launchPad.vertical_);
+            LOG(TRACE) << "* Removing subset-pruned launch pad {" << launchPad.vertical_.toString() << '}';
             continue;
         }
 
-        auto supersetEntries = globalVisitees_->getSupersetEntries(*launchPad->vertical_);
+        auto supersetEntries = globalVisitees_->getSupersetEntries(launchPad.vertical_);
         if (localVisitees != nullptr) {
-            auto localSupersetEntries = localVisitees->getSupersetEntries(*launchPad->vertical_);
+            auto localSupersetEntries = localVisitees->getSupersetEntries(launchPad.vertical_);
             auto endIterator = std::remove_if(localSupersetEntries.begin(), localSupersetEntries.end(), [](auto entry) { return !entry.second->isPruningSubsets(); });
 
             std::for_each(localSupersetEntries.begin(), endIterator, [&supersetEntries](auto entry) { supersetEntries.push_back(entry); });
         }
         if (supersetEntries.empty()) return launchPad;
-        LOG(TRACE) << boost::format{"* Escaping launchPad %1% from: %2%"} % launchPad->vertical_->toString() % "[UNIMPLEMENTED]";
-        std::list<std::shared_ptr<Vertical>> supersetVerticals;
-        //std::transform(supersetEntries.begin(), supersetEntries.end(), supersetVerticals.begin(),
-        //        [](auto entry) {return std::make_shared<Vertical>(entry.first); });
+        LOG(TRACE) << boost::format{"* Escaping launchPad %1% from: %2%"} % launchPad.vertical_.toString() % "[UNIMPLEMENTED]";
+        std::vector<Vertical> supersetVerticals;
 
         for (auto& entry : supersetEntries) {
             supersetVerticals.push_back(entry.first);
         }
 
-        escapeLaunchPad(launchPad->vertical_, std::move(supersetVerticals), localVisitees);
-        //continue;
-
-        //launchPads_.insert(*launchPad);
-        //LOG(DEBUG) << boost::format{"Giving up on %1%."} % launchPad->vertical_->toString();
-        //return nullptr;
+        escapeLaunchPad(launchPad.vertical_, std::move(supersetVerticals), localVisitees);
     }
 }
 
 // this move looks legit IMO
-void SearchSpace::escapeLaunchPad(std::shared_ptr<Vertical> launchPad,
-                                  std::list<std::shared_ptr<Vertical>>&& pruningSupersets,
-                                  std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees) {
+void SearchSpace::escapeLaunchPad(Vertical const& launchPad,
+                                  std::vector<Vertical> pruningSupersets,
+                                  VerticalMap<VerticalInfo>* localVisitees) {
     // TODO: list<не shared_ptr>, чтобы не создавать новые поинтеры? Мб создать новый лист list<Vertical>
 
     std::transform(pruningSupersets.begin(), pruningSupersets.end(), pruningSupersets.begin(),
@@ -94,23 +83,23 @@ void SearchSpace::escapeLaunchPad(std::shared_ptr<Vertical> launchPad,
             return true;
         }
 
-        auto launchPadCandidate_ptr = launchPad->Union(hittingSetCandidate);
+        auto launchPadCandidate_ptr = launchPad.Union(hittingSetCandidate);
 
         if ((localVisitees == nullptr && isImpliedByMinDep(launchPadCandidate_ptr, localVisitees))
             || isImpliedByMinDep(launchPadCandidate_ptr, globalVisitees_)) {
             return true;
         }
 
-        if (launchPadIndex_.getAnySubsetEntry(*launchPadCandidate_ptr).second != nullptr) {
+        if (launchPadIndex_->getAnySubsetEntry(*launchPadCandidate_ptr).second != nullptr) {
             return true;
         }
 
         return false;
     };
     {
-        string pruningSupersetsStr = "[";
-        for (auto pruningSuperset : pruningSupersets) {
-            pruningSupersetsStr += pruningSuperset->toString();
+        std::string pruningSupersetsStr = "[";
+        for (auto& pruningSuperset : pruningSupersets) {
+            pruningSupersetsStr += pruningSuperset.toString();
         }
         pruningSupersetsStr += "]";
         LOG(TRACE) << boost::format{"Escaping %1% pruned by %2%"} % launchPad->toString() % pruningSupersetsStr;
@@ -120,26 +109,26 @@ void SearchSpace::escapeLaunchPad(std::shared_ptr<Vertical> launchPad,
             boost::make_optional(pruningFunction)
         );
     {
-        string hittingSetStr = "[";
-        for (auto el : hittingSet) {
-            hittingSetStr += el->toString();
+        std::string hittingSetStr = "[";
+        for (auto& el : hittingSet) {
+            hittingSetStr += el.toString();
         }
         hittingSetStr += "]";
         LOG(TRACE) << boost::format{"* Evaluated hitting set: %1%"} % hittingSetStr;
     }
     for (auto& escaping : hittingSet) {
 
-        auto escapedLaunchPadVertical = launchPad->Union(*escaping);
+        auto escapedLaunchPadVertical = launchPad.Union(escaping);
 
         // assert, который не имплементнуть из-за трансформа
         LOG(TRACE) << "createDependencyCandidate while escaping launch pad";
         DependencyCandidate escapedLaunchPad = strategy_->createDependencyCandidate(escapedLaunchPadVertical);
-        LOG(TRACE) << boost::format{"  Escaped: %1%"} % escapedLaunchPadVertical->toString();
+        LOG(TRACE) << boost::format{"  Escaped: %1%"} % escapedLaunchPadVertical.toString();
         LOG(DEBUG) << boost::format{"  Proposed launch pad arity: %1% should be <= maxLHS: %2%"}
-            % escapedLaunchPad.vertical_->getArity() % context_->configuration_.maxLHS;
-        if (escapedLaunchPad.vertical_->getArity() <= context_->configuration_.maxLHS) {
+            % escapedLaunchPad.vertical_.getArity() % context_->configuration_.maxLHS;
+        if (escapedLaunchPad.vertical_.getArity() <= context_->configuration_.maxLHS) {
             launchPads_.insert(escapedLaunchPad);
-            launchPadIndex_.put(*escapedLaunchPad.vertical_, std::make_shared<DependencyCandidate>(escapedLaunchPad));
+            launchPadIndex_->put(escapedLaunchPad.vertical_, std::make_unique<DependencyCandidate>(escapedLaunchPad));
         }
     }
 }
@@ -629,10 +618,10 @@ void SearchSpace::requireMinimalDependency(std::shared_ptr<DependencyStrategy> s
     }
 }
 
-std::list<std::shared_ptr<Vertical>> SearchSpace::getSubsetDeps(std::shared_ptr<Vertical> vertical,
-                                                                std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> verticalInfos) {
+std::list<std::shared_ptr<Vertical>> SearchSpace::getSubsetDeps(
+        Vertical const& vertical, VerticalMap<VerticalInfo>* verticalInfos) {
 
-    auto subsetEntries = verticalInfos->getSubsetEntries(*vertical);
+    auto subsetEntries = verticalInfos->getSubsetEntries(vertical);
     auto subsetEntriesEnd = std::remove_if(subsetEntries.begin(), subsetEntries.end(),
             [](auto& entry){ return !entry.second->isDependency_;});
     std::list<std::shared_ptr<Vertical>> subsetDeps;
@@ -645,17 +634,16 @@ std::list<std::shared_ptr<Vertical>> SearchSpace::getSubsetDeps(std::shared_ptr<
     return subsetDeps;
 }
 
-bool SearchSpace::isImpliedByMinDep(std::shared_ptr<Vertical> vertical,
-                                    std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> verticalInfos) {
+bool SearchSpace::isImpliedByMinDep(Vertical const& vertical, VerticalMap<VerticalInfo>* verticalInfos) {
     // TODO: function<bool(Vertical, ...)> --> function<bool(Vertical&, ...)>
-    return verticalInfos->getAnySubsetEntry(*vertical,
-            [](auto vertical, auto info) -> bool { return info->isDependency_ && info->isExtremal_; }).second != nullptr;
+    return verticalInfos->getAnySubsetEntry(
+            vertical,[](auto vertical, auto info) -> bool { return info->isDependency_ && info->isExtremal_; }
+            ).second != nullptr;
 }
 
-bool SearchSpace::isKnownNonDependency(std::shared_ptr<Vertical> vertical,
-                                       std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> verticalInfos) {
-    return verticalInfos->getAnySupersetEntry(*vertical,
-                                            [](auto vertical, auto info) -> bool { return !info->isDependency_; }).second != nullptr;
+bool SearchSpace::isKnownNonDependency(Vertical const& vertical, VerticalMap<VerticalInfo>* verticalInfos) {
+    return verticalInfos->getAnySupersetEntry(
+            vertical, [](auto vertical, auto info) -> bool { return !info->isDependency_; }).second != nullptr;
 }
 
 void SearchSpace::printStats() const {
