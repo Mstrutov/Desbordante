@@ -24,8 +24,8 @@ class ProfilingContext : public DependencyConsumer {
 private:
     Configuration configuration_;
     std::unique_ptr<PLICache> pliCache_;
-    std::unique_ptr<VerticalMap<std::shared_ptr<AgreeSetSample>>> agreeSetSamples_;     //unique_ptr?
-    ColumnLayoutRelationData const* relationData_;
+    std::unique_ptr<VerticalMap<AgreeSetSample>> agreeSetSamples_;     //unique_ptr?
+    ColumnLayoutRelationData* relationData_;
     std::mt19937 random_;
     CustomRandom customRandom_;
 
@@ -35,13 +35,14 @@ public:
         AS
     };
 
-    ProfilingContext(Configuration  configuration, ColumnLayoutRelationData const* relationData,
+    ProfilingContext(Configuration  configuration, ColumnLayoutRelationData* relationData,
             std::function<void (PartialKey const&)> const& uccConsumer,
             std::function<void (PartialFD const&)> const& fdConsumer,
             CachingMethod const& cachingMethod, CacheEvictionMethod const& evictionMethod, double cachingMethodValue);
 
-    std::shared_ptr<AgreeSetSample> createFocusedSample(std::shared_ptr<Vertical> focus, double boostFactor);
-    std::shared_ptr<AgreeSetSample> getAgreeSetSample(std::shared_ptr<Vertical> focus);
+    // Non-const as RandomGenerator state gets changed
+    AgreeSetSample const* createFocusedSample(Vertical const& focus, double boostFactor);
+    AgreeSetSample const* getAgreeSetSample(Vertical const& focus) const;
     PLICache* getPLICache() { return pliCache_.get(); }
     bool isAgreeSetSamplesEmpty() const { return agreeSetSamples_ == nullptr; }
     RelationalSchema const* getSchema() const { return relationData_->getSchema(); }

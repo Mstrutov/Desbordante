@@ -46,11 +46,11 @@ DependencyCandidate KeyG1Strategy::createDependencyCandidate(Vertical const& ver
         return DependencyCandidate(vertical, ConfidenceInterval(keyError), true);
     }
 
-    if (context_->agreeSetSamples_ == nullptr) {
+    if (context_->isAgreeSetSamplesEmpty()) {
         return DependencyCandidate(vertical, ConfidenceInterval(0, .5, 1), false);
     }
 
-    std::shared_ptr<AgreeSetSample> agreeSetSample = context_->getAgreeSetSample(vertical);
+    AgreeSetSample const* agreeSetSample = context_->getAgreeSetSample(vertical);
     ConfidenceInterval estimatedEqualityPairs = agreeSetSample
             ->estimateAgreements(vertical, context_->getConfiiguration().estimateConfidence)
             .multiply(context_->getColumnLayoutRelationData()->getNumTuplePairs());

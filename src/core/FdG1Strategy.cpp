@@ -92,14 +92,14 @@ ConfidenceInterval FdG1Strategy::calculateG1(ConfidenceInterval const &numViolat
 }
 
 DependencyCandidate FdG1Strategy::createDependencyCandidate(Vertical const& vertical) const {
-    if (context_->agreeSetSamples_ == nullptr) {
+    if (context_->isAgreeSetSamplesEmpty()) {
         return DependencyCandidate(vertical, ConfidenceInterval(0, .5, 1), false);
     }
 
-    std::shared_ptr<AgreeSetSample> agreeSetSample = context_->getAgreeSetSample(vertical);
+    AgreeSetSample const* agreeSetSample = context_->getAgreeSetSample(vertical);
     ConfidenceInterval numViolatingTuplePairs = agreeSetSample
-            ->estimateMixed(vertical, std::make_shared<Vertical>(static_cast<Vertical>(*rhs_)),context_->configuration_.estimateConfidence)
-            .multiply(context_->relationData_->getNumTuplePairs());
+            ->estimateMixed(vertical, static_cast<Vertical>(*rhs_), context_->getConfiiguration().estimateConfidence)
+            .multiply(context_->getColumnLayoutRelationData()->getNumTuplePairs());
     //LOG(DEBUG) << boost::format{"Creating dependency candidate %1% with %2% violating pairs"}
     //    % vertical->toString() % numViolatingTuplePairs;
     ConfidenceInterval g1 = calculateG1(numViolatingTuplePairs);
@@ -110,5 +110,5 @@ DependencyCandidate FdG1Strategy::createDependencyCandidate(Vertical const& vert
 
 void FdG1Strategy::registerDependency(Vertical const& vertical, double error,
                                       DependencyConsumer const& discoveryUnit) const {
-    discoveryUnit.registerFd(vertical, rhs_, error, 0); // TODO: calculate score?
+    discoveryUnit.registerFd(vertical, *rhs_, error, 0); // TODO: calculate score?
 }

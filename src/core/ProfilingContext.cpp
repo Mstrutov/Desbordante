@@ -7,17 +7,17 @@
 
 #include "logging/easylogging++.h"
 
-ProfilingContext::ProfilingContext(Configuration configuration, ColumnLayoutRelationData const* relationData,
-                                   std::function<void(const PartialKey &)> const& uccConsumer,
-                                   std::function<void(const PartialFD &)> const& fdConsumer,
-                                   CachingMethod const& cachingMethod, CacheEvictionMethod const& evictionMethod,
-                                   double cachingMethodValue) :
-configuration_(std::move(configuration)), relationData_(relationData),
-random_(configuration_.seed == 0 ? std::mt19937() : std::mt19937(configuration_.seed)),
-customRandom_(configuration_.seed == 0 ? CustomRandom() : CustomRandom(configuration_.seed)) {
+ProfilingContext::ProfilingContext(
+        Configuration configuration, ColumnLayoutRelationData* relationData,
+        std::function<void(const PartialKey &)> const& uccConsumer,
+        std::function<void(const PartialFD &)> const& fdConsumer,
+        CachingMethod const& cachingMethod, CacheEvictionMethod const& evictionMethod, double cachingMethodValue) :
+    configuration_(std::move(configuration)), relationData_(relationData),
+    random_(configuration_.seed == 0 ? std::mt19937() : std::mt19937(configuration_.seed)),
+    customRandom_(configuration_.seed == 0 ? CustomRandom() : CustomRandom(configuration_.seed)) {
     uccConsumer_ = uccConsumer;
     fdConsumer_ = fdConsumer;
-    pliCache_ = std::make_shared<PLICache>(
+    pliCache_ = std::make_unique<PLICache>(
             relationData_,
             cachingMethod,
             evictionMethod,
@@ -32,10 +32,11 @@ customRandom_(configuration_.seed == 0 ? CustomRandom() : CustomRandom(configura
     pliCache_->setMaximumEntropy(getMaximumEntropy(relationData_));
     if (configuration_.sampleSize > 0) {
         auto schema = relationData_->getSchema();
-        agreeSetSamples_ = std::make_unique<VerticalMap<std::shared_ptr<AgreeSetSample>>>(schema);
+        agreeSetSamples_ = std::make_unique<VerticalMap<AgreeSetSample>>(schema);
         for (auto& column : schema->getColumns()) {
-            auto sample = createFocusedSample(std::make_shared<Vertical>(static_cast<Vertical>(*column)), 1);
-            agreeSetSamples_->put(static_cast<Vertical>(*column), sample);
+            //auto sample =
+            createFocusedSample(static_cast<Vertical>(*column), 1);
+            // agreeSetSamples_->put(static_cast<Vertical>(*column), std::move(sample));
         }
     } else {
         agreeSetSamples_ = nullptr;
@@ -128,24 +129,23 @@ double ProfilingContext::setMaximumEntropy(ColumnLayoutRelationData const* relat
     }
 }
 
-std::shared_ptr<AgreeSetSample>
-ProfilingContext::createFocusedSample(std::shared_ptr<Vertical> focus, double boostFactor) {
-    std::shared_ptr<ListAgreeSetSample> sample = ListAgreeSetSample::createFocusedFor(
+AgreeSetSample const* ProfilingContext::createFocusedSample(Vertical const& focus, double boostFactor) {
+    std::unique_ptr<ListAgreeSetSample> sample = ListAgreeSetSample::createFocusedFor(
             relationData_,
             focus,
-            pliCache_->getOrCreateFor(*focus, this),
+            pliCache_->getOrCreateFor(focus, this),
             configuration_.sampleSize * boostFactor,
             customRandom_
             );
-    LOG(TRACE) << boost::format {"Creating sample focused on: %1%"} % focus->toString();
-    agreeSetSamples_->put(*focus, sample);
-    return sample;
+    LOG(TRACE) << boost::format {"Creating sample focused on: %1%"} % focus.toString();
+    auto sample_ptr = sample.get();
+    agreeSetSamples_->put(focus, std::move(sample));
+    return sample_ptr;
 }
 
-// TODO: implement using std::max_element??
-std::shared_ptr<AgreeSetSample> ProfilingContext::getAgreeSetSample(std::shared_ptr<Vertical> focus) {
-    std::shared_ptr<AgreeSetSample> sample = nullptr;
-    for (auto& [key, nextSample] : agreeSetSamples_->getSubsetEntries(*focus)) {
+AgreeSetSample const* ProfilingContext::getAgreeSetSample(Vertical const& focus) const {
+    AgreeSetSample const* sample = nullptr;
+    for (auto& [key, nextSample] : agreeSetSamples_->getSubsetEntries(focus)) {
         if (sample == nullptr || nextSample->getSamplingRatio() > sample->getSamplingRatio()) {
             sample = nextSample;
         }
@@ -153,7 +153,7 @@ std::shared_ptr<AgreeSetSample> ProfilingContext::getAgreeSetSample(std::shared_
     return sample;
 }
 
-double ProfilingContext::getMedianValue(std::vector<double> && values, std::string const& measureName) {
+double ProfilingContext::getMedianValue(std::vector<double> && values, std::string const& measureName){
     if (values.size() <= 1) {
         LOG(WARNING) << "Got " << measureName << " == 0\n";
         return 0;
