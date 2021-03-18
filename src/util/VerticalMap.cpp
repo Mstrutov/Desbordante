@@ -522,6 +522,11 @@ Value const* VerticalMap<Value>::get(Vertical const &key) const {
 }
 
 template<class Value>
+Value* VerticalMap<Value>::get(Vertical const &key) {
+    return const_cast<Value*>(setTrie_.get(key.getColumnIndices(), 0)); ;
+}
+
+template<class Value>
 Value const* VerticalMap<Value>::get(bitset const &key) const {
     return setTrie_.get(key, 0); ;
 }

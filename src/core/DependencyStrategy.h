@@ -7,13 +7,12 @@ class SearchSpace;
 
 class DependencyStrategy {
 protected:
-
     DependencyStrategy(double maxError, double deviation) :
         minNonDependencyError_(maxError - deviation), maxDependencyError_(maxError + deviation) {}
 public:
     double minNonDependencyError_;
     double maxDependencyError_;
-    std::shared_ptr<ProfilingContext> context_;
+    ProfilingContext* context_;
     unsigned int calcCount_ = 0;
     /*
      * Create the initial candidate for the given SearchSpace
@@ -30,7 +29,7 @@ public:
 
     virtual ~DependencyStrategy() = default;
 
-    bool shouldResample(std::shared_ptr<Vertical> vertical, double boostFactor);
+    bool shouldResample(Vertical const& vertical, double boostFactor);
     bool isIrrelevantColumn(std::shared_ptr<Column> column) { return this->isIrrelevantColumn(column->getIndex()); }
 
     static double round(double error) { return std::ceil(error * 32768) / 32768; }

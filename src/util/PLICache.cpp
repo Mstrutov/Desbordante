@@ -6,16 +6,15 @@
 #include "VerticalMap.h"
 
 
-std::shared_ptr<PositionListIndex> PLICache::get(Vertical const &vertical) {
-    //VerticalMap<std::shared_ptr<PositionListIndex>> obj(nullptr);
+PositionListIndex* PLICache::get(Vertical const &vertical) {
     return index_->get(vertical);
 }
 
-PLICache::PLICache(std::shared_ptr<ColumnLayoutRelationData> relationData, CachingMethod cachingMethod,
+PLICache::PLICache(ColumnLayoutRelationData* relationData, CachingMethod cachingMethod,
                    CacheEvictionMethod evictionMethod, double cachingMethodValue, double minEntropy, double meanEntropy,
                    double medianEntropy, double maximumEntropy, double medianGini, double medianInvertedEntropy) :
         relationData_(relationData),
-        index_(std::make_shared<CacheMap>(relationData->getSchema())),
+        index_(std::make_unique<CacheMap>(relationData->getSchema())),
         cachingMethod_(cachingMethod),
         evictionMethod_(evictionMethod),
         cachingMethodValue_(cachingMethodValue),
@@ -26,18 +25,25 @@ PLICache::PLICache(std::shared_ptr<ColumnLayoutRelationData> relationData, Cachi
         medianGini_(medianGini),
         medianInvertedEntropy_(medianInvertedEntropy) {
     for (auto& column_ptr : relationData->getSchema()->getColumns()) {
-        index_->put(static_cast<Vertical>(*column_ptr), relationData->getColumnData(column_ptr->getIndex())->getPositionListIndex());
+        index_->put(
+                static_cast<Vertical>(*column_ptr),
+                relationData->getColumnData(column_ptr->getIndex()).moveOutPositionListIndex());
     }
-    // usageCounter, decayCounter, statistics
+}
+
+PLICache::~PLICache() {
+    for (auto& column_ptr : relationData_->getSchema()->getColumns()) {
+        auto PLI = index_->remove(static_cast<Vertical>(*column_ptr));
+        relationData_->getColumnData(column_ptr->getIndex()).moveInPositionListIndex(std::move(PLI));
+    }
 }
 
 // obtains or calculates a PositionListIndex using cache
-std::shared_ptr<PositionListIndex>
-PLICache::getOrCreateFor(Vertical const &vertical, ProfilingContext* profilingContext) {
+PositionListIndex* PLICache::getOrCreateFor(Vertical const &vertical, ProfilingContext* profilingContext) {
     LOG(DEBUG) << boost::format{"PLI for %1% requested: "} % vertical.toString();
 
     // is PLI already cached?
-    std::shared_ptr<PositionListIndex> pli = get(vertical);
+    PositionListIndex* pli = get(vertical);
     if (pli != nullptr) {
         pli->incFreq();
         LOG(DEBUG) << boost::format{"Served from PLI cache."};
@@ -50,7 +56,8 @@ PLICache::getOrCreateFor(Vertical const &vertical, ProfilingContext* profilingCo
     std::vector<PositionListIndexRank> ranks;
     ranks.reserve(subsetEntries.size());
     for (auto& [subVertical, subPLI_ptr] : subsetEntries) {
-        PositionListIndexRank pliRank(subVertical, subPLI_ptr, subVertical->getArity());
+        // TODO: избавиться от таких const_cast, которые сбрасывают константность
+        PositionListIndexRank pliRank(&subVertical, const_cast<PositionListIndex*>(subPLI_ptr), subVertical.getArity());
         ranks.push_back(pliRank);
         if (!smallestPliRank
             || smallestPliRank->pli_->getSize() > pliRank.pli_->getSize()
@@ -61,8 +68,8 @@ PLICache::getOrCreateFor(Vertical const &vertical, ProfilingContext* profilingCo
     assert(smallestPliRank);            // check if smallestPliRank is initialized
 
     std::vector<PositionListIndexRank> operands;
-    boost::dynamic_bitset<> cover(relationData_.lock()->getNumColumns());
-    boost::dynamic_bitset<> coverTester(relationData_.lock()->getNumColumns());
+    boost::dynamic_bitset<> cover(relationData_->getNumColumns());
+    boost::dynamic_bitset<> coverTester(relationData_->getNumColumns());
     if (smallestPliRank) {
         smallestPliRank->pli_->incFreq();
         operands.push_back(*smallestPliRank);
@@ -95,34 +102,41 @@ PLICache::getOrCreateFor(Vertical const &vertical, ProfilingContext* profilingCo
             }
         }
     }
+
+    // TODO: конкретные костыли, надо делать Column : Vertical
+    std::vector<std::unique_ptr<Vertical>> verticalColumns;
+
     for (auto& column : vertical.getColumns()) {
         if (!cover[column->getIndex()]) {
-            auto columnData = relationData_.lock()->getColumnData(column->getIndex());
-            operands.emplace_back(std::make_shared<Vertical>(static_cast<Vertical>(*column)),
-                    columnData->getPositionListIndex(), 1);
-            columnData->getPositionListIndex()->incFreq();
+            verticalColumns.push_back(std::make_unique<Vertical>(static_cast<Vertical>(*column)));
+            auto columnPLI = index_->get(**verticalColumns.rbegin());
+            operands.emplace_back(verticalColumns.rbegin()->get(), columnPLI, 1);
+            columnPLI->incFreq();
         }
     }
     // sort operands by ascending order
-    std::sort(operands.begin(), operands.end(), [](auto& el1, auto& el2) { return el1.pli_->getSize() < el2.pli_->getSize(); });
+    std::sort(operands.begin(), operands.end(),
+              [](auto& el1, auto& el2) { return el1.pli_->getSize() < el2.pli_->getSize(); });
     // TODO: Profiling context stuff
 
     LOG(DEBUG) << boost::format {"Intersecting %1%."} % "[UNIMPLEMENTED]";
     // Intersect and cache
-    if (operands.size() >= profilingContext->configuration_.naryIntersectionSize) {
+    std::unique_ptr<PositionListIndex> intersectionPLI;
+    if (operands.size() >= profilingContext->getConfiiguration().naryIntersectionSize) {
         PositionListIndexRank basePliRank = operands[0];
-        pli = basePliRank.pli_->probeAll(*vertical.without(*basePliRank.vertical_), *relationData_.lock());
-        cachingProcess(vertical, pli, profilingContext);
+        intersectionPLI = basePliRank.pli_->probeAll(vertical.without(*basePliRank.vertical_), *relationData_);
+        cachingProcess(vertical, std::move(intersectionPLI), profilingContext);
     } else {
-        std::shared_ptr<Vertical> currentVertical = nullptr;
+        Vertical const* currentVertical = nullptr;
         for (auto& operand : operands) {
             if (pli == nullptr) {
                 currentVertical = operand.vertical_;
                 pli = operand.pli_;
             } else {
-                currentVertical = currentVertical->Union(*operand.vertical_);
-                pli = pli->intersect(operand.pli_);
-                cachingProcess(*currentVertical, pli, profilingContext);
+                cachingProcess(
+                        currentVertical->Union(*operand.vertical_),
+                        pli->intersect(operand.pli_),
+                        profilingContext);
             }
         }
     }
@@ -137,11 +151,11 @@ size_t PLICache::size() const {
     return index_->getSize();
 }
 
-void PLICache::cachingProcess(Vertical const &vertical, std::shared_ptr<PositionListIndex> pli, ProfilingContext* profilingContext) {
+void PLICache::cachingProcess(Vertical const &vertical, std::unique_ptr<PositionListIndex> pli, ProfilingContext* profilingContext) {
     switch (cachingMethod_) {
         case CachingMethod::COIN:
-            if (profilingContext->customRandom_.nextDouble() < profilingContext->configuration_.cachingProbability) {
-                index_->put(vertical, pli);
+            if (profilingContext->nextDouble() < profilingContext->getConfiiguration().cachingProbability) {
+                index_->put(vertical, std::move(pli));
             }
             break;
         case CachingMethod::NOCACHING:
@@ -149,7 +163,7 @@ void PLICache::cachingProcess(Vertical const &vertical, std::shared_ptr<Position
             // newUsageInfo - parallel
             break;
         case CachingMethod::ALLCACHING:
-            index_->put(vertical, pli);
+            index_->put(vertical, std::move(pli));
             break;
         default:
             //index_->put(vertical, pli);

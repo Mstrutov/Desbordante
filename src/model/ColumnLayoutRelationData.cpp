@@ -16,11 +16,11 @@ ColumnLayoutRelationData::ColumnLayoutRelationData(std::unique_ptr<RelationalSch
     RelationData(std::move(schema)),
     columnData(std::move(columnData)) {}
 
-std::vector<ColumnData> const& ColumnLayoutRelationData::getColumnData() const {
+std::vector<ColumnData>& ColumnLayoutRelationData::getColumnData() {
     return columnData;
 }
 
-ColumnData const& ColumnLayoutRelationData::getColumnData(int columnIndex) const {
+ColumnData& ColumnLayoutRelationData::getColumnData(int columnIndex) {
     return columnData[columnIndex];
 }
 
