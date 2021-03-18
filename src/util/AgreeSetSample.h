@@ -5,58 +5,57 @@
 
 #pragma once
 
-#include <map>
-#include <type_traits>
 #include <boost/dynamic_bitset.hpp>
+
 #include "ColumnLayoutRelationData.h"
-#include "Vertical.h"
 #include "ConfidenceInterval.h"
 #include "custom/CustomRandom.h"
+#include "Vertical.h"
 
-using std::enable_if, std::is_base_of, boost::dynamic_bitset, std::map;
 
 //abstract base class for Agree Set Sample implementations (trie <- not used, list)
 class AgreeSetSample {
 public:
 
-    virtual unsigned long long getNumAgreeSupersets(std::shared_ptr<Vertical> agreement) = 0;
-    virtual unsigned long long getNumAgreeSupersets(std::shared_ptr<Vertical> agreement, std::shared_ptr<Vertical> disagreement) = 0;
-    virtual std::shared_ptr<std::vector<unsigned long long>> getNumAgreeSupersetsExt(std::shared_ptr<Vertical> agreement, std::shared_ptr<Vertical> disagreement);
+    virtual unsigned long long getNumAgreeSupersets(Vertical const& agreement) const = 0;
+    virtual unsigned long long getNumAgreeSupersets(Vertical const& agreement, Vertical const& disagreement) const = 0;
+    virtual std::unique_ptr<std::vector<unsigned long long>> getNumAgreeSupersetsExt(
+            Vertical const& agreement, Vertical const& disagreement) const;
 
-    double estimateAgreements(std::shared_ptr<Vertical> agreement);
-    ConfidenceInterval estimateAgreements(std::shared_ptr<Vertical> agreement, double confidence);
-    ConfidenceInterval estimateMixed(std::shared_ptr<Vertical> agreement, std::shared_ptr<Vertical> disagreement, double confidence);
+    double estimateAgreements(Vertical const& agreement) const;
+    ConfidenceInterval estimateAgreements(Vertical const& agreement, double confidence) const;
+    ConfidenceInterval estimateMixed(Vertical const& agreement, Vertical const& disagreement, double confidence) const;
 
-    double getSamplingRatio() { return sampleSize / static_cast<double>(populationSize); }
-    bool isExact() { return populationSize == sampleSize; }
+    double getSamplingRatio() const { return sampleSize / static_cast<double>(populationSize); }
+    bool isExact() const { return populationSize == sampleSize; }
 
     virtual ~AgreeSetSample() = default;
 
 protected:
-    shared_ptr<ColumnLayoutRelationData> relationData;
-    shared_ptr<Vertical> focus;
+    ColumnLayoutRelationData* relationData;
+    Vertical focus;
     unsigned int sampleSize;
     unsigned long long populationSize;
-    AgreeSetSample(shared_ptr<ColumnLayoutRelationData> relationData, shared_ptr<Vertical> focus, unsigned int sampleSize, unsigned long long populationSize);
+    AgreeSetSample(ColumnLayoutRelationData * relationData, Vertical  focus, unsigned int sampleSize, unsigned long long populationSize);
 
-    //template<typename T, typename enable_if<is_base_of<AgreeSetSample, T>::value>::type* = nullptr> //- TODO: SFINAE???
     template<typename T>
-    static shared_ptr<T> createFor(shared_ptr<ColumnLayoutRelationData> relationData, int sampleSize);
+    static std::unique_ptr<T> createFor(ColumnLayoutRelationData* relationData, int sampleSize);
 
-    //template<typename T, typename enable_if<is_base_of<AgreeSetSample, T>::value>::type* = nullptr> // - TODO: SFINAE???
     template<typename T>
-    static shared_ptr<T> createFocusedFor(shared_ptr<ColumnLayoutRelationData> relation,
-                                          shared_ptr<Vertical> restrictionVertical,
-                                          shared_ptr<PositionListIndex> restrictionPli,
+    static std::unique_ptr<T> createFocusedFor(ColumnLayoutRelationData* relation,
+                                          Vertical const& restrictionVertical,
+                                          PositionListIndex* restrictionPli,
                                           unsigned int sampleSize, CustomRandom& random);
 private:
     static double stdDevSmoothing;
 
-    double ratioToRelationRatio(double ratio) { return ratio * populationSize / relationData->getNumTuplePairs(); }
-    double observationsToRelationRatio(double numObservations) { return ratioToRelationRatio(numObservations / sampleSize); }
+    double ratioToRelationRatio(double ratio) const {
+        return ratio * populationSize / relationData->getNumTuplePairs(); }
+    double observationsToRelationRatio(double numObservations) const {
+        return ratioToRelationRatio(numObservations / sampleSize); }
     static double calculateNonNegativeFraction(double a, double b);
 
-    ConfidenceInterval estimateGivenNumHits(unsigned long long numHits, double confidence);
+    ConfidenceInterval estimateGivenNumHits(unsigned long long numHits, double confidence) const;
     // Inverse cumulative distribution function (aka the probit function)
     double probitFunction(double quantile) const;
 };
