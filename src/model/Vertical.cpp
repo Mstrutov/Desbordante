@@ -13,8 +13,8 @@ Vertical::Vertical(Column const& col) : schema(col.getSchema()){
     columnIndices.set(col.getIndex());
 }
 
-bool Vertical::contains(Vertical &that) const {
-    boost::dynamic_bitset<>& thatIndices = that.columnIndices;
+bool Vertical::contains(Vertical const& that) const {
+    boost::dynamic_bitset<> const& thatIndices = that.columnIndices;
     if (columnIndices.size() < thatIndices.size()) return false;
 
     for (size_t columnIndex = thatIndices.find_first();
@@ -73,7 +73,7 @@ Vertical Vertical::invert() const {
     return schema->getVertical(flippedIndices);
 }
 
-Vertical Vertical::invert(Vertical &scope) const {
+Vertical Vertical::invert(Vertical const& scope) const {
     boost::dynamic_bitset<> flippedIndices(columnIndices);
     flippedIndices ^= scope.columnIndices;
     return schema->getVertical(flippedIndices);

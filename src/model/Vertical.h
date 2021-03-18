@@ -41,7 +41,8 @@ public:
 
     boost::dynamic_bitset<> getColumnIndices() const { return columnIndices; }
     RelationalSchema const* getSchema() const { return schema; }
-    bool contains(Vertical& that) const;
+
+    bool contains(Vertical const& that) const;
     bool contains(Column const& that) const;
     bool intersects(Vertical const& that) const;
     Vertical Union(Vertical const& that) const;
@@ -50,7 +51,7 @@ public:
     Vertical without (Vertical const & that) const;
     Vertical without(Column const& that) const;
     Vertical invert() const;
-    Vertical invert(Vertical& scope) const;
+    Vertical invert(Vertical const& scope) const;
 
     unsigned int getArity() const { return columnIndices.count(); }
     std::vector<Column const*> getColumns() const;
