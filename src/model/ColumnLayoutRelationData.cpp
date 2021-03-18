@@ -24,6 +24,10 @@ ColumnData& ColumnLayoutRelationData::getColumnData(int columnIndex) {
     return columnData[columnIndex];
 }
 
+ColumnData const& ColumnLayoutRelationData::getColumnData(int columnIndex) const {
+    return columnData[columnIndex];
+}
+
 unsigned int ColumnLayoutRelationData::getNumRows() const {
     return columnData[0].getProbingTable().size();
 }

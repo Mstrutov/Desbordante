@@ -26,6 +26,7 @@ public:
     std::string getName() const { return name; }
     RelationalSchema const* getSchema() const { return schema; }
 
+    std::string toIndicesString() const { return std::to_string(index);}
     std::string toString() const { return "[" + name + "]";}
 
     explicit operator std::string() const { return toString(); }
