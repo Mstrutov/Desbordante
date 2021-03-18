@@ -12,8 +12,8 @@
 
 
 ColumnData::ColumnData(Column const* column, std::unique_ptr<PositionListIndex> positionListIndex):
-    column(column),
-    positionListIndex(std::move(positionListIndex)) {
+        column(column),
+        positionListIndex_(std::move(positionListIndex)) {
         positionListIndex->forceCacheProbingTable();
     }
 

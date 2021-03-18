@@ -1,6 +1,7 @@
 #pragma once
 
 class ProfilingContext;
+
 #include "CacheEvictionMethod.h"
 #include "CachingMethod.h"
 #include "ProfilingContext.h"
@@ -10,16 +11,16 @@ class PLICache {
 private:
     class PositionListIndexRank {
     public:
-        std::shared_ptr<Vertical> vertical_;
-        std::shared_ptr<PositionListIndex> pli_;
+        Vertical const* vertical_;
+        PositionListIndex* pli_;
         int addedArity_;
 
-        PositionListIndexRank(std::shared_ptr<Vertical> vertical, std::shared_ptr<PositionListIndex> pli, int initialArity):
+        PositionListIndexRank(Vertical const* vertical, PositionListIndex* pli, int initialArity):
             vertical_(vertical), pli_(pli), addedArity_(initialArity) {}
     };
-    using CacheMap = VerticalMap<std::shared_ptr<PositionListIndex>>;
-    std::weak_ptr<ColumnLayoutRelationData> relationData_;
-    std::shared_ptr<CacheMap> index_;    //unique_ptr?
+    using CacheMap = VerticalMap<PositionListIndex>;
+    ColumnLayoutRelationData* relationData_;
+    std::unique_ptr<CacheMap> index_;
     //usageCounter - for parallelism
 
     int savedIntersections_ = 0;
@@ -35,15 +36,21 @@ private:
     double medianGini_;
     double medianInvertedEntropy_;
 
-    void cachingProcess(Vertical const& vertical, std::shared_ptr<PositionListIndex> pli, ProfilingContext* profilingContext);
+    void cachingProcess(Vertical const& vertical,
+                        std::unique_ptr<PositionListIndex> pli,
+                        ProfilingContext* profilingContext);
 public:
-    PLICache(std::shared_ptr<ColumnLayoutRelationData> relationData, CachingMethod cachingMethod, CacheEvictionMethod evictionMethod,
-             double cachingMethodValue, double minEntropy, double meanEntropy, double medianEntropy, double maximumEntropy, double medianGini, double medianInvertedEntropy);
+    PLICache(ColumnLayoutRelationData* relationData, CachingMethod cachingMethod, CacheEvictionMethod evictionMethod,
+             double cachingMethodValue, double minEntropy, double meanEntropy, double medianEntropy,
+             double maximumEntropy, double medianGini, double medianInvertedEntropy);
 
-    std::shared_ptr<PositionListIndex> get(Vertical const& vertical);
-    std::shared_ptr<PositionListIndex> getOrCreateFor(Vertical const& vertical, ProfilingContext* profilingContext);
+    PositionListIndex* get(Vertical const& vertical);
+    PositionListIndex* getOrCreateFor(Vertical const& vertical, ProfilingContext* profilingContext);
 
     void setMaximumEntropy(double e) { maximumEntropy_ = e; }
 
     size_t size() const;
+
+    // returns ownership of single column PLIs back to ColumnLayoutRelationData
+    virtual ~PLICache();
 };

@@ -45,9 +45,14 @@ public:
     bool isAgreeSetSamplesEmpty() const { return agreeSetSamples_ == nullptr; }
     RelationalSchema const* getSchema() const { return relationData_->getSchema(); }
 
+    Configuration const& getConfiiguration() const { return configuration_; }
+    ColumnLayoutRelationData const* getColumnLayoutRelationData() const { return relationData_; }
+    PLICache const* getPLICache() const { return pliCache_.get(); }
+
     // get int in range [0, upperBound) from the uniform distribution
     // int nextInt(int upperBound) { return std::uniform_int_distribution<int>{0, upperBound}(random_); }
     int nextInt(int upperBound) { return customRandom_.nextInt(upperBound); }
+    double nextDouble() { return customRandom_.nextDouble(); }
 
     static double getMaximumEntropy(ColumnLayoutRelationData const* cd1);
     static double getMinEntropy(ColumnLayoutRelationData const* cd1);

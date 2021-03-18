@@ -73,8 +73,6 @@ std::optional<DependencyCandidate> SearchSpace::pollLaunchPad(
 void SearchSpace::escapeLaunchPad(Vertical const& launchPad,
                                   std::vector<Vertical> pruningSupersets,
                                   VerticalMap<VerticalInfo>* localVisitees) {
-    // TODO: list<не shared_ptr>, чтобы не создавать новые поинтеры? Мб создать новый лист list<Vertical>
-
     std::transform(pruningSupersets.begin(), pruningSupersets.end(), pruningSupersets.begin(),
             [this](auto superset) { return superset->invert()->without(strategy_->getIrrelevantColumns()); } );
 

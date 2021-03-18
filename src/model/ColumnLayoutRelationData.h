@@ -19,8 +19,8 @@ private:
     std::vector<ColumnData> columnData;
 
 public:
-    std::vector<ColumnData> const& getColumnData() const override;
-    ColumnData const& getColumnData(int columnIndex) const override;
+    std::vector<ColumnData>& getColumnData() override;
+    ColumnData& getColumnData(int columnIndex) override;
     unsigned int getNumRows() const override;
     std::vector<int> getTuple(int tupleIndex) const override;
 

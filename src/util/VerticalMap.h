@@ -99,6 +99,9 @@ public:
     std::unique_ptr<Value> remove(Vertical const& key);
     std::unique_ptr<Value> remove(bitset const& key);
 
+    // non-const version of get() for костыль purposes
+    Value* get(Vertical const& key);
+
     // get all keys/values/entries for traversing
     std::unordered_set<Vertical> keySet();
     std::vector<Value const*> values();
