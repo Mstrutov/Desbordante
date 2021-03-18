@@ -17,6 +17,7 @@ public:
 
     virtual unsigned int getNumRows() const = 0;
     virtual std::vector<ColumnData>& getColumnData() = 0;
+    virtual std::vector<ColumnData> const& getColumnData() const = 0;
     virtual ColumnData& getColumnData(int columnIndex) = 0;
     virtual ColumnData const& getColumnData(int columnIndex) const = 0;
     virtual std::vector<int> getTuple(int tupleIndex) const = 0;
