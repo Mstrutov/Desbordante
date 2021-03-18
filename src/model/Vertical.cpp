@@ -93,7 +93,7 @@ std::vector<Column const*> Vertical::getColumns() const {
     return columns;
 }
 
-std::string Vertical::toIndicesString() const {
+std::string Vertical::toString() const {
     std::string result = "[";
 
     if (columnIndices.find_first() == boost::dynamic_bitset<>::npos)
@@ -113,27 +113,26 @@ std::string Vertical::toIndicesString() const {
     return result;
 }
 
-//std::string Vertical::toIndicesString() const {
-//    string result = "[";
-//
-//    if (columnIndices.find_first() == boost::dynamic_bitset<>::npos) {
-//        return "[]";
-//    }
-//
-//    auto relation = schema.lock();
-//    for (size_t index = columnIndices.find_first();
-//         index != dynamic_bitset<>::npos;
-//         index = columnIndices.find_next(index)) {
-//        result += std::to_string(index);
-//        if (columnIndices.find_next(index) != dynamic_bitset<>::npos) {
-//            result += ',';
-//        }
-//    }
-//
-//    result += ']';
-//
-//    return result;
-//}
+std::string Vertical::toIndicesString() const {
+    std::string result = "[";
+
+    if (columnIndices.find_first() == boost::dynamic_bitset<>::npos) {
+        return "[]";
+    }
+
+    for (size_t index = columnIndices.find_first();
+         index != boost::dynamic_bitset<>::npos;
+         index = columnIndices.find_next(index)) {
+        result += std::to_string(index);
+        if (columnIndices.find_next(index) != boost::dynamic_bitset<>::npos) {
+            result += ',';
+        }
+    }
+
+    result += ']';
+
+    return result;
+}
 
 
 

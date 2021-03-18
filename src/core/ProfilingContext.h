@@ -36,7 +36,8 @@ public:
     };
 
     ProfilingContext(Configuration  configuration, ColumnLayoutRelationData const* relationData,
-            std::function<void (PartialKey const&)> const& uccConsumer, std::function<void (PartialFD const&)> const& fdConsumer,
+            std::function<void (PartialKey const&)> const& uccConsumer,
+            std::function<void (PartialFD const&)> const& fdConsumer,
             CachingMethod const& cachingMethod, CacheEvictionMethod const& evictionMethod, double cachingMethodValue);
 
     std::shared_ptr<AgreeSetSample> createFocusedSample(std::shared_ptr<Vertical> focus, double boostFactor);

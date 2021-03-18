@@ -1,7 +1,7 @@
 #include "DependencyStrategy.h"
 #include "PLICache.h"
 
-bool DependencyStrategy::shouldResample(Vertical const& vertical, double boostFactor) {
+bool DependencyStrategy::shouldResample(Vertical const& vertical, double boostFactor) const {
 
     if (context_->getConfiiguration().sampleSize <= 0 || vertical.getArity() < 1) return false;
 
@@ -10,7 +10,7 @@ bool DependencyStrategy::shouldResample(Vertical const& vertical, double boostFa
     if (currentSample->isExact()) return false;
 
     // Get an estimate of the number of equality pairs in the vertical
-    std::shared_ptr<PositionListIndex> pli = context_->getPLICache()->get(vertical);
+    PositionListIndex* pli = context_->getPLICache()->get(vertical);
     double nep = pli != nullptr
             ? pli->getNepAsLong()
             : currentSample->estimateAgreements(vertical) * context_->getColumnLayoutRelationData()->getNumTuplePairs();

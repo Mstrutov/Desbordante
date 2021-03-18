@@ -57,6 +57,7 @@ public:
     std::vector<Column const*> getColumns() const;
     std::vector<Vertical> getParents() const;
 
+    std::string toString() const;
     std::string toIndicesString() const;
     explicit operator std::string() const { return toIndicesString(); }
 };

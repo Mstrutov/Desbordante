@@ -12,8 +12,8 @@ public:
     std::list<PartialFD> discoveredFDs_;
     std::list<PartialKey> discoveredUCCs_;
 
-    PartialFD registerFd(std::shared_ptr<Vertical> lhs, std::shared_ptr<Column> rhs, double error, double score) const;
-    PartialKey registerUcc(std::shared_ptr<Vertical> keyVertical, double error, double score) const;
+    PartialFD registerFd(Vertical const& lhs, Column const& rhs, double error, double score) const;
+    PartialKey registerUcc(Vertical const& keyVertical, double error, double score) const;
 
     std::string fdsToString() const;
     std::string uccsToString() const;
