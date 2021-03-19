@@ -3,7 +3,7 @@
 
 bool DependencyStrategy::shouldResample(Vertical const& vertical, double boostFactor) const {
 
-    if (context_->getConfiiguration().sampleSize <= 0 || vertical.getArity() < 1) return false;
+    if (context_->getConfiguration().sampleSize <= 0 || vertical.getArity() < 1) return false;
 
     // Do we have an exact sample already?
     AgreeSetSample const* currentSample = context_->getAgreeSetSample(vertical);
@@ -16,9 +16,9 @@ bool DependencyStrategy::shouldResample(Vertical const& vertical, double boostFa
             : currentSample->estimateAgreements(vertical) * context_->getColumnLayoutRelationData()->getNumTuplePairs();
 
     // Should the new sample be exact?
-    if (nep <= context_->getConfiiguration().sampleSize * boostFactor) return true;
+    if (nep <= context_->getConfiguration().sampleSize * boostFactor) return true;
 
     // Will we achieve an improved sampling ratio?
-    double newSamplingRatio = context_->getConfiiguration().sampleSize * boostFactor / nep;
+    double newSamplingRatio = context_->getConfiguration().sampleSize * boostFactor / nep;
     return newSamplingRatio >= 2 * currentSample->getSamplingRatio();
 }

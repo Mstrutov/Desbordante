@@ -98,7 +98,7 @@ DependencyCandidate FdG1Strategy::createDependencyCandidate(Vertical const& vert
 
     AgreeSetSample const* agreeSetSample = context_->getAgreeSetSample(vertical);
     ConfidenceInterval numViolatingTuplePairs = agreeSetSample
-            ->estimateMixed(vertical, static_cast<Vertical>(*rhs_), context_->getConfiiguration().estimateConfidence)
+            ->estimateMixed(vertical, static_cast<Vertical>(*rhs_), context_->getConfiguration().estimateConfidence)
             .multiply(context_->getColumnLayoutRelationData()->getNumTuplePairs());
     //LOG(DEBUG) << boost::format{"Creating dependency candidate %1% with %2% violating pairs"}
     //    % vertical->toString() % numViolatingTuplePairs;
@@ -108,7 +108,13 @@ DependencyCandidate FdG1Strategy::createDependencyCandidate(Vertical const& vert
     return DependencyCandidate(vertical, g1, false);
 }
 
-void FdG1Strategy::registerDependency(Vertical const& vertical, double error,
-                                      DependencyConsumer const& discoveryUnit) const {
+void FdG1Strategy::registerDependency(
+        Vertical const& vertical, double error, DependencyConsumer const& discoveryUnit) const {
     discoveryUnit.registerFd(vertical, *rhs_, error, 0); // TODO: calculate score?
+}
+
+std::unique_ptr<DependencyStrategy> FdG1Strategy::createClone() {
+    return std::make_unique<FdG1Strategy>(
+        rhs_, (maxDependencyError_ + minNonDependencyError_) / 2,
+        (maxDependencyError_ - minNonDependencyError_) / 2);
 }

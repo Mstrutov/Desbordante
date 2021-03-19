@@ -122,7 +122,7 @@ PositionListIndex* PLICache::getOrCreateFor(Vertical const &vertical, ProfilingC
     LOG(DEBUG) << boost::format {"Intersecting %1%."} % "[UNIMPLEMENTED]";
     // Intersect and cache
     std::unique_ptr<PositionListIndex> intersectionPLI;
-    if (operands.size() >= profilingContext->getConfiiguration().naryIntersectionSize) {
+    if (operands.size() >= profilingContext->getConfiguration().naryIntersectionSize) {
         PositionListIndexRank basePliRank = operands[0];
         intersectionPLI = basePliRank.pli_->probeAll(vertical.without(*basePliRank.vertical_), *relationData_);
         cachingProcess(vertical, std::move(intersectionPLI), profilingContext);
@@ -154,7 +154,7 @@ size_t PLICache::size() const {
 void PLICache::cachingProcess(Vertical const &vertical, std::unique_ptr<PositionListIndex> pli, ProfilingContext* profilingContext) {
     switch (cachingMethod_) {
         case CachingMethod::COIN:
-            if (profilingContext->nextDouble() < profilingContext->getConfiiguration().cachingProbability) {
+            if (profilingContext->nextDouble() < profilingContext->getConfiguration().cachingProbability) {
                 index_->put(vertical, std::move(pli));
             }
             break;
