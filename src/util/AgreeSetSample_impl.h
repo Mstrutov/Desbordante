@@ -43,9 +43,9 @@ std::unique_ptr<T> AgreeSetSample::createFor(ColumnLayoutRelationData* relationD
 }
 
 template<typename T>
-std::unique_ptr<T> AgreeSetSample::createFocusedFor(ColumnLayoutRelationData* relation,
+std::unique_ptr<T> AgreeSetSample::createFocusedFor(ColumnLayoutRelationData const* relation,
                                                Vertical const& restrictionVertical,
-                                               PositionListIndex* restrictionPli, unsigned int sampleSize,
+                                               PositionListIndex const* restrictionPli, unsigned int sampleSize,
                                                CustomRandom& random) {
     static_assert(std::is_base_of<AgreeSetSample, T>::value);
     //std::random_device rd;
@@ -55,7 +55,7 @@ std::unique_ptr<T> AgreeSetSample::createFocusedFor(ColumnLayoutRelationData* re
     boost::dynamic_bitset<> freeColumnIndices(relation->getNumColumns());
     freeColumnIndices.set();
     freeColumnIndices &= ~restrictionVertical.getColumnIndices();
-    std::vector<std::reference_wrapper<ColumnData>> relevantColumnData;
+    std::vector<std::reference_wrapper<const ColumnData>> relevantColumnData;
     for (size_t columnIndex = freeColumnIndices.find_first();
          columnIndex != boost::dynamic_bitset<>::npos;
          columnIndex = freeColumnIndices.find_next(columnIndex)){

@@ -3,28 +3,25 @@
 #include <queue>
 // TODO: extra careful with const& -> shared_ptr conversions via make_shared-smart pointer may delete the object - pass empty deleter [](*) {}
 
-// TODO: consider storing only containers of shared_ptrs
-
-void SearchSpace::discover(std::unique_ptr<VerticalMap<VerticalInfo>> localVisitees) {
+void SearchSpace::discover() {
     std::cout << "Discovering in: " << static_cast<std::string>(*strategy_) << std::endl;
     while (true) {  // на второй итерации дропается
         auto now = std::chrono::system_clock::now();
-        std::optional<DependencyCandidate> launchPad = pollLaunchPad(localVisitees.get());
+        std::optional<DependencyCandidate> launchPad = pollLaunchPad();
         if (!launchPad.has_value()) break;
 
-        if (localVisitees == nullptr) {
-            localVisitees = std::make_unique<VerticalMap<VerticalInfo>>(context_->getSchema());
+        if (localVisitees_ == nullptr) {
+            localVisitees_ = std::make_unique<VerticalMap<VerticalInfo>>(context_->getSchema());
         }
 
-        bool isDependencyFound = ascend(*launchPad, std::move(localVisitees));
+        bool isDependencyFound = ascend(*launchPad);
         pollingLaunchPads += std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::system_clock::now() - now).count();
         returnLaunchPad(*launchPad, !isDependencyFound);
     }
 }
 
-std::optional<DependencyCandidate> SearchSpace::pollLaunchPad(
-        VerticalMap<VerticalInfo>* localVisitees) {
+std::optional<DependencyCandidate> SearchSpace::pollLaunchPad() {
     while (true) {
         if (launchPads_.empty()) {
             if (deferredLaunchPads_.empty()) return std::optional<DependencyCandidate>();
@@ -35,19 +32,19 @@ std::optional<DependencyCandidate> SearchSpace::pollLaunchPad(
 
         auto launchPad = launchPads_.extract(launchPads_.begin()).value();
 
-        launchPads_.erase(launchPads_.begin());
+        // launchPads_.erase(launchPads_.begin());
         launchPadIndex_->remove(launchPad.vertical_);
 
         if (isImpliedByMinDep(launchPad.vertical_, globalVisitees_.get())
-            || (localVisitees != nullptr && isImpliedByMinDep(launchPad.vertical_, localVisitees))) {
+            || (localVisitees_ != nullptr && isImpliedByMinDep(launchPad.vertical_, localVisitees_.get()))) {
             launchPadIndex_->remove(launchPad.vertical_);
             LOG(TRACE) << "* Removing subset-pruned launch pad {" << launchPad.vertical_.toString() << '}';
             continue;
         }
 
         auto supersetEntries = globalVisitees_->getSupersetEntries(launchPad.vertical_);
-        if (localVisitees != nullptr) {
-            auto localSupersetEntries = localVisitees->getSupersetEntries(launchPad.vertical_);
+        if (localVisitees_ != nullptr) {
+            auto localSupersetEntries = localVisitees_->getSupersetEntries(launchPad.vertical_);
             auto endIterator = std::remove_if(localSupersetEntries.begin(), localSupersetEntries.end(),
                                               [](auto& entry) { return !entry.second->isPruningSubsets(); });
 
@@ -63,26 +60,25 @@ std::optional<DependencyCandidate> SearchSpace::pollLaunchPad(
             supersetVerticals.push_back(entry.first);
         }
 
-        escapeLaunchPad(launchPad.vertical_, std::move(supersetVerticals), localVisitees);
+        escapeLaunchPad(launchPad.vertical_, std::move(supersetVerticals));
     }
 }
 
 // this move looks legit IMO
 void SearchSpace::escapeLaunchPad(Vertical const& launchPad,
-                                  std::vector<Vertical> pruningSupersets,
-                                  VerticalMap<VerticalInfo>* localVisitees) {
+                                  std::vector<Vertical> pruningSupersets) {
     std::transform(pruningSupersets.begin(), pruningSupersets.end(), pruningSupersets.begin(),
             [this](auto& superset) { return superset.invert().without(strategy_->getIrrelevantColumns()); } );
 
     std::function<bool (Vertical const&)> pruningFunction =
-            [this, &launchPad, &localVisitees] (auto const& hittingSetCandidate) -> bool {
+            [this, &launchPad] (auto const& hittingSetCandidate) -> bool {
         if (scope_ != nullptr && scope_->getAnySupersetEntry(hittingSetCandidate).second == nullptr) {
             return true;
         }
 
         auto launchPadCandidate = launchPad.Union(hittingSetCandidate);
 
-        if ((localVisitees == nullptr && isImpliedByMinDep(launchPadCandidate, localVisitees))
+        if ((localVisitees_ == nullptr && isImpliedByMinDep(launchPadCandidate, localVisitees_.get()))
             || isImpliedByMinDep(launchPadCandidate, globalVisitees_.get())) {
             return true;
         }
@@ -146,8 +142,7 @@ void SearchSpace::returnLaunchPad(DependencyCandidate const &launchPad, bool isD
     launchPadIndex_->put(launchPad.vertical_, std::make_unique<DependencyCandidate>(launchPad));
 }
 
-bool SearchSpace::ascend(DependencyCandidate const &launchPad,
-                         std::unique_ptr<VerticalMap<VerticalInfo>> localVisitees) {
+bool SearchSpace::ascend(DependencyCandidate const &launchPad) {
 
     auto now = std::chrono::system_clock::now();
 
@@ -173,7 +168,7 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad,
             error = traversalCandidate.error_.get();
 
             bool canBeDependency = *error <= strategy_->maxDependencyError_;
-            localVisitees->put(traversalCandidate.vertical_, std::make_unique<VerticalInfo>(
+            localVisitees_->put(traversalCandidate.vertical_, std::make_unique<VerticalInfo>(
                     canBeDependency,
                     false,
                     *error
@@ -192,7 +187,7 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad,
                         : strategy_->calculateError(traversalCandidate.vertical_);
                 // double errorDiff = *error - traversalCandidate.error_.getMean();
 
-                localVisitees->put(traversalCandidate.vertical_, std::make_unique<VerticalInfo>(
+                localVisitees_->put(traversalCandidate.vertical_, std::make_unique<VerticalInfo>(
                         error <= strategy_->maxDependencyError_,
                         false,
                         *error
@@ -260,7 +255,7 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad,
     if (*error <= strategy_->maxDependencyError_) {
         LOG(TRACE) << boost::format{"  Key peak in climbing phase e(%1%)=%2% -> Need to minimize."}
             % traversalCandidate.vertical_.toString() % *error;
-        trickleDown(traversalCandidate.vertical_, *error, std::move(localVisitees));
+        trickleDown(traversalCandidate.vertical_, *error);
 
         if (recursionDepth_ == 0) {
             assert(scope_ == nullptr);
@@ -277,7 +272,7 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad,
             LOG(DEBUG) << boost::format{"[---] %1% is maximum non-dependency (err=%2%)."}
                 % traversalCandidate.vertical_.toString() % *error;
         } else {
-            localVisitees->put(traversalCandidate.vertical_,
+            localVisitees_->put(traversalCandidate.vertical_,
                                std::make_unique<VerticalInfo>(VerticalInfo::forNonDependency()));
             LOG(DEBUG) << boost::format{"      %1% is local-maximum non-dependency (err=%2%)."}
                 % traversalCandidate.vertical_.toString() % *error;
@@ -291,8 +286,7 @@ void SearchSpace::checkEstimate(DependencyStrategy* strategy,
     std::cout << "Stepped into method 'checkEstimate' - not implemented yet being a debug method\n";
 }
 
-void SearchSpace::trickleDown(Vertical const& mainPeak, double mainPeakError,
-                              std::unique_ptr<VerticalMap<VerticalInfo>> localVisitees) {
+void SearchSpace::trickleDown(Vertical const& mainPeak, double mainPeakError) {
     LOG(DEBUG) << boost::format{"====== Trickling down from %1% ======"} % mainPeak.toString();
 
     std::unordered_set<Vertical> maximalNonDeps;
@@ -334,7 +328,7 @@ void SearchSpace::trickleDown(Vertical const& mainPeak, double mainPeakError,
                         allegedNonDeps.insert(escapedPeakVertical);
                         continue;
                     }
-                    if (isKnownNonDependency(escapedPeakVertical, localVisitees.get())
+                    if (isKnownNonDependency(escapedPeakVertical, localVisitees_.get())
                         || isKnownNonDependency(escapedPeakVertical, globalVisitees_.get())) {
                         continue;
                     }
@@ -345,7 +339,7 @@ void SearchSpace::trickleDown(Vertical const& mainPeak, double mainPeakError,
             continue;
         }
         auto allegedMinDep = trickleDownFrom(
-                std::move(peak), strategy_.get(), allegedMinDeps.get(), allegedNonDeps, localVisitees.get(),
+                std::move(peak), strategy_.get(), allegedMinDeps.get(), allegedNonDeps,
                 globalVisitees_.get(), sampleBoost_);
         if (!allegedMinDep.has_value()) {
             std::pop_heap(peaks.begin(), peaks.end(), peaksComparator);
@@ -406,7 +400,7 @@ void SearchSpace::trickleDown(Vertical const& mainPeak, double mainPeakError,
         if (allegedMaxNonDep.getArity() == 0) continue;
 
         if (maximalNonDeps.find(allegedMaxNonDep) != maximalNonDeps.end()
-                || isKnownNonDependency(allegedMaxNonDep, localVisitees.get())
+                || isKnownNonDependency(allegedMaxNonDep, localVisitees_.get())
                 || isKnownNonDependency(allegedMaxNonDep, globalVisitees_.get())) {
             continue;
         }
@@ -419,7 +413,7 @@ void SearchSpace::trickleDown(Vertical const& mainPeak, double mainPeakError,
             % allegedMaxNonDep.toString() % isNonDep % error;
         if (isNonDep) {
             maximalNonDeps.insert(allegedMaxNonDep);
-            localVisitees->put(allegedMaxNonDep, std::make_unique<VerticalInfo>(VerticalInfo::forNonDependency()));
+            localVisitees_->put(allegedMaxNonDep, std::make_unique<VerticalInfo>(VerticalInfo::forNonDependency()));
         } else {
             peaks.emplace_back(allegedMaxNonDep, ConfidenceInterval(error), true);
             std::push_heap(peaks.begin(), peaks.end(), peaksComparator);
@@ -472,16 +466,18 @@ void SearchSpace::trickleDown(Vertical const& mainPeak, double mainPeakError,
                     static_cast<Vertical>(scopeColumn)
                     ));
         }
-        globalVisitees_ = nestedSearchSpace->moveOutGlobalVisitees();
         auto prev = std::chrono::system_clock::now();
         numNested++;
         //std::cout << static_cast<std::string>(*strategy_) << ' ';
         //std::cout << numNested << std::endl;
         tricklingDown += std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::system_clock::now() - now).count();
-        nestedSearchSpace->discover(std::move(localVisitees));
+        nestedSearchSpace->moveInLocalVisitees(std::move(localVisitees_));
+        nestedSearchSpace->discover();
         tricklingDownPart += std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::system_clock::now() - prev).count();
+        globalVisitees_ = nestedSearchSpace->moveOutGlobalVisitees();
+        localVisitees_ = nestedSearchSpace->moveOutLocalVisitees();
 
         for (auto& [allegedMinDep, info] : allegedMinDeps->entrySet()) {
             if (!isImpliedByMinDep(allegedMinDep, globalVisitees_.get())) {
@@ -499,7 +495,7 @@ void SearchSpace::trickleDown(Vertical const& mainPeak, double mainPeakError,
 std::optional<Vertical> SearchSpace::trickleDownFrom(
         DependencyCandidate minDepCandidate, DependencyStrategy* strategy,
         VerticalMap<VerticalInfo>* allegedMinDeps, std::unordered_set<Vertical> & allegedNonDeps,
-        VerticalMap<VerticalInfo>* localVisitees, VerticalMap<VerticalInfo>* globalVisitees, double boostFactor) {
+        VerticalMap<VerticalInfo>* globalVisitees, double boostFactor) {
     auto now = std::chrono::system_clock::now();
     if (minDepCandidate.error_.getMin() > strategy->maxDependencyError_) {
         throw std::runtime_error("Error in trickleDownFrom: minDepCandidate's error should be <= maxError");
@@ -512,7 +508,7 @@ std::optional<Vertical> SearchSpace::trickleDownFrom(
             parentCandidates([](auto& candidate1, auto& candidate2)
                 {return DependencyCandidate::minErrorComparator(candidate1, candidate2); });
         for (auto& parentVertical : minDepCandidate.vertical_.getParents()) {
-            if (isKnownNonDependency(parentVertical, localVisitees)
+            if (isKnownNonDependency(parentVertical, localVisitees_.get())
                     || isKnownNonDependency(parentVertical, globalVisitees))
                 continue;
             if (allegedNonDeps.count(parentVertical) != 0) {
@@ -531,7 +527,7 @@ std::optional<Vertical> SearchSpace::trickleDownFrom(
             if (parentCandidate.error_.getMin() > strategy->minNonDependencyError_) {
                 do {
                     if (parentCandidate.isExact()) {
-                        localVisitees->put(parentCandidate.vertical_,
+                        localVisitees_->put(parentCandidate.vertical_,
                                 std::make_unique<VerticalInfo>(VerticalInfo::forNonDependency()));
                     } else {
                         allegedNonDeps.insert(parentCandidate.vertical_);
@@ -553,7 +549,6 @@ std::optional<Vertical> SearchSpace::trickleDownFrom(
                     strategy,
                     allegedMinDeps,
                     allegedNonDeps,
-                    localVisitees,
                     globalVisitees,
                     boostFactor
                     );
@@ -592,7 +587,7 @@ std::optional<Vertical> SearchSpace::trickleDownFrom(
     } else {
         LOG(TRACE) << boost::format{"* Guessed incorrect %1%-ary minimum dependency candidate."}
             % minDepCandidate.vertical_.getArity();
-        localVisitees->put(minDepCandidate.vertical_, std::make_unique<VerticalInfo>(VerticalInfo::forNonDependency()));
+        localVisitees_->put(minDepCandidate.vertical_, std::make_unique<VerticalInfo>(VerticalInfo::forNonDependency()));
 
         if (strategy->shouldResample(minDepCandidate.vertical_, boostFactor)) {
             context_->createFocusedSample(minDepCandidate.vertical_, boostFactor);

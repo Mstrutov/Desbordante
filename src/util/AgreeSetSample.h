@@ -32,19 +32,19 @@ public:
     virtual ~AgreeSetSample() = default;
 
 protected:
-    ColumnLayoutRelationData* relationData;
+    ColumnLayoutRelationData const* relationData;
     Vertical focus;
     unsigned int sampleSize;
     unsigned long long populationSize;
-    AgreeSetSample(ColumnLayoutRelationData * relationData, Vertical  focus, unsigned int sampleSize, unsigned long long populationSize);
+    AgreeSetSample(ColumnLayoutRelationData const* relationData, Vertical  focus, unsigned int sampleSize, unsigned long long populationSize);
 
     template<typename T>
     static std::unique_ptr<T> createFor(ColumnLayoutRelationData* relationData, int sampleSize);
 
     template<typename T>
-    static std::unique_ptr<T> createFocusedFor(ColumnLayoutRelationData* relation,
+    static std::unique_ptr<T> createFocusedFor(ColumnLayoutRelationData const* relation,
                                           Vertical const& restrictionVertical,
-                                          PositionListIndex* restrictionPli,
+                                          PositionListIndex const* restrictionPli,
                                           unsigned int sampleSize, CustomRandom& random);
 private:
     static double stdDevSmoothing;
