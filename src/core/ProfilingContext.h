@@ -47,7 +47,7 @@ public:
     bool isAgreeSetSamplesEmpty() const { return agreeSetSamples_ == nullptr; }
     RelationalSchema const* getSchema() const { return relationData_->getSchema(); }
 
-    Configuration const& getConfiiguration() const { return configuration_; }
+    Configuration const& getConfiguration() const { return configuration_; }
     ColumnLayoutRelationData const* getColumnLayoutRelationData() const { return relationData_; }
     PLICache const* getPLICache() const { return pliCache_.get(); }
 

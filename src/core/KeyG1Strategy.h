@@ -22,4 +22,6 @@ public:
     unsigned int getNumIrrelevantColumns() const override { return 1; }
     Vertical getIrrelevantColumns() const override {
         return *context_->getColumnLayoutRelationData()->getSchema()->emptyVertical; }
+
+    std::unique_ptr<DependencyStrategy> createClone() override;
 };

@@ -28,5 +28,8 @@ public:
     void registerDependency(Vertical const& vertical, double error, DependencyConsumer const& discoveryUnit) const override;
     bool isIrrelevantColumn(unsigned int columnIndex) const override { return rhs_->getIndex() == columnIndex; }
     unsigned int getNumIrrelevantColumns() const override { return 1; }
+
+    std::unique_ptr<DependencyStrategy> createClone() override;
+
     Vertical getIrrelevantColumns() const override { return static_cast<Vertical>(*rhs_); }
 };

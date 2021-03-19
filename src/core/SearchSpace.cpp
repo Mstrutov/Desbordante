@@ -19,10 +19,11 @@ void SearchSpace::discover(std::unique_ptr<VerticalMap<VerticalInfo>> localVisit
         std::optional<DependencyCandidate> launchPad = pollLaunchPad(localVisitees.get());
         if (!launchPad.has_value()) break;
 
-        if (localVisitees == nullptr)
+        if (localVisitees == nullptr) {
             localVisitees = std::make_unique<VerticalMap<VerticalInfo>>(context_->getSchema());
+        }
 
-        bool isDependencyFound = ascend(*launchPad, localVisitees.get());
+        bool isDependencyFound = ascend(*launchPad, std::move(localVisitees));
         pollingLaunchPads += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - now).count();
         returnLaunchPad(*launchPad, !isDependencyFound);
     }
@@ -100,7 +101,7 @@ void SearchSpace::escapeLaunchPad(Vertical const& launchPad,
             pruningSupersetsStr += pruningSuperset.toString();
         }
         pruningSupersetsStr += "]";
-        LOG(TRACE) << boost::format{"Escaping %1% pruned by %2%"} % launchPad->toString() % pruningSupersetsStr;
+        LOG(TRACE) << boost::format{"Escaping %1% pruned by %2%"} % launchPad.toString() % pruningSupersetsStr;
     }
     auto hittingSet = context_->getSchema()->calculateHittingSet(
             std::move(pruningSupersets),
@@ -123,8 +124,8 @@ void SearchSpace::escapeLaunchPad(Vertical const& launchPad,
         DependencyCandidate escapedLaunchPad = strategy_->createDependencyCandidate(escapedLaunchPadVertical);
         LOG(TRACE) << boost::format{"  Escaped: %1%"} % escapedLaunchPadVertical.toString();
         LOG(DEBUG) << boost::format{"  Proposed launch pad arity: %1% should be <= maxLHS: %2%"}
-            % escapedLaunchPad.vertical_.getArity() % context_->configuration_.maxLHS;
-        if (escapedLaunchPad.vertical_.getArity() <= context_->configuration_.maxLHS) {
+            % escapedLaunchPad.vertical_.getArity() % context_->getConfiguration().maxLHS;
+        if (escapedLaunchPad.vertical_.getArity() <= context_->getConfiguration().maxLHS) {
             launchPads_.insert(escapedLaunchPad);
             launchPadIndex_->put(escapedLaunchPad.vertical_, std::make_unique<DependencyCandidate>(escapedLaunchPad));
         }
@@ -133,22 +134,22 @@ void SearchSpace::escapeLaunchPad(Vertical const& launchPad,
 
 void SearchSpace::addLaunchPad(const DependencyCandidate &launchPad) {
     launchPads_.insert(launchPad);
-    launchPadIndex_.put(*launchPad.vertical_, std::make_shared<DependencyCandidate>(launchPad));
+    launchPadIndex_->put(launchPad.vertical_, std::make_unique<DependencyCandidate>(launchPad));
 }
 
 void SearchSpace::returnLaunchPad(DependencyCandidate const &launchPad, bool isDefer) {
-    if (isDefer && context_->configuration_.isDeferFailedLaunchPads) {
+    if (isDefer && context_->getConfiguration().isDeferFailedLaunchPads) {
         deferredLaunchPads_.push_back(launchPad);
-        LOG(TRACE) << boost::format{"Deferred seed %1%"} % launchPad.vertical_->toString();
+        LOG(TRACE) << boost::format{"Deferred seed %1%"} % launchPad.vertical_.toString();
     }
     else {
         launchPads_.insert(launchPad);
     }
-    launchPadIndex_.put(*launchPad.vertical_, std::make_shared<DependencyCandidate>(launchPad));
+    launchPadIndex_->put(launchPad.vertical_, std::make_unique<DependencyCandidate>(launchPad));
 }
 
 bool SearchSpace::ascend(DependencyCandidate const &launchPad,
-                         std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees) {
+                         std::unique_ptr<VerticalMap<VerticalInfo>> localVisitees) {
 
     auto now = std::chrono::system_clock::now();
 
@@ -163,10 +164,10 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad,
     boost::optional<double> error;
 
     while (true) {
-        LOG(TRACE) << boost::format{"-> %1%"} % traversalCandidate.vertical_->toString();
+        LOG(TRACE) << boost::format{"-> %1%"} % traversalCandidate.vertical_.toString();
 
-        if (context_->configuration_.isCheckEstimates) {
-            checkEstimate(strategy_, traversalCandidate);
+        if (context_->getConfiguration().isCheckEstimates) {
+            checkEstimate(strategy_.get(), traversalCandidate);
         }
 
         if (traversalCandidate.isExact()) {
@@ -174,7 +175,7 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad,
             error = traversalCandidate.error_.get();
 
             bool canBeDependency = *error <= strategy_->maxDependencyError_;
-            localVisitees->put(*traversalCandidate.vertical_, std::make_shared<VerticalInfo>(
+            localVisitees->put(traversalCandidate.vertical_, std::make_unique<VerticalInfo>(
                     canBeDependency,
                     false,
                     *error
@@ -184,16 +185,16 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad,
         else {
             if (traversalCandidate.error_.getMin() > strategy_->maxDependencyError_) {
                 LOG(TRACE) << boost::format {"  Skipping check form %1% (estimated error: %2%)."}
-                    % traversalCandidate.vertical_->toString() % traversalCandidate.error_;
+                    % traversalCandidate.vertical_.toString() % traversalCandidate.error_;
                 error.reset();
             }
             else {
-                error = context_->configuration_.isEstimateOnly
+                error = context_->getConfiguration().isEstimateOnly
                         ? traversalCandidate.error_.getMean()
                         : strategy_->calculateError(traversalCandidate.vertical_);
                 // double errorDiff = *error - traversalCandidate.error_.getMean();
 
-                localVisitees->put(*traversalCandidate.vertical_, std::make_shared<VerticalInfo>(
+                localVisitees->put(traversalCandidate.vertical_, std::make_unique<VerticalInfo>(
                         error <= strategy_->maxDependencyError_,
                         false,
                         *error
@@ -208,26 +209,26 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad,
             }
         }
 
-        if (traversalCandidate.vertical_->getArity() >=
-            context_->relationData_->getNumColumns() - strategy_->getNumIrrelevantColumns()
-            || traversalCandidate.vertical_->getArity() >= context_->configuration_.maxLHS) {
+        if (traversalCandidate.vertical_.getArity() >=
+            context_->getColumnLayoutRelationData()->getNumColumns() - strategy_->getNumIrrelevantColumns()
+            || traversalCandidate.vertical_.getArity() >= context_->getConfiguration().maxLHS) {
             break;
         }
 
         boost::optional<DependencyCandidate> nextCandidate;
         int numSeenElements = isAscendRandomly_ ? 1 : -1;
         for (auto& extensionColumn : context_->getSchema()->getColumns()) {
-            if (traversalCandidate.vertical_->getColumnIndices()[extensionColumn->getIndex()]
-                    || strategy_->isIrrelevantColumn(extensionColumn)) {
+            if (traversalCandidate.vertical_.getColumnIndices()[extensionColumn->getIndex()]
+                    || strategy_->isIrrelevantColumn(*extensionColumn)) {
                 continue;
             }
-            auto extendedVertical = traversalCandidate.vertical_->Union(static_cast<Vertical>(*extensionColumn));
+            auto extendedVertical = traversalCandidate.vertical_.Union(static_cast<Vertical>(*extensionColumn));
 
-            if (scope_ != nullptr && scope_->getSupersetEntries(*extendedVertical).empty()) {
+            if (scope_ != nullptr && scope_->getSupersetEntries(extendedVertical).empty()) {
                 continue;
             }
 
-            bool isSubsetPruned = isImpliedByMinDep(extendedVertical, globalVisitees_);
+            bool isSubsetPruned = isImpliedByMinDep(extendedVertical, globalVisitees_.get());
             if (isSubsetPruned) {
                 continue;
             }
@@ -251,7 +252,7 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad,
     //std::cout << static_cast<std::string>(traversalCandidate) << std::endl;
 
     if (!error) {
-        LOG(TRACE) << boost::format{"  Hit ceiling at %1%."} % traversalCandidate.vertical_->toString();
+        LOG(TRACE) << boost::format{"  Hit ceiling at %1%."} % traversalCandidate.vertical_.toString();
         error = strategy_->calculateError(traversalCandidate.vertical_);
         double errorDiff = *error - traversalCandidate.error_.getMean();
         LOG(TRACE) << boost::format{"  Checking candidate... actual error: %1%"} % *error;
@@ -260,113 +261,111 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad,
 
     if (*error <= strategy_->maxDependencyError_) {
         LOG(TRACE) << boost::format{"  Key peak in climbing phase e(%1%)=%2% -> Need to minimize."}
-            % traversalCandidate.vertical_->toString() % *error;
-        trickleDown(traversalCandidate.vertical_, *error, localVisitees);
+            % traversalCandidate.vertical_.toString() % *error;
+        trickleDown(traversalCandidate.vertical_, *error, std::move(localVisitees));
 
         if (recursionDepth_ == 0) {
             assert(scope_ == nullptr);
-            globalVisitees_->put(*traversalCandidate.vertical_, std::make_shared<VerticalInfo>(VerticalInfo::forMinimalDependency()));
+            globalVisitees_->put(traversalCandidate.vertical_,
+                                 std::make_unique<VerticalInfo>(VerticalInfo::forMinimalDependency()));
         }
 
         return true;
     } else {
         if (recursionDepth_ == 0) {
             assert(scope_ == nullptr);
-            globalVisitees_->put(*traversalCandidate.vertical_, std::make_shared<VerticalInfo>(VerticalInfo::forMaximalNonDependency()));
+            globalVisitees_->put(traversalCandidate.vertical_,
+                                 std::make_unique<VerticalInfo>(VerticalInfo::forMaximalNonDependency()));
             LOG(DEBUG) << boost::format{"[---] %1% is maximum non-dependency (err=%2%)."}
-                % traversalCandidate.vertical_->toString() % *error;
+                % traversalCandidate.vertical_.toString() % *error;
         } else {
-            localVisitees->put(*traversalCandidate.vertical_, std::make_shared<VerticalInfo>(VerticalInfo::forNonDependency()));
+            localVisitees->put(traversalCandidate.vertical_,
+                               std::make_unique<VerticalInfo>(VerticalInfo::forNonDependency()));
             LOG(DEBUG) << boost::format{"      %1% is local-maximum non-dependency (err=%2%)."}
-                % traversalCandidate.vertical_->toString() % *error;
+                % traversalCandidate.vertical_.toString() % *error;
         }
     }
     return false;
 }
 
-void SearchSpace::checkEstimate(std::shared_ptr<DependencyStrategy> strategy,
+void SearchSpace::checkEstimate(DependencyStrategy* strategy,
                                 DependencyCandidate const &traversalCandidate) {
     std::cout << "Stepped into method 'checkEstimate' - not implemented yet being a debug method\n";
 }
 
-void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPeakError,
-                              std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees) {
-    LOG(DEBUG) << boost::format{"====== Trickling down from %1% ======"} % mainPeak->toString();
+void SearchSpace::trickleDown(Vertical const& mainPeak, double mainPeakError,
+                              std::unique_ptr<VerticalMap<VerticalInfo>> localVisitees) {
+    LOG(DEBUG) << boost::format{"====== Trickling down from %1% ======"} % mainPeak.toString();
 
     std::unordered_set<Vertical> maximalNonDeps;
-    auto allegedMinDeps = std::make_shared<VerticalMap<std::shared_ptr<VerticalInfo>>>(context_->getSchema());
-    // arityComparator returns true if candidate1 < candidate2. We need a candidate with the smallest arity to be the highest value in the heap,
-    // i.e. such a candidate that arityComparator returns false for every other candidate => peaksComparator should return !(candidate1 < candidate2)
-    // In one word, Java priority queue highlights the least element, C++ - the largest
-    std::function<bool(std::shared_ptr<DependencyCandidate>, std::shared_ptr<DependencyCandidate>)> peaksComparator =
-            [](auto candidate1, auto candidate2) -> bool { return DependencyCandidate::arityComparator(*candidate1, *candidate2); };
-    std::vector<std::shared_ptr<DependencyCandidate>> peaks;
+    auto allegedMinDeps = std::make_unique<VerticalMap<VerticalInfo>>(context_->getSchema());
+    auto peaksComparator = [](auto& candidate1, auto& candidate2) -> bool {
+        return DependencyCandidate::arityComparator(candidate1, candidate2); };
+    std::vector<DependencyCandidate> peaks;
     std::make_heap(peaks.begin(), peaks.end(), peaksComparator);
-    peaks.push_back(std::make_shared<DependencyCandidate>(mainPeak, ConfidenceInterval(mainPeakError), true));
+    peaks.emplace_back(mainPeak, ConfidenceInterval(mainPeakError), true);
     std::push_heap(peaks.begin(), peaks.end(), peaksComparator);
     std::unordered_set<Vertical> allegedNonDeps;
 
     auto now = std::chrono::system_clock::now();
 
     while (!peaks.empty()) {
-        // пока ситуация такая: при спуске из АС правильно считает C за не-ФЗ, АС за ФЗ, но не выходит из этого цикла,
-        // т.к. не убирает АС: subsetDeps - пусто (должно ли оно быть пустым?)
         auto peak = peaks.front();
 
-        auto subsetDeps = getSubsetDeps(peak->vertical_, allegedMinDeps);
+        auto subsetDeps = getSubsetDeps(peak.vertical_, allegedMinDeps.get());
         if (!subsetDeps.empty()) {
             std::pop_heap(peaks.begin(), peaks.end(), peaksComparator);
             peaks.pop_back();
 
             auto peakHittingSet = context_->getSchema()->calculateHittingSet(
                     std::move(subsetDeps), boost::optional<std::function<bool (Vertical const&)>>());
-            std::unordered_set<std::shared_ptr<Vertical>> escapedPeakVerticals;
+            std::unordered_set<Vertical> escapedPeakVerticals;
 
-            for (auto vertical : peakHittingSet) {
-                escapedPeakVerticals.insert(peak->vertical_->without(*vertical));
+            for (auto& vertical : peakHittingSet) {
+                escapedPeakVerticals.insert(peak.vertical_.without(vertical));
             }
-//            std::transform(peakHittingSet.begin(), peakHittingSet.end(), escapedPeakVerticals.begin(),
-//                [&peak](auto vertical) { return std::make_shared<Vertical>(peak->vertical_->without(*vertical)); });
 
             for (auto& escapedPeakVertical : escapedPeakVerticals) {
-                if (escapedPeakVertical->getArity() > 0
-                    && allegedNonDeps.find(*escapedPeakVertical) == allegedNonDeps.end()) {
-                    // TODO: escapedPeakVertical, [](Vertical* v) {} ?
-                    //auto escapedPeakVertical_ptr = std::make_shared<Vertical>(escapedPeakVertical);
+                if (escapedPeakVertical.getArity() > 0
+                    && allegedNonDeps.find(escapedPeakVertical) == allegedNonDeps.end()) {
+
                     LOG(TRACE) << "createDependencyCandidate as an escaped peak while trickling down";
                     auto escapedPeak = strategy_->createDependencyCandidate(escapedPeakVertical);
 
                     if (escapedPeak.error_.getMean() > strategy_->minNonDependencyError_) {
-                        allegedNonDeps.insert(*escapedPeakVertical);
+                        allegedNonDeps.insert(escapedPeakVertical);
                         continue;
                     }
-                    if (isKnownNonDependency(escapedPeakVertical, localVisitees)
-                        || isKnownNonDependency(escapedPeakVertical, globalVisitees_)) {
+                    if (isKnownNonDependency(escapedPeakVertical, localVisitees.get())
+                        || isKnownNonDependency(escapedPeakVertical, globalVisitees_.get())) {
                         continue;
                     }
-                    peaks.push_back(std::make_shared<DependencyCandidate>(escapedPeak));
+                    peaks.push_back(escapedPeak);
                     std::push_heap(peaks.begin(), peaks.end(), peaksComparator);
                 }
             }
             continue;
         }
-        auto allegedMinDep = trickleDownFrom(*peak, strategy_,
-                                             allegedMinDeps, allegedNonDeps, localVisitees, globalVisitees_, sampleBoost_);
-        if (allegedMinDep == nullptr) {
+        auto allegedMinDep = trickleDownFrom(
+                std::move(peak), strategy_.get(), allegedMinDeps.get(), allegedNonDeps, localVisitees.get(),
+                globalVisitees_.get(), sampleBoost_);
+        if (!allegedMinDep.has_value()) {
             std::pop_heap(peaks.begin(), peaks.end(), peaksComparator);
             peaks.pop_back();
         }
     }
 
-    LOG(DEBUG) << boost::format{"* %1% alleged minimum dependencies (%2%)"} % allegedMinDeps->getSize() % "UNIMPLEMENTED";
+    LOG(DEBUG) << boost::format{"* %1% alleged minimum dependencies (%2%)"}
+        % allegedMinDeps->getSize() % "UNIMPLEMENTED";
 
     int numUncertainMinDeps = 0;
     for (auto& [allegedMinDep, info] : allegedMinDeps->entrySet()) {
-        if (info->isExtremal_ && !globalVisitees_->containsKey(*allegedMinDep)) {
+        if (info->isExtremal_ && !globalVisitees_->containsKey(allegedMinDep)) {
             LOG(DEBUG) << boost::format{"[%1%] Minimum dependency: %2% (error=%3%)"}
-                % recursionDepth_ % allegedMinDep->toString() % info->error_;
-            globalVisitees_->put(*allegedMinDep, info);
-            strategy_->registerDependency(allegedMinDep, info->error_, *context_);  // TODO: is it expensive to dereference ptr like this?
+                % recursionDepth_ % allegedMinDep.toString() % info->error_;
+            // TODO: Костыль -- info в нескольких местах должен храниться. ХЗ, кому он принадлежит, пока копирую
+            globalVisitees_->put(allegedMinDep, std::make_unique<VerticalInfo>(*info));
+            strategy_->registerDependency(allegedMinDep, info->error_, *context_);
         }
         if (!info->isExtremal_) {
             numUncertainMinDeps++;
@@ -380,13 +379,13 @@ void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPea
     // TODO: костыль: calculateHittingSet needs a list, but keySet returns an unordered_set
     // ещё и морока с transform и unordered_set - мб вообще в лист переделать.
     auto allegedMaxNonDepsHS = context_->getSchema()->calculateHittingSet(
-            std::list<std::shared_ptr<Vertical>>(allegedMinDepsSet.begin(), allegedMinDepsSet.end()),
+            std::vector<Vertical>(allegedMinDepsSet.begin(), allegedMinDepsSet.end()),
             boost::optional<std::function<bool (Vertical const&)>>());
-    std::unordered_set<std::shared_ptr<Vertical>> allegedMaxNonDeps;
+    std::unordered_set<Vertical> allegedMaxNonDeps;
 
 
-    for (auto minLeaveOutVertical : allegedMaxNonDepsHS) {
-        allegedMaxNonDeps.insert(minLeaveOutVertical->invert(*mainPeak));
+    for (auto& minLeaveOutVertical : allegedMaxNonDepsHS) {
+        allegedMaxNonDeps.insert(minLeaveOutVertical.invert(mainPeak));
     }
 
     LOG(DEBUG) << boost::format{"* %1% alleged maximum non-dependencies (%2%)"}
@@ -397,34 +396,34 @@ void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPea
     // checking the consistency of all data structures
     if (auto allegedMinDepsKeySet = allegedMinDeps->keySet();
             !std::all_of(allegedMinDepsKeySet.begin(), allegedMinDepsKeySet.end(),
-                [mainPeak](auto vertical) -> bool { return mainPeak->contains(*vertical); })) {
+                [mainPeak](auto vertical) -> bool { return mainPeak.contains(*vertical); })) {
         throw std::runtime_error("Main peak should contain all alleged min dependencies");
     }
     if (!std::all_of(allegedMaxNonDeps.begin(), allegedMaxNonDeps.end(),
-                     [mainPeak](auto vertical) -> bool { return mainPeak->contains(*vertical); })) {
+                     [mainPeak](auto vertical) -> bool { return mainPeak.contains(*vertical); })) {
         throw std::runtime_error("Main peak should contain all alleged max non-dependencies");
     }
 
-    for (auto allegedMaxNonDep : allegedMaxNonDeps) {
-        if (allegedMaxNonDep->getArity() == 0) continue;
+    for (auto& allegedMaxNonDep : allegedMaxNonDeps) {
+        if (allegedMaxNonDep.getArity() == 0) continue;
 
-        if (maximalNonDeps.find(*allegedMaxNonDep) != maximalNonDeps.end()
-                || isKnownNonDependency(allegedMaxNonDep, localVisitees)
-                || isKnownNonDependency(allegedMaxNonDep, globalVisitees_)) {
+        if (maximalNonDeps.find(allegedMaxNonDep) != maximalNonDeps.end()
+                || isKnownNonDependency(allegedMaxNonDep, localVisitees.get())
+                || isKnownNonDependency(allegedMaxNonDep, globalVisitees_.get())) {
             continue;
         }
 
-        double error = context_->configuration_.isEstimateOnly
+        double error = context_->getConfiguration().isEstimateOnly
                 ? strategy_->createDependencyCandidate(allegedMaxNonDep).error_.getMean()
                 : strategy_->calculateError(allegedMaxNonDep);
         bool isNonDep = error > strategy_->minNonDependencyError_;
         LOG(TRACE) << boost::format {"* Alleged maximal non-dependency %1%: non-dep?: %2%, error: %3%"}
-            % allegedMaxNonDep->toString() % isNonDep % error;
+            % allegedMaxNonDep.toString() % isNonDep % error;
         if (isNonDep) {
-            maximalNonDeps.insert(*allegedMaxNonDep);
-            localVisitees->put(*allegedMaxNonDep, std::make_shared<VerticalInfo>(VerticalInfo::forNonDependency()));
+            maximalNonDeps.insert(allegedMaxNonDep);
+            localVisitees->put(allegedMaxNonDep, std::make_unique<VerticalInfo>(VerticalInfo::forNonDependency()));
         } else {
-            peaks.push_back(std::make_shared<DependencyCandidate>(allegedMaxNonDep, ConfidenceInterval(error), true));
+            peaks.emplace_back(allegedMaxNonDep, ConfidenceInterval(error), true);
             std::push_heap(peaks.begin(), peaks.end(), peaksComparator);
         }
     }
@@ -432,109 +431,112 @@ void SearchSpace::trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPea
 
     if (peaks.empty()) {
         for (auto& [allegedMinDep, info] : allegedMinDeps->entrySet()) {
-            if (!info->isExtremal_ && !globalVisitees_->containsKey(*allegedMinDep)) {
+            if (!info->isExtremal_ && !globalVisitees_->containsKey(allegedMinDep)) {
                 LOG(DEBUG) << boost::format{"[%1%] Minimum dependency: %2% (error=%3%)"}
-                    % recursionDepth_ % allegedMinDep->toString() % info->error_;
+                    % recursionDepth_ % allegedMinDep.toString() % info->error_;
+                // TODO: тут надо сделать non-const - костыльный mutable; опять Info в двух местах хранится
                 info->isExtremal_ = true;
-                globalVisitees_->put(*allegedMinDep, info);
+                globalVisitees_->put(allegedMinDep, std::make_unique<VerticalInfo>(*info));
                 strategy_->registerDependency(allegedMinDep, info->error_, *context_);
             }
         }
         tricklingDown += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - now).count();
     } else {
         LOG(DEBUG) << boost::format{"* %1% new peaks (%2%)"} % peaks.size() % "UNIMPLEMENTED";
-        auto newScope = std::make_unique<VerticalMap<std::shared_ptr<Vertical>>>(context_->getSchema());
+        auto newScope = std::make_unique<VerticalMap<Vertical>>(context_->getSchema());
         std::sort_heap(peaks.begin(), peaks.end(), peaksComparator);
         for (auto& peak : peaks) {
-            newScope->put(*peak->vertical_, peak->vertical_);
+            newScope->put(peak.vertical_, std::make_unique<Vertical>(peak.vertical_));
         }
 
         double newSampleBoost = sampleBoost_ * sampleBoost_;
         LOG(DEBUG) << boost::format{"* Increasing sampling boost factor to %1%"} % newSampleBoost;
 
-        // Nested слишком часто создаётся - что-то не так
         auto scopeVerticals  = newScope->keySet();
-        auto nestedSearchSpace = std::make_shared<SearchSpace> (
-                -1, strategy_, std::move(newScope), globalVisitees_, context_->getSchema(),
-                launchPads_.key_comp(), recursionDepth_ + 1,
-                sampleBoost_ * context_->configuration_.sampleBooster
+        // TODO: что делать с strategy, globalVisitees?
+        auto nestedSearchSpace = std::make_unique<SearchSpace> (
+                -1, strategy_->createClone(), std::move(newScope), std::move(globalVisitees_),
+                context_->getSchema(), launchPads_.key_comp(), recursionDepth_ + 1,
+                sampleBoost_ * context_->getConfiguration().sampleBooster
                 );
         nestedSearchSpace->setContext(context_);
 
-        std::unordered_set<std::shared_ptr<Column>> scopeColumns;
-        for (auto vertical : scopeVerticals) {
-            for (auto column : vertical->getColumns()) {
-                scopeColumns.insert(column);
+        std::unordered_set<Column> scopeColumns;
+        for (auto& vertical : scopeVerticals) {
+            for (auto column : vertical.getColumns()) {
+                scopeColumns.insert(*column);
             }
         }
-        for (auto scopeColumn : scopeColumns) {
+        for (auto& scopeColumn : scopeColumns) {
             LOG(TRACE) << "createDependencyCandidate while building a nested search space";
             // TODO: again problems with conversion: Column* -> Vertical*. If this is too inefficient, consider refactoring
             nestedSearchSpace->addLaunchPad(strategy_->createDependencyCandidate(
-                    std::make_shared<Vertical>(static_cast<Vertical>(*scopeColumn))
+                    static_cast<Vertical>(scopeColumn)
                     ));
         }
+        globalVisitees_ = nestedSearchSpace->moveOutGlobalVisitees();
         auto prev = std::chrono::system_clock::now();
         numNested++;
         //std::cout << static_cast<std::string>(*strategy_) << ' ';
         //std::cout << numNested << std::endl;
-        tricklingDown += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - now).count();
-        nestedSearchSpace->discover(localVisitees);
-        tricklingDownPart += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - prev).count();
+        tricklingDown += std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::system_clock::now() - now).count();
+        nestedSearchSpace->discover(std::move(localVisitees));
+        tricklingDownPart += std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::system_clock::now() - prev).count();
 
         for (auto& [allegedMinDep, info] : allegedMinDeps->entrySet()) {
-            if (!isImpliedByMinDep(allegedMinDep, globalVisitees_)) {
+            if (!isImpliedByMinDep(allegedMinDep, globalVisitees_.get())) {
                 LOG(DEBUG) << boost::format{"[%1%] Minimum dependency: %2% (error=%3%) (was right after all)"}
-                    % recursionDepth_ % allegedMinDep->toString() % info->error_;
+                    % recursionDepth_ % allegedMinDep.toString() % info->error_;
+                // TODO: тут надо сделать non-const - костыльный mutable; опять Info в двух местах хранится
                 info->isExtremal_ = true;
-                globalVisitees_->put(*allegedMinDep, info);
+                globalVisitees_->put(allegedMinDep, std::make_unique<VerticalInfo>(*info));
                 strategy_->registerDependency(allegedMinDep, info->error_, *context_);
             }
         }
     }
 }
 
-std::shared_ptr<Vertical>
-SearchSpace::trickleDownFrom(DependencyCandidate &minDepCandidate, std::shared_ptr<DependencyStrategy> strategy,
-                             std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> allegedMinDeps,
-                             std::unordered_set<Vertical> &allegedNonDeps,
-                             std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees,
-                             std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> globalVisitees,
-                             double boostFactor) {
+std::optional<Vertical> SearchSpace::trickleDownFrom(
+        DependencyCandidate minDepCandidate, DependencyStrategy* strategy,
+        VerticalMap<VerticalInfo>* allegedMinDeps, std::unordered_set<Vertical> & allegedNonDeps,
+        VerticalMap<VerticalInfo>* localVisitees, VerticalMap<VerticalInfo>* globalVisitees, double boostFactor) {
     auto now = std::chrono::system_clock::now();
-    if (minDepCandidate.error_.getMin() > strategy->maxDependencyError_)
+    if (minDepCandidate.error_.getMin() > strategy->maxDependencyError_) {
         throw std::runtime_error("Error in trickleDownFrom: minDepCandidate's error should be <= maxError");
+    }
 
     bool areAllParentsKnownNonDeps = true;
-    if (minDepCandidate.vertical_->getArity() > 1) {
-        std::priority_queue<std::shared_ptr<DependencyCandidate>, std::vector<std::shared_ptr<DependencyCandidate>>,
-            std::function<bool (std::shared_ptr<DependencyCandidate>, std::shared_ptr<DependencyCandidate>)>>
-            parentCandidates([](auto candidate1, auto candidate2)
-                {return DependencyCandidate::minErrorComparator(*candidate1, *candidate2); });
-        for (auto parentVertical : minDepCandidate.vertical_->getParents()) {
+    if (minDepCandidate.vertical_.getArity() > 1) {
+        std::priority_queue<DependencyCandidate, std::vector<DependencyCandidate>,
+            std::function<bool (DependencyCandidate&, DependencyCandidate&)>>
+            parentCandidates([](auto& candidate1, auto& candidate2)
+                {return DependencyCandidate::minErrorComparator(candidate1, candidate2); });
+        for (auto& parentVertical : minDepCandidate.vertical_.getParents()) {
             if (isKnownNonDependency(parentVertical, localVisitees)
                     || isKnownNonDependency(parentVertical, globalVisitees))
                 continue;
-            if (allegedNonDeps.count(*parentVertical) != 0) {
+            if (allegedNonDeps.count(parentVertical) != 0) {
                 areAllParentsKnownNonDeps = false;
                 continue;
             }
             // TODO: construction methods should return unique_ptr<...>
             LOG(TRACE) << "createDependencyCandidate while trickling down from";
-            parentCandidates.push(std::make_shared<DependencyCandidate>(strategy->createDependencyCandidate(parentVertical)));
+            parentCandidates.push(strategy->createDependencyCandidate(parentVertical));
         }
 
         while (!parentCandidates.empty()) {
             auto parentCandidate = parentCandidates.top();
             parentCandidates.pop();
 
-            if (parentCandidate->error_.getMin() > strategy->minNonDependencyError_) {
+            if (parentCandidate.error_.getMin() > strategy->minNonDependencyError_) {
                 do {
-                    if (parentCandidate->isExact()) {
-                        localVisitees->put(*parentCandidate->vertical_,
-                                std::make_shared<VerticalInfo>(VerticalInfo::forNonDependency()));
+                    if (parentCandidate.isExact()) {
+                        localVisitees->put(parentCandidate.vertical_,
+                                std::make_unique<VerticalInfo>(VerticalInfo::forNonDependency()));
                     } else {
-                        allegedNonDeps.insert(*parentCandidate->vertical_);
+                        allegedNonDeps.insert(parentCandidate.vertical_);
                         areAllParentsKnownNonDeps = false;
                     }
                     if (!parentCandidates.empty()) {
@@ -545,10 +547,11 @@ SearchSpace::trickleDownFrom(DependencyCandidate &minDepCandidate, std::shared_p
                 break;
             }
 
-            tricklingDownFrom += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - now).count();
+            tricklingDownFrom += std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::system_clock::now() - now).count();
 
             auto allegedMinDep = trickleDownFrom(
-                    *parentCandidate,
+                    std::move(parentCandidate),
                     strategy,
                     allegedMinDeps,
                     allegedNonDeps,
@@ -559,7 +562,7 @@ SearchSpace::trickleDownFrom(DependencyCandidate &minDepCandidate, std::shared_p
 
             now = std::chrono::system_clock::now();
 
-            if (allegedMinDep != nullptr){
+            if (allegedMinDep.has_value()){
                 return allegedMinDep;
             }
 
@@ -578,36 +581,37 @@ SearchSpace::trickleDownFrom(DependencyCandidate &minDepCandidate, std::shared_p
     double errorDiff = candidateError - minDepCandidate.error_.getMean();
     if (candidateError <= strategy->maxDependencyError_) {
         LOG(TRACE) << boost::format{"* Found %1%-ary minimum dependency candidate: %2%"}
-            % minDepCandidate.vertical_->getArity() % minDepCandidate;
-        allegedMinDeps->removeSupersetEntries(*minDepCandidate.vertical_);
-        allegedMinDeps->put(*minDepCandidate.vertical_,
-                std::make_shared<VerticalInfo>(true, areAllParentsKnownNonDeps, candidateError));
-        if (areAllParentsKnownNonDeps && context_->configuration_.isCheckEstimates) {
+            % minDepCandidate.vertical_.getArity() % minDepCandidate;
+        allegedMinDeps->removeSupersetEntries(minDepCandidate.vertical_);
+        allegedMinDeps->put(minDepCandidate.vertical_,
+                std::make_unique<VerticalInfo>(true, areAllParentsKnownNonDeps, candidateError));
+        if (areAllParentsKnownNonDeps && context_->getConfiguration().isCheckEstimates) {
             requireMinimalDependency(strategy, minDepCandidate.vertical_);
         }
-        tricklingDownFrom += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - now).count();
+        tricklingDownFrom += std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::system_clock::now() - now).count();
         return minDepCandidate.vertical_;
     } else {
         LOG(TRACE) << boost::format{"* Guessed incorrect %1%-ary minimum dependency candidate."}
-            % minDepCandidate.vertical_->getArity();
-        localVisitees->put(*minDepCandidate.vertical_, std::make_shared<VerticalInfo>(VerticalInfo::forNonDependency()));
+            % minDepCandidate.vertical_.getArity();
+        localVisitees->put(minDepCandidate.vertical_, std::make_unique<VerticalInfo>(VerticalInfo::forNonDependency()));
 
         if (strategy->shouldResample(minDepCandidate.vertical_, boostFactor)) {
             context_->createFocusedSample(minDepCandidate.vertical_, boostFactor);
         }
-        tricklingDownFrom += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - now).count();
-        return nullptr;
+        tricklingDownFrom += std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::system_clock::now() - now).count();
+        return std::optional<Vertical>();
     }
 }
 
-void SearchSpace::requireMinimalDependency(std::shared_ptr<DependencyStrategy> strategy,
-                                           std::shared_ptr<Vertical> minDependency) {
+void SearchSpace::requireMinimalDependency(DependencyStrategy* strategy, Vertical const& minDependency) {
     double error = strategy->calculateError(minDependency);
     if (error > strategy->maxDependencyError_) {
         throw std::runtime_error("Wrong minimal dependency estimate");
     }
-    if (minDependency->getArity() > 1) {
-        for (auto parent : minDependency->getParents()) {
+    if (minDependency.getArity() > 1) {
+        for (auto& parent : minDependency.getParents()) {
             double parentError = strategy->calculateError(parent);
             if (parentError <= strategy->minNonDependencyError_) {
                 throw std::runtime_error("Wrong minimal dependency estimate");
@@ -616,13 +620,13 @@ void SearchSpace::requireMinimalDependency(std::shared_ptr<DependencyStrategy> s
     }
 }
 
-std::list<std::shared_ptr<Vertical>> SearchSpace::getSubsetDeps(
+std::vector<Vertical> SearchSpace::getSubsetDeps(
         Vertical const& vertical, VerticalMap<VerticalInfo>* verticalInfos) {
 
     auto subsetEntries = verticalInfos->getSubsetEntries(vertical);
     auto subsetEntriesEnd = std::remove_if(subsetEntries.begin(), subsetEntries.end(),
             [](auto& entry){ return !entry.second->isDependency_;});
-    std::list<std::shared_ptr<Vertical>> subsetDeps;
+    std::vector<Vertical> subsetDeps;
 
     std::transform(subsetEntries.begin(), subsetEntriesEnd, std::inserter(subsetDeps, subsetDeps.begin()),
             [](auto& entry){
@@ -656,7 +660,7 @@ void SearchSpace::printStats() const {
 }
 
 void SearchSpace::ensureInitialized() {
-    strategy_->ensureInitialized(shared_from_this());
+    strategy_->ensureInitialized(this);
     std::string initializedLaunchPads;
     for (auto const& pad : launchPads_) {
         initializedLaunchPads += std::string(pad) + " ";

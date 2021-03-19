@@ -10,6 +10,7 @@ protected:
     DependencyStrategy(double maxError, double deviation) :
         minNonDependencyError_(maxError - deviation), maxDependencyError_(maxError + deviation) {}
 public:
+    // TODO: public --> protected fields
     double minNonDependencyError_;
     double maxDependencyError_;
     ProfilingContext* context_;
@@ -29,6 +30,8 @@ public:
     virtual Vertical getIrrelevantColumns() const = 0;
 
     virtual ~DependencyStrategy() = default;
+
+    virtual std::unique_ptr<DependencyStrategy> createClone() = 0;
 
     bool shouldResample(Vertical const& vertical, double boostFactor) const;
     bool isIrrelevantColumn(Column const& column) const { return this->isIrrelevantColumn(column.getIndex()); }

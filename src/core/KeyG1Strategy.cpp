@@ -52,7 +52,7 @@ DependencyCandidate KeyG1Strategy::createDependencyCandidate(Vertical const& ver
 
     AgreeSetSample const* agreeSetSample = context_->getAgreeSetSample(vertical);
     ConfidenceInterval estimatedEqualityPairs = agreeSetSample
-            ->estimateAgreements(vertical, context_->getConfiiguration().estimateConfidence)
+            ->estimateAgreements(vertical, context_->getConfiguration().estimateConfidence)
             .multiply(context_->getColumnLayoutRelationData()->getNumTuplePairs());
     ConfidenceInterval keyError = calculateKeyError(estimatedEqualityPairs);
     return DependencyCandidate(vertical, keyError, false);
@@ -61,4 +61,10 @@ DependencyCandidate KeyG1Strategy::createDependencyCandidate(Vertical const& ver
 void KeyG1Strategy::registerDependency(Vertical const& vertical, double error,
                                       DependencyConsumer const& discoveryUnit) const {
     discoveryUnit.registerUcc(vertical, error, 0); // TODO: calculate score?
+}
+
+std::unique_ptr<DependencyStrategy> KeyG1Strategy::createClone() {
+    return std::make_unique<KeyG1Strategy>(
+            (maxDependencyError_ + minNonDependencyError_) / 2,
+            (maxDependencyError_ - minNonDependencyError_) / 2);
 }
