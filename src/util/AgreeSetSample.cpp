@@ -11,7 +11,7 @@ using namespace std;
 
 double AgreeSetSample::stdDevSmoothing = 1;
 
-AgreeSetSample::AgreeSetSample(ColumnLayoutRelationData* relationData, Vertical focus, unsigned int sampleSize,
+AgreeSetSample::AgreeSetSample(ColumnLayoutRelationData const* relationData, Vertical focus, unsigned int sampleSize,
                                unsigned long long populationSize):
         relationData(relationData),
         focus(std::move(focus)),

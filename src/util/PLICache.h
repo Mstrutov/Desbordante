@@ -36,7 +36,7 @@ private:
     double medianGini_;
     double medianInvertedEntropy_;
 
-    void cachingProcess(Vertical const& vertical,
+    std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> cachingProcess(Vertical const& vertical,
                         std::unique_ptr<PositionListIndex> pli,
                         ProfilingContext* profilingContext);
 public:
@@ -45,7 +45,8 @@ public:
              double maximumEntropy, double medianGini, double medianInvertedEntropy);
 
     PositionListIndex* get(Vertical const& vertical);
-    PositionListIndex* getOrCreateFor(Vertical const& vertical, ProfilingContext* profilingContext);
+    std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> getOrCreateFor(
+            Vertical const& vertical, ProfilingContext* profilingContext);
 
     void setMaximumEntropy(double e) { maximumEntropy_ = e; }
 

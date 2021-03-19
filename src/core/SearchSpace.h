@@ -16,6 +16,7 @@ class SearchSpace : public std::enable_shared_from_this<SearchSpace> {
 private:
     ProfilingContext* context_;
     std::unique_ptr<DependencyStrategy> strategy_;
+    std::unique_ptr<VerticalMap<VerticalInfo>> localVisitees_ = nullptr;
     std::unique_ptr<VerticalMap<VerticalInfo>> globalVisitees_;
     std::set<DependencyCandidate, std::function<bool (DependencyCandidate const&, DependencyCandidate const&)>> launchPads_;
     std::unique_ptr<VerticalMap<DependencyCandidate>> launchPadIndex_;
@@ -28,19 +29,27 @@ private:
     int numNested = 0;
 
 
-    void discover(std::unique_ptr<VerticalMap<VerticalInfo>> localVisitees);
-    std::optional<DependencyCandidate> pollLaunchPad(VerticalMap<VerticalInfo>* localVisitees);
-    void escapeLaunchPad(Vertical const& launchPad, std::vector<Vertical> pruningSupersets, VerticalMap<VerticalInfo>* localVisitees);
+    // void discover(std::unique_ptr<VerticalMap<VerticalInfo>> localVisitees);
+    std::optional<DependencyCandidate> pollLaunchPad();
+    void escapeLaunchPad(Vertical const& launchPad, std::vector<Vertical> pruningSupersets);
     void returnLaunchPad(DependencyCandidate const& launchPad, bool isDefer);
 
-    bool ascend(DependencyCandidate const& launchPad, std::unique_ptr<VerticalMap<VerticalInfo>> localVisitees);
+    bool ascend(DependencyCandidate const& launchPad);
     void checkEstimate(DependencyStrategy* strategy, DependencyCandidate const& traversalCandidate);
-    void trickleDown(Vertical const& mainPeak, double mainPeakError,
-                     std::unique_ptr<VerticalMap<VerticalInfo>> localVisitees);
+    void trickleDown(Vertical const& mainPeak, double mainPeakError);
     std::optional<Vertical> trickleDownFrom(
             DependencyCandidate minDepCandidate, DependencyStrategy* strategy,
             VerticalMap<VerticalInfo>* allegedMinDeps, std::unordered_set<Vertical> & allegedNonDeps,
-            VerticalMap<VerticalInfo>* localVisitees, VerticalMap<VerticalInfo>* globalVisitees, double boostFactor);
+            VerticalMap<VerticalInfo>* globalVisitees, double boostFactor);
+
+    // CAREFUL: resets globalVisitees_, therefore SearchSpace could become invalidated
+    std::unique_ptr<VerticalMap<VerticalInfo>> moveOutGlobalVisitees() { return std::move(globalVisitees_); }
+    // CAREFUL: resets localVisitees_, therefore SearchSpace could become invalidated
+    std::unique_ptr<VerticalMap<VerticalInfo>> moveOutLocalVisitees() { return std::move(localVisitees_); }
+    void moveInLocalVisitees(std::unique_ptr<VerticalMap<VerticalInfo>> localVisitees) {
+        localVisitees_ = std::move(localVisitees); }
+
+
     static void requireMinimalDependency(DependencyStrategy* strategy, Vertical const& minDependency);
     static std::vector<Vertical> getSubsetDeps(Vertical const& vertical, VerticalMap<VerticalInfo>* verticalInfos);
     static bool isImpliedByMinDep(Vertical const& vertical, VerticalMap<VerticalInfo>* verticalInfos);
@@ -76,7 +85,7 @@ public:
                         schema, dependencyCandidateComparator, 0, 1) {}
 
     void ensureInitialized();
-    void discover() { discover(nullptr); }
+    void discover();
     void addLaunchPad(DependencyCandidate const& launchPad);
     void setContext(ProfilingContext* context)  {
         context_ = context;
@@ -84,7 +93,5 @@ public:
     }
     ProfilingContext* getContext() { return context_; }
     unsigned int getErrorCalcCount() { return strategy_->calcCount_; }
-    // CAREFUL: resets globalVisitees_, therefore SearchSpace could become invalidated
-    std::unique_ptr<VerticalMap<VerticalInfo>> moveOutGlobalVisitees() { return std::move(globalVisitees_); }
     void printStats() const;
 };

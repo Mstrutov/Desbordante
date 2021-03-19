@@ -28,7 +28,10 @@ void KeyG1Strategy::ensureInitialized(SearchSpace* searchSpace) const {
 
 double KeyG1Strategy::calculateError(Vertical const& keyCandidate) const {
     auto pli = context_->getPLICache()->getOrCreateFor(keyCandidate, context_);
-    double error = calculateKeyError(pli);
+    auto pliPointer = std::holds_alternative<PositionListIndex*>(pli)
+                      ? std::get<PositionListIndex*>(pli)
+                      : std::get<std::unique_ptr<PositionListIndex>>(pli).get();
+    double error = calculateKeyError(pliPointer);
     calcCount_++;
     return error;
 }
@@ -42,7 +45,10 @@ ConfidenceInterval KeyG1Strategy::calculateKeyError(ConfidenceInterval const& es
 DependencyCandidate KeyG1Strategy::createDependencyCandidate(Vertical const& vertical) const {
     if (vertical.getArity() == 1) {
         auto pli = context_->getPLICache()->getOrCreateFor(vertical, context_);
-        double keyError = calculateKeyError(pli->getNepAsLong());
+        auto pliPointer = std::holds_alternative<PositionListIndex*>(pli)
+                          ? std::get<PositionListIndex*>(pli)
+                          : std::get<std::unique_ptr<PositionListIndex>>(pli).get();
+        double keyError = calculateKeyError(pliPointer->getNepAsLong());
         return DependencyCandidate(vertical, ConfidenceInterval(keyError), true);
     }
 

@@ -29,6 +29,9 @@ private:
     std::mt19937 random_;
     CustomRandom customRandom_;
 
+    AgreeSetSample const* createColumnFocusedSample(
+            Vertical const& focus, PositionListIndex const* restrictionPLI, double boostFactor);
+
 public:
     enum class ObjectToCache {
         PLI,

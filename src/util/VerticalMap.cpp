@@ -64,7 +64,7 @@ typename VerticalMap<Value>::SetTrie* VerticalMap<Value>::SetTrie::getOrCreateSu
     if (subtrie == nullptr) {
         subtries_[index - offset_] = std::make_unique<SetTrie>(index + 1, dimension_);
     }
-    return subtrie.get();
+    return subtries_[index - offset_].get();
 }
 
 template <class Value>

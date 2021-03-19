@@ -39,7 +39,8 @@ PLICache::~PLICache() {
 }
 
 // obtains or calculates a PositionListIndex using cache
-PositionListIndex* PLICache::getOrCreateFor(Vertical const &vertical, ProfilingContext* profilingContext) {
+std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> PLICache::getOrCreateFor(
+        Vertical const &vertical, ProfilingContext* profilingContext) {
     LOG(DEBUG) << boost::format{"PLI for %1% requested: "} % vertical.toString();
 
     // is PLI already cached?
@@ -120,56 +121,64 @@ PositionListIndex* PLICache::getOrCreateFor(Vertical const &vertical, ProfilingC
     // TODO: Profiling context stuff
 
     LOG(DEBUG) << boost::format {"Intersecting %1%."} % "[UNIMPLEMENTED]";
+
+    if (operands.empty()) {
+        throw std::logic_error("Current implementation assumes operands.size() > 0");
+    }
+
+    // TODO: тут не очень понятно: cachingProcess может забрать себе PLI, а может и отдать обратно,
+    //  поэтому приходится через variant разбирать. Проверить, насколько много платим за обёртку.
     // Intersect and cache
-    std::unique_ptr<PositionListIndex> intersectionPLI;
+    std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> variantIntersectionPLI;
     if (operands.size() >= profilingContext->getConfiguration().naryIntersectionSize) {
         PositionListIndexRank basePliRank = operands[0];
-        intersectionPLI = basePliRank.pli_->probeAll(vertical.without(*basePliRank.vertical_), *relationData_);
-        cachingProcess(vertical, std::move(intersectionPLI), profilingContext);
+        auto intersectionPLI = basePliRank.pli_->probeAll(vertical.without(*basePliRank.vertical_), *relationData_);
+        variantIntersectionPLI = cachingProcess(vertical, std::move(intersectionPLI), profilingContext);
     } else {
-        Vertical const* currentVertical = nullptr;
-        for (auto& operand : operands) {
-            if (pli == nullptr) {
-                currentVertical = operand.vertical_;
-                pli = operand.pli_;
-            } else {
-                cachingProcess(
-                        currentVertical->Union(*operand.vertical_),
-                        pli->intersect(operand.pli_),
-                        profilingContext);
-            }
+        Vertical currentVertical = *operands.begin()->vertical_;
+        variantIntersectionPLI = operands.begin()->pli_;
+
+        for (size_t i = 1; i < operands.size(); i++) {
+            currentVertical = currentVertical.Union(*operands[i].vertical_);
+            variantIntersectionPLI =
+                std::holds_alternative<PositionListIndex*>(variantIntersectionPLI)
+                ? std::get<PositionListIndex*>(variantIntersectionPLI)->intersect(operands[i].pli_)
+                : std::get<std::unique_ptr<PositionListIndex>>(variantIntersectionPLI)->intersect(operands[i].pli_);
+            variantIntersectionPLI = cachingProcess(
+                currentVertical,
+                std::move(std::get<std::unique_ptr<PositionListIndex>>(variantIntersectionPLI)),
+                profilingContext);
         }
     }
 
     LOG(DEBUG) << boost::format {"Calculated from %1% sub-PLIs (saved %2% intersections)."}
         % operands.size() % (vertical.getArity() - operands.size());
 
-    return pli;
+    return variantIntersectionPLI;
 }
 
 size_t PLICache::size() const {
     return index_->getSize();
 }
 
-void PLICache::cachingProcess(Vertical const &vertical, std::unique_ptr<PositionListIndex> pli, ProfilingContext* profilingContext) {
+std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> PLICache::cachingProcess(
+        Vertical const &vertical, std::unique_ptr<PositionListIndex> pli, ProfilingContext* profilingContext) {
+    auto pliPointer = pli.get();
     switch (cachingMethod_) {
         case CachingMethod::COIN:
             if (profilingContext->nextDouble() < profilingContext->getConfiguration().cachingProbability) {
                 index_->put(vertical, std::move(pli));
+                return pliPointer;
+            } else {
+                return pli;
             }
-            break;
         case CachingMethod::NOCACHING:
-            //index_->put(vertical, pli);
-            // newUsageInfo - parallel
-            break;
+            return pli;
         case CachingMethod::ALLCACHING:
             index_->put(vertical, std::move(pli));
-            break;
+            return pliPointer;
         default:
-            //index_->put(vertical, pli);
-            // doubts on necessity of statistics => no implementation yet
             throw std::runtime_error("Only NOCACHING and ALLCACHING strategies are currently available");
-            //break;
     }
 }
 

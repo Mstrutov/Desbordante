@@ -21,7 +21,7 @@ double FdG1Strategy::calculateG1(PositionListIndex* lhsPLI) const {
     int probingTableValueId;
     for (auto const& cluster : lhsPLI->getIndex()) {
         valueCounts.clear();
-        for (auto const& position : cluster) {
+        for (int position : cluster) {
             probingTableValueId = probingTable[position];
             //    auto now = std::chrono::system_clock::now();
             if (probingTableValueId != PositionListIndex::singletonValueId) {
@@ -75,10 +75,13 @@ double FdG1Strategy::calculateError(Vertical const& lhs) const {
         error = calculateG1(rhsPli->getNip());
     } else {
         auto lhsPli = context_->getPLICache()->getOrCreateFor(lhs, context_);
+        auto lhsPliPointer = std::holds_alternative<PositionListIndex*>(lhsPli)
+            ? std::get<PositionListIndex*>(lhsPli)
+            : std::get<std::unique_ptr<PositionListIndex>>(lhsPli).get();
         auto jointPli = context_->getPLICache()->get(lhs.Union(static_cast<Vertical>(*rhs_)));
         error = jointPli == nullptr
-                ? calculateG1(lhsPli)
-                : calculateG1(lhsPli->getNepAsLong() - jointPli->getNepAsLong());
+            ? calculateG1(lhsPliPointer)
+            : calculateG1(lhsPliPointer->getNepAsLong() - jointPli->getNepAsLong());
     }
     calcCount_++;
     return error;

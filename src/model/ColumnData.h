@@ -13,18 +13,18 @@
 class ColumnData {
 private:
     Column const* column;
-    std::unique_ptr<PositionListIndex> positionListIndex_;
+    std::variant<std::unique_ptr<PositionListIndex>, PositionListIndex*> positionListIndex_;
 
 public:
     ColumnData(Column const* column, std::unique_ptr<PositionListIndex> positionListIndex);
-    std::vector<int> const& getProbingTable() const { return (*positionListIndex_->getProbingTable()); }
-    int getProbingTableValue(int tupleIndex) const { return (*positionListIndex_->getProbingTable())[tupleIndex]; }
+    std::vector<int> const& getProbingTable() const;
+    int getProbingTableValue(int tupleIndex) const;
     Column const* getColumn() const { return column; }
-    PositionListIndex const* getPositionListIndex() const { return positionListIndex_.get(); }
+    PositionListIndex const* getPositionListIndex() const;
 
     // Transfers positionListIndex_ ownership to the outside world. BE CAREFUL - other methods
     // of ColumnData get invalidated while the PLI is moved out
-    std::unique_ptr<PositionListIndex> moveOutPositionListIndex() { return std::move(positionListIndex_); }
+    std::unique_ptr<PositionListIndex> moveOutPositionListIndex();
 
     // Moves a PLI under the ownership of ColumnData
     void moveInPositionListIndex(std::unique_ptr<PositionListIndex> positionListIndex ) { positionListIndex_ = std::move(positionListIndex); }

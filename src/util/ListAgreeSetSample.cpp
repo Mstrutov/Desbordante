@@ -2,8 +2,8 @@
 #include "logging/easylogging++.h"
 
 std::unique_ptr<ListAgreeSetSample> ListAgreeSetSample::createFocusedFor(
-        ColumnLayoutRelationData* relation, Vertical const& restrictionVertical, PositionListIndex* restrictionPLi,
-        unsigned int sampleSize, CustomRandom& random) {
+        ColumnLayoutRelationData const* relation, Vertical const& restrictionVertical,
+        PositionListIndex const* restrictionPLi, unsigned int sampleSize, CustomRandom& random) {
     return AgreeSetSample::createFocusedFor<ListAgreeSetSample>(
             relation, restrictionVertical, restrictionPLi, sampleSize, random);
 }
@@ -19,7 +19,7 @@ std::unique_ptr<std::vector<unsigned long long>> ListAgreeSetSample::bitSetToLon
     return result;
 }
 
-ListAgreeSetSample::ListAgreeSetSample(ColumnLayoutRelationData* relation, Vertical const& focus,
+ListAgreeSetSample::ListAgreeSetSample(ColumnLayoutRelationData const* relation, Vertical const& focus,
         unsigned int sampleSize, unsigned long long populationSize,
         std::unordered_map<boost::dynamic_bitset<>, int> const& agreeSetCounters)
         : AgreeSetSample(relation, focus, sampleSize, populationSize) {

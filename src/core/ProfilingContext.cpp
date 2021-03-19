@@ -17,6 +17,21 @@ ProfilingContext::ProfilingContext(
     customRandom_(configuration_.seed == 0 ? CustomRandom() : CustomRandom(configuration_.seed)) {
     uccConsumer_ = uccConsumer;
     fdConsumer_ = fdConsumer;
+    // TODO: тут проявляется косяк, что unique_ptr<PLI> приходится отбирать у CLRD.
+    //       SetSample и MaxEntropy требуют CLRD. Приходится плясать-переставлять методы
+    //       да на самом деле в коде подразумевается, что в CLRD есть какая-то ссылка на PLI, так что
+    //       надо переделывать
+    if (configuration_.sampleSize > 0) {
+        auto schema = relationData_->getSchema();
+        agreeSetSamples_ = std::make_unique<VerticalMap<AgreeSetSample>>(schema);
+        for (auto& column : schema->getColumns()) {
+            createColumnFocusedSample(static_cast<Vertical>(*column),
+                                      relationData->getColumnData(column->getIndex()).getPositionListIndex(), 1);
+        }
+    } else {
+        agreeSetSamples_ = nullptr;
+    }
+    double maxEntropy = getMaximumEntropy(relationData_);
     pliCache_ = std::make_unique<PLICache>(
             relationData_,
             cachingMethod,
@@ -29,18 +44,7 @@ ProfilingContext::ProfilingContext(
             getMedianGini(relationData_),
             getMedianInvertedEntropy(relationData_)
             );
-    pliCache_->setMaximumEntropy(getMaximumEntropy(relationData_));
-    if (configuration_.sampleSize > 0) {
-        auto schema = relationData_->getSchema();
-        agreeSetSamples_ = std::make_unique<VerticalMap<AgreeSetSample>>(schema);
-        for (auto& column : schema->getColumns()) {
-            //auto sample =
-            createFocusedSample(static_cast<Vertical>(*column), 1);
-            // agreeSetSamples_->put(static_cast<Vertical>(*column), std::move(sample));
-        }
-    } else {
-        agreeSetSamples_ = nullptr;
-    }
+    pliCache_->setMaximumEntropy(maxEntropy);
     // TODO: partialFDScoring - for FD registration
 }
 
@@ -132,10 +136,14 @@ double ProfilingContext::setMaximumEntropy(ColumnLayoutRelationData const* relat
 }
 
 AgreeSetSample const* ProfilingContext::createFocusedSample(Vertical const& focus, double boostFactor) {
+    auto pli = pliCache_->getOrCreateFor(focus, this);
+    auto pliPointer = std::holds_alternative<PositionListIndex*>(pli)
+                      ? std::get<PositionListIndex*>(pli)
+                      : std::get<std::unique_ptr<PositionListIndex>>(pli).get();
     std::unique_ptr<ListAgreeSetSample> sample = ListAgreeSetSample::createFocusedFor(
             relationData_,
             focus,
-            pliCache_->getOrCreateFor(focus, this),
+            pliPointer,
             configuration_.sampleSize * boostFactor,
             customRandom_
             );
@@ -144,6 +152,22 @@ AgreeSetSample const* ProfilingContext::createFocusedSample(Vertical const& focu
     agreeSetSamples_->put(focus, std::move(sample));
     return sample_ptr;
 }
+
+AgreeSetSample const* ProfilingContext::createColumnFocusedSample(
+        const Vertical &focus, PositionListIndex const* restrictionPLI, double boostFactor) {
+    std::unique_ptr<ListAgreeSetSample> sample = ListAgreeSetSample::createFocusedFor(
+            relationData_,
+            focus,
+            restrictionPLI,
+            configuration_.sampleSize * boostFactor,
+            customRandom_
+    );
+    LOG(TRACE) << boost::format {"Creating sample focused on: %1%"} % focus.toString();
+    auto sample_ptr = sample.get();
+    agreeSetSamples_->put(focus, std::move(sample));
+    return sample_ptr;
+}
+
 
 AgreeSetSample const* ProfilingContext::getAgreeSetSample(Vertical const& focus) const {
     AgreeSetSample const* sample = nullptr;
@@ -166,4 +190,5 @@ double ProfilingContext::getMedianValue(std::vector<double> && values, std::stri
            ((values[values.size() / 2] + values[values.size() / 2 - 1]) / 2) :
            (values[values.size() / 2]);
 }
+
 
