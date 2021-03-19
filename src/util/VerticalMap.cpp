@@ -9,7 +9,7 @@ template <class Value>
 std::unique_ptr<Value> VerticalMap<Value>::SetTrie::associate(
         bitset const& key, size_t nextBit, std::unique_ptr<Value> value) {
     nextBit = (nextBit == 0 ? key.find_first() : key.find_next(nextBit - 1));
-    if (nextBit == dynamic_bitset<>::npos) {
+    if (nextBit == boost::dynamic_bitset<>::npos) {
         auto oldValue = std::move(value_);
         value_ = std::move(value);
         return oldValue;
@@ -20,7 +20,7 @@ std::unique_ptr<Value> VerticalMap<Value>::SetTrie::associate(
 template <class Value>
 Value const* VerticalMap<Value>::SetTrie::get(bitset const&key, size_t nextBit) const {
     nextBit = (nextBit == 0 ? key.find_first() : key.find_next(nextBit - 1));
-    if (nextBit == dynamic_bitset<>::npos) {
+    if (nextBit == boost::dynamic_bitset<>::npos) {
         return value_.get();
     }
 
@@ -64,7 +64,7 @@ typename VerticalMap<Value>::SetTrie* VerticalMap<Value>::SetTrie::getOrCreateSu
     if (subtrie == nullptr) {
         subtries_[index - offset_] = std::make_unique<SetTrie>(index + 1, dimension_);
     }
-    return subtrie;
+    return subtrie.get();
 }
 
 template <class Value>
@@ -104,7 +104,7 @@ void VerticalMap<Value>::SetTrie::traverseEntries(bitset &subsetKey,
 template <class Value>
 bool VerticalMap<Value>::SetTrie::collectSubsetKeys(
         bitset const& key, size_t nextBit, bitset & subsetKey,
-        std::function<bool (bitset &&, Value const*)> const& collector) const {
+        std::function<bool (bitset const&, Value const*)> const& collector) const {
     if (value_ != nullptr) {
         if (!collector(bitset(subsetKey), value_.get())) return false;
     }
@@ -125,7 +125,7 @@ bool VerticalMap<Value>::SetTrie::collectSubsetKeys(
 template <class Value>
 bool VerticalMap<Value>::SetTrie::collectSupersetKeys(
         bitset const& key, size_t nextBit, bitset &supersetKey,
-        std::function<bool (bitset &&, Value const*)> const& collector) const {
+        std::function<bool (bitset const&, Value const*)> const& collector) const {
     if (nextBit != bitset::npos) {
         nextBit = (nextBit == 0 ? key.find_first() : key.find_next(nextBit - 1));
     }
@@ -165,7 +165,7 @@ bool VerticalMap<Value>::SetTrie::collectSupersetKeys(
 template <class Value>
 bool VerticalMap<Value>::SetTrie::collectRestrictedSupersetKeys(
         bitset const&key, bitset const& blacklist, size_t nextBit, bitset &supersetKey,
-        std::function<void (bitset &&, Value const*)> const& collector) const {
+        std::function<void (bitset const&, Value const*)> const& collector) const {
     if (nextBit != bitset::npos) {
         nextBit = (nextBit == 0 ? key.find_first() : key.find_next(nextBit - 1));
     }
@@ -218,7 +218,7 @@ std::vector<Vertical> VerticalMap<Value>::getSubsetKeys(Vertical const& vertical
             vertical.getColumnIndices(),
             0,
             subsetKey,
-            [&subsetKeys, this](auto indices, auto value)
+            [&subsetKeys, this](auto& indices, auto value)
                 {
                     subsetKeys.push_back(relation_->getVertical(indices));
                     return true;
@@ -235,7 +235,7 @@ std::vector<typename VerticalMap<Value>::Entry> VerticalMap<Value>::getSubsetEnt
             vertical.getColumnIndices(),
             0,
             subsetKey,
-            [&entries, this](auto indices, auto value) {
+            [&entries, this](auto& indices, auto value) {
                 entries.emplace_back(relation_->getVertical(indices), value);
                 return true;
             }
@@ -252,7 +252,7 @@ typename VerticalMap<Value>::Entry VerticalMap<Value>::getAnySubsetEntry(Vertica
             vertical.getColumnIndices(),
             0,
             subsetKey,
-            [&entry, this](auto indices, auto value) {
+            [&entry, this](auto& indices, auto value) {
                 entry = {relation_->getVertical(indices), value};
                 return false;
             }
@@ -269,7 +269,7 @@ typename VerticalMap<Value>::Entry VerticalMap<Value>::getAnySubsetEntry(
             vertical.getColumnIndices(),
             0,
             subsetKey,
-            [&entry, this, &condition](auto indices, auto value) {
+            [&entry, this, &condition](auto& indices, auto value) {
                 auto kv = relation_->getVertical(indices);
                 if (condition(&kv, value)) {
                     entry = {kv, value};
@@ -291,7 +291,7 @@ std::vector<typename VerticalMap<Value>::Entry> VerticalMap<Value>::getSupersetE
             vertical.getColumnIndices(),
             0,
             supersetKey,
-            [&entries, this](auto indices, auto value) {
+            [&entries, this](auto& indices, auto value) {
                 entries.emplace_back(relation_->getVertical(indices), value);
                 return true;
             }
@@ -307,7 +307,7 @@ typename VerticalMap<Value>::Entry VerticalMap<Value>::getAnySupersetEntry(Verti
             vertical.getColumnIndices(),
             0,
             supersetKey,
-            [&entry, this](auto indices, auto value) {
+            [&entry, this](auto& indices, auto value) {
                 entry = {relation_->getVertical(indices), value};
                 return false;
             }
@@ -325,7 +325,7 @@ VerticalMap<Value>::getAnySupersetEntry(
             vertical.getColumnIndices(),
             0,
             supersetKey,
-            [&entry, this, &condition](auto indices, auto value) {
+            [&entry, this, &condition](auto& indices, auto value) {
                 auto kv = relation_->getVertical(indices);
                 if (condition(&kv, value)) {
                     entry = {kv, value};
@@ -352,7 +352,7 @@ std::vector<typename VerticalMap<Value>::Entry> VerticalMap<Value>::getRestricte
             exclusion.getColumnIndices(),
             0,
             supersetKey,
-            [&entries, this](auto indices, auto value) {
+            [&entries, this](auto& indices, auto value) {
                 entries.emplace_back(relation_->getVertical(indices), value);
                 return true;
             }
@@ -384,7 +384,7 @@ std::unordered_set<Vertical> VerticalMap<Value>::keySet() {
     bitset subsetKey(relation_->getNumColumns());
     setTrie_.traverseEntries(
             subsetKey,
-            [&keySet, this](auto k, auto v) { keySet.insert(relation_->getVertical(k)); }
+            [&keySet, this](auto& k, auto v) { keySet.insert(relation_->getVertical(k)); }
             );
     return keySet;
 }
@@ -395,7 +395,7 @@ std::vector<Value const*> VerticalMap<Value>::values() {
     bitset subsetKey(relation_->getNumColumns());
     setTrie_.traverseEntries(
             subsetKey,
-            [&values](auto k, auto v) -> void { values.push_back(v); }
+            [&values](auto& k, auto v) -> void { values.push_back(v); }
     );
     return values;
 }
@@ -406,7 +406,7 @@ std::unordered_set<typename VerticalMap<Value>::Entry> VerticalMap<Value>::entry
     bitset subsetKey(relation_->getNumColumns());
     setTrie_.traverseEntries(
             subsetKey,
-            [&entrySet, this](auto k, auto v) -> void { entrySet.emplace(relation_->getVertical(k), v); }
+            [&entrySet, this](auto& k, auto v) -> void { entrySet.emplace(relation_->getVertical(k), v); }
     );
     return entrySet;
 }
@@ -442,7 +442,7 @@ void VerticalMap<Value>::shrink(double factor, std::function<bool(Entry, Entry)>
     bitset subsetKey(relation_->getNumColumns());
     setTrie_.traverseEntries(
             subsetKey,
-            [&keyQueue, this, &canRemove](auto k, auto v) {
+            [&keyQueue, this, &canRemove](auto& k, auto v) {
                 if (Entry entry(relation_->getVertical(k), v); canRemove(entry)) {
                     keyQueue.push(entry);
                 }
@@ -481,7 +481,7 @@ void VerticalMap<Value>::shrink(std::unordered_map<Vertical, unsigned int> &usag
     bitset subsetKey(relation_->getNumColumns());
     setTrie_.traverseEntries(
             subsetKey,
-            [&keyQueue, this, &canRemove, &usageCounter, medianOfUsage](auto k, auto v) -> void {
+            [&keyQueue, this, &canRemove, &usageCounter, medianOfUsage](auto& k, auto v) -> void {
                 if (Entry entry(relation_->getVertical(k), v); canRemove(entry) && usageCounter.at(entry.first) <= medianOfUsage) {
                     keyQueue.push(entry);
                 }

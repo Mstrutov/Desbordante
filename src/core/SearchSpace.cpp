@@ -1,13 +1,6 @@
 #include "logging/easylogging++.h"
 #include "SearchSpace.h"
 #include <queue>
-/*SearchSpace::SearchSpace(int id, std::shared_ptr<DependencyStrategy> strategy,
-                         std::unique_ptr<VerticalMap<Vertical>> scope, VerticalMap<VerticalInfo> globalVisitees,
-                         std::shared_ptr<RelationalSchema> schema, std::function<bool(DependencyCandidate const &,
-                                                                                      DependencyCandidate const &)> const &dependencyCandidateComparator,
-                         int recursionDepth, double sampleBoost) : id_(id), strategy_(strategy), scope_(std::move(scope)), globalVisitees_(globalVisitees), recursionDepth_(recursionDepth),
-                                                                   sampleBoost_(sampleBoost), launchPadIndex_(schema), launchPads_(dependencyCandidateComparator) {}*/
-
 // TODO: extra careful with const& -> shared_ptr conversions via make_shared-smart pointer may delete the object - pass empty deleter [](*) {}
 
 // TODO: consider storing only containers of shared_ptrs
@@ -24,7 +17,8 @@ void SearchSpace::discover(std::unique_ptr<VerticalMap<VerticalInfo>> localVisit
         }
 
         bool isDependencyFound = ascend(*launchPad, std::move(localVisitees));
-        pollingLaunchPads += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - now).count();
+        pollingLaunchPads += std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::system_clock::now() - now).count();
         returnLaunchPad(*launchPad, !isDependencyFound);
     }
 }
@@ -54,12 +48,15 @@ std::optional<DependencyCandidate> SearchSpace::pollLaunchPad(
         auto supersetEntries = globalVisitees_->getSupersetEntries(launchPad.vertical_);
         if (localVisitees != nullptr) {
             auto localSupersetEntries = localVisitees->getSupersetEntries(launchPad.vertical_);
-            auto endIterator = std::remove_if(localSupersetEntries.begin(), localSupersetEntries.end(), [](auto entry) { return !entry.second->isPruningSubsets(); });
+            auto endIterator = std::remove_if(localSupersetEntries.begin(), localSupersetEntries.end(),
+                                              [](auto& entry) { return !entry.second->isPruningSubsets(); });
 
-            std::for_each(localSupersetEntries.begin(), endIterator, [&supersetEntries](auto entry) { supersetEntries.push_back(entry); });
+            std::for_each(localSupersetEntries.begin(), endIterator,
+                          [&supersetEntries](auto &entry) { supersetEntries.push_back(entry); });
         }
         if (supersetEntries.empty()) return launchPad;
-        LOG(TRACE) << boost::format{"* Escaping launchPad %1% from: %2%"} % launchPad.vertical_.toString() % "[UNIMPLEMENTED]";
+        LOG(TRACE) << boost::format{"* Escaping launchPad %1% from: %2%"}
+            % launchPad.vertical_.toString() % "[UNIMPLEMENTED]";
         std::vector<Vertical> supersetVerticals;
 
         for (auto& entry : supersetEntries) {
@@ -75,21 +72,22 @@ void SearchSpace::escapeLaunchPad(Vertical const& launchPad,
                                   std::vector<Vertical> pruningSupersets,
                                   VerticalMap<VerticalInfo>* localVisitees) {
     std::transform(pruningSupersets.begin(), pruningSupersets.end(), pruningSupersets.begin(),
-            [this](auto superset) { return superset->invert()->without(strategy_->getIrrelevantColumns()); } );
+            [this](auto& superset) { return superset.invert().without(strategy_->getIrrelevantColumns()); } );
 
-    std::function<bool (Vertical const&)> pruningFunction = [this, &launchPad, &localVisitees] (auto const& hittingSetCandidate) -> bool {
+    std::function<bool (Vertical const&)> pruningFunction =
+            [this, &launchPad, &localVisitees] (auto const& hittingSetCandidate) -> bool {
         if (scope_ != nullptr && scope_->getAnySupersetEntry(hittingSetCandidate).second == nullptr) {
             return true;
         }
 
-        auto launchPadCandidate_ptr = launchPad.Union(hittingSetCandidate);
+        auto launchPadCandidate = launchPad.Union(hittingSetCandidate);
 
-        if ((localVisitees == nullptr && isImpliedByMinDep(launchPadCandidate_ptr, localVisitees))
-            || isImpliedByMinDep(launchPadCandidate_ptr, globalVisitees_)) {
+        if ((localVisitees == nullptr && isImpliedByMinDep(launchPadCandidate, localVisitees))
+            || isImpliedByMinDep(launchPadCandidate, globalVisitees_.get())) {
             return true;
         }
 
-        if (launchPadIndex_->getAnySubsetEntry(*launchPadCandidate_ptr).second != nullptr) {
+        if (launchPadIndex_->getAnySubsetEntry(launchPadCandidate).second != nullptr) {
             return true;
         }
 
@@ -396,11 +394,11 @@ void SearchSpace::trickleDown(Vertical const& mainPeak, double mainPeakError,
     // checking the consistency of all data structures
     if (auto allegedMinDepsKeySet = allegedMinDeps->keySet();
             !std::all_of(allegedMinDepsKeySet.begin(), allegedMinDepsKeySet.end(),
-                [mainPeak](auto vertical) -> bool { return mainPeak.contains(*vertical); })) {
+                [mainPeak](auto& vertical) -> bool { return mainPeak.contains(vertical); })) {
         throw std::runtime_error("Main peak should contain all alleged min dependencies");
     }
     if (!std::all_of(allegedMaxNonDeps.begin(), allegedMaxNonDeps.end(),
-                     [mainPeak](auto vertical) -> bool { return mainPeak.contains(*vertical); })) {
+                     [mainPeak](auto& vertical) -> bool { return mainPeak.contains(vertical); })) {
         throw std::runtime_error("Main peak should contain all alleged max non-dependencies");
     }
 

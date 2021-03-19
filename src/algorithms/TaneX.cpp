@@ -14,7 +14,7 @@
 #include "LatticeVertex.h"
 
 double Tane::calculateZeroAryFdError(ColumnData const* rhs, ColumnLayoutRelationData const* relationData) {
-     return 1 - rhs->getPositionListIndex()->getNepAsLong() / static_cast<double>(relationData->getNumTuplePairs());
+    return 1 - rhs->getPositionListIndex()->getNepAsLong() / static_cast<double>(relationData->getNumTuplePairs());
 }
 
 double Tane::calculateFdError(PositionListIndex const* lhsPli, PositionListIndex const* jointPli,
@@ -131,7 +131,7 @@ unsigned long long Tane::execute() {
             }
         }
     }
-    levels.push_back(level1);
+    levels.push_back(std::move(level1));
 
     for (unsigned int arity = 2; arity <= maxArity; arity++) {
         //auto startTime = std::chrono::system_clock::now();

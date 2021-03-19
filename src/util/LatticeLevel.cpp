@@ -34,7 +34,7 @@ void LatticeLevel::generateNextLevel(std::vector<std::unique_ptr<LatticeLevel>>&
     }
 
     std::sort(currentLevelVertices.begin(), currentLevelVertices.end(), LatticeVertex::comparator);
-    LatticeLevel nextLevel(arity + 1);
+    auto nextLevel = std::make_unique<LatticeLevel>(arity + 1);
 
     for (unsigned int vertexIndex1 = 0; vertexIndex1 < currentLevelVertices.size(); vertexIndex1++){
         LatticeVertex* vertex1 = currentLevelVertices[vertexIndex1];
@@ -91,14 +91,14 @@ void LatticeLevel::generateNextLevel(std::vector<std::unique_ptr<LatticeLevel>>&
             childVertex->getParents().push_back(vertex1);
             childVertex->getParents().push_back(vertex2);
 
-            nextLevel.add(std::move(childVertex));
+            nextLevel->add(std::move(childVertex));
 
             continueMidOuter:
             continue;
         }
     }
 
-    levels.push_back(std::make_unique<LatticeLevel>(nextLevel));
+    levels.push_back(std::move(nextLevel));
 }
 
 void LatticeLevel::clearLevelsBelow(std::vector<std::unique_ptr<LatticeLevel>>& levels, unsigned int arity) {
