@@ -7,16 +7,15 @@
 #include "PositionListIndex.h"
 #include "RelationData.h"
 
-
 class Tane : public FDAlgorithm {
 public:
 
     constexpr static char INPUT_FILE_CONFIG_KEY[] = "inputFile";
 
     //TODO: these consts should go in class (or struct) Configuration
-    const double maxFdError = 0;
-    const double maxUccError = 0;
-    const int maxArity = 100;
+    const double maxFdError = 0.01;
+    const double maxUccError = 0.01;
+    const unsigned int maxArity = -1;
 
     int countOfFD = 0;
     int countOfUCC = 0;

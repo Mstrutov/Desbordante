@@ -44,10 +44,12 @@ ProfilingContext::ProfilingContext(
     // TODO: partialFDScoring - for FD registration
 }
 
+ProfilingContext::~ProfilingContext() = default;
+
 double ProfilingContext::getMaximumEntropy(ColumnLayoutRelationData const* relationData) {
-    auto columns = relationData->getColumnData();
-    auto maxColumn = std::max_element(columns.begin(), columns.end(),
-            [](auto& cd1, auto& cd2) {
+    auto& columns = relationData->getColumnData();
+    auto maxColumn = std::max_element(
+            columns.begin(), columns.end(),[](auto& cd1, auto& cd2) {
         return cd1.getPositionListIndex()->getEntropy() < cd2.getPositionListIndex()->getEntropy();
     });
     return maxColumn->getPositionListIndex()->getEntropy();
@@ -55,10 +57,10 @@ double ProfilingContext::getMaximumEntropy(ColumnLayoutRelationData const* relat
 
 double ProfilingContext::getMinEntropy(ColumnLayoutRelationData const* relationData) {
     auto& columns = relationData->getColumnData();
-    auto minColumn = std::min_element(columns.begin(), columns.end(),
-                                      [](auto& cd1, auto& cd2) {
-                                          return cd1.getPositionListIndex()->getEntropy() < cd2.getPositionListIndex()->getEntropy();
-                                      });
+    auto minColumn = std::min_element(
+                columns.begin(), columns.end(),[](auto& cd1, auto& cd2) {
+            return cd1.getPositionListIndex()->getEntropy() < cd2.getPositionListIndex()->getEntropy();
+        });
     return minColumn->getPositionListIndex()->getEntropy();
 }
 

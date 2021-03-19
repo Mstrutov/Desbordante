@@ -22,6 +22,8 @@ public:
     virtual ColumnData const& getColumnData(int columnIndex) const = 0;
     virtual std::vector<int> getTuple(int tupleIndex) const = 0;
 
+    virtual ~RelationData();
+
     //virtual void shuffleColumns()=0;
 
     unsigned int getNumColumns() const { return schema->getNumColumns(); }

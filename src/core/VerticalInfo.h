@@ -15,6 +15,6 @@ public:
     static VerticalInfo forNonDependency() { return VerticalInfo(false, false); }
     static VerticalInfo forMaximalNonDependency() { return VerticalInfo(false, true); }
 
-    bool isPruningSupersets() { return isDependency_ || isExtremal_; }
-    bool isPruningSubsets() {return !isDependency_ || isExtremal_; }
+    bool isPruningSupersets() const { return isDependency_ || isExtremal_; }
+    bool isPruningSubsets() const {return !isDependency_ || isExtremal_; }
 };

@@ -56,6 +56,8 @@ public:
     int nextInt(int upperBound) { return customRandom_.nextInt(upperBound); }
     double nextDouble() { return customRandom_.nextDouble(); }
 
+    ~ProfilingContext();
+
     static double getMaximumEntropy(ColumnLayoutRelationData const* cd1);
     static double getMinEntropy(ColumnLayoutRelationData const* cd1);
     static double getMedianEntropy(ColumnLayoutRelationData const* relationData);

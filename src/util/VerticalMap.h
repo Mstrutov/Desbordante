@@ -62,16 +62,16 @@ private:
 
         // Calls collector on every trie that is a subset of the given subsetKey
         bool collectSubsetKeys(bitset const& key, size_t nextBit, bitset& subsetKey,
-                               std::function<bool(bitset&&, Value const*)> const& collector) const;
+                               std::function<bool(bitset const&, Value const*)> const& collector) const;
 
         // Calls collector on every trie that is a superset of the given subsetKey
         bool collectSupersetKeys(bitset const& key, size_t nextBit, bitset& supersetKey,
-                                 std::function<bool(bitset&&, Value const*)> const& collector) const;
+                                 std::function<bool(bitset const&, Value const*)> const& collector) const;
 
         // Calls collector on every trie that is a superset of the given subsetKey with no bits from the blacklist
         bool collectRestrictedSupersetKeys(bitset const& key, bitset const& blacklist, size_t nextBit,
                                            bitset& supersetKey,
-                                           std::function<void(bitset&&, Value const*)> const& collector) const;
+                                           std::function<void(bitset const&, Value const*)> const& collector) const;
 
         // Calls collector on every entry
         void traverseEntries(bitset& subsetKey, std::function<void(bitset const&, Value const*)> collector) const;

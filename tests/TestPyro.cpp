@@ -1,4 +1,3 @@
-
 #include <iostream>
 
 #include "gmock/gmock.h"
@@ -16,7 +15,7 @@ class PyroTest : public LightDatasets, public HeavyDatasets, public ::testing::T
 
 TEST_F(PyroTest, ReturnsSameHashOnHeavyDatasets) {
 
-    auto path = fs::current_path().append("inputData");
+    auto path = std::filesystem::current_path().append("inputData");
 
     try {
         for (auto dataset : HeavyDatasets::datasets) {

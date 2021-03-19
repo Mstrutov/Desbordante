@@ -14,7 +14,7 @@
 ColumnData::ColumnData(Column const* column, std::unique_ptr<PositionListIndex> positionListIndex):
         column(column),
         positionListIndex_(std::move(positionListIndex)) {
-        positionListIndex->forceCacheProbingTable();
+        positionListIndex_->forceCacheProbingTable();
     }
 
 /*void ColumnData::shuffle() {

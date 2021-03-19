@@ -61,7 +61,7 @@ bool RelationalSchema::isNullEqualNull() const { return isNullEqNull; }
 std::unordered_set<Vertical> RelationalSchema::calculateHittingSet(
         std::vector<Vertical> verticals, boost::optional<std::function<bool (Vertical const&)>> pruningFunction) const {
     std::sort(verticals.begin(), verticals.end(),
-              [](auto vertical1, auto vertical2) { return vertical1->getArity() < vertical2->getArity(); });
+              [](auto& vertical1, auto& vertical2) { return vertical1.getArity() < vertical2.getArity(); });
     VerticalMap<Vertical> consolidatedVerticals(this);
 
     VerticalMap<Vertical> hittingSet(this);
@@ -105,3 +105,5 @@ std::unordered_set<Vertical> RelationalSchema::calculateHittingSet(
     }
     return hittingSet.keySet();
 }
+
+RelationalSchema::~RelationalSchema() = default;

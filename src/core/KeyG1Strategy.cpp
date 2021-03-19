@@ -18,7 +18,7 @@ void KeyG1Strategy::ensureInitialized(SearchSpace* searchSpace) const {
     if (searchSpace->isInitialized_) return;
 
     for (auto& column : context_->getSchema()->getColumns()) {
-        if (DependencyStrategy::isIrrelevantColumn(column->getIndex())) continue;
+        if (isIrrelevantColumn(column->getIndex())) continue;
 
         searchSpace->addLaunchPad(createDependencyCandidate(static_cast<Vertical>(*column)));
     }
