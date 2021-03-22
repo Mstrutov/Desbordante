@@ -14,13 +14,14 @@
 #include "ConfigParser.h"
 #include "algorithms/Pyro.h"
 #include "algorithms/TaneX.h"
+#include "algorithms/Fd_mine.h"
 
 namespace po = boost::program_options;
 
 INITIALIZE_EASYLOGGINGPP
 
 bool checkOptions(std::string const& alg, double error) {
-    if (alg != "pyro" && alg != "tane") {
+    if (alg != "pyro" && alg != "tane" && alg != "fdmine") {
         std::cout << "ERROR: no matching algorithm. Available algorithms are:\n\tpyro\n\ttane.\n" << std::endl;
         return false;
     }
@@ -95,6 +96,15 @@ int main(int argc, char const *argv[]) {
     } else if (alg == "tane"){
         try {
             Tane algInstance(path, separator, hasHeader);
+            algInstance.execute();
+            std::cout << "another test test" << std::endl;
+        } catch (std::runtime_error& e) {
+            std::cout << e.what() << std::endl;
+            return 1;
+        }
+    } else if (alg == "fdmine"){
+        try {
+            Fd_mine algInstance(path);
             algInstance.execute();
         } catch (std::runtime_error& e) {
             std::cout << e.what() << std::endl;
