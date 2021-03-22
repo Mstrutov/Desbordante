@@ -8,7 +8,7 @@
 #include "LatticeVertex.h"
 #include "Vertical.h"
 
-long Fd_mine::execute() {
+void Fd_mine::execute() {
     // 1
     relation = ColumnLayoutRelationData::createFrom(inputGenerator, true);
     schema = relation->getSchema();
