@@ -31,5 +31,5 @@ class Fd_mine {
     
   public:
     Fd_mine(fs::path& path) : inputGenerator(path) {};
-    long execute();
+    void execute();
 };
