@@ -1,5 +1,3 @@
-// Strutovsky, 29.08.2019
-
 #include "TaneX.h"
 
 #include <chrono>
@@ -56,8 +54,8 @@ void Tane::registerUCC(Vertical& key, double error, shared_ptr<RelationalSchema>
 }
 
 
-long Tane::execute() {
-    shared_ptr<ColumnLayoutRelationData> relation = ColumnLayoutRelationData::createFrom(inputGenerator, true);
+unsigned long long Tane::execute() {
+    shared_ptr<ColumnLayoutRelationData> relation = ColumnLayoutRelationData::createFrom(inputGenerator_, true);
     shared_ptr<RelationalSchema> schema = relation->getSchema();
     cout << schema->getName() << " has " << relation->getNumColumns() << " columns, "
          << relation->getNumRows() << " rows, and a maximum NIP of " << setw(2)

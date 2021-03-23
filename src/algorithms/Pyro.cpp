@@ -4,7 +4,7 @@
 #include "KeyG1Strategy.h"
 #include "Pyro.h"
 
-double Pyro::execute() {
+unsigned long long Pyro::execute() {
     auto startTime = std::chrono::system_clock::now();
 
     auto relation = ColumnLayoutRelationData::createFrom(inputGenerator_, configuration_.isNullEqualNull);
@@ -83,7 +83,7 @@ double Pyro::execute() {
 }
 
 Pyro::Pyro(fs::path const &path, char separator, bool hasHeader, int seed, double maxError, unsigned int maxLHS) :
-        inputGenerator_(path, separator, hasHeader),
+        FDAlgorithm(path, separator, hasHeader),
         cachingMethod_(CachingMethod::COIN),
         evictionMethod_(CacheEvictionMethod::DEFAULT) {
     uccConsumer_ = [this](auto const& key) { this->discoveredUCCs_.push_back(key); };
