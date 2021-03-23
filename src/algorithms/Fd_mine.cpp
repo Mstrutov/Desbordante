@@ -3,6 +3,7 @@
 #include <map>
 #include <set>
 #include <vector>
+#include <queue>
 
 #include "ColumnLayoutRelationData.h"
 #include "LatticeVertex.h"
@@ -171,12 +172,42 @@ void Fd_mine::generateCandidates(std::set<dynamic_bitset<>> &candidateSet) {
 
 void Fd_mine::display() {
     int count_fd = 0;
-    for (auto [l, r] : fdSet) {
-        for (size_t j = 0; j < r.size(); j++) {
-            if (!r[j]) continue;
+    std::queue<dynamic_bitset<>> queue;
+    std::map<dynamic_bitset<>, bool> observed;
+
+    for (auto [lhs, rhs] : fdSet) {
+        observed[lhs] = true;
+        queue.push(lhs);
+        while(!queue.empty()) {
+            dynamic_bitset<> currentLhs = queue.front();
+            queue.pop();
+            for(auto [eq, eqset] : eqSet) {
+                if(eq.is_subset_of(currentLhs)) {
+                    for (auto newEq : eqset) {
+                        dynamic_bitset<> generatedLhs = (currentLhs - eq) | newEq;
+                        if(!observed[generatedLhs]) {
+                            queue.push(generatedLhs);
+                            fdSet[generatedLhs] |= rhs;
+                            observed[generatedLhs] = true;
+                        }
+                    }
+                }
+
+                if(eq.is_subset_of(fdSet[currentLhs])) {
+                    for(auto eqRhs : eqSet[eq]) {
+                        fdSet[currentLhs] |= eqRhs;
+                    }
+                }
+            }
+        }
+    }
+
+    for (auto [lhs, rhs] : fdSet) {
+        for (size_t j = 0; j < rhs.size(); j++) {
+            if (!rhs[j] || rhs[j] && lhs[j]) continue;
             std::cout << "Discovered FD: ";
-            for (size_t i = 0; i < l.size(); i++) {
-                if (l[i]) std::cout << schema->getColumn(i)->getName() << " ";
+            for (size_t i = 0; i < lhs.size(); i++) {
+                if (lhs[i]) std::cout << schema->getColumn(i)->getName() << " ";
             }
             std::cout << " -> " << schema->getColumn(j)->getName() << std::endl;
             count_fd++;
