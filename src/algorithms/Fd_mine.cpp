@@ -187,13 +187,18 @@ void Fd_mine::display() {
                         dynamic_bitset<> generatedLhs = (currentLhs - eq) | newEq;
                         if(!observed[generatedLhs]) {
                             queue.push(generatedLhs);
-                            fdSet[generatedLhs] |= rhs;
+                            if(fdSet.count(generatedLhs)) {
+                                fdSet[generatedLhs] |= rhs;
+                            }
+                            else {
+                                fdSet[currentLhs] = rhs;
+                            }
                             observed[generatedLhs] = true;
                         }
                     }
                 }
 
-                if(eq.is_subset_of(fdSet[currentLhs])) {
+                if(fdSet.count(currentLhs) && eq.is_subset_of(fdSet[currentLhs])) {
                     for(auto eqRhs : eqSet[eq]) {
                         fdSet[currentLhs] |= eqRhs;
                     }
