@@ -84,32 +84,21 @@ int main(int argc, char const *argv[]) {
               << "\" with separator \'" << separator
               << "\'. Header is " << (hasHeader ? "" : "not ") << "present. " << std::endl;
     auto path = std::filesystem::current_path() / "inputData" / dataset;
+
+    std::unique_ptr<FDAlgorithm> algorithmInstance;
     if (alg == "pyro") {
-        try {
-            Pyro algInstance(path, separator, hasHeader, seed, error, maxLhs);
-            double elapsedTime = algInstance.execute();
-            std::cout << "> ELAPSED TIME: " << elapsedTime << std::endl;
-        } catch (std::runtime_error& e) {
-            std::cout << e.what() << std::endl;
-            return 1;
-        }
+        algorithmInstance = std::make_unique<Pyro>(path, separator, hasHeader, seed, error, maxLhs);
     } else if (alg == "tane"){
-        try {
-            Tane algInstance(path, separator, hasHeader);
-            algInstance.execute();
-            std::cout << "another test test" << std::endl;
-        } catch (std::runtime_error& e) {
-            std::cout << e.what() << std::endl;
-            return 1;
-        }
+        algorithmInstance = std::make_unique<Tane>(path, separator, hasHeader);
     } else if (alg == "fdmine"){
-        try {
-            Fd_mine algInstance(path);
-            algInstance.execute();
-        } catch (std::runtime_error& e) {
-            std::cout << e.what() << std::endl;
-            return 1;
-        }
+        algorithmInstance = std::make_unique<Fd_mine>(path);
+    }
+    try {
+        unsigned long long elapsedTime = algorithmInstance->execute();
+        std::cout << "> ELAPSED TIME: " << elapsedTime << std::endl;
+    } catch (std::runtime_error& e) {
+        std::cout << e.what() << std::endl;
+        return 1;
     }
     return 0;
 }
