@@ -8,7 +8,7 @@
 #include "LatticeVertex.h"
 #include "Vertical.h"
 
-void Fd_mine::execute() {
+unsigned long long Fd_mine::execute() {
     // 1
     relation = ColumnLayoutRelationData::createFrom(inputGenerator, true);
     schema = relation->getSchema();
@@ -41,6 +41,9 @@ void Fd_mine::execute() {
 
     // 3
     display();
+
+    // placeholder
+    return 0;
 }
 
 void Fd_mine::computeNonTrivialClosure(dynamic_bitset<> xi) {
