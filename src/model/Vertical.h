@@ -53,5 +53,6 @@ public:
     //possible to use list or set?
 
     string toString() const;
+    std::string toIndicesString() const;
     explicit operator std::string() const { return toString(); }
 };

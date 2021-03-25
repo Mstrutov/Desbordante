@@ -63,7 +63,7 @@ unsigned long long Pyro::execute() {
         searchSpace->setContext(profilingContext);
         searchSpace->ensureInitialized();
         searchSpace->discover();
-        searchSpace->printStats();
+        // searchSpace->printStats();
         totalErrorCalcCount += searchSpace->getErrorCalcCount();
         totalAscension += searchSpace->ascending / 1000000;
         totalTrickle += searchSpace->tricklingDown / 1000000;
