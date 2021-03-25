@@ -41,6 +41,7 @@ TEST(PyroTester, first) {
             for (auto & dataset : datasets) {
                 Pyro algoInstance(path / dataset, ',', true);
                 results[0].push_back(algoInstance.execute());
+                std::cout << algoInstance.resultsToJSONString();
             }
         }
         /*Pyro algoInstance(path / "adult.csv", ';', false);
