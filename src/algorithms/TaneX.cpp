@@ -36,6 +36,7 @@ void Tane::registerFD(Vertical& lhs, shared_ptr<Column> rhs, double error, share
         cout << schema->getColumn(i)->getName() << " ";
     }
     cout << "-> " << rhs->getName() << " - error equals " << error << endl;
+    FDAlgorithm::registerFD(lhs, *rhs);
     countOfFD++;
 }
 
@@ -260,5 +261,8 @@ unsigned long long Tane::execute() {
     cout << "Total intersections: " << PositionListIndex::intersectionCount << endl;
     cout << "Total FD count: " << countOfFD << endl;
     cout << "Total UCC count: " << countOfUCC << endl;
+
+    cout << "===== FD JSON ========" << getJsonFDs() << endl;
+
     return aprioriMillis;
 }

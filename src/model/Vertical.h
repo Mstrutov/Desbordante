@@ -53,6 +53,8 @@ public:
     //possible to use list or set?
 
     string toString() const;
+
+    // returns a Vertical as a string "[index_1,index_2,...,index_n]"
     std::string toIndicesString() const;
     explicit operator std::string() const { return toString(); }
 };
