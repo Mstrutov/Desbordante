@@ -79,6 +79,8 @@ unsigned long long Pyro::execute() {
     std::cout << "Total intersection time: " << PositionListIndex::micros / 1000 << "ms" << std::endl;
     std::cout << "====RESULTS-FD====\r\n" << fdsToString();
     std::cout << "====RESULTS-UCC====\r\n" << uccsToString();
+    std::cout << "====JSON-FD========\r\n" << FDAlgorithm::getJsonFDs() << std::endl;
+    std::cout << "HASH: " << FDAlgorithm::fletcher16() << std::endl;
     return elapsed_milliseconds.count();
 }
 
@@ -87,7 +89,8 @@ Pyro::Pyro(fs::path const &path, char separator, bool hasHeader, int seed, doubl
         cachingMethod_(CachingMethod::COIN),
         evictionMethod_(CacheEvictionMethod::DEFAULT) {
     uccConsumer_ = [this](auto const& key) { this->discoveredUCCs_.push_back(key); };
-    fdConsumer_ = [this](auto const& fd) { this->discoveredFDs_.push_back(fd); };
+    fdConsumer_ = [this](auto const& fd) {
+        this->discoveredFDs_.push_back(fd); this->fdCollection_.emplace_back(*fd.lhs_, *fd.rhs_); };
     configuration_.seed = seed;
     configuration_.maxUccError = maxError;
     configuration_.maxUccError = maxError;

@@ -29,7 +29,7 @@ std::string DependencyConsumer::uccsToString() const {
     return result;
 }
 
-std::string DependencyConsumer::resultsToJSONString() {
+std::string DependencyConsumer::getJsonFDs() {
     std::string result = "{\"fds\": [";
     std::list<std::string> discoveredFDStrings;
     for (auto& fd : discoveredFDs_) {
