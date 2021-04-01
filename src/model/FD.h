@@ -17,5 +17,8 @@ public:
         return "{lhs: " + lhs_.toIndicesString() + ", rhs: " + rhs_.toIndicesString() + "}";
     }
 
+    Vertical const& getLhs() const { return lhs_; }
+    Column const& getRhs() const { return rhs_; }
+
     // unsigned int fletcher16() const;
 };

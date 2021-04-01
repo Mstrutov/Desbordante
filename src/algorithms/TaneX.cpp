@@ -263,6 +263,7 @@ unsigned long long Tane::execute() {
     cout << "Total UCC count: " << countOfUCC << endl;
 
     cout << "===== FD JSON ========" << getJsonFDs() << endl;
+    cout << "HASH: " << fletcher16() << endl;
 
     return aprioriMillis;
 }
