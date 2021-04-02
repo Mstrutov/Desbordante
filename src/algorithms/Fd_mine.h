@@ -7,6 +7,7 @@
 #include "ColumnCombination.h"
 #include "ColumnLayoutRelationData.h"
 #include "PositionListIndex.h"
+#include "Vertical.h"
 
 class Fd_mine : public FDAlgorithm {
   private:
@@ -24,9 +25,9 @@ class Fd_mine : public FDAlgorithm {
 
     void computeNonTrivialClosure(dynamic_bitset<> xi);
     void obtainFDandKey(dynamic_bitset<> xi);
-    void obtainEQSet(std::set<dynamic_bitset<>> &candidateSet);
-    void pruneCandidates(std::set<dynamic_bitset<>> &candidateSet);
-    void generateCandidates(std::set<dynamic_bitset<>> &candidateSet);
+    void obtainEQSet();
+    void pruneCandidates();
+    void generateCandidates();
     void display();
     
   public:
