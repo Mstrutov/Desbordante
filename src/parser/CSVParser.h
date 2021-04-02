@@ -18,6 +18,7 @@ class CSVParser {
 private:
     std::ifstream source;
     char separator;
+    char escapeSymbol = '\"';
     bool hasHeader;
     bool hasNext;
     std::string nextLine;

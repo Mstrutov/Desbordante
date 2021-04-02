@@ -17,4 +17,6 @@ public:
 
     std::string fdsToString() const;
     std::string uccsToString() const;
+
+    virtual std::string getJsonFDs();
 };
