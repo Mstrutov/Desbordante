@@ -28,7 +28,7 @@ private:
     unsigned int originalRelationSize;
     vector<int> probingTableCache;
     unsigned int freq_ = 0;
-
+    int clusterNum = -1;
 
     static unsigned long long calculateNep(unsigned int numElements);
     static void sortClusters(deque<vector<int>> & clusters);
@@ -49,6 +49,7 @@ public:
     double getNep() { return (double) nep; }
     unsigned long long getNepAsLong() const { return nep; }           //ADDED: getNep()
     unsigned int getNumNonSingletonCluster() const { return index.size(); }
+    unsigned int getNumCluster();
     unsigned int getFreq() const { return freq_; }
     void incFreq() { freq_++; }
     int getSize() { return size; }

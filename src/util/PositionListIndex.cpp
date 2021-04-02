@@ -253,3 +253,13 @@ string PositionListIndex::toString() const {
     res.push_back(']');
     return res;
 }
+
+unsigned int PositionListIndex::getNumCluster(){
+    if (clusterNum != -1) return clusterNum;
+    unsigned int sum = 0;
+    for (auto &i : index) {
+        sum += i.size();
+    }
+    clusterNum = index.size() + originalRelationSize - sum;
+    return clusterNum;
+}
