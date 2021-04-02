@@ -48,24 +48,25 @@ unsigned long long Fd_mine::execute() {
 }
 
 void Fd_mine::computeNonTrivialClosure(dynamic_bitset<> xi) {
-    closure[xi] = dynamic_bitset<>(xi.size());
+    if (!closure.count(xi)) {
+        closure[xi] = dynamic_bitset<>(xi.size());
+    }
     for (int columnIndex = 0; columnIndex < schema->getNumColumns();
          columnIndex++) {
         if ((r - xi - closure[xi])[columnIndex]) {
             dynamic_bitset<> xiy = xi;
+            dynamic_bitset<> y(schema->getNumColumns());
             xiy[columnIndex] = 1;
+            y[columnIndex] = 1;
+            shared_ptr<ColumnData> columnData;
 
-            if (plis[xi] == nullptr) {
-                shared_ptr<ColumnData> columnData =
-                    relation->getColumnData(xi.find_first());
+            if (!plis.count(xi)) {
+                columnData = relation->getColumnData(xi.find_first());
                 plis[xi] = columnData->getPositionListIndex();
             }
 
-            dynamic_bitset<> y(schema->getNumColumns());
-            y[columnIndex] = 1;
-            if (plis[y] == nullptr) {
-                shared_ptr<ColumnData> columnData =
-                    relation->getColumnData(columnIndex);
+            if (!plis.count(y)) {
+                columnData = relation->getColumnData(columnIndex);
                 plis[y] = columnData->getPositionListIndex();
             }
 
@@ -143,12 +144,12 @@ void Fd_mine::generateCandidates(std::set<dynamic_bitset<>> &candidateSet) {
 
                 if (!(xj).is_subset_of(fdSet[xi]) &&
                     !(xi).is_subset_of(fdSet[xj])) {
-                    if (plis[xi] == nullptr) {
+                    if (!plis.count(xi)) {
                         shared_ptr<ColumnData> columnData =
                             relation->getColumnData(xi.find_first());
                         plis[xi] = columnData->getPositionListIndex();
                     }
-                    if (plis[xj] == nullptr) {
+                    if (!plis.count(xj)) {
                         shared_ptr<ColumnData> columnData =
                             relation->getColumnData(xj.find_first());
                         plis[xj] = columnData->getPositionListIndex();
@@ -173,36 +174,42 @@ void Fd_mine::generateCandidates(std::set<dynamic_bitset<>> &candidateSet) {
 void Fd_mine::display() {
     int count_fd = 0;
     std::queue<dynamic_bitset<>> queue;
-    std::map<dynamic_bitset<>, bool> observed;
+    
 
     for (auto [lhs, rhs] : fdSet) {
+        std::map<dynamic_bitset<>, bool> observed;
         observed[lhs] = true;
+        dynamic_bitset<> Rhs = rhs;
         queue.push(lhs);
+        for(auto [eq, eqset] : eqSet) {
+            if(eq.is_subset_of(Rhs)) {
+                for(auto eqRhs : eqset) {
+                    Rhs |= eqRhs;
+                }
+            }             
+        }
+        fdSet[lhs] |= Rhs;
+
         while(!queue.empty()) {
             dynamic_bitset<> currentLhs = queue.front();
             queue.pop();
             for(auto [eq, eqset] : eqSet) {
+
                 if(eq.is_subset_of(currentLhs)) {
                     for (auto newEq : eqset) {
                         dynamic_bitset<> generatedLhs = (currentLhs - eq) | newEq;
+                        if(fdSet.count(generatedLhs)) {
+                            fdSet[generatedLhs] |= Rhs;
+                        } else {
+                            fdSet[generatedLhs] = Rhs;
+                        }
                         if(!observed[generatedLhs]) {
                             queue.push(generatedLhs);
-                            if(fdSet.count(generatedLhs)) {
-                                fdSet[generatedLhs] |= rhs;
-                            }
-                            else {
-                                fdSet[currentLhs] = rhs;
-                            }
                             observed[generatedLhs] = true;
                         }
                     }
                 }
-
-                if(fdSet.count(currentLhs) && eq.is_subset_of(fdSet[currentLhs])) {
-                    for(auto eqRhs : eqSet[eq]) {
-                        fdSet[currentLhs] |= eqRhs;
-                    }
-                }
+                
             }
         }
     }

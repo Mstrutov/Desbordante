@@ -2,14 +2,14 @@
 
 #include <set>
 
+#include "FDAlgorithm.h"
 #include "CSVParser.h"
 #include "ColumnCombination.h"
 #include "ColumnLayoutRelationData.h"
 #include "PositionListIndex.h"
 
-class Fd_mine {
+class Fd_mine : public FDAlgorithm {
   private:
-    CSVParser inputGenerator;
 
     shared_ptr<ColumnLayoutRelationData> relation;
     shared_ptr<RelationalSchema> schema;
@@ -30,6 +30,7 @@ class Fd_mine {
     void display();
     
   public:
-    Fd_mine(fs::path& path) : inputGenerator(path) {};
+    Fd_mine(fs::path& path) : FDAlgorithm(path){};
+    ~Fd_mine() override {};
     unsigned long long execute();
 };
