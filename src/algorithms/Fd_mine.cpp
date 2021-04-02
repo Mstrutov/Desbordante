@@ -222,6 +222,7 @@ void Fd_mine::display() {
                 if (lhs[i]) std::cout << schema->getColumn(i)->getName() << " ";
             }
             std::cout << "-> " << schema->getColumn(j)->getName() << std::endl;
+            registerFD(Vertical(schema, lhs), *schema->getColumn(j));
             count_fd++;
         }
     }
