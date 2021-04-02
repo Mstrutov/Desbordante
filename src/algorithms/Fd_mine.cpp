@@ -72,7 +72,7 @@ void Fd_mine::computeNonTrivialClosure(dynamic_bitset<> xi) {
 
             plis[xiy] = plis[xi]->intersect(plis[y]);
 
-            if (plis[xi]->getSize() == plis[xiy]->getSize()) {
+            if (plis[xi]->getNumCluster()  == plis[xiy]->getNumCluster() ) {
                 closure[xi][columnIndex] = 1;
             }
         }
@@ -221,7 +221,7 @@ void Fd_mine::display() {
             for (size_t i = 0; i < lhs.size(); i++) {
                 if (lhs[i]) std::cout << schema->getColumn(i)->getName() << " ";
             }
-            std::cout << " -> " << schema->getColumn(j)->getName() << std::endl;
+            std::cout << "-> " << schema->getColumn(j)->getName() << std::endl;
             count_fd++;
         }
     }
