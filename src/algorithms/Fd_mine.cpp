@@ -35,9 +35,9 @@ unsigned long long Fd_mine::execute() {
             computeNonTrivialClosure(xi);
             obtainFDandKey(xi);
         }
-        obtainEQSet(candidateSet);
-        pruneCandidates(candidateSet);
-        generateCandidates(candidateSet);
+        obtainEQSet();
+        pruneCandidates();
+        generateCandidates();
     }
 
     // 3
@@ -86,7 +86,7 @@ void Fd_mine::obtainFDandKey(dynamic_bitset<> xi) {
     }
 }
 
-void Fd_mine::obtainEQSet(std::set<dynamic_bitset<>> &candidateSet) {
+void Fd_mine::obtainEQSet() {
     for (auto &xi : candidateSet) {
         for (auto &[x, xClosure] : fdSet) {
             dynamic_bitset<> z = xi & x;
@@ -101,7 +101,7 @@ void Fd_mine::obtainEQSet(std::set<dynamic_bitset<>> &candidateSet) {
     }
 }
 
-void Fd_mine::pruneCandidates(std::set<dynamic_bitset<>> &candidateSet) {
+void Fd_mine::pruneCandidates() {
     std::set<dynamic_bitset<>>::iterator it = candidateSet.begin();
     while (it != candidateSet.end()) {
         bool found = false;
@@ -125,7 +125,7 @@ void Fd_mine::pruneCandidates(std::set<dynamic_bitset<>> &candidateSet) {
     }
 }
 
-void Fd_mine::generateCandidates(std::set<dynamic_bitset<>> &candidateSet) {
+void Fd_mine::generateCandidates() {
     std::vector<dynamic_bitset<>> candidates(candidateSet.begin(),
                                              candidateSet.end());
 
