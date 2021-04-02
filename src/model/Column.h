@@ -34,6 +34,7 @@ public:
     // TODO: const pointer
     std::shared_ptr<RelationalSchema> getSchema() const { return schema.lock(); }
     string toString() const { return "[" + name + "]";}
+    std::string toIndicesString() const { return std::to_string(index); }
     explicit operator std::string() const { return toString(); }
     bool operator==(const Column& rhs);
 };

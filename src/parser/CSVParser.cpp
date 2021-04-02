@@ -73,12 +73,14 @@ vector<string> CSVParser::parseNext() {
 
     auto nextTokenBegin = nextLine.begin();
     auto nextTokenEnd = nextLine.begin();
+    bool isEscaped = false;
     while (nextTokenEnd != nextLine.end()){
-        if (*nextTokenEnd == separator){
+        if (!isEscaped && *nextTokenEnd == separator){
             result.emplace_back(nextTokenBegin, nextTokenEnd);
             nextTokenBegin = nextTokenEnd + 1;
             nextTokenEnd = nextTokenBegin;
         } else {
+            isEscaped ^= (*nextTokenEnd == escapeSymbol);
             nextTokenEnd++;
         }
     }
