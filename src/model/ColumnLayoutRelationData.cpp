@@ -1,8 +1,6 @@
-//
-// Created by kek on 26.07.2019.
-//
-
 #include "ColumnLayoutRelationData.h"
+
+#include "easylogging++.h"
 
 #include <map>
 #include <memory>
@@ -61,8 +59,8 @@ shared_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::createFrom(CSVPar
     while (fileInput.getHasNext()){
         row = std::move(fileInput.parseNext());
 
-        //skip incomplete rows
         if ((int)row.size() != numColumns) {
+            LOG(WARNING) << "Skipping incomplete rows";
             continue;
         }
 

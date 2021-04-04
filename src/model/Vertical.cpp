@@ -94,7 +94,7 @@ vector<shared_ptr<Column>> Vertical::getColumns() const {
 string Vertical::toString() const {
     string result = "[";
 
-    if ((int)columnIndices.find_first() == -1)
+    if (columnIndices.find_first() == boost::dynamic_bitset<>::npos)
         return "[]";
 
     auto relation = schema.lock();
@@ -111,6 +111,29 @@ string Vertical::toString() const {
 
     return result;
 }
+
+std::string Vertical::toIndicesString() const {
+    string result = "[";
+
+    if (columnIndices.find_first() == boost::dynamic_bitset<>::npos) {
+        return "[]";
+    }
+
+    auto relation = schema.lock();
+    for (size_t index = columnIndices.find_first();
+         index != dynamic_bitset<>::npos;
+         index = columnIndices.find_next(index)) {
+        result += std::to_string(index);
+        if (columnIndices.find_next(index) != dynamic_bitset<>::npos) {
+            result += ',';
+        }
+    }
+
+    result += ']';
+
+    return result;
+}
+
 
 vector<shared_ptr<Vertical>> Vertical::getParents() {
     if (getArity() < 2) return vector<shared_ptr<Vertical>>();

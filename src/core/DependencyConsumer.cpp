@@ -29,3 +29,34 @@ std::string DependencyConsumer::uccsToString() const {
     return result;
 }
 
+std::string DependencyConsumer::getJsonFDs() {
+    std::string result = "{\"fds\": [";
+    std::list<std::string> discoveredFDStrings;
+    for (auto& fd : discoveredFDs_) {
+        discoveredFDStrings.push_back(fd.toIndicesString());
+    }
+    discoveredFDStrings.sort();
+    for (auto const& fd : discoveredFDStrings) {
+        result += '\"' + fd + "\",";
+    }
+    if (result.back() == ',') {
+        result.erase(result.size() - 1);
+    }
+    result += ']';
+
+    result += ", \"uccs\": [";
+    std::list<std::string> discoveredUCCStrings;
+    for (auto& ucc : discoveredUCCs_) {
+        discoveredUCCStrings.push_back(ucc.toIndicesString());
+    }
+    discoveredUCCStrings.sort();
+    for (auto const& ucc : discoveredUCCStrings) {
+        result += '\"' + ucc + "\",";
+    }
+    if (result.back() == ',') {
+        result.erase(result.size() - 1);
+    }
+    result += "]}";
+    return result;
+}
+
