@@ -13,8 +13,8 @@ public:
     constexpr static char INPUT_FILE_CONFIG_KEY[] = "inputFile";
 
     //TODO: these consts should go in class (or struct) Configuration
-    const double maxFdError = 0.01;
-    const double maxUccError = 0.01;
+    const double maxFdError = 0;
+    const double maxUccError = 0;
     const int maxArity = 20;
     //TODO: DO NOT FORGET ABOUT MAXARITY!! - SET ARITY IN CONSTRUCTOR
     // no evidence that there will be multiple Tane instances + tricky static stuff => just const
@@ -23,8 +23,8 @@ public:
     int countOfUCC = 0;
     long aprioriMillis = 0;
 
-    explicit Tane(fs::path const& path, char separator = ',', bool hasHeader = true)
-            : FDAlgorithm(path, separator, hasHeader) {}
+    explicit Tane(fs::path const& path, char separator = ',', bool hasHeader = true, double maxError = 0)
+            : FDAlgorithm(path, separator, hasHeader), maxFdError(maxError), maxUccError(maxError) {}
     unsigned long long execute() override;
 
     static double calculateZeroAryFdError(shared_ptr<ColumnData> rhs, shared_ptr<ColumnLayoutRelationData> relationData);
