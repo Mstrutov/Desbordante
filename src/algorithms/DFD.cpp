@@ -14,19 +14,20 @@ unsigned long long DFD::execute() {
     shared_ptr<ColumnLayoutRelationData> relation = ColumnLayoutRelationData::createFrom(inputGenerator_, true);//second parameter?
     shared_ptr<RelationalSchema> schema = relation->getSchema();
 
+    std::list<shared_ptr<Column>> possibleRHSs(schema->getColumns().begin(), schema->getColumns().end());
+
     //first loop of DFD
-    for (auto column : schema->getColumns()) {
-        shared_ptr<ColumnData> columnData = relation->getColumnData(column->getIndex());
+    for (auto columnIter = possibleRHSs.begin(); columnIter != possibleRHSs.end(); columnIter++) {
+        shared_ptr<ColumnData> columnData = relation->getColumnData((*columnIter)->getIndex());
         shared_ptr<PositionListIndex> columnPLI = columnData->getPositionListIndex();
 
         //if current column is unique
         if (columnPLI->getNumNonSingletonCluster() == 0) {
-            auto lhs = Vertical(*column);
+            possibleRHSs.erase(columnIter);
+            auto lhs = Vertical(**columnIter);
 
-            for (auto rhs : schema->getColumns()) {
-                if (rhs->getIndex() != column->getIndex()) {
-                    this->registerFD(lhs, *rhs); //TODO ptrs???
-                }
+            for (auto rhs : possibleRHSs) {
+                this->registerFD(lhs, *rhs); //TODO ptrs???
             }
         }
     }
