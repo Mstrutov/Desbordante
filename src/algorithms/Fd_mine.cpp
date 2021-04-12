@@ -70,8 +70,10 @@ void Fd_mine::computeNonTrivialClosure(dynamic_bitset<> xi) {
                 plis[y] = columnData->getPositionListIndex();
             }
 
-            plis[xiy] = plis[xi]->intersect(plis[y]);
-
+            if (!plis.count(xiy)) {
+                plis[xiy] = plis[xi]->intersect(plis[y]);
+            }
+            
             if (plis[xi]->getNumCluster()  == plis[xiy]->getNumCluster() ) {
                 closure[xi][columnIndex] = 1;
             }
