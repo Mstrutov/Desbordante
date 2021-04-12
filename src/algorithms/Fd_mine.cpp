@@ -1,9 +1,9 @@
 #include "Fd_mine.h"
 
 #include <map>
+#include <queue>
 #include <set>
 #include <vector>
-#include <queue>
 
 #include "ColumnLayoutRelationData.h"
 #include "LatticeVertex.h"
@@ -16,8 +16,7 @@ unsigned long long Fd_mine::execute() {
 
     r = dynamic_bitset<>(schema->getNumColumns());
 
-    for (size_t columnIndex = 0; columnIndex < schema->getNumColumns();
-         columnIndex++) {
+    for (size_t columnIndex = 0; columnIndex < schema->getNumColumns(); columnIndex++) {
         dynamic_bitset<> tmp(schema->getNumColumns());
         tmp[columnIndex] = 1;
         r[columnIndex] = 1;
@@ -51,8 +50,7 @@ void Fd_mine::computeNonTrivialClosure(dynamic_bitset<> xi) {
     if (!closure.count(xi)) {
         closure[xi] = dynamic_bitset<>(xi.size());
     }
-    for (int columnIndex = 0; columnIndex < schema->getNumColumns();
-         columnIndex++) {
+    for (int columnIndex = 0; columnIndex < schema->getNumColumns(); columnIndex++) {
         if ((r - xi - closure[xi])[columnIndex]) {
             dynamic_bitset<> xiy = xi;
             dynamic_bitset<> y(schema->getNumColumns());
@@ -73,8 +71,8 @@ void Fd_mine::computeNonTrivialClosure(dynamic_bitset<> xi) {
             if (!plis.count(xiy)) {
                 plis[xiy] = plis[xi]->intersect(plis[y]);
             }
-            
-            if (plis[xi]->getNumCluster()  == plis[xiy]->getNumCluster() ) {
+
+            if (plis[xi]->getNumCluster() == plis[xiy]->getNumCluster()) {
                 closure[xi][columnIndex] = 1;
             }
         }
@@ -92,8 +90,7 @@ void Fd_mine::obtainEQSet() {
     for (auto &xi : candidateSet) {
         for (auto &[x, xClosure] : fdSet) {
             dynamic_bitset<> z = xi & x;
-            if ((xi - z).is_subset_of(xClosure) &&
-                (x - z).is_subset_of(closure[xi])) {
+            if ((xi - z).is_subset_of(xClosure) && (x - z).is_subset_of(closure[xi])) {
                 if (x != xi) {
                     eqSet[x].insert(xi);
                     eqSet[xi].insert(x);
@@ -128,8 +125,7 @@ void Fd_mine::pruneCandidates() {
 }
 
 void Fd_mine::generateCandidates() {
-    std::vector<dynamic_bitset<>> candidates(candidateSet.begin(),
-                                             candidateSet.end());
+    std::vector<dynamic_bitset<>> candidates(candidateSet.begin(), candidateSet.end());
 
     dynamic_bitset<> xi;
     dynamic_bitset<> xj;
@@ -144,8 +140,7 @@ void Fd_mine::generateCandidates() {
             if ((xi ^ xj).count() == 2) {
                 xij = xi | xj;
 
-                if (!(xj).is_subset_of(fdSet[xi]) &&
-                    !(xi).is_subset_of(fdSet[xj])) {
+                if (!(xj).is_subset_of(fdSet[xi]) && !(xi).is_subset_of(fdSet[xj])) {
                     if (!plis.count(xi)) {
                         shared_ptr<ColumnData> columnData =
                             relation->getColumnData(xi.find_first());
@@ -176,42 +171,39 @@ void Fd_mine::generateCandidates() {
 void Fd_mine::display() {
     int count_fd = 0;
     std::queue<dynamic_bitset<>> queue;
-    
 
     for (auto [lhs, rhs] : fdSet) {
         std::map<dynamic_bitset<>, bool> observed;
         observed[lhs] = true;
         dynamic_bitset<> Rhs = rhs;
         queue.push(lhs);
-        for(auto [eq, eqset] : eqSet) {
-            if(eq.is_subset_of(Rhs)) {
-                for(auto eqRhs : eqset) {
+        for (auto [eq, eqset] : eqSet) {
+            if (eq.is_subset_of(Rhs)) {
+                for (auto eqRhs : eqset) {
                     Rhs |= eqRhs;
                 }
-            }             
+            }
         }
         fdSet[lhs] |= Rhs;
 
-        while(!queue.empty()) {
+        while (!queue.empty()) {
             dynamic_bitset<> currentLhs = queue.front();
             queue.pop();
-            for(auto [eq, eqset] : eqSet) {
-
-                if(eq.is_subset_of(currentLhs)) {
+            for (auto [eq, eqset] : eqSet) {
+                if (eq.is_subset_of(currentLhs)) {
                     for (auto newEq : eqset) {
                         dynamic_bitset<> generatedLhs = (currentLhs - eq) | newEq;
-                        if(fdSet.count(generatedLhs)) {
+                        if (fdSet.count(generatedLhs)) {
                             fdSet[generatedLhs] |= Rhs;
                         } else {
                             fdSet[generatedLhs] = Rhs;
                         }
-                        if(!observed[generatedLhs]) {
+                        if (!observed[generatedLhs]) {
                             queue.push(generatedLhs);
                             observed[generatedLhs] = true;
                         }
                     }
                 }
-                
             }
         }
     }
