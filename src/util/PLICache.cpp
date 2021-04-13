@@ -27,14 +27,15 @@ PLICache::PLICache(ColumnLayoutRelationData* relationData, CachingMethod caching
     for (auto& column_ptr : relationData->getSchema()->getColumns()) {
         index_->put(
                 static_cast<Vertical>(*column_ptr),
-                relationData->getColumnData(column_ptr->getIndex()).moveOutPositionListIndex());
+                relationData->getColumnData(column_ptr->getIndex()).getPLIOwnership());
     }
 }
 
 PLICache::~PLICache() {
     for (auto& column_ptr : relationData_->getSchema()->getColumns()) {
-        auto PLI = index_->remove(static_cast<Vertical>(*column_ptr));
-        relationData_->getColumnData(column_ptr->getIndex()).moveInPositionListIndex(std::move(PLI));
+        //auto PLI =
+        index_->remove(static_cast<Vertical>(*column_ptr));
+        //relationData_->getColumnData(column_ptr->getIndex()).getPLI(std::move(PLI));
     }
 }
 
