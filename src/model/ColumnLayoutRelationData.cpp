@@ -9,23 +9,24 @@
 using namespace std;
 
 //vector <- pass by reference
-ColumnLayoutRelationData::ColumnLayoutRelationData(shared_ptr<RelationalSchema>& schema, vector<shared_ptr<ColumnData>> columnData) :
+ColumnLayoutRelationData::ColumnLayoutRelationData(shared_ptr<RelationalSchema> const& schema,
+                                                   vector<shared_ptr<ColumnData>> columnData) :
     RelationData(schema),
     columnData(std::move(columnData)){}
 
-vector<shared_ptr<ColumnData>> ColumnLayoutRelationData::getColumnData() {
+vector<shared_ptr<ColumnData>> ColumnLayoutRelationData::getColumnData() const {
     return columnData;
 }
 
-shared_ptr<ColumnData> ColumnLayoutRelationData::getColumnData(int columnIndex) {
+shared_ptr<ColumnData> ColumnLayoutRelationData::getColumnData(int columnIndex) const {
     return columnData[columnIndex];
 }
 
-unsigned int ColumnLayoutRelationData::getNumRows() {
+unsigned int ColumnLayoutRelationData::getNumRows() const {
     return columnData[0]->getProbingTable()->size();
 }
 
-vector<int> ColumnLayoutRelationData::getTuple(int tupleIndex) {
+vector<int> ColumnLayoutRelationData::getTuple(int tupleIndex) const {
     int numColumns = schema->getNumColumns();
     vector<int> tuple = vector<int>(numColumns);
     for (int columnIndex = 0; columnIndex < numColumns; columnIndex++){

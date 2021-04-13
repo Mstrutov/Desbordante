@@ -36,5 +36,6 @@ public:
     string toString() const { return "[" + name + "]";}
     std::string toIndicesString() const { return std::to_string(index); }
     explicit operator std::string() const { return toString(); }
-    bool operator==(const Column& rhs);
+    bool operator==(const Column& rhs) const;
+    bool operator!=(const Column& rhs) const;
 };
