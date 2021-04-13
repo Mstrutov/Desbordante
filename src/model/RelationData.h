@@ -20,17 +20,17 @@ public:
     //c++17: inline initialization || constexpr
     static const int nullValueId;
 
-    virtual unsigned int getNumRows()=0;
-    unsigned int getNumColumns();
-    virtual vector<shared_ptr<ColumnData>> getColumnData()=0;
-    virtual shared_ptr<ColumnData> getColumnData(int columnIndex)=0;
-    virtual vector<int> getTuple(int tupleIndex)=0;
+    virtual unsigned int getNumRows() const = 0;
+    unsigned int getNumColumns() const;
+    virtual vector<shared_ptr<ColumnData>> getColumnData() const = 0;
+    virtual shared_ptr<ColumnData> getColumnData(int columnIndex) const = 0;
+    virtual vector<int> getTuple(int tupleIndex) const = 0;
     virtual void shuffleColumns()=0;
-    double getMaximumNip() { return getNumRows() * (getNumRows() - 1) / 2.0; }
-    unsigned long long getNumTuplePairs() { return (unsigned long long) getNumRows() * (getNumRows() - 1) / 2; }
+    double getMaximumNip() const { return getNumRows() * (getNumRows() - 1) / 2.0; }
+    unsigned long long getNumTuplePairs() const { return (unsigned long long) getNumRows() * (getNumRows() - 1) / 2; }
 
-    shared_ptr<RelationalSchema> getSchema();
+    shared_ptr<RelationalSchema> getSchema() const;
 protected:
-    explicit RelationData(shared_ptr<RelationalSchema>& schema);
+    explicit RelationData(shared_ptr<RelationalSchema> const& schema);
     shared_ptr<RelationalSchema> schema;
 };
