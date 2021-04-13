@@ -28,7 +28,7 @@ private:
         size_t offset_;
         size_t dimension_;
         std::vector<std::unique_ptr<SetTrie>> subtries_; //unique_ptr?
-        std::unique_ptr<Value> value_;
+        std::shared_ptr<Value> value_;
 
         bool isEmpty() const;
 
@@ -39,14 +39,14 @@ private:
         // Sets given key to a given value
         // Returns the old value with ownership
         // Not a const method as SetTrie gets changed
-        std::unique_ptr<Value> associate(bitset const& key, size_t nextBit, std::unique_ptr<Value> value);
+        std::shared_ptr<Value> associate(bitset const& key, size_t nextBit, std::shared_ptr<Value> value);
 
         // Returns a pointer to the value mapped by the given key
         Value const* get(bitset const& key, size_t nextBit) const;
 
         // Erases an entry with the given key
         // Returns the old value with ownership
-        std::unique_ptr<Value> remove(bitset const& key, size_t nextBit);
+        std::shared_ptr<Value> remove(bitset const& key, size_t nextBit);
 
         // Gets the subtrie with the given index. If such a subtrie does not exist, creates one
         // Not a const method as a SetTrie may be created
@@ -95,9 +95,9 @@ public:
     Value const* get(Vertical const &key) const;
     Value const* get(bitset const &key) const;
     bool containsKey(Vertical const& key) { return get(key) != nullptr; }
-    std::unique_ptr<Value> put(Vertical const& key, std::unique_ptr<Value> value);
-    std::unique_ptr<Value> remove(Vertical const& key);
-    std::unique_ptr<Value> remove(bitset const& key);
+    std::shared_ptr<Value> put(Vertical const& key, std::shared_ptr<Value> value);
+    std::shared_ptr<Value> remove(Vertical const& key);
+    std::shared_ptr<Value> remove(bitset const& key);
 
     // non-const version of get() for костыль purposes
     Value* get(Vertical const& key);

@@ -6,13 +6,12 @@
 #include "DependencyCandidate.h"
 
 template <class Value>
-std::unique_ptr<Value> VerticalMap<Value>::SetTrie::associate(
-        bitset const& key, size_t nextBit, std::unique_ptr<Value> value) {
+std::shared_ptr<Value> VerticalMap<Value>::SetTrie::associate(
+        bitset const& key, size_t nextBit, std::shared_ptr<Value> value) {
     nextBit = (nextBit == 0 ? key.find_first() : key.find_next(nextBit - 1));
     if (nextBit == boost::dynamic_bitset<>::npos) {
-        auto oldValue = std::move(value_);
-        value_ = std::move(value);
-        return oldValue;
+        std::swap(value, value_);
+        return value;
     }
     return getOrCreateSubTrie(nextBit)->associate(key, nextBit + 1, std::move(value));
 }
@@ -30,10 +29,10 @@ Value const* VerticalMap<Value>::SetTrie::get(bitset const&key, size_t nextBit) 
 }
 
 template <class Value>
-std::unique_ptr<Value> VerticalMap<Value>::SetTrie::remove(bitset const&key, size_t nextBit) {
+std::shared_ptr<Value> VerticalMap<Value>::SetTrie::remove(bitset const&key, size_t nextBit) {
     nextBit = (nextBit == 0 ? key.find_first() : key.find_next(nextBit - 1));
     if (nextBit == bitset::npos) {
-        auto removedValue = std::move(value_);
+        auto removedValue = value_;
         value_ = nullptr;
         return removedValue;
     }
@@ -418,14 +417,14 @@ unsigned int VerticalMap<Value>::removeFromUsageCounter(
 }
 
 template<class Value>
-std::unique_ptr<Value> VerticalMap<Value>::remove(Vertical const &key) {
+std::shared_ptr<Value> VerticalMap<Value>::remove(Vertical const &key) {
     auto removedValue = setTrie_.remove(key.getColumnIndices(), 0);
     if (removedValue != nullptr) size_--;
     return removedValue;
 }
 
 template<class Value>
-std::unique_ptr<Value> VerticalMap<Value>::remove(const VerticalMap::bitset &key)  {
+std::shared_ptr<Value> VerticalMap<Value>::remove(const VerticalMap::bitset &key)  {
     auto removedValue = setTrie_.remove(key, 0);
     if (removedValue != nullptr) size_--;
     return removedValue;
@@ -509,7 +508,7 @@ void VerticalMap<Value>::shrink(std::unordered_map<Vertical, unsigned int> &usag
 }
 
 template<class Value>
-std::unique_ptr<Value> VerticalMap<Value>::put(Vertical const &key, std::unique_ptr<Value> value) {
+std::shared_ptr<Value> VerticalMap<Value>::put(Vertical const &key, std::shared_ptr<Value> value) {
     auto oldValue = setTrie_.associate(key.getColumnIndices(), 0, std::move(value));
     if (oldValue == nullptr) size_++;
 
