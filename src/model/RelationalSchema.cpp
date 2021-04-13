@@ -1,7 +1,3 @@
-//
-// Created by kek on 17.07.19.
-//
-
 #include <utility>
 
 #include "RelationalSchema.h"
