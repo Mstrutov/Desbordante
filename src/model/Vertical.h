@@ -24,7 +24,6 @@ private:
     weak_ptr<RelationalSchema> schema;
 
 public:
-    //TODO: think about passing dynamic_bitset.
     Vertical(shared_ptr<RelationalSchema> relSchema, dynamic_bitset<> const & indices);
     Vertical() = default;
     explicit Vertical(Column & col);
@@ -32,25 +31,25 @@ public:
     //Vertical(Vertical& other) = default;
     Vertical(Vertical const& other) = default;
     Vertical& operator=(const Vertical& rhs) = default;
-    Vertical(Vertical&& other) = default;        //just = default
+    Vertical(Vertical&& other) = default;
     Vertical& operator=(Vertical&& rhs) = default;
     virtual ~Vertical() = default;
     bool operator==(Vertical const& other) const { return columnIndices == other.columnIndices; }
 
     dynamic_bitset<> getColumnIndices() const { return columnIndices; }
     shared_ptr<RelationalSchema> getSchema() { return schema.lock(); }
-    bool contains(Vertical& that);
-    bool intersects(Vertical& that);
-    std::shared_ptr<Vertical> Union(Vertical const& that);
-    std::shared_ptr<Vertical> project(Vertical& that);
+    bool contains(Vertical const& that) const;
+    bool intersects(Vertical const& that) const;
+    std::shared_ptr<Vertical> Union(Vertical const& that) const;
+    std::shared_ptr<Vertical> project(Vertical const& that) const;
     std::shared_ptr<Vertical> without (Vertical const & that) const;
-    std::shared_ptr<Vertical> invert();
-    std::shared_ptr<Vertical> invert(Vertical& scope);
+    std::shared_ptr<Vertical> invert() const;
+    std::shared_ptr<Vertical> invert(Vertical const& scope) const;
+
     static Vertical emptyVertical(shared_ptr<RelationalSchema> relSchema);
     unsigned int getArity() const { return columnIndices.count(); }
     vector<shared_ptr<Column>> getColumns() const;
     vector<shared_ptr<Vertical>> getParents();
-    //possible to use list or set?
 
     string toString() const;
 
