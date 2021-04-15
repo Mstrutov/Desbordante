@@ -21,14 +21,14 @@ private:
     vector<shared_ptr<ColumnData>> columnData;
 
 public:
-    vector<shared_ptr<ColumnData>> getColumnData() override;
-    shared_ptr<ColumnData> getColumnData(int columnIndex) override;
-    unsigned int getNumRows() override;
-    vector<int> getTuple(int tupleIndex) override;
+    vector<shared_ptr<ColumnData>> getColumnData() const override;
+    shared_ptr<ColumnData> getColumnData(int columnIndex) const override;
+    unsigned int getNumRows() const override;
+    vector<int> getTuple(int tupleIndex) const override;
     void shuffleColumns() override;
     double getMaximumEntropy() { return std::log(getNumRows()); }
 
-    ColumnLayoutRelationData(shared_ptr<RelationalSchema>& schema, vector<shared_ptr<ColumnData>> columnData);
+    ColumnLayoutRelationData(shared_ptr<RelationalSchema> const& schema, vector<shared_ptr<ColumnData>> columnData);
 
     static shared_ptr<ColumnLayoutRelationData> createFrom(CSVParser& fileInput, bool isNullEqNull);
     static shared_ptr<ColumnLayoutRelationData> createFrom(CSVParser& fileInput, bool isNullEqNull, int maxCols, long maxRows);
