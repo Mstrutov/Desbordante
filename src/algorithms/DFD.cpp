@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <random>
 
-#include "LatticeNode.h"
 #include "../model/ColumnLayoutRelationData.h"
 #include "../model/RelationalSchema.h"
 #include "../util/PositionListIndex.h"
@@ -43,7 +42,7 @@ unsigned long long DFD::execute() {
     }
 }
 
-shared_ptr<LatticeNode> DFD::takeRandom(std::list<shared_ptr<LatticeNode>> const& nodeList) {
+shared_ptr<Vertical> DFD::takeRandom(std::list<shared_ptr<Vertical>> const& nodeList) {
     std::uniform_int_distribution<> dis(0, std::distance(nodeList.begin(), nodeList.end()) - 1);
     auto iterator = nodeList.begin();
     std::advance(iterator, dis(this->gen));
@@ -51,31 +50,25 @@ shared_ptr<LatticeNode> DFD::takeRandom(std::list<shared_ptr<LatticeNode>> const
 }
 
 void DFD::findLHSs(shared_ptr<Column> rhs, shared_ptr<RelationalSchema> schema) {
-    /*std::list<shared_ptr<Vertical>> seeds;
+
+    std::vector<shared_ptr<Vertical>> minimalDeps; //TODO мб их определять либо в функции execute, либо полями класса
+    std::vector<shared_ptr<Vertical>> maximalNonDeps;
+
+    std::list<shared_ptr<Vertical>> seeds; //TODO лист или вектор?
 
     //initialize seeds nodes
     for (auto column : schema->getColumns()) {
         //add to seeds all columns except rhs
         if (column->getIndex() != rhs->getIndex())
-            seeds.emplace_back(std::make_shared<Vertical>(*column)); //TO DO проверить
-    }*/
-
-    std::vector<shared_ptr<LatticeNode>> minimalDeps; //TODO мб их определять либо в функции execute, либо полями класса
-    std::vector<shared_ptr<LatticeNode>> maximalNonDeps;
-
-    std::list<shared_ptr<LatticeNode>> seeds; //TODO лист или вектор?
-
-    for (auto column : schema->getColumns()) {
-        //add to seeds all columns except rhs
-        if (column->getIndex() != rhs->getIndex()) {
-            seeds.emplace_back(std::make_shared<LatticeNode>(*column)); //TODO проверить
-        }
+            seeds.emplace_back(std::make_shared<Vertical>(*column)); //TODO проверить
     }
 
+
+
     while (!seeds.empty()) {
-        shared_ptr<LatticeNode> node = takeRandom(seeds);
+        shared_ptr<Vertical> node = takeRandom(seeds);
         do {
-            if (node->isVisited() && node->isCandidate()) {
+            /*if (node->isVisited() && node->isCandidate()) {
                 if (node->isMinimalDependency()) {
                     minimalDeps.push_back(node);
                 } else if (node->isMaximalNonDependency()) {
@@ -86,6 +79,28 @@ void DFD::findLHSs(shared_ptr<Column> rhs, shared_ptr<RelationalSchema> schema) 
                 if (!inferCategory(node)) {
                     computePartitions(node);
                 }
+            }*/
+
+            auto nodeObservation = observations.find(*node);
+            if (nodeObservation != observations.end()) {
+                NodeCategory& nodeCategory = nodeObservation->second;
+
+                if (nodeCategory == NodeCategory::candidateMinimalDependency &&
+                    observations.checkIfMinimalDependency(node)
+                ) {
+                    nodeCategory = NodeCategory::minimalDependency;
+                    minimalDeps.push_back(node);
+                    observations.updateDependencyType(*node);//TODO хз зачем это говно
+
+                } else if (nodeCategory == NodeCategory::candidateMaximalNonDependency &&
+                           observations.checkIfMaximalNonDependency(node)
+                ) {
+                    nodeCategory = NodeCategory::maximalNonDependency;
+                    maximalNonDeps.push_back(node);
+                    observations.updateDependencyType(*node);
+                }
+
+                //observations.updateDependencyType(*node);
             }
 
             node = pickNextNode();
