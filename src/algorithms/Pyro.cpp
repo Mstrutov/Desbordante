@@ -80,6 +80,7 @@ unsigned long long Pyro::execute() {
     /*std::cout << "====RESULTS-FD====\r\n" << fdsToString();
     std::cout << "====RESULTS-UCC====\r\n" << uccsToString();
     std::cout << "====JSON-FD========\r\n" << FDAlgorithm::getJsonFDs() << std::endl;*/
+
     std::cout << "HASH: " << FDAlgorithm::fletcher16() << std::endl;
     return elapsed_milliseconds.count();
 }
@@ -91,7 +92,7 @@ Pyro::Pyro(std::filesystem::path const &path, char separator, bool hasHeader, in
         evictionMethod_(CacheEvictionMethod::DEFAULT) {
     uccConsumer_ = [this](auto const& key) { this->discoveredUCCs_.push_back(key); };
     fdConsumer_ = [this](auto const& fd) {
-        this->discoveredFDs_.push_back(fd); this->fdCollection_.emplace_back(*fd.lhs_, *fd.rhs_); };
+        this->discoveredFDs_.push_back(fd); this->fdCollection_.emplace_back(fd.lhs_, fd.rhs_); };
     configuration_.seed = seed;
     configuration_.maxUccError = maxError;
     configuration_.maxUccError = maxError;

@@ -29,11 +29,11 @@ double Tane::calculateUccError(PositionListIndex const* pli, ColumnLayoutRelatio
 
 void Tane::registerFD(Vertical const& lhs, Column const* rhs, double error, RelationalSchema const* schema) {
     dynamic_bitset<> lhs_bitset = lhs.getColumnIndices();
-    std::cout << "Discovered FD: ";
+    /*std::cout << "Discovered FD: ";
     for (size_t i = lhs_bitset.find_first(); i != dynamic_bitset<>::npos; i = lhs_bitset.find_next(i)) {
         std::cout << schema->getColumn(i)->getName() << " ";
     }
-    std::cout << "-> " << rhs->getName() << " - error equals " << error << std::endl;
+    std::cout << "-> " << rhs->getName() << " - error equals " << error << std::endl;*/
     FDAlgorithm::registerFD(lhs, *rhs);
     countOfFD++;
 }
@@ -43,12 +43,12 @@ void Tane::registerFD(Vertical const& lhs, Column const* rhs, double error, Rela
 }*/
 
 void Tane::registerUCC(Vertical const& key, double error, RelationalSchema const* schema)  {
-    dynamic_bitset<> key_bitset = key.getColumnIndices();
+    /*dynamic_bitset<> key_bitset = key.getColumnIndices();
     std::cout << "Discovered UCC: ";
     for (int i = key_bitset.find_first(); i != -1; i = key_bitset.find_next(i)) {
         std::cout << schema->getColumn(i)->getName() << " ";
     }
-    std::cout << "- error equals " << error << std::endl;
+    std::cout << "- error equals " << error << std::endl;*/
     countOfUCC++;
 }
 
