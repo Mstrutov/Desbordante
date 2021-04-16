@@ -21,7 +21,8 @@ public:
 
     bool isCandidate(shared_ptr<Vertical> const& vertical);
     bool isVisited(shared_ptr<Vertical> const& vertical) { return this->find(*vertical) != this->end();} //нужна ли?
-    bool checkIfMinimalDependency(shared_ptr<Vertical> const& vertical);
-    bool checkIfMaximalNonDependency(shared_ptr<Vertical>  const& vertical);
+
+    NodeCategory updateDependencyCategory(shared_ptr<Vertical>  const& vertical);
+    NodeCategory updateNonDependencyCategory(shared_ptr<Vertical>  const& vertical);
 
 };

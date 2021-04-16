@@ -68,46 +68,31 @@ void DFD::findLHSs(shared_ptr<Column> rhs, shared_ptr<RelationalSchema> schema) 
     while (!seeds.empty()) {
         shared_ptr<Vertical> node = takeRandom(seeds);
         do {
-            /*if (node->isVisited() && node->isCandidate()) {
-                if (node->isMinimalDependency()) {
-                    minimalDeps.push_back(node);
-                } else if (node->isMaximalNonDependency()) {
-                    maximalNonDeps.push_back(node);
-                }
-                node.updateDependencyType();
-            } else {
-                if (!inferCategory(node)) {
-                    computePartitions(node);
-                }
-            }*/
+            auto const nodeObservation = observations.find(*node); //const?
 
-            auto nodeObservation = observations.find(*node);
             if (nodeObservation != observations.end()) {
                 NodeCategory& nodeCategory = nodeObservation->second;
 
-                if (nodeCategory == NodeCategory::candidateMinimalDependency &&
-                    observations.checkIfMinimalDependency(node)
-                ) {
-                    nodeCategory = NodeCategory::minimalDependency;
-                    minimalDeps.push_back(node);
-                    observations.updateDependencyType(*node);//TODO хз зачем это говно
-
-                } else if (nodeCategory == NodeCategory::candidateMaximalNonDependency &&
-                           observations.checkIfMaximalNonDependency(node)
-                ) {
-                    nodeCategory = NodeCategory::maximalNonDependency;
-                    maximalNonDeps.push_back(node);
-                    observations.updateDependencyType(*node);
+                if (nodeCategory == NodeCategory::candidateMinimalDependency) {
+                    nodeCategory = observations.updateDependencyCategory(node);
+                    if (nodeCategory == NodeCategory::minimalDependency) {
+                        minimalDeps.push_back(node);
+                    }
+                } else if (nodeCategory == NodeCategory::candidateMaximalNonDependency) {
+                    nodeCategory = observations.updateNonDependencyCategory(node);
+                    if (nodeCategory == NodeCategory::maximalNonDependency) {
+                        maximalNonDeps.push_back(node);
+                    }
                 }
 
-                //observations.updateDependencyType(*node);
+            } else {
+                
             }
-
-            node = pickNextNode();
+            node = pickNextNode(node);
         } while (node != nullptr);
     }
 }
 
-shared_ptr<LatticeNode> pickNextNode(shared_ptr<LatticeNode> node) {
+shared_ptr<Vertical> pickNextNode(shared_ptr<Vertical> node) {
 
 }
