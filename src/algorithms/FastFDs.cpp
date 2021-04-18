@@ -12,7 +12,7 @@
 
 using std::vector, std::shared_ptr, std::set;
 
-bool operator<(Vertical const& l, Vertical const& r) {
+static bool operator<(Vertical const& l, Vertical const& r) {
     dynamic_bitset<> const& l_bitset = l.getColumnIndices();
     dynamic_bitset<> const& r_bitset = r.getColumnIndices();
     if (l_bitset == r_bitset)
@@ -47,19 +47,19 @@ unsigned long long FastFDs::execute() {
             registerFD(Vertical(), *column);
         } else if (!(diff_sets_mod.size() == 1 && *diff_sets_mod.back() == *schema_->emptyVertical)) {
             // use vector instead of set?
-            set<Column, OrderingComparator> init_ordering = getOrdering(diff_sets_mod, *column);
+            set<Column, OrderingComparator> init_ordering = getInitOrdering(diff_sets_mod, *column);
             findCovers(*column, diff_sets_mod, diff_sets_mod, *schema_->emptyVertical, init_ordering);
         }
     }
 
-    verifyFDs();
+    verifyFDsWithEmptyLHS();
 
     auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time);
 
     return elapsed_milliseconds.count();
 }
 
-void FastFDs::verifyFDs() {
+void FastFDs::verifyFDsWithEmptyLHS() {
     vector<ushort> fds_per_col(schema_->getNumColumns(), 0);
     for (auto const& fd : fdCollection_) {
         if (fd.getLhs().getArity() == 1)
@@ -102,7 +102,7 @@ void FastFDs::findCovers(Column const& attribute, vector<shared_ptr<Vertical>> c
                 next_diff_sets.push_back(diff_set);
         }
 
-        auto next_ordering = getOrdering(next_diff_sets, column, ordering);
+        auto next_ordering = getNextOrdering(next_diff_sets, column, ordering);
         findCovers(attribute, diff_sets_mod, next_diff_sets, *path.Union(column), next_ordering);
     }
 }
@@ -128,8 +128,8 @@ bool FastFDs::coverMinimal(Vertical const& cover, vector<shared_ptr<Vertical>> c
     return true; // cover is minimal
 }
 
-static bool orderingComp(vector<shared_ptr<Vertical>> const& diff_sets,
-                         Column const& l_col, Column const& r_col) {
+bool FastFDs::orderingComp(vector<shared_ptr<Vertical>> const& diff_sets,
+                           Column const& l_col, Column const& r_col) const {
         unsigned cov_l = 0;
         unsigned cov_r = 0;
 
@@ -146,13 +146,12 @@ static bool orderingComp(vector<shared_ptr<Vertical>> const& diff_sets,
 }
 
 set<Column, FastFDs::OrderingComparator>
-FastFDs::getOrdering(vector<shared_ptr<Vertical>> const& diff_sets, Column const& attribute) const {
-    auto ordering_comp = [&diff_sets](Column const& l_col, Column const& r_col) {
+FastFDs::getInitOrdering(vector<shared_ptr<Vertical>> const& diff_sets, Column const& attribute) const {
+    auto ordering_comp = [&diff_sets, this](Column const& l_col, Column const& r_col) {
         return orderingComp(diff_sets, l_col, r_col);
     };
     set<Column, OrderingComparator> ordering(ordering_comp);
     for (auto const& col : schema_->getColumns()) {
-        // no operator != for Columns
         if (*col != attribute)
             ordering.insert(*col);
     }
@@ -160,9 +159,9 @@ FastFDs::getOrdering(vector<shared_ptr<Vertical>> const& diff_sets, Column const
 }
 
 set<Column, FastFDs::OrderingComparator>
-FastFDs::getOrdering(vector<shared_ptr<Vertical>> const& diff_sets, Column const& attribute,
-                     set<Column, OrderingComparator> const& cur_ordering) const {
-    auto ordering_comp = [&diff_sets](Column const& l_col, Column const& r_col) {
+FastFDs::getNextOrdering(vector<shared_ptr<Vertical>> const& diff_sets, Column const& attribute,
+                         set<Column, OrderingComparator> const& cur_ordering) const {
+    auto ordering_comp = [&diff_sets, this](Column const& l_col, Column const& r_col) {
         return orderingComp(diff_sets, l_col, r_col);
     };
     set<Column, OrderingComparator> ordering(ordering_comp);
