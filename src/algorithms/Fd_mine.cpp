@@ -13,6 +13,7 @@ unsigned long long Fd_mine::execute() {
     // 1
     relation = ColumnLayoutRelationData::createFrom(inputGenerator, true);
     schema = relation->getSchema();
+    auto startTime = std::chrono::system_clock::now();
 
     r = dynamic_bitset<>(schema->getNumColumns());
 
@@ -42,8 +43,8 @@ unsigned long long Fd_mine::execute() {
     // 3
     display();
 
-    // placeholder
-    return 0;
+    std::chrono::milliseconds elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
+    return elapsed_milliseconds.count();
 }
 
 void Fd_mine::computeNonTrivialClosure(dynamic_bitset<> xi) {
