@@ -26,7 +26,7 @@ private:
 public:
     Vertical(shared_ptr<RelationalSchema> relSchema, dynamic_bitset<> const & indices);
     Vertical() = default;
-    explicit Vertical(Column & col);
+    explicit Vertical(Column const& col);
 
     //Vertical(Vertical& other) = default;
     Vertical(Vertical const& other) = default;
@@ -37,12 +37,15 @@ public:
     bool operator==(Vertical const& other) const { return columnIndices == other.columnIndices; }
 
     dynamic_bitset<> getColumnIndices() const { return columnIndices; }
-    shared_ptr<RelationalSchema> getSchema() { return schema.lock(); }
+    shared_ptr<RelationalSchema> getSchema() const { return schema.lock(); }
     bool contains(Vertical const& that) const;
+    bool contains(Column const& that) const;
     bool intersects(Vertical const& that) const;
     std::shared_ptr<Vertical> Union(Vertical const& that) const;
+    std::shared_ptr<Vertical> Union(Column const& that) const;
     std::shared_ptr<Vertical> project(Vertical const& that) const;
-    std::shared_ptr<Vertical> without (Vertical const & that) const;
+    std::shared_ptr<Vertical> without(Vertical const& that) const;
+    std::shared_ptr<Vertical> without(Column const& that) const;
     std::shared_ptr<Vertical> invert() const;
     std::shared_ptr<Vertical> invert(Vertical const& scope) const;
 
