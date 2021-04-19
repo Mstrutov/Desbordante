@@ -84,7 +84,9 @@ vector<string> CSVParser::parseNext() {
             nextTokenEnd++;
         }
     }
-    result.emplace_back(nextTokenBegin, nextTokenEnd);
+    if (nextTokenBegin != nextLine.begin() || nextTokenBegin != nextTokenEnd) {
+        result.emplace_back(nextTokenBegin, nextTokenEnd);
+    }
 
     hasNext = !source.eof();
     if(hasNext){
