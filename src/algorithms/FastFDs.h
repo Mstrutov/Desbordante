@@ -58,12 +58,7 @@ private:
      */
     bool orderingComp(vector<shared_ptr<Vertical>> const& diff_sets,
                       Column const& l_col, Column const& r_col) const;
-    /* Examines list of mined FDs for non-minimal FDs
-     * such as [X]->[A] forall X in schema_->getColumns(),
-     * where column [A] contains equal values and replaces
-     * these FDs with []->[A]
-     */
-    void verifyFDsWithEmptyLHS();
+    bool columnContainsOnlyEqualValues(Column const& column) const;
 
     std::shared_ptr<ColumnLayoutRelationData> relation_;
     shared_ptr<RelationalSchema> schema_;

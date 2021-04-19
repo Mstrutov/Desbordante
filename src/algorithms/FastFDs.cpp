@@ -44,18 +44,20 @@ unsigned long long FastFDs::execute() {
     std::cout << "TIME TO DIFF SETS GENERATION: " << elapsed_mills_to_gen_diff_sets.count() << '\n';
 
     for (auto const& column : schema_->getColumns()) {
-        vector<shared_ptr<Vertical>> diff_sets_mod = getDiffSetsMod(*column);
-        if (diff_sets_mod.empty()) {
+        if (columnContainsOnlyEqualValues(*column)) {
             std::cout << "Registered FD: " << schema_->emptyVertical->toString() << "->" << column->toString() << '\n';
             registerFD(Vertical(), *column);
-        } else if (!(diff_sets_mod.size() == 1 && *diff_sets_mod.back() == *schema_->emptyVertical)) {
+            continue;
+        }
+
+        vector<shared_ptr<Vertical>> diff_sets_mod = getDiffSetsMod(*column);
+        assert(!diff_sets_mod.empty());
+        if (!(diff_sets_mod.size() == 1 && *diff_sets_mod.back() == *schema_->emptyVertical)) {
             // use vector instead of set?
             set<Column, OrderingComparator> init_ordering = getInitOrdering(diff_sets_mod, *column);
             findCovers(*column, diff_sets_mod, diff_sets_mod, *schema_->emptyVertical, init_ordering);
         }
     }
-
-    verifyFDsWithEmptyLHS();
 
     auto elapsed_milliseconds =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time);
@@ -63,25 +65,11 @@ unsigned long long FastFDs::execute() {
     return elapsed_milliseconds.count();
 }
 
-void FastFDs::verifyFDsWithEmptyLHS() {
-    vector<ushort> fds_per_col(schema_->getNumColumns(), 0);
-    for (auto const& fd : fdCollection_) {
-        if (fd.getLhs().getArity() == 1)
-            fds_per_col[fd.getRhs().getIndex()]++;
-    }
-
-    for (size_t i = 0; i != fds_per_col.size(); ++i) {
-        auto pli = relation_->getColumnData(i)->getPositionListIndex();
-        if (fds_per_col[i] == schema_->getNumColumns() - 1 &&
-            pli->getNumNonSingletonCluster() == 1 &&
-            static_cast<unsigned int>(pli->getSize()) == relation_->getNumRows()) {
-            fdCollection_.remove_if([&i](FD const& fd) {
-                return fd.getRhs().getIndex() == i;
-            });
-            std::cout << "Registered FD: " << schema_->emptyVertical->toString() << "->" << schema_->getColumn(i)->toString() << '\n';
-            registerFD(Vertical(), *schema_->getColumn(i));
-        }
-    }
+bool FastFDs::columnContainsOnlyEqualValues(Column const& column) const {
+    auto pli = relation_->getColumnData(column.getIndex())->getPositionListIndex();
+    bool column_contains_only_equal_values = pli->getNumNonSingletonCluster() == 1 &&
+                                             static_cast<unsigned int>(pli->getSize()) == relation_->getNumRows();
+    return column_contains_only_equal_values;
 }
 
 void FastFDs::findCovers(Column const& attribute, vector<shared_ptr<Vertical>> const& diff_sets_mod,
@@ -322,18 +310,6 @@ void FastFDs::genDiffSets() {
             std::cout << agree_set->toString() << '\n';
         }
     #endif
-
-    // no agree sets
-    if (agree_sets.empty()) {
-        #ifdef FASTFDS_DEBUG
-            std::cout << "No agree sets over relation\n";
-        #endif
-
-        dynamic_bitset<> bitset_all_cols(schema_->getNumColumns());
-        bitset_all_cols.set();
-        diff_sets_.push_back(schema_->getVertical(bitset_all_cols));
-        return;
-    }
 
     // Complement agree sets to get difference sets
     diff_sets_.reserve(agree_sets.size());
