@@ -7,7 +7,9 @@
 #include "ListAgreeSetSample.h"
 
 using ::testing::ContainerEq, ::testing::Eq;
-using namespace std;
+using std::deque, std::vector, std::cout, std::endl, std::unique_ptr;
+
+namespace fs = std::filesystem;
 
 std::string get_selfpath();
 
