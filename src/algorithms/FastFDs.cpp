@@ -25,6 +25,9 @@ unsigned long long FastFDs::execute() {
     relation_ = ColumnLayoutRelationData::createFrom(inputGenerator_, true);
     schema_ = relation_->getSchema();
 
+    if (schema_->getNumColumns() == 0)
+        throw std::runtime_error("Got an empty .csv file: FD mining is meaningless.");
+
     auto start_time = std::chrono::system_clock::now();
 
     genDiffSets();
@@ -54,7 +57,8 @@ unsigned long long FastFDs::execute() {
 
     verifyFDsWithEmptyLHS();
 
-    auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time);
+    auto elapsed_milliseconds =
+        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time);
 
     return elapsed_milliseconds.count();
 }
