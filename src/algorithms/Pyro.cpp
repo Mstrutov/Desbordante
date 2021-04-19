@@ -9,6 +9,9 @@ unsigned long long Pyro::execute() {
 
     auto relation = ColumnLayoutRelationData::createFrom(inputGenerator_, configuration_.isNullEqualNull);
     auto schema = relation->getSchema();
+    if (relation->getColumnData().empty()) {
+        throw std::runtime_error("Got an empty .csv file: FD mining is meaningless.");
+    }
 
     auto profilingContext = std::make_shared<ProfilingContext>(
             configuration_,
@@ -77,9 +80,9 @@ unsigned long long Pyro::execute() {
     std::cout << "Total ascension time: " << totalAscension << "ms" << std::endl;
     std::cout << "Total trickle time: " << totalTrickle << "ms" << std::endl;
     std::cout << "Total intersection time: " << PositionListIndex::micros / 1000 << "ms" << std::endl;
-    std::cout << "====RESULTS-FD====\r\n" << fdsToString();
+    /*std::cout << "====RESULTS-FD====\r\n" << fdsToString();
     std::cout << "====RESULTS-UCC====\r\n" << uccsToString();
-    std::cout << "====JSON-FD========\r\n" << FDAlgorithm::getJsonFDs() << std::endl;
+    std::cout << "====JSON-FD========\r\n" << FDAlgorithm::getJsonFDs() << std::endl;*/
     std::cout << "HASH: " << FDAlgorithm::fletcher16() << std::endl;
     return elapsed_milliseconds.count();
 }

@@ -58,6 +58,9 @@ void Tane::registerUCC(Vertical& key, double error, shared_ptr<RelationalSchema>
 unsigned long long Tane::execute() {
     shared_ptr<ColumnLayoutRelationData> relation = ColumnLayoutRelationData::createFrom(inputGenerator_, true);
     shared_ptr<RelationalSchema> schema = relation->getSchema();
+    if (relation->getColumnData().empty()) {
+        throw std::runtime_error("Got an empty .csv file: FD mining is meaningless.");
+    }
     cout << schema->getName() << " has " << relation->getNumColumns() << " columns, "
          << relation->getNumRows() << " rows, and a maximum NIP of " << setw(2)
          << relation->getMaximumNip() << "." << endl;
@@ -262,7 +265,7 @@ unsigned long long Tane::execute() {
     cout << "Total FD count: " << countOfFD << endl;
     cout << "Total UCC count: " << countOfUCC << endl;
 
-    cout << "===== FD JSON ========" << getJsonFDs() << endl;
+    /*cout << "===== FD JSON ========" << getJsonFDs() << endl; */
     cout << "HASH: " << fletcher16() << endl;
 
     return aprioriMillis;
