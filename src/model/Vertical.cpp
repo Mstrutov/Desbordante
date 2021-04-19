@@ -15,7 +15,7 @@ Vertical::Vertical(shared_ptr<RelationalSchema> relSchema, dynamic_bitset<> cons
     columnIndices(indices),
     schema(relSchema) {}
 
-Vertical::Vertical(Column & col) : schema(col.getSchema()){
+Vertical::Vertical(Column const& col) : schema(col.getSchema()){
     columnIndices = dynamic_bitset<>(schema.lock()->getNumColumns());
     columnIndices.set(col.getIndex());
 }
@@ -35,6 +35,10 @@ bool Vertical::contains(Vertical const& that) const {
     return true;
 }
 
+bool Vertical::contains(Column const& that) const {
+    return columnIndices.test(that.getIndex());
+}
+
 bool Vertical::intersects(Vertical const& that) const {
     boost::dynamic_bitset<> const& thatIndices = that.columnIndices;
     return columnIndices.intersects(thatIndices);
@@ -46,15 +50,27 @@ std::shared_ptr<Vertical> Vertical::Union(Vertical const& that) const {
     return schema.lock()->getVertical(retainedColumnIndices);
 }
 
+std::shared_ptr<Vertical> Vertical::Union(Column const& that) const {
+    boost::dynamic_bitset<> retainedColumnIndices(columnIndices);
+    retainedColumnIndices.set(that.getIndex());
+    return schema.lock()->getVertical(retainedColumnIndices);
+}
+
 std::shared_ptr<Vertical> Vertical::project(Vertical const& that) const {
     boost::dynamic_bitset<> retainedColumnIndices(columnIndices);
     retainedColumnIndices &= that.columnIndices;
     return schema.lock()->getVertical(retainedColumnIndices);
 }
 
-std::shared_ptr<Vertical> Vertical::without(Vertical const & that) const {
+std::shared_ptr<Vertical> Vertical::without(Vertical const& that) const {
     dynamic_bitset<> retainedColumnIndices(columnIndices);
     retainedColumnIndices &= ~that.columnIndices;
+    return schema.lock()->getVertical(retainedColumnIndices);
+}
+
+std::shared_ptr<Vertical> Vertical::without(Column const& that) const {
+    dynamic_bitset<> retainedColumnIndices(columnIndices);
+    retainedColumnIndices.reset(that.getIndex());
     return schema.lock()->getVertical(retainedColumnIndices);
 }
 
