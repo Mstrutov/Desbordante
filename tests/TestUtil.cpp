@@ -11,6 +11,8 @@ using std::deque, std::vector, std::cout, std::endl, std::unique_ptr;
 
 namespace fs = std::filesystem;
 
+namespace fs = std::filesystem;
+
 std::string get_selfpath();
 
 TEST(pliChecker, first){
@@ -28,7 +30,7 @@ TEST(pliChecker, first){
         CSVParser csvParser(path);
         auto test = ColumnLayoutRelationData::createFrom(csvParser, true);
         auto columnData = test->getColumnData(0);
-        index = columnData->getPositionListIndex()->getIndex();
+        index = columnData.getPositionListIndex()->getIndex();
     }
     catch (std::runtime_error& e) {
         cout << "Excepion raised in test: " << e.what() << endl;
@@ -50,7 +52,7 @@ TEST(pliChecker, second){
         CSVParser csvParser(path);
         auto test = ColumnLayoutRelationData::createFrom(csvParser, false);
         auto columnData = test->getColumnData(0);
-        index = columnData->getPositionListIndex()->getIndex();
+        index = columnData.getPositionListIndex()->getIndex();
     }
     catch (std::runtime_error& e) {
         cout << "Excepion raised in test: " << e.what() << endl;
@@ -72,8 +74,8 @@ TEST(pliIntersectChecker, first){
 
         auto test1 = ColumnLayoutRelationData::createFrom(csvParser1, false);
         auto test2 = ColumnLayoutRelationData::createFrom(csvParser2, false);
-        auto pli1 = test1->getColumnData(0)->getPositionListIndex();
-        auto pli2 = test2->getColumnData(0)->getPositionListIndex();
+        auto pli1 = test1->getColumnData(0).getPositionListIndex();
+        auto pli2 = test2->getColumnData(0).getPositionListIndex();
 
         intersection = pli1->intersect(pli2);
     }

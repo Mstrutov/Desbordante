@@ -85,16 +85,16 @@ std::unique_ptr<PositionListIndex> PositionListIndex::createFor(std::vector<int>
                                                size, entropy, nep, data.size(), data.size(), invEnt, giniImpurity);
 }
 
-unsigned long long PositionListIndex::calculateNep(unsigned int numElements) {
-    return static_cast<unsigned long long>(numElements) * (numElements - 1) / 2;
-}
+//unsigned long long PositionListIndex::calculateNep(unsigned int numElements) {
+//
+//}
 
 void PositionListIndex::sortClusters(std::deque<std::vector<int>> &clusters) {
     sort(clusters.begin(), clusters.end(), [](std::vector<int> & a, std::vector<int> & b){
         return a[0] < b[0]; } );
 }
 
-std::shared_ptr<const std::vector<int>> PositionListIndex::getProbingTable() const {
+std::shared_ptr<const std::vector<int>> PositionListIndex::calculateAndGetProbingTable() const {
     if (probingTableCache != nullptr) return probingTableCache;
 
     std::vector<int> probingTable = std::vector<int>(originalRelationSize);
@@ -110,30 +110,28 @@ std::shared_ptr<const std::vector<int>> PositionListIndex::getProbingTable() con
     return std::make_shared<std::vector<int>>(probingTable);
 }
 
-void PositionListIndex::forceCacheProbingTable() {
-    getProbingTable(true);
-}
+
 
 // интересное место: true --> надо передать поле без копирования, false --> надо сконструировать и выдать наружу
 // кажется, самым лёгким способом будет навернуть shared_ptr
-std::shared_ptr<const std::vector<int>> PositionListIndex::getProbingTable(bool isCaching) {
+/*std::shared_ptr<const std::vector<int>> PositionListIndex::getProbingTable(bool isCaching) {
     auto probingTable = getProbingTable();
     if (isCaching) {
         probingTableCache = probingTable;
         return probingTableCache;
     }
     return probingTable;
-}
+}*/
 
-std::deque<std::vector<int>> const & PositionListIndex::getIndex() const {
-    return index;
-}
+//std::deque<std::vector<int>> const & PositionListIndex::getIndex() const {
+//    return index;
+//}
 
 std::unique_ptr<PositionListIndex> PositionListIndex::intersect(PositionListIndex const* that) const {
     assert(this->relationSize == that->relationSize);
     return this->size > that->size ?
-            that->probe(this->getProbingTable()) :
-            this->probe(that->getProbingTable());
+            that->probe(this->calculateAndGetProbingTable()) :
+            this->probe(that->calculateAndGetProbingTable());
 }
 
 //TODO: nullCluster некорректен

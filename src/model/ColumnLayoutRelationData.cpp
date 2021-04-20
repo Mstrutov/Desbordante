@@ -21,13 +21,9 @@ ColumnData& ColumnLayoutRelationData::getColumnData(int columnIndex) {
     return columnData[columnIndex];
 }
 
-ColumnData const& ColumnLayoutRelationData::getColumnData(int columnIndex) const {
-    return columnData[columnIndex];
-}
+//ColumnData const& ColumnLayoutRelationData::getColumnData(int columnIndex) const ;
 
-unsigned int ColumnLayoutRelationData::getNumRows() const {
-    return columnData[0].getProbingTable().size();
-}
+//unsigned int ColumnLayoutRelationData::getNumRows() const
 
 std::vector<int> ColumnLayoutRelationData::getTuple(int tupleIndex) const {
     int numColumns = schema->getNumColumns();
