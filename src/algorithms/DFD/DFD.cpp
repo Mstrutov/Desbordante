@@ -106,7 +106,7 @@ void DFD::findLHSs(shared_ptr<Column> rhs, shared_ptr<RelationalSchema> schema) 
 DFD::DFD(const std::filesystem::path &path, char separator, bool hasHeader)
         : FDAlgorithm(path, separator, hasHeader), gen(rd()), observations() {
     relation = ColumnLayoutRelationData::createFrom(inputGenerator_, true);
-    dependencies = DependenciesSet(relation->getSchema());
+    dependencies = DependenciesMap(relation->getSchema());
 }
 
 shared_ptr<Vertical> DFD::pickNextNode(shared_ptr<Vertical> node) {

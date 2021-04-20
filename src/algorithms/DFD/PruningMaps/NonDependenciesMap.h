@@ -5,7 +5,7 @@
 #pragma once
 
 #include "Vertical.h"
-#include "LatticeObservations.h"
+#include "DFD/LatticeObservations/LatticeObservations.h"
 
 namespace std {
     template<>

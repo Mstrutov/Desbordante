@@ -2,15 +2,15 @@
 // Created by alexandrsmirn
 //
 
-#include "DependenciesSet.h"
+#include "DependenciesMap.h"
 
-DependenciesSet::DependenciesSet(shared_ptr<RelationalSchema> schema) {
+DependenciesMap::DependenciesMap(shared_ptr<RelationalSchema> schema) {
     for (auto const& column : schema->getColumns()) {
         this->insert(std::make_pair(Vertical(*column), std::unordered_set<shared_ptr<Vertical>>()));
     }
 }
 
-void DependenciesSet::addNewDependency(shared_ptr<Vertical> node) { //пока версия без балансировок
+void DependenciesMap::addNewDependency(shared_ptr<Vertical> node) { //пока версия без балансировок
     using std::unordered_set;
 
     for (auto const& column : node->getColumns()) {
@@ -24,7 +24,7 @@ void DependenciesSet::addNewDependency(shared_ptr<Vertical> node) { //пока �
     }
 }
 
-std::vector<shared_ptr<Vertical>> DependenciesSet::getUncheckedSubsets(shared_ptr<Vertical> node, LatticeObservations const& observations) {
+std::vector<shared_ptr<Vertical>> DependenciesMap::getUncheckedSubsets(shared_ptr<Vertical> node, LatticeObservations const& observations) {
     std::vector<shared_ptr<Vertical>> uncheckedSubsets;
 
     for (auto& subsetNode : node->getParents()) {
@@ -38,7 +38,7 @@ std::vector<shared_ptr<Vertical>> DependenciesSet::getUncheckedSubsets(shared_pt
     return uncheckedSubsets;
 }
 
-bool DependenciesSet::canBePruned(Vertical const& node) {
+bool DependenciesMap::canBePruned(Vertical const& node) {
     using std::unordered_set;
 
     for (auto const& column : node.getColumns()) {

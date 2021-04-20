@@ -28,7 +28,9 @@ include_directories(${Boost_INCLUDE_DIRS})
 # providing subdirectories for header inclusion
 include_directories(
     "src/algorithms"
-    "src/algorithms/DFD/PruningSets"
+    "src/algorithms/DFD/LatticeObservations"
+    "src/algorithms/DFD/PruningMaps"
+    "src/algorithms/DFD"
     "src/model"
     "src/util"
     "src/parser"
