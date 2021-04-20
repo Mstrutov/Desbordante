@@ -22,8 +22,8 @@ public:
     std::vector<ColumnData>& getColumnData() override { return columnData; };
     std::vector<ColumnData> const& getColumnData() const override { return columnData; };
     ColumnData& getColumnData(int columnIndex) override;
-    ColumnData const& getColumnData(int columnIndex) const override;
-    unsigned int getNumRows() const override;
+    ColumnData const& getColumnData(int columnIndex) const override { return columnData[columnIndex]; }
+    unsigned int getNumRows() const override { return columnData[0].getProbingTable().size(); }
     std::vector<int> getTuple(int tupleIndex) const override;
 
     //void shuffleColumns() override = 0;

@@ -29,32 +29,32 @@ bool ColumnData::operator==(const ColumnData &rhs) {
     return this->column == rhs.column;
 }
 
-std::vector<int> const &ColumnData::getProbingTable() const {
-    /*if (std::holds_alternative<std::unique_ptr<PositionListIndex>>(positionListIndex_)) {
-        return *std::get<std::unique_ptr<PositionListIndex>>(positionListIndex_)->getProbingTable();
-    } else {
-        return *std::get<PositionListIndex*>(positionListIndex_)->getProbingTable();
-    }*/
-    return *positionListIndex_->getProbingTable();
-}
-
-int ColumnData::getProbingTableValue(int tupleIndex) const {
-//    if (std::holds_alternative<std::unique_ptr<PositionListIndex>>(positionListIndex_)) {
-//        return (*std::get<std::unique_ptr<PositionListIndex>>(positionListIndex_)->getProbingTable())[tupleIndex];
+//std::vector<int> const &ColumnData::getProbingTable() const {
+//    /*if (std::holds_alternative<std::unique_ptr<PositionListIndex>>(positionListIndex_)) {
+//        return *std::get<std::unique_ptr<PositionListIndex>>(positionListIndex_)->getProbingTable();
 //    } else {
-//        return (*std::get<PositionListIndex*>(positionListIndex_)->getProbingTable())[tupleIndex];
-//    }
-    return (*positionListIndex_->getProbingTable())[tupleIndex];
-}
-
-PositionListIndex const *ColumnData::getPositionListIndex() const {
-//    if (std::holds_alternative<std::unique_ptr<PositionListIndex>>(positionListIndex_)) {
-//        return std::get<std::unique_ptr<PositionListIndex>>(positionListIndex_).get();
-//    } else {
-//        return std::get<PositionListIndex*>(positionListIndex_);
-//    }
-    return positionListIndex_.get();
-}
+//        return *std::get<PositionListIndex*>(positionListIndex_)->getProbingTable();
+//    }*/
+//    return *positionListIndex_->getProbingTable();
+//}
+//
+//int ColumnData::getProbingTableValue(int tupleIndex) const {
+////    if (std::holds_alternative<std::unique_ptr<PositionListIndex>>(positionListIndex_)) {
+////        return (*std::get<std::unique_ptr<PositionListIndex>>(positionListIndex_)->getProbingTable())[tupleIndex];
+////    } else {
+////        return (*std::get<PositionListIndex*>(positionListIndex_)->getProbingTable())[tupleIndex];
+////    }
+//
+//}
+//
+//PositionListIndex const *ColumnData::getPositionListIndex() const {
+////    if (std::holds_alternative<std::unique_ptr<PositionListIndex>>(positionListIndex_)) {
+////        return std::get<std::unique_ptr<PositionListIndex>>(positionListIndex_).get();
+////    } else {
+////        return std::get<PositionListIndex*>(positionListIndex_);
+////    }
+//    return positionListIndex_.get();
+//}
 
 //std::unique_ptr<PositionListIndex> ColumnData::moveOutPositionListIndex() {
 //    if (std::holds_alternative<std::unique_ptr<PositionListIndex>>(positionListIndex_)) {

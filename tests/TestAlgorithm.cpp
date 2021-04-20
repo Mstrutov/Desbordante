@@ -18,7 +18,6 @@ using std::string, std::vector;
 
 namespace fs = std::filesystem;
 
-
 /* This is a test suite for algorithm verification. It should be possible to run these tests for any algorithm that:
  * 1. extends FDAlgorithm
  * 2. stores the results in FDAlgorithm::fdCollection_
