@@ -29,10 +29,12 @@ namespace std {
 }
 
 class DependenciesSet : public std::unordered_map<Vertical, std::unordered_set<shared_ptr<Vertical>>> { //TODO указателями или просто объектами?
+
 public:
-    DependenciesSet(shared_ptr<RelationalSchema> schema);
+    explicit DependenciesSet(shared_ptr<RelationalSchema> schema);
+    DependenciesSet() = default;
 
     void addNewDependency(shared_ptr<Vertical> node);
-    std::vector<shared_ptr<Vertical>> getUncheckedSubsets(shared_ptr<Vertical> node, LatticeObservations const& observations);
+    vector<shared_ptr<Vertical>> getUncheckedSubsets(shared_ptr<Vertical> node, LatticeObservations const& observations);
     bool canBePruned(Vertical const& node);
 };
