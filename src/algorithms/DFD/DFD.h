@@ -8,16 +8,16 @@
 #include <stack>
 
 #include "FDAlgorithm.h"
-#include "LatticeObservations.h"
+#include "DFD/LatticeObservations/LatticeObservations.h"
 #include "PLICache.h"
-#include "DependenciesSet.h"
+#include "DependenciesMap.h"
 #include "NonDependenciesMap.h"
 
 class DFD : public FDAlgorithm {
 private:
     LatticeObservations observations;
     shared_ptr<PLICache> partitionCache;
-    DependenciesSet dependencies;
+    DependenciesMap dependencies;
     NonDependenciesMap nonDependenciesMap;
     shared_ptr<ColumnLayoutRelationData> relation;
 
