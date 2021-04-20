@@ -6,15 +6,28 @@
 #include "FDAlgorithm.h"
 #include "ColumnLayoutRelationData.h"
 
+
+
 class FastFDs : public FDAlgorithm {
 public:
+    enum class AgreeSetsGenMethod {
+        kUsingVectorOfIDSets = 0,
+        kUsingMapOfIDSets       ,
+        kUsingGetAgreeSet       , // Simplest method by Wyss et al
+        kUsingMCAndGetAgreeSet  , // From maximal representation using getAgreeSet()
+    };
+
     using FDAlgorithm::FDAlgorithm;
     unsigned long long execute() override;
 private:
     using OrderingComparator = std::function<bool (Column const&, Column const&)>;
 
-    // Computes all difference sets of `relation_`
+    // Computes all difference sets of `relation_` by complementing agree sets
     void genDiffSets();
+
+    // Computes all agree sets of `relation_`
+    template<AgreeSetsGenMethod method = AgreeSetsGenMethod::kUsingVectorOfIDSets>
+    std::set<std::shared_ptr<Vertical>> genAgreeSets() const;
 
     /* Computes minimal difference sets
      * of `relation_` modulo `col`
