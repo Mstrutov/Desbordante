@@ -41,6 +41,7 @@ unsigned long long DFD::execute() {
     for (auto rhs : possibleRHSs) {
         //тут строим новую решетку, соответственно нужно обнулить/завести некоторые структуры данных
         findLHSs(rhs, schema);
+        //TODO не заьыть зареать все зависимости из списка
     }
 }
 
@@ -71,9 +72,7 @@ void DFD::findLHSs(shared_ptr<Column> rhs, shared_ptr<RelationalSchema> schema) 
         if (column->getIndex() != rhs->getIndex())
             seeds.emplace_back(std::make_shared<Vertical>(*column)); //TODO проверить
     }
-
-
-
+    
     while (!seeds.empty()) {
         shared_ptr<Vertical> node = takeRandom(seeds);
         do {
@@ -96,7 +95,7 @@ void DFD::findLHSs(shared_ptr<Column> rhs, shared_ptr<RelationalSchema> schema) 
 
             } else if (!observations.inferCategory(node)) {
                 //auto nodePartition = partitionCache->getOrCreateFor()
-
+                //TODO
             }
             //node = pickNextNode(node);
         } while (node != nullptr);
@@ -139,7 +138,68 @@ shared_ptr<Vertical> DFD::pickNextNode(shared_ptr<Vertical> node) {
         }
     }
 
-    shared_ptr<Vertical> nextNode = trace.empty() ? nullptr : trace.top();
-    trace.pop();
+    shared_ptr<Vertical> nextNode = nullptr;
+    if (!trace.empty()) {
+        nextNode = trace.top();
+        trace.pop();
+    }
     return nextNode;
+}
+
+std::list<shared_ptr<Vertical>> DFD::generateNextSeeds() {
+    std::unordered_set<shared_ptr<Vertical>> seeds;
+    std::unordered_set<shared_ptr<Vertical>> newSeeds;
+    dynamic_bitset<> singleColumnBitset(relation->getNumColumns());
+
+    //TODO переписать под метод getColumns
+    for (auto const& node : maximalNonDeps) {
+        shared_ptr<Vertical> complementNode = node->invert();
+        singleColumnBitset.clear();
+        //dynamic_bitset<> complementNodeIndices = complementNode->getColumnIndices();
+
+        if (seeds.empty()) {
+            for (size_t columnIndex = complementNode->getColumnIndices().find_first();
+                 columnIndex < complementNode->getColumnIndices().size();
+                 columnIndex = complementNode->getColumnIndices().find_next(columnIndex)
+            ) {
+                singleColumnBitset[columnIndex] = true;
+                seeds.insert(std::make_shared<Vertical>(relation->getSchema(), singleColumnBitset));
+                singleColumnBitset[columnIndex] = false;
+            }
+        } else {
+            for (auto const& dependency : seeds) {
+                for (size_t columnIndex = complementNode->getColumnIndices().find_first();
+                     columnIndex < complementNode->getColumnIndices().size();
+                     columnIndex = complementNode->getColumnIndices().find_next(columnIndex)
+                ) {
+                    //TODO дикие костыли
+                    singleColumnBitset.set(columnIndex);
+                    singleColumnBitset |= dependency->getColumnIndices();
+                    newSeeds.insert(std::make_shared<Vertical>(relation->getSchema(), singleColumnBitset));
+                    singleColumnBitset.clear();
+                }
+            }
+
+            minimize(newSeeds);
+            seeds.clear();
+            for (auto const& newSeed : newSeeds) {
+                seeds.insert(newSeed);
+            }
+            newSeeds.clear();
+        }
+    }
+
+    std::unordered_set<shared_ptr<Vertical>> const discoveredMinimalDepsSet(minimalDeps.begin(), minimalDeps.end());
+    for (auto const& seed : seeds) {
+        if (discoveredMinimalDepsSet.find(seed) != discoveredMinimalDepsSet.end()) {
+            seeds.erase(seed);
+        }
+    }
+
+    return std::list(seeds.begin(), seeds.end());
+}
+
+//TODO пока что дикий костыль за квадрат
+void DFD::minimize(std::unordered_set<shared_ptr<Vertical>> & nodeList) {
+
 }
