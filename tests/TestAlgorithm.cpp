@@ -1,6 +1,7 @@
 #include <algorithm>
-#include <map>
+#include <filesystem>
 #include <iostream>
+#include <map>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -10,9 +11,12 @@
 #include "algorithms/TaneX.h"
 #include "RelationalSchema.h"
 
+
 using ::testing::ContainerEq, ::testing::Eq;
 
 using std::string, std::vector;
+
+namespace fs = std::filesystem;
 
 
 /* This is a test suite for algorithm verification. It should be possible to run these tests for any algorithm that:
@@ -60,11 +64,10 @@ testing::AssertionResult checkFDListEquality(
     return actual.empty() ? testing::AssertionSuccess() : testing::AssertionFailure() << "some FDs remain undiscovered";
 }
 
-TEST(AlgorithmSyntheticTest, ReturnsEmptyOnEmpty) {
+TEST(AlgorithmSyntheticTest, ThrowsOnEmpty) {
     auto path = fs::current_path() / "inputData" / "TestEmpty.csv";
     auto algorithm = createAlgorithmInstance(path, ',', true);
-    algorithm->execute();
-    ASSERT_TRUE(algorithm->fdList().empty());
+    ASSERT_THROW(algorithm->execute(), std::runtime_error);
 }
 
 TEST(AlgorithmSyntheticTest, ReturnsEmptyOnSingleNonKey) {
@@ -108,12 +111,11 @@ TEST_F(AlgorithmTest, ReturnsSameFDCollectionHash) {
     auto path = fs::current_path() /"inputData";
 
     try {
-        for (size_t i = 0; i < LightDatasets::datasetQuantity(); i++) {
-            auto pyro = Pyro(path / LightDatasets::dataset(i), LightDatasets::separator(i),
-                             LightDatasets::hasHeader(i), 0, 0, -1);
+        for (auto const& dataset : LightDatasets::datasets) {
+            auto pyro = Pyro(path / dataset.name, dataset.separator, dataset.header_presence, 0, 0, -1);
             pyro.execute();
-            EXPECT_EQ(pyro.FDAlgorithm::fletcher16(), LightDatasets::hash(i))
-                                << "FD collection hash changed for " << LightDatasets::dataset(i);
+            EXPECT_EQ(pyro.FDAlgorithm::fletcher16(), dataset.hash)
+                                << "FD collection hash changed for " << dataset.name;
         }
     }
     catch (std::runtime_error& e) {
@@ -127,19 +129,19 @@ TEST_F(AlgorithmTest, ReturnsSameAsPyro) {
     auto path = fs::current_path() /"inputData";
 
     try {
-        for (size_t i = 0; i < LightDatasets::datasetQuantity(); i++) {
+        for (auto const& dataset : HeavyDatasets::datasets) {
             auto algorithm = createAlgorithmInstance(
-                    path / LightDatasets::dataset(i),LightDatasets::separator(i),
-                    LightDatasets::hasHeader(i));
+                    path / dataset.name, dataset.separator,
+                    dataset.header_presence);
             algorithm->execute();
             std::string algorithmResults = algorithm->getJsonFDs();
-            auto pyro = Pyro(path / LightDatasets::dataset(i), LightDatasets::separator(i),
-                             LightDatasets::hasHeader(i), 0, 0, -1);
+            auto pyro = Pyro(path / dataset.name, dataset.separator,
+                             dataset.header_presence, 0, 0, -1);
             pyro.execute();
             std::string resultsPyro = pyro.FDAlgorithm::getJsonFDs();
             // std::cout << "HASH for " << LightDatasets::dataset(i) << ": " << pyro.FDAlgorithm::fletcher16();
             EXPECT_EQ(resultsPyro, algorithmResults)
-                << "The new algorithm and Pyro yield different results at " << LightDatasets::dataset(i);
+                << "The new algorithm and Pyro yield different results at " << dataset.name;
         }
     }
     catch (std::runtime_error& e) {
