@@ -31,8 +31,10 @@ private:
 
     void findLHSs(shared_ptr<Column> rhs, shared_ptr<RelationalSchema> schema); //TODO: нужен ли второй параметр?; мб переименовать типа findDeps
     shared_ptr<Vertical> pickNextNode(shared_ptr<Vertical> node);
+    std::list<shared_ptr<Vertical>> generateNextSeeds();
     shared_ptr<Vertical> takeRandom(std::list<shared_ptr<Vertical>> const& nodeList);
     shared_ptr<Vertical> takeRandom(std::vector<shared_ptr<Vertical>> const& nodeList);
+    void minimize(std::unordered_set<shared_ptr<Vertical>> & nodeList);
 
 public:
     explicit DFD(std::filesystem::path const& path, char separator = ',', bool hasHeader = true);
