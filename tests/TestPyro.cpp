@@ -19,12 +19,11 @@ TEST_F(PyroTest, ReturnsSameHashOnHeavyDatasets) {
     auto path = fs::current_path().append("inputData");
 
     try {
-        for (size_t i = 0; i < HeavyDatasets::datasetQuantity(); i++) {
-            auto pyro = Pyro(path / HeavyDatasets::dataset(i), HeavyDatasets::separator(i),
-                             HeavyDatasets::hasHeader(i), 0, 0, -1);
+        for (auto dataset : HeavyDatasets::datasets) {
+            auto pyro = Pyro(path / dataset.name, dataset.separator, dataset.header_presence, 0, 0, -1);
             pyro.execute();
-            EXPECT_EQ(pyro.FDAlgorithm::fletcher16(), HeavyDatasets::hash(i))
-                << "Pyro result hash changed for " << HeavyDatasets::dataset(i);
+            EXPECT_EQ(pyro.FDAlgorithm::fletcher16(), dataset.hash)
+                << "Pyro result hash changed for " << dataset.name;
         }
     }
     catch (std::runtime_error& e) {
