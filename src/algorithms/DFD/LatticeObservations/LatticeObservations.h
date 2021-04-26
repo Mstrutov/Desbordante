@@ -6,16 +6,17 @@
 
 #include <unordered_map>
 #include "Vertical.h"
+#include "../src/custom/CustomHashes.h"
 
-
-namespace std {
+/*namespace std {
     template<>
     struct hash<Vertical> {
         size_t operator()(Vertical const &k) const {
             return k.getColumnIndices().to_ulong();
         }
     };
-}
+}*/
+
 
 enum class NodeCategory {
         dependency,
