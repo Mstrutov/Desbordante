@@ -25,12 +25,13 @@ double FdG1Strategy::calculateG1(PositionListIndex* lhsPLI) const {
             probingTableValueId = probingTable[position];
             //    auto now = std::chrono::system_clock::now();
             if (probingTableValueId != PositionListIndex::singletonValueId) {
-                auto location = valueCounts.find(probingTableValueId);
+                valueCounts[probingTableValueId] += 1;
+                /*auto location = valueCounts.find(probingTableValueId);
                 if (location == valueCounts.end()) {
                     valueCounts.emplace_hint(location, probingTableValueId, 1);
                 } else {
                     location->second += 1;
-                }
+                }*/
             }
             //    nanos_ += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - now).count();
         }

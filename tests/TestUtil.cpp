@@ -65,7 +65,7 @@ TEST(pliIntersectChecker, first){
     deque<vector<int>> ans = {
             {2, 5}
     };
-    shared_ptr<PositionListIndex> intersection;
+    std::shared_ptr<PositionListIndex> intersection;
 
     try {
         auto path = fs::current_path().append("inputData");

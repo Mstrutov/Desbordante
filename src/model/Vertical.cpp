@@ -133,8 +133,6 @@ std::string Vertical::toIndicesString() const {
     return result;
 }
 
-
-
 std::vector<Vertical> Vertical::getParents() const {
     if (getArity() < 2) return std::vector<Vertical>();
     std::vector<Vertical> parents(getArity());
@@ -147,4 +145,13 @@ std::vector<Vertical> Vertical::getParents() const {
         parents[i++] = getSchema()->getVertical(std::move(parentColumnIndices));
     }
     return parents;
+}
+
+bool Vertical::operator<(Vertical const& rhs) const {
+    assert(schema == rhs.schema);
+    if (this->columnIndices == rhs.columnIndices)
+        return false;
+
+    boost::dynamic_bitset<> const& lr_xor = (this->columnIndices ^ rhs.columnIndices);
+    return rhs.columnIndices.test(lr_xor.find_first());
 }

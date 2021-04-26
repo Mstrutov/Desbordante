@@ -20,8 +20,8 @@ public:
     ColumnData(Column const* column, std::unique_ptr<PositionListIndex> positionListIndex);
     // Инвариант: конструктором гарантируется, что в ColumnData.PLI есть закешированная ProbingTable
     std::vector<int> const& getProbingTable() const { return *positionListIndex_->getCachedProbingTable(); }
-    int getProbingTableValue(int tupleIndex) const { return (*positionListIndex_->getCachedProbingTable())[tupleIndex]; }
     Column const* getColumn() const { return column; }
+    int getProbingTableValue(int tupleIndex) const { return (*positionListIndex_->getCachedProbingTable())[tupleIndex]; }
     PositionListIndex const* getPositionListIndex() const { return positionListIndex_.get(); }
     // TODO: посмотреть, что будет с производительностью, если добавить указатель на PT прямо сюда
     // по идее, это должно оптимизироваться инлайнингом
