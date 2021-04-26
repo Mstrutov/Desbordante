@@ -31,8 +31,13 @@ public:
 
     explicit operator std::string() const { return toString(); }
 
-    bool operator==(const Column& rhs) const;
-    bool operator!=(const Column& rhs) const;
-
     explicit operator Vertical() const;
+
+    /* We consider the lhs column to be less than rhs if
+     * lhs.index > rhs.index
+     */
+    bool operator<(Column const& rhs) const;
+    bool operator==(Column const& rhs) const;
+    bool operator!=(Column const& rhs) const;
+    bool operator>(Column const& rhs) const;
 };
