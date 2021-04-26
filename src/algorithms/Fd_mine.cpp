@@ -8,6 +8,7 @@
 #include "ColumnLayoutRelationData.h"
 #include "LatticeVertex.h"
 #include "Vertical.h"
+#include <boost/unordered_map.hpp>
 
 unsigned long long Fd_mine::execute() {
     // 1
@@ -137,8 +138,24 @@ void Fd_mine::generateCandidates() {
 
         for (size_t j = i + 1; j < candidates.size(); j++) {
             xj = candidates[j];
-            // sets different in two bits (in two arguments)
-            if ((xi ^ xj).count() == 2) {
+
+            bool similar = true;
+            int set_bits = 0;
+            int set_bits_amount = xi.count();
+
+            for (int k = 0; set_bits < set_bits_amount - 1; k++) {
+                if(xi[k] == xj[k]) {
+                    if(xi[k]) {
+                        set_bits++;
+                    }
+                }
+                else {
+                    similar = false;
+                    break;
+                }
+            }
+
+            if (similar){
                 xij = xi | xj;
 
                 if (!(xj).is_subset_of(fdSet[xi]) && !(xi).is_subset_of(fdSet[xj])) {
@@ -172,33 +189,34 @@ void Fd_mine::generateCandidates() {
 void Fd_mine::display() {
     int count_fd = 0;
     std::queue<dynamic_bitset<>> queue;
+    dynamic_bitset<> generatedLhs(r.size());
+    dynamic_bitset<> generatedLhs_tmp(r.size());
+    
+    for (const auto &[lhs, rhs] : fdSet) {
+        boost::unordered_map<dynamic_bitset<>, bool> observed;
 
-    for (auto [lhs, rhs] : fdSet) {
-        std::map<dynamic_bitset<>, bool> observed;
         observed[lhs] = true;
         dynamic_bitset<> Rhs = rhs;
         queue.push(lhs);
-        for (auto [eq, eqset] : eqSet) {
-            if (eq.is_subset_of(Rhs)) {
-                for (auto eqRhs : eqset) {
-                    Rhs |= eqRhs;
-                }
-            }
-        }
-        fdSet[lhs] |= Rhs;
+
+        
 
         while (!queue.empty()) {
             dynamic_bitset<> currentLhs = queue.front();
             queue.pop();
-            for (auto [eq, eqset] : eqSet) {
+            for (const auto &[eq, eqset] : eqSet) {
+                if (eq.is_subset_of(Rhs)) {
+                    for (const auto &eqRhs : eqset) {
+                        Rhs |= eqRhs;
+                    }
+                }
+
                 if (eq.is_subset_of(currentLhs)) {
-                    for (auto newEq : eqset) {
-                        dynamic_bitset<> generatedLhs = (currentLhs - eq) | newEq;
-                        if (fdSet.count(generatedLhs)) {
-                            fdSet[generatedLhs] |= Rhs;
-                        } else {
-                            fdSet[generatedLhs] = Rhs;
-                        }
+                    generatedLhs_tmp = currentLhs - eq;
+                    for (const auto &newEq : eqset) {
+                        generatedLhs = generatedLhs_tmp;
+                        generatedLhs |= newEq;
+
                         if (!observed[generatedLhs]) {
                             queue.push(generatedLhs);
                             observed[generatedLhs] = true;
@@ -207,9 +225,18 @@ void Fd_mine::display() {
                 }
             }
         }
+
+        for (auto &[lhs, rbool] : observed) {
+            if (fdSet.count(lhs)) {
+                fdSet[lhs] |= Rhs;
+            }
+            else {
+                fdSet[lhs] = Rhs;
+            }
+        }
     }
 
-    for (auto [lhs, rhs] : fdSet) {
+    for (auto &[lhs, rhs] : fdSet) {
         for (size_t j = 0; j < rhs.size(); j++) {
             if (!rhs[j] || rhs[j] && lhs[j]) continue;
             std::cout << "Discovered FD: ";
