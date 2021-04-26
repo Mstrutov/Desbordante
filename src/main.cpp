@@ -14,13 +14,14 @@
 #include "ConfigParser.h"
 #include "algorithms/Pyro.h"
 #include "algorithms/TaneX.h"
+#include "algorithms/DFD/DFD.h";
 
 namespace po = boost::program_options;
 
 INITIALIZE_EASYLOGGINGPP
 
 bool checkOptions(std::string const& alg, double error) {
-    if (alg != "pyro" && alg != "tane") {
+    if (alg != "pyro" && alg != "tane" && alg != "dfd") {
         std::cout << "ERROR: no matching algorithm. Available algorithms are:\n\tpyro\n\ttane.\n" << std::endl;
         return false;
     }
@@ -89,6 +90,8 @@ int main(int argc, char const *argv[]) {
         algorithmInstance = std::make_unique<Pyro>(path, separator, hasHeader, seed, error, maxLhs);
     } else if (alg == "tane"){
         algorithmInstance = std::make_unique<Tane>(path, separator, hasHeader);
+    } else if (alg == "dfd") {
+        algorithmInstance = std::make_unique<DFD>(path, separator, hasHeader);
     }
     try {
         unsigned long long elapsedTime = algorithmInstance->execute();

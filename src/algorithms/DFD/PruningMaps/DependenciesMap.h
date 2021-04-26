@@ -19,14 +19,14 @@
     };
 }*/
 
-namespace std {
+/*namespace std {
     template<>
     struct hash<shared_ptr<Vertical>> {
         size_t operator()(shared_ptr<Vertical> const &k) const {
             return k->getColumnIndices().to_ulong();
         }
     };
-}
+}*/
 
 class DependenciesMap : public std::unordered_map<Vertical, std::unordered_set<shared_ptr<Vertical>>> { //TODO указателями или просто объектами?
 

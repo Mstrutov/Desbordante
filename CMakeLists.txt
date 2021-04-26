@@ -29,6 +29,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 include_directories(
     "src/algorithms"
     "src/algorithms/DFD/LatticeObservations"
+    "src/algorithms/DFD/PartitionStorage"
     "src/algorithms/DFD/PruningMaps"
     "src/algorithms/DFD"
     "src/model"

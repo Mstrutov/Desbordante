@@ -7,14 +7,14 @@
 #include "Vertical.h"
 #include "DFD/LatticeObservations/LatticeObservations.h"
 
-namespace std {
+/*namespace std {
     template<>
     struct hash<shared_ptr<Vertical>> {
         size_t operator()(shared_ptr<Vertical> const &k) const {
             return k->getColumnIndices().to_ulong();
         }
     };
-}
+}*/
 
 class NonDependenciesMap : public std::unordered_map<Vertical, std::unordered_set<shared_ptr<Vertical>>>{
 public:
