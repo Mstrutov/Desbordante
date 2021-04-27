@@ -22,8 +22,8 @@ private:
     NonDependenciesMap nonDependenciesMap;
     shared_ptr<ColumnLayoutRelationData> relation;
 
-    std::vector<shared_ptr<Vertical>> minimalDeps; //TODO мб их определять либо в функции execute, либо полями класса
-    std::vector<shared_ptr<Vertical>> maximalNonDeps;
+    std::unordered_set<shared_ptr<Vertical>> minimalDeps; //TODO мб их определять либо в функции execute, либо полями класса
+    std::unordered_set<shared_ptr<Vertical>> maximalNonDeps;
 
     std::stack<shared_ptr<Vertical>> trace;
 
