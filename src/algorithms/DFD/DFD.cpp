@@ -102,12 +102,12 @@ void DFD::findLHSs(shared_ptr<Column const> const& rhs, shared_ptr<RelationalSch
                 if (nodeCategory == NodeCategory::candidateMinimalDependency) {
                     nodeCategory = observations.updateDependencyCategory(node);
                     if (nodeCategory == NodeCategory::minimalDependency) {
-                        minimalDeps.push_back(node);
+                        minimalDeps.insert(node);
                     }
                 } else if (nodeCategory == NodeCategory::candidateMaximalNonDependency) {
                     nodeCategory = observations.updateNonDependencyCategory(node);
                     if (nodeCategory == NodeCategory::maximalNonDependency) {
-                        maximalNonDeps.push_back(node);
+                        maximalNonDeps.insert(node);
                     }
                 }
 
@@ -149,7 +149,7 @@ shared_ptr<Vertical> DFD::pickNextNode(shared_ptr<Vertical> const& node) {
         if (nodeIter->second == NodeCategory::candidateMinimalDependency) {
             vector<shared_ptr<Vertical>> uncheckedSubsets = dependenciesMap.getUncheckedSubsets(node, observations); //TODO переписать observations в конструктор?
             if (uncheckedSubsets.empty()) {
-                minimalDeps.push_back(node);
+                minimalDeps.insert(node);
                 dependenciesMap.addNewDependency(node);
             } else {
                 shared_ptr<Vertical> nextNode = takeRandom(uncheckedSubsets);
@@ -159,7 +159,7 @@ shared_ptr<Vertical> DFD::pickNextNode(shared_ptr<Vertical> const& node) {
         } else if (nodeIter->second == NodeCategory::candidateMaximalNonDependency) {
             vector<shared_ptr<Vertical>> uncheckedSupersets = nonDependenciesMap.getUncheckedSupersets(node, observations);
             if (uncheckedSupersets.empty()) {
-                maximalNonDeps.push_back(node);
+                maximalNonDeps.insert(node);
                 nonDependenciesMap.addNewNonDependency(node);
             } else {
                 shared_ptr<Vertical> nextNode = takeRandom(uncheckedSupersets);
