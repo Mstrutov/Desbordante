@@ -17,7 +17,8 @@ unsigned long long DFD::execute() {
     shared_ptr<RelationalSchema> schema = relation->getSchema();
 
     //std::list<shared_ptr<Column>> possibleRHSs(schema->getColumns().begin(), schema->getColumns().end());
-    std::list<shared_ptr<Column>> possibleRHSs;
+
+    /*std::list<shared_ptr<Column>> possibleRHSs;
     for (auto const& column : schema->getColumns()) {
         possibleRHSs.push_back(column);
     }
@@ -38,18 +39,42 @@ unsigned long long DFD::execute() {
             }
         }
         columnIter = nextIter;
+    }*/
+    //TODO может переделать на сет, потому что проверям лежит ли элемент там
+    std::vector<Vertical> uniqueVerticals;
+
+    for (auto const& column : schema->getColumns()) {
+        shared_ptr<ColumnData> const columnData = relation->getColumnData(column->getIndex());
+        shared_ptr<PositionListIndex> const columnPLI = columnData->getPositionListIndex();
+
+        if (columnPLI->getNumNonSingletonCluster() == 0) {
+            Vertical const& lhs = Vertical(*column);
+            uniqueVerticals.push_back(lhs);
+            for (auto const& rhs : schema->getColumns()) {
+                if (rhs->getIndex() != column->getIndex()) {
+                    registerFD(lhs, *rhs);
+                }
+            }
+        }
     }
 
     //second loop of DFD
-    for (auto const& rhs : possibleRHSs) {
+    for (auto const& rhs : schema->getColumns()) {
         //тут строим новую решетку, соответственно нужно обнулить/завести некоторые структуры данных
         minimalDeps.clear();
         maximalNonDeps.clear();
-        //dependenciesMap.clear();
-        //nonDependenciesMap.clear();
         dependenciesMap = DependenciesMap(relation->getSchema());
         nonDependenciesMap = NonDependenciesMap(relation->getSchema());
         observations.clear();
+
+        //в метаноме немного по другому
+        for (auto const& lhs : uniqueVerticals) {
+            if (!lhs.contains(*rhs)) {
+                observations[lhs] = NodeCategory::minimalDependency;
+                //разобраться с шаред поинтерами
+                dependenciesMap.addNewDependency(std::make_shared<Vertical>(lhs));
+            }
+        }
 
         findLHSs(rhs, schema);
 
@@ -90,46 +115,46 @@ void DFD::findLHSs(shared_ptr<Column const> const& rhs, shared_ptr<RelationalSch
         if (column->getIndex() != rhs->getIndex())
             seeds.push_back(std::make_shared<Vertical>(*column)); //TODO проверить, поменял emplace на push
     }
-    
-    while (!seeds.empty()) {
-        shared_ptr<Vertical> node = takeRandom(seeds);
-        do {
-            auto const nodeObservationIter = observations.find(*node); //const?
+    do {
+        while (!seeds.empty()) {
+            shared_ptr<Vertical> node = takeRandom(seeds);
+            do {
+                auto const nodeObservationIter = observations.find(*node); //const?
 
-            if (nodeObservationIter != observations.end()) {
-                NodeCategory& nodeCategory = nodeObservationIter->second;
+                if (nodeObservationIter != observations.end()) {
+                    NodeCategory &nodeCategory = nodeObservationIter->second;
 
-                if (nodeCategory == NodeCategory::candidateMinimalDependency) {
-                    nodeCategory = observations.updateDependencyCategory(node);
-                    if (nodeCategory == NodeCategory::minimalDependency) {
-                        minimalDeps.insert(node);
+                    if (nodeCategory == NodeCategory::candidateMinimalDependency) {
+                        nodeCategory = observations.updateDependencyCategory(node);
+                        if (nodeCategory == NodeCategory::minimalDependency) {
+                            minimalDeps.insert(node);
+                        }
+                    } else if (nodeCategory == NodeCategory::candidateMaximalNonDependency) {
+                        nodeCategory = observations.updateNonDependencyCategory(node);
+                        if (nodeCategory == NodeCategory::maximalNonDependency) {
+                            maximalNonDeps.insert(node);
+                        }
                     }
-                } else if (nodeCategory == NodeCategory::candidateMaximalNonDependency) {
-                    nodeCategory = observations.updateNonDependencyCategory(node);
-                    if (nodeCategory == NodeCategory::maximalNonDependency) {
-                        maximalNonDeps.insert(node);
+
+                } else if (!observations.inferCategory(node)) { //TODO переделать inferCategory
+                    auto nodePartition = partitionStorage->getOrCreateFor(*node);
+                    auto rhsPartition = relation->getColumnData(rhs->getIndex())->getPositionListIndex();
+                    auto nodeIntersectedWithRHSPartition = nodePartition->intersect(rhsPartition); //может ещё раз вызвать getOrCreateFor вместо пересечения?
+
+                    if (nodePartition->getNumNonSingletonCluster() ==
+                        nodeIntersectedWithRHSPartition->getNumNonSingletonCluster()
+                    ) {
+                        observations.insert(std::make_pair(*node, NodeCategory::candidateMinimalDependency));
+                    } else {
+                        observations.insert(std::make_pair(*node, NodeCategory::candidateMaximalNonDependency));
                     }
                 }
 
-            } else if (!observations.inferCategory(node)) { //TODO переделать inferCategory
-                auto nodePartition = partitionStorage->getOrCreateFor(*node);
-                auto rhsPartition = relation->getColumnData(rhs->getIndex())->getPositionListIndex();
-                auto nodeIntersectedWithRHSPartition = nodePartition->intersect(rhsPartition); //может ещё раз вызвать getOrCreateFor вместо пересечения?
-
-                if (nodePartition->getNumNonSingletonCluster() ==
-                    nodeIntersectedWithRHSPartition->getNumNonSingletonCluster()
-                ) {
-                    observations.insert(std::make_pair(*node, NodeCategory::candidateMinimalDependency));
-                } else {
-                    observations.insert(std::make_pair(*node, NodeCategory::candidateMaximalNonDependency));
-                }
-            }
-
-            node = pickNextNode(node);
-        } while (node != nullptr);
-
+                node = pickNextNode(node);
+            } while (node != nullptr);
+        }
         seeds = generateNextSeeds();
-    }
+    } while (!seeds.empty());
 }
 
 DFD::DFD(const std::filesystem::path &path, char separator, bool hasHeader)
@@ -180,12 +205,12 @@ shared_ptr<Vertical> DFD::pickNextNode(shared_ptr<Vertical> const& node) {
 std::list<shared_ptr<Vertical>> DFD::generateNextSeeds() {
     std::unordered_set<shared_ptr<Vertical>> seeds;
     std::unordered_set<shared_ptr<Vertical>> newSeeds;
-    dynamic_bitset<> singleColumnBitset(relation->getNumColumns());
+    dynamic_bitset<> singleColumnBitset(relation->getNumColumns(), 0);
 
     //TODO переписать под метод getColumns
     for (auto const& node : maximalNonDeps) {
         shared_ptr<Vertical> complementNode = node->invert();
-        singleColumnBitset.clear();
+        singleColumnBitset.reset();
         //dynamic_bitset<> complementNodeIndices = complementNode->getColumnIndices();
 
         if (seeds.empty()) {
@@ -204,10 +229,10 @@ std::list<shared_ptr<Vertical>> DFD::generateNextSeeds() {
                      columnIndex = complementNode->getColumnIndices().find_next(columnIndex)
                 ) {
                     //TODO дикие костыли
-                    singleColumnBitset.set(columnIndex);
+                    singleColumnBitset[columnIndex] = true;
                     singleColumnBitset |= dependency->getColumnIndices();
                     newSeeds.insert(std::make_shared<Vertical>(relation->getSchema(), singleColumnBitset));
-                    singleColumnBitset.clear();
+                    singleColumnBitset.reset();
                 }
             }
 
@@ -222,9 +247,17 @@ std::list<shared_ptr<Vertical>> DFD::generateNextSeeds() {
 
     //TODO может быть затратно?
     std::unordered_set<shared_ptr<Vertical>> const discoveredMinimalDepsSet(minimalDeps.begin(), minimalDeps.end());
-    for (auto const& seed : seeds) {
+    /*for (auto const& seed : seeds) {
         if (discoveredMinimalDepsSet.find(seed) != discoveredMinimalDepsSet.end()) {
             seeds.erase(seed);
+        }
+    }*/
+
+    for (auto seedIter = seeds.begin(); seedIter != seeds.end(); ) {
+        if (discoveredMinimalDepsSet.find(*seedIter) != discoveredMinimalDepsSet.end()) {
+            seedIter = seeds.erase(seedIter);
+        } else {
+            seedIter++;
         }
     }
 
@@ -233,11 +266,21 @@ std::list<shared_ptr<Vertical>> DFD::generateNextSeeds() {
 
 //TODO пока что дикий костыль за квадрат
 void DFD::minimize(std::unordered_set<shared_ptr<Vertical>> & nodeList) {
-    for (auto const& node : nodeList) {
+    /*for (auto const& node : nodeList) {
         for (auto const& nodeToCheck : nodeList) {
-            if (nodeToCheck->contains(*node)) {
+            if (!(*nodeToCheck == *node) && nodeToCheck->contains(*node)) {
                 //TODO переписать на итераторы
                 nodeList.erase(nodeToCheck);
+            }
+        }
+    }*/
+
+    for (auto nodeIter = nodeList.begin(); nodeIter != nodeList.end(); nodeIter++) {
+        for (auto nodeToCheckIter = nodeList.begin(); nodeToCheckIter != nodeList.end(); ) {
+            if ( !(**nodeIter == **nodeToCheckIter) && (*nodeToCheckIter)->contains(**nodeIter)) {
+                nodeToCheckIter = nodeList.erase(nodeToCheckIter);
+            } else {
+                nodeToCheckIter++;
             }
         }
     }
