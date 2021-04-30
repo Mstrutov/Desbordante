@@ -15,11 +15,20 @@ void NonDependenciesMap::addNewNonDependency(shared_ptr<Vertical> node) {
 
     for (auto const& column : node->getColumns()) {
         unordered_set<shared_ptr<Vertical>>& verticalSet = this->find(Vertical(*column))->second;
-        for (auto const& vertical : verticalSet) {
+        /*for (auto const& vertical : verticalSet) {
             if (node->contains(*vertical)) {
                 verticalSet.erase(vertical);    //удаляем подмножества
             }
+        }*/
+
+        for (auto iter = verticalSet.begin(); iter != verticalSet.end(); ) {
+            if (node->contains(**iter)) {
+                iter = verticalSet.erase(iter); //удаляем подмножества
+            } else {
+                iter++;
+            }
         }
+
         verticalSet.insert(node);
     }
 }
