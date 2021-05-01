@@ -101,4 +101,14 @@ bool LatticeObservations::inferCategory(shared_ptr<Vertical> const& node) { //TO
     return false;
 }
 
+bool LatticeObservations::isCandidate(const shared_ptr<Vertical> &node) {
+    auto nodeIter = this->find(*node);
+    if (nodeIter == this->end()) {
+        return false;
+    } else {
+        return nodeIter->second == NodeCategory::candidateMaximalNonDependency ||
+               nodeIter->second == NodeCategory::candidateMinimalDependency;
+    }
+}
+
 
