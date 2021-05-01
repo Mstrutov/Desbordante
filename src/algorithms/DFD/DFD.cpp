@@ -72,7 +72,8 @@ unsigned long long DFD::execute() {
             if (!lhs.contains(*rhs)) {
                 observations[lhs] = NodeCategory::minimalDependency;
                 //разобраться с шаред поинтерами
-                dependenciesMap.addNewDependency(std::make_shared<Vertical>(lhs));
+                dependenciesMap.addNewDependency(std::make_shared<Vertical>(lhs));//TODO костыль
+                minimalDeps.insert(std::make_shared<Vertical>(lhs));
             }
         }
 
@@ -153,7 +154,7 @@ void DFD::findLHSs(shared_ptr<Column const> const& rhs, shared_ptr<RelationalSch
                 node = pickNextNode(node);
             } while (node != nullptr);
         }
-        seeds = generateNextSeeds();
+        seeds = generateNextSeeds(rhs);
     } while (!seeds.empty());
 }
 
@@ -202,14 +203,26 @@ shared_ptr<Vertical> DFD::pickNextNode(shared_ptr<Vertical> const& node) {
     return nextNode;
 }
 
-std::list<shared_ptr<Vertical>> DFD::generateNextSeeds() {
-    std::unordered_set<shared_ptr<Vertical>> seeds;
+
+std::list<shared_ptr<Vertical>> DFD::generateNextSeeds(shared_ptr<Column const> const& currentRHS) {
+    /*struct qwe {
+        bool operator()(shared_ptr<Vertical> const& v1, shared_ptr<Vertical> const& v2) const {
+            return *v1 == *v2;
+        }
+    };*/
+
+    //using unordered_set = std::unordered_set<shared_ptr<Vertical>, std::hash<shared_ptr<Vertical>>, custom_comparator>
+
+    std::unordered_set<shared_ptr<Vertical>, _Hash = > seeds;
     std::unordered_set<shared_ptr<Vertical>> newSeeds;
     dynamic_bitset<> singleColumnBitset(relation->getNumColumns(), 0);
 
     //TODO переписать под метод getColumns
     for (auto const& node : maximalNonDeps) {
-        shared_ptr<Vertical> complementNode = node->invert();
+        //shared_ptr<Vertical> complementNode = node->invert();
+        dynamic_bitset<> nodeIndices = node->getColumnIndices();
+        nodeIndices[currentRHS->getIndex()] = true;
+        shared_ptr<Vertical> complementNode = std::make_shared<Vertical>(node->getSchema(), std::move(nodeIndices.flip()));
         singleColumnBitset.reset();
         //dynamic_bitset<> complementNodeIndices = complementNode->getColumnIndices();
 
@@ -246,12 +259,14 @@ std::list<shared_ptr<Vertical>> DFD::generateNextSeeds() {
     }
 
     //TODO может быть затратно?
-    std::unordered_set<shared_ptr<Vertical>> const discoveredMinimalDepsSet(minimalDeps.begin(), minimalDeps.end());
+    std::unordered_set<shared_ptr<Vertical>> discoveredMinimalDepsSet(minimalDeps.begin(), minimalDeps.end());
     /*for (auto const& seed : seeds) {
         if (discoveredMinimalDepsSet.find(seed) != discoveredMinimalDepsSet.end()) {
             seeds.erase(seed);
         }
     }*/
+
+
 
     for (auto seedIter = seeds.begin(); seedIter != seeds.end(); ) {
         if (discoveredMinimalDepsSet.find(*seedIter) != discoveredMinimalDepsSet.end()) {
