@@ -59,7 +59,9 @@ std::unique_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::createFrom(
     while (fileInput.getHasNext()){
         row = fileInput.parseNext();
 
-        if ((int)row.size() != numColumns) {
+        if (row.empty() && numColumns == 1) {
+            row.emplace_back("");
+        } else if ((int)row.size() != numColumns) {
             LOG(WARNING) << "Skipping incomplete rows";
             continue;
         }
