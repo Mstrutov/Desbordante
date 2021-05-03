@@ -50,11 +50,11 @@ unsigned long long DFD::execute() {
         if (columnPLI->getNumNonSingletonCluster() == 0) {
             Vertical const& lhs = Vertical(*column);
             uniqueVerticals.push_back(lhs);
-            for (auto const& rhs : schema->getColumns()) {
+            /*for (auto const& rhs : schema->getColumns()) {
                 if (rhs->getIndex() != column->getIndex()) {
                     registerFD(lhs, *rhs);
                 }
-            }
+            }*/
         }
     }
 
@@ -84,7 +84,8 @@ unsigned long long DFD::execute() {
             registerFD(std::move(*minimalDependencyLHS), *rhs);
         }
     }
-    std::cout << this->getJsonFDs();
+    std::cout << "====JSON-FD========\r\n" << FDAlgorithm::getJsonFDs() << std::endl;
+    std::cout << "HASH: " << FDAlgorithm::fletcher16() << std::endl;
 }
 
 shared_ptr<Vertical> DFD::takeRandom(std::list<shared_ptr<Vertical>> & nodeList) {
@@ -176,6 +177,7 @@ shared_ptr<Vertical> DFD::pickNextNode(shared_ptr<Vertical> const& node) {
             vector<shared_ptr<Vertical>> uncheckedSubsets = dependenciesMap.getUncheckedSubsets(node, observations); //TODO переписать observations в конструктор?
             if (uncheckedSubsets.empty()) {
                 minimalDeps.insert(node);
+                //observations[*node] = NodeCategory::minimalDependency;
                 dependenciesMap.addNewDependency(node);
             } else {
                 shared_ptr<Vertical> nextNode = takeRandom(uncheckedSubsets);
@@ -186,6 +188,7 @@ shared_ptr<Vertical> DFD::pickNextNode(shared_ptr<Vertical> const& node) {
             vector<shared_ptr<Vertical>> uncheckedSupersets = nonDependenciesMap.getUncheckedSupersets(node, observations);
             if (uncheckedSupersets.empty()) {
                 maximalNonDeps.insert(node);
+                //observations[*node] = NodeCategory::maximalNonDependency;
                 nonDependenciesMap.addNewNonDependency(node);
             } else {
                 shared_ptr<Vertical> nextNode = takeRandom(uncheckedSupersets);
@@ -211,10 +214,10 @@ std::list<shared_ptr<Vertical>> DFD::generateNextSeeds(shared_ptr<Column const> 
         }
     };*/
 
-    //using unordered_set = std::unordered_set<shared_ptr<Vertical>, std::hash<shared_ptr<Vertical>>, custom_comparator>
+    using vertical_set = std::unordered_set<shared_ptr<Vertical>, std::hash<shared_ptr<Vertical>>, custom_comparator>;
 
-    std::unordered_set<shared_ptr<Vertical>, _Hash = > seeds;
-    std::unordered_set<shared_ptr<Vertical>> newSeeds;
+    vertical_set seeds;
+    vertical_set newSeeds;
     dynamic_bitset<> singleColumnBitset(relation->getNumColumns(), 0);
 
     //TODO переписать под метод getColumns
@@ -259,14 +262,12 @@ std::list<shared_ptr<Vertical>> DFD::generateNextSeeds(shared_ptr<Column const> 
     }
 
     //TODO может быть затратно?
-    std::unordered_set<shared_ptr<Vertical>> discoveredMinimalDepsSet(minimalDeps.begin(), minimalDeps.end());
+    vertical_set discoveredMinimalDepsSet(minimalDeps.begin(), minimalDeps.end());
     /*for (auto const& seed : seeds) {
         if (discoveredMinimalDepsSet.find(seed) != discoveredMinimalDepsSet.end()) {
             seeds.erase(seed);
         }
     }*/
-
-
 
     for (auto seedIter = seeds.begin(); seedIter != seeds.end(); ) {
         if (discoveredMinimalDepsSet.find(*seedIter) != discoveredMinimalDepsSet.end()) {
@@ -280,7 +281,7 @@ std::list<shared_ptr<Vertical>> DFD::generateNextSeeds(shared_ptr<Column const> 
 }
 
 //TODO пока что дикий костыль за квадрат
-void DFD::minimize(std::unordered_set<shared_ptr<Vertical>> & nodeList) {
+void DFD::minimize(std::unordered_set<shared_ptr<Vertical>, std::hash<shared_ptr<Vertical>>, custom_comparator> & nodeList) {
     /*for (auto const& node : nodeList) {
         for (auto const& nodeToCheck : nodeList) {
             if (!(*nodeToCheck == *node) && nodeToCheck->contains(*node)) {

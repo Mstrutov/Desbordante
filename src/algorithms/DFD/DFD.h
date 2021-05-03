@@ -36,7 +36,7 @@ private:
     std::list<shared_ptr<Vertical>> generateNextSeeds(shared_ptr<Column const> const& currentRHS);
     shared_ptr<Vertical> takeRandom(std::list<shared_ptr<Vertical>> & nodeList);
     shared_ptr<Vertical> takeRandom(std::vector<shared_ptr<Vertical>> const& nodeList);
-    void minimize(std::unordered_set<shared_ptr<Vertical>> & nodeList);
+    void minimize(std::unordered_set<shared_ptr<Vertical>, std::hash<shared_ptr<Vertical>>, custom_comparator> & nodeList);
 
 public:
     explicit DFD(std::filesystem::path const& path, char separator = ',', bool hasHeader = true);
