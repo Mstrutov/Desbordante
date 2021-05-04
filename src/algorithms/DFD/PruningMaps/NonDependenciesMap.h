@@ -6,23 +6,18 @@
 
 #include "Vertical.h"
 #include "DFD/LatticeObservations/LatticeObservations.h"
+#include "CustomComparator.h"
 
-/*namespace std {
-    template<>
-    struct hash<shared_ptr<Vertical>> {
-        size_t operator()(shared_ptr<Vertical> const &k) const {
-            return k->getColumnIndices().to_ulong();
-        }
-    };
-}*/
-
-class NonDependenciesMap : public std::unordered_map<Vertical, std::unordered_set<shared_ptr<Vertical>>>{
+class NonDependenciesMap : public std::unordered_map<Vertical, std::unordered_set<shared_ptr<Vertical>, std::hash<shared_ptr<Vertical>>, custom_comparator>>{
+    using vertical_set = std::unordered_set<shared_ptr<Vertical>, std::hash<shared_ptr<Vertical>>, custom_comparator>;
 public:
+
     explicit NonDependenciesMap(shared_ptr<RelationalSchema> schema);
     NonDependenciesMap() = default;
 
-    void addNewNonDependency(shared_ptr<Vertical> node);
-    vector<shared_ptr<Vertical>> getUncheckedSupersets(shared_ptr<Vertical> node, LatticeObservations const& observations);
-    bool canBePruned(Vertical const& node);
+    std::unordered_set<Vertical> getPrunedSupersets(std::unordered_set<Vertical> supersets);
+    void addNewNonDependency(shared_ptr<Vertical> const& node);
+    bool canBePruned(Vertical const& node) const;
+    void rebalance();
 };
 
