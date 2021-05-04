@@ -3,61 +3,94 @@
 //
 
 #include "NonDependenciesMap.h"
+//#include "CustomComparator.h"
+
+using vertical_set = std::unordered_set<shared_ptr<Vertical>, std::hash<shared_ptr<Vertical>>, custom_comparator>;
 
 NonDependenciesMap::NonDependenciesMap(shared_ptr<RelationalSchema> schema) {
     for (auto const& column : schema->getColumns()) {
-        this->insert(std::make_pair(Vertical(*column), std::unordered_set<shared_ptr<Vertical>>()));
+        this->insert(std::make_pair(Vertical(*column), vertical_set()));
     }
 }
 
-void NonDependenciesMap::addNewNonDependency(shared_ptr<Vertical> node) {
-    using std::unordered_set;
+std::unordered_set<Vertical> NonDependenciesMap::getPrunedSupersets(std::unordered_set<Vertical> supersets) {
+    std::unordered_set<Vertical> prunedSupersets;
+    for (auto const& node : supersets) {
+        if (canBePruned(node)) {
+            prunedSupersets.insert(node);
+        }
+    }
+    return prunedSupersets;
+}
 
-    for (auto const& column : node->getColumns()) {
-        unordered_set<shared_ptr<Vertical>>& verticalSet = this->find(Vertical(*column))->second;
-        /*for (auto const& vertical : verticalSet) {
-            if (node->contains(*vertical)) {
-                verticalSet.erase(vertical);    //удаляем подмножества
-            }
-        }*/
-
-        for (auto iter = verticalSet.begin(); iter != verticalSet.end(); ) {
-            if (node->contains(**iter)) {
-                iter = verticalSet.erase(iter); //удаляем подмножества
-            } else {
-                iter++;
+bool NonDependenciesMap::canBePruned(const Vertical &node) const {
+    for (auto const& mapRow : *this) {
+        Vertical const& key = mapRow.first;
+        if (node.contains(key)) {
+            for (shared_ptr<Vertical> const& nonDependency : mapRow.second) {
+                if (nonDependency->contains(node)) {
+                    return true;
+                }
             }
         }
-
-        verticalSet.insert(node);
     }
 }
 
-vector<shared_ptr<Vertical>>
-NonDependenciesMap::getUncheckedSupersets(shared_ptr<Vertical> node, LatticeObservations const& observations) {
-    std::vector<shared_ptr<Vertical>> uncheckedSubsets;
+void NonDependenciesMap::addNewNonDependency(shared_ptr<Vertical> const& nodeToAdd) {
+    for (auto const& mapRow : *this) {
+        Vertical const& key = mapRow.first;
+
+        if (nodeToAdd->contains(key)) {
+            vertical_set nonDepsForKey = mapRow.second;
+            bool hasSupersetEntry = false;
+
+            for (auto iter = nonDepsForKey.begin(); iter != nonDepsForKey.end(); ) {
+                //если совпадают, то contains = true
+                shared_ptr<Vertical> const& nonDep = *iter;
+                if (nonDep->contains(*nodeToAdd)) {
+                    hasSupersetEntry = true;
+                    break;
+                } else if (nodeToAdd->contains(*nonDep)) {
+                    iter = nonDepsForKey.erase(iter);
+                } else {
+                    iter++;
+                }
+            }
+
+            if (!hasSupersetEntry) {
+                nonDepsForKey.insert(nodeToAdd);
+            }
+        }
+    }
+    //rebalance();
+}
+
+/*vector<shared_ptr<Vertical>>
+NonDependenciesMap::getUncheckedSupersets(shared_ptr<Vertical> node, LatticeObservations & observations) {
+    std::vector<shared_ptr<Vertical>> uncheckedSupersets;
+    //dynamic_bitset<> invertedColumnIndices = node->getColumnIndices().flip();
 
     for (auto& subsetNode : node->getParents()) {
-        if (observations.find(*subsetNode) == observations.end() &&
-            !canBePruned(*subsetNode)
-        ) {
-            uncheckedSubsets.push_back(std::move(subsetNode));
+        if (observations.find(*subsetNode) == observations.end()) {
+            uncheckedSupersets.push_back(std::move(subsetNode));
         }
     }
 
-    return uncheckedSubsets;
-}
+    for (size_t index = invertedColumnIndices.find_first(); index < invertedColumnIndices.size(); index = invertedColumnIndices.find_next(index)) {
+        invertedColumnIndices[index] = false; //убираем одну из колонок
+        auto supersetNode = std::make_shared<Vertical>(node->getSchema(), invertedColumnIndices.flip());
+        auto supersetVerticalIter = this->find(*supersetNode); //TODO !!!лучше переделать без второго flip а просто бежать циклом по нулям
 
-bool NonDependenciesMap::canBePruned(const Vertical &node) {
-    using std::unordered_set;
-
-    for (auto const& column : node.getColumns()) {
-        unordered_set<shared_ptr<Vertical>>& verticalContainingColumnSet = this->find(Vertical(*column))->second;
-        for (auto const& vertical : verticalContainingColumnSet) {
-            if (vertical->contains(node)) { //TODO contains проверяет на равенство?
-                return true;
+        if (supersetVerticalIter == this->end()) {
+            if (!canBePruned(*supersetNode)) {
+                uncheckedSupersets.push_back(std::move(supersetNode));
+            } else {
+                observations[*supersetNode] = NodeCategory::dependency;
             }
         }
+
+        invertedColumnIndices[index] = true; //возвращаем как было
     }
-    return false;
-}
+
+    return uncheckedSupersets;
+}*/
