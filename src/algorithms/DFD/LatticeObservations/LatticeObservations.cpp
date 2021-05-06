@@ -61,13 +61,14 @@ NodeCategory LatticeObservations::updateNonDependencyCategory(const shared_ptr<V
 }
 
 bool LatticeObservations::inferCategory(shared_ptr<Vertical> const& node) { //TODO можно ли оптимизировать?
-    dynamic_bitset<> columnIndices = node->getColumnIndices(); //копируем индексы
-    /*bool hasDependencySubset = false;
-    bool hasNonDependencySuperset = false;
-    bool hasUncheckedSubset = false;
-    bool hasUncheckedSuperset = false;
+    /*dynamic_bitset<> columnIndices = node->getColumnIndices(); //копируем индексы
 
-    bool allSubsetsAreNonDeps = false;*/
+    //bool hasDependencySubset = false;
+    //bool hasNonDependencySuperset = false;
+    //bool hasUncheckedSubset = false;
+    //bool hasUncheckedSuperset = false;
+
+    //bool allSubsetsAreNonDeps = false;
 
     for (size_t index = 0; index < columnIndices.size(); index++) {
         if (columnIndices[index]) {
@@ -98,7 +99,7 @@ bool LatticeObservations::inferCategory(shared_ptr<Vertical> const& node) { //TO
         }
     }
 
-    return false;
+    return false;*/
 }
 
 bool LatticeObservations::isCandidate(const shared_ptr<Vertical> &node) {
@@ -109,6 +110,37 @@ bool LatticeObservations::isCandidate(const shared_ptr<Vertical> &node) {
         return nodeIter->second == NodeCategory::candidateMaximalNonDependency ||
                nodeIter->second == NodeCategory::candidateMinimalDependency;
     }
+}
+
+LatticeObservations::vertical_set LatticeObservations::getUncheckedSubsets(const shared_ptr<Vertical> &node) {
+    vertical_set uncheckedSubsets;
+
+    for (auto& subsetNode : node->getParents()) {
+        if (this->find(*subsetNode) == this->end()) {
+            uncheckedSubsets.insert(std::move(subsetNode));
+        }
+    }
+
+    return uncheckedSubsets;
+}
+
+LatticeObservations::vertical_set LatticeObservations::getUncheckedSupersets(const shared_ptr<Vertical> &node) {
+    dynamic_bitset<> indices = node->getColumnIndices();
+    vertical_set uncheckedSupersets;
+
+    for (size_t index = 0; index < indices.size(); index++) {
+        if (!indices[index]) {
+            indices[index] = true;
+            auto supersetNode = std::make_shared<Vertical>(node->getSchema(), indices);
+
+            if (this->find(*supersetNode) == this->end()) {
+                uncheckedSupersets.insert(std::move(supersetNode));
+            }
+
+            indices[index] = false;
+        }
+    }
+    return uncheckedSupersets;
 }
 
 

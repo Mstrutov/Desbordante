@@ -7,16 +7,7 @@
 #include <unordered_map>
 #include "Vertical.h"
 #include "../src/custom/CustomHashes.h"
-
-/*namespace std {
-    template<>
-    struct hash<Vertical> {
-        size_t operator()(Vertical const &k) const {
-            return k.getColumnIndices().to_ulong();
-        }
-    };
-}*/
-
+#include "CustomComparator.h"
 
 enum class NodeCategory {
         dependency,
@@ -29,7 +20,7 @@ enum class NodeCategory {
 
 class LatticeObservations : public std::unordered_map<Vertical, NodeCategory> {
 public:
-
+    using vertical_set = std::unordered_set<shared_ptr<Vertical>, std::hash<shared_ptr<Vertical>>, custom_comparator>;
     //TODO ctors
 
     bool isCandidate(shared_ptr<Vertical> const& vertical);
@@ -37,6 +28,9 @@ public:
 
     NodeCategory updateDependencyCategory(shared_ptr<Vertical>  const& vertical);
     NodeCategory updateNonDependencyCategory(shared_ptr<Vertical>  const& vertical);
+
+    vertical_set getUncheckedSubsets(shared_ptr<Vertical> const& node);
+    vertical_set getUncheckedSupersets(shared_ptr<Vertical> const& node);
 
     bool inferCategory(shared_ptr<Vertical> const& node);
 

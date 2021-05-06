@@ -13,10 +13,10 @@ NonDependenciesMap::NonDependenciesMap(shared_ptr<RelationalSchema> schema) {
     }
 }
 
-std::unordered_set<Vertical> NonDependenciesMap::getPrunedSupersets(std::unordered_set<Vertical> supersets) {
-    std::unordered_set<Vertical> prunedSupersets;
+vertical_set NonDependenciesMap::getPrunedSupersets(vertical_set const& supersets) const {
+    vertical_set prunedSupersets;
     for (auto const& node : supersets) {
-        if (canBePruned(node)) {
+        if (canBePruned(*node)) {
             prunedSupersets.insert(node);
         }
     }

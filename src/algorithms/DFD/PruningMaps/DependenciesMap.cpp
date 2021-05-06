@@ -6,60 +6,74 @@
 
 DependenciesMap::DependenciesMap(shared_ptr<RelationalSchema> schema) {
     for (auto const& column : schema->getColumns()) {
-        this->insert(std::make_pair(Vertical(*column), std::unordered_set<shared_ptr<Vertical>>()));
+        this->insert(std::make_pair(Vertical(*column), vertical_set()));
     }
 }
 
-void DependenciesMap::addNewDependency(shared_ptr<Vertical> node) { //пока версия без балансировок
-    using std::unordered_set;
+DependenciesMap::vertical_set DependenciesMap::getPrunedSubsets(vertical_set const& subsets) const {
+    vertical_set prunedSubsets;
+    for (auto const& node : subsets) {
+        if (canBePruned(*node)) {
+            prunedSubsets.insert(node);
+        }
+    }
+    return prunedSubsets;
+}
 
-    for (auto const& column : node->getColumns()) {
-        unordered_set<shared_ptr<Vertical>>& verticalSet = this->find(Vertical(*column))->second;
-        /*for (auto const &vertical : verticalSet) {
-            if (vertical->contains(*node)) {
-                verticalSet.erase(vertical);    //удаляем надмножества
+void DependenciesMap::addNewDependency(shared_ptr<Vertical> nodeToAdd) { //пока версия без балансировок
+    for (auto const& mapRow : *this) {
+        Vertical const& key = mapRow.first;
+
+        if (nodeToAdd->contains(key)) {
+            vertical_set depsForKey = mapRow.second;
+            bool hasSubsetEntry = false;
+
+            for (auto iter = depsForKey.begin(); iter != depsForKey.end(); ) {
+                //если совпадают, то contains = true
+                shared_ptr<Vertical> const& dep = *iter;
+                if (nodeToAdd->contains(*dep)) {
+                    hasSubsetEntry = true;
+                    break;
+                } else if (dep->contains(*nodeToAdd)) {
+                    iter = depsForKey.erase(iter);
+                } else {
+                    iter++;
+                }
             }
-        }*/
 
-        for (auto iter = verticalSet.begin(); iter != verticalSet.end(); ) {
-            if ((*iter)->contains(*node)) {
-                iter = verticalSet.erase(iter); //удаляем подмножества
-            } else {
-                iter++;
+            if (!hasSubsetEntry) {
+                depsForKey.insert(nodeToAdd);
             }
         }
-
-        verticalSet.insert(node);
     }
+    //rebalance();
 }
 
-std::vector<shared_ptr<Vertical>> DependenciesMap::getUncheckedSubsets(shared_ptr<Vertical> node, LatticeObservations const& observations) {
+/*std::vector<shared_ptr<Vertical>> DependenciesMap::getUncheckedSubsets(shared_ptr<Vertical> node, LatticeObservations & observations) {
     std::vector<shared_ptr<Vertical>> uncheckedSubsets;
 
     for (auto& subsetNode : node->getParents()) {
-        if (observations.find(*subsetNode) == observations.end() &&
-            !canBePruned(*subsetNode)
-        ) {
-            uncheckedSubsets.push_back(std::move(subsetNode));
+        if (observations.find(*subsetNode) == observations.end()) {
+            if (!canBePruned(*subsetNode)) {
+                uncheckedSubsets.push_back(std::move(subsetNode));
+            } else {
+                observations[*subsetNode] = NodeCategory::nonDependency;
+            }
         }
     }
 
     return uncheckedSubsets;
-}
+}*/
 
-bool DependenciesMap::canBePruned(Vertical const& node) {
-    using std::unordered_set;
-
-    for (auto const& column : node.getColumns()) {
-        unordered_set<shared_ptr<Vertical>>& verticalSet = this->find(Vertical(*column))->second;
-        for (auto const& vertical : verticalSet) {
-            if (node.contains(*vertical)) { //TODO contains проверяет на равенство?
-                return true;
+bool DependenciesMap::canBePruned(Vertical const& node) const {
+    for (auto const& mapRow : *this) {
+        Vertical const& key = mapRow.first;
+        if (node.contains(key)) {
+            for (shared_ptr<Vertical> const& dependency : mapRow.second) {
+                if (node.contains(*dependency)) {
+                    return true;
+                }
             }
         }
     }
-
-    return false;
 }
-
-
