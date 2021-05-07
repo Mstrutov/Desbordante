@@ -40,6 +40,8 @@ include_directories(
     "src/caching"
     "src/logging"
     "src"
+    "src/algorithms/depminer"
+    "src/algorithms/depminer/util"
     )
 
 # adding submodules
