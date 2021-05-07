@@ -24,12 +24,6 @@ unsigned long long Depminer::execute(){
     cout << schema->getName() << " has " << relation->getNumColumns() << " columns, "
          << relation->getNumRows() << " rows, and a maximum NIP of " << setw(2)
          << relation->getMaximumNip() << "." << endl;
-    for (auto column : schema->getColumns()) {
-        shared_ptr<ColumnData> columnData = relation->getColumnData(column->getIndex());
-        double avgPartners = columnData->getPositionListIndex()->getNepAsLong() * 2.0 / relation->getNumRows();
-        cout << "* " << column->toString() << ": every tuple has " << setw(2)
-             << avgPartners << " partners on average." << endl;
-    }
 
     //Agree sets
     std::set<Vertical> agreeSets;
@@ -40,7 +34,7 @@ unsigned long long Depminer::execute(){
 
     //LHS
 
-    
+
 
     return 0;
 }
