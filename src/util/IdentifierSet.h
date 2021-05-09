@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "ColumnData.h"
+#include "Vertical.h"
 #include "ColumnLayoutRelationData.h"
 
 /* TODO: consider using Vertical + vector<int> indices
@@ -15,19 +16,19 @@ class IdentifierSet {
 public:
     IdentifierSet(IdentifierSet const&) = default;
     IdentifierSet(IdentifierSet&&) = default;
-    IdentifierSet(ColumnLayoutRelationData const& relation, int index);
+    IdentifierSet(ColumnLayoutRelationData const* relation, int index);
 
     std::string toString() const;
 
     // Returns an intersection (agree_set(tuple, other.tuple)) of two IndetifierSets
-    std::shared_ptr<Vertical> intersect(IdentifierSet const& other) const;
+    Vertical intersect(IdentifierSet const& other) const;
 private:
     struct IdentifierSetValue {
-        Column const& attribute;
+        Column const* attribute;
         int cluster_index;
     };
 
-    ColumnLayoutRelationData const& relation_;
+    ColumnLayoutRelationData const* relation_;
     std::vector<IdentifierSetValue> data_;
     int tuple_index_;
 };
