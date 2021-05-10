@@ -25,4 +25,7 @@ public:
     CMAXGen() = default;
     ~CMAXGen() = default;
     void execute(std::set<Vertical> agreeSets);
+    std::set<CMAXSet> getCmaxSets(){
+        return this->cmaxSets;
+    }
 };

@@ -59,9 +59,7 @@ void CMAXGen::CMaxSetsGenerate(){
     for(MAXSet maxSet : this->maxSets){
         CMAXSet result = CMAXSet(maxSet.getColumn());
         for(auto combination : maxSet.getCombinations()){
-            boost::dynamic_bitset<> invert = combination.getColumnIndices();
-            invert ^= boost::dynamic_bitset<>(invert.size(), false);
-            result.addCombination(Vertical(combination.getSchema(), invert));
+            result.addCombination(combination.invert());
         }
         cmaxSets.insert(result);
     }
