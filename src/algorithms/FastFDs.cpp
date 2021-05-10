@@ -170,16 +170,20 @@ FastFDs::getNextOrdering(vector<DiffSet> const& diff_sets, Column const& attribu
         return orderingComp(diff_sets, l_col, r_col);
     };
     set<Column, OrderingComparator> ordering(ordering_comp);
+    // columns that are contained in at least one diff set
+    std::unordered_set<Column> diff_sets_cols;
+
+    for (DiffSet const& diff_set : diff_sets) {
+        for (Column const* const col : diff_set.getColumns()) {
+            diff_sets_cols.insert(*col);
+        }
+    }
 
     auto p = cur_ordering.find(attribute);
     assert(p != cur_ordering.end());
     for (++p; p != cur_ordering.end(); ++p) {
-        //awful kostil
-        for (DiffSet const& diff_set : diff_sets) {
-            if (diff_set.contains(*p)) {
-                ordering.insert(*p);
-                break;
-            }
+        if (diff_sets_cols.find(*p) != diff_sets_cols.end()) {
+            ordering.insert(*p);
         }
     }
     return ordering;
