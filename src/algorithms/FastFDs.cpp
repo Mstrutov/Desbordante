@@ -46,7 +46,7 @@ unsigned long long FastFDs::execute() {
             continue;
         }
 
-        vector<Vertical> diff_sets_mod = getDiffSetsMod(*column);
+        vector<DiffSet> diff_sets_mod = getDiffSetsMod(*column);
         assert(!diff_sets_mod.empty());
         if (!(diff_sets_mod.size() == 1 && diff_sets_mod.back() == *schema_->emptyVertical)) {
             // use vector instead of set?
@@ -71,8 +71,8 @@ bool FastFDs::columnContainsOnlyEqualValues(Column const& column) const {
     return column_contains_only_equal_values;
 }
 
-void FastFDs::findCovers(Column const& attribute, vector<Vertical> const& diff_sets_mod,
-                         vector<Vertical> const& cur_diff_sets, Vertical const& path,
+void FastFDs::findCovers(Column const& attribute, vector<DiffSet> const& diff_sets_mod,
+                         vector<DiffSet> const& cur_diff_sets, Vertical const& path,
                          set<Column, OrderingComparator> const& ordering) {
     if (ordering.size() == 0 && !cur_diff_sets.empty())
         return; // no FDs here
@@ -88,8 +88,8 @@ void FastFDs::findCovers(Column const& attribute, vector<Vertical> const& diff_s
     }
 
     for (Column const& column : ordering) {
-        vector<Vertical> next_diff_sets;
-        for (Vertical const& diff_set : cur_diff_sets) {
+        vector<DiffSet> next_diff_sets;
+        for (DiffSet const& diff_set : cur_diff_sets) {
             if (!diff_set.contains(column))
                 next_diff_sets.push_back(diff_set);
         }
@@ -113,7 +113,7 @@ bool FastFDs::isCover(Vertical const& candidate, vector<Vertical> const& sets) c
 }
 
 bool FastFDs::coverMinimal(Vertical const& cover,
-                           vector<Vertical> const& diff_sets_mod) const {
+                           vector<DiffSet> const& diff_sets_mod) const {
     for (Column const* column : cover.getColumns()) {
         Vertical subset = cover.without(*column);
         bool subset_covers = isCover(subset, diff_sets_mod);
@@ -123,12 +123,12 @@ bool FastFDs::coverMinimal(Vertical const& cover,
     return true; // cover is minimal
 }
 
-bool FastFDs::orderingComp(vector<Vertical> const& diff_sets,
+bool FastFDs::orderingComp(vector<DiffSet> const& diff_sets,
                            Column const& l_col, Column const& r_col) const {
     unsigned cov_l = 0;
     unsigned cov_r = 0;
 
-    for (Vertical const& diff_set : diff_sets) {
+    for (DiffSet const& diff_set : diff_sets) {
         if (diff_set.contains(l_col))
             ++cov_l;
         if (diff_set.contains(r_col))
@@ -142,7 +142,7 @@ bool FastFDs::orderingComp(vector<Vertical> const& diff_sets,
 }
 
 set<Column, FastFDs::OrderingComparator>
-FastFDs::getInitOrdering(vector<Vertical> const& diff_sets, Column const& attribute) const {
+FastFDs::getInitOrdering(vector<DiffSet> const& diff_sets, Column const& attribute) const {
     auto ordering_comp = [&diff_sets, this](Column const& l_col, Column const& r_col) {
         return orderingComp(diff_sets, l_col, r_col);
     };
@@ -157,7 +157,7 @@ FastFDs::getInitOrdering(vector<Vertical> const& diff_sets, Column const& attrib
 }
 
 set<Column, FastFDs::OrderingComparator>
-FastFDs::getNextOrdering(vector<Vertical> const& diff_sets, Column const& attribute,
+FastFDs::getNextOrdering(vector<DiffSet> const& diff_sets, Column const& attribute,
                          set<Column, OrderingComparator> const& cur_ordering) const {
     auto ordering_comp = [&diff_sets, this](Column const& l_col, Column const& r_col) {
         return orderingComp(diff_sets, l_col, r_col);
@@ -168,7 +168,7 @@ FastFDs::getNextOrdering(vector<Vertical> const& diff_sets, Column const& attrib
     assert(p != cur_ordering.end());
     for (++p; p != cur_ordering.end(); ++p) {
         //awful kostil
-        for (Vertical const& diff_set : diff_sets) {
+        for (DiffSet const& diff_set : diff_sets) {
             if (diff_set.contains(*p)) {
                 ordering.insert(*p);
                 break;
@@ -178,19 +178,19 @@ FastFDs::getNextOrdering(vector<Vertical> const& diff_sets, Column const& attrib
     return ordering;
 }
 
-vector<Vertical> FastFDs::getDiffSetsMod(Column const& col) const {
-    vector<Vertical> diff_sets_mod;
+vector<FastFDs::DiffSet> FastFDs::getDiffSetsMod(Column const& col) const {
+    vector<DiffSet> diff_sets_mod;
 
     /* diff_sets_ is sorted, before adding next diff_set to
      * diff_sets_mod need to check if diff_sets_mod contains
      * a subset of diff_set, that means that diff_set
      * is not minimal.
      */
-    for (Vertical const& diff_set : diff_sets_) {
+    for (DiffSet const& diff_set : diff_sets_) {
         if (diff_set.contains(col)) {
             bool is_miminal = true;
 
-            for (Vertical const& min_diff_set : diff_sets_mod) {
+            for (DiffSet const& min_diff_set : diff_sets_mod) {
                 if (diff_set.contains(min_diff_set)) {
                     is_miminal = false;
                     break;
@@ -214,7 +214,6 @@ vector<Vertical> FastFDs::getDiffSetsMod(Column const& col) const {
 
 void FastFDs::genDiffSets() {
     AgreeSetFactory factory(relation_.get());
-    // std::set to get rid of repeating agree sets during inserting
     set<AgreeSet> const agree_sets = factory.genAgreeSets();
 
     #ifdef FASTFDS_DEBUG
