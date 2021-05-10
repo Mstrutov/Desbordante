@@ -18,10 +18,10 @@
 using std::set, std::vector, std::unordered_set;
 
 template<AgreeSetsGenMethod method>
-set<AgreeSet> AgreeSetFactory::genAgreeSets() const {
+AgreeSetFactory::SetOfAgreeSets AgreeSetFactory::genAgreeSets() const {
     auto start_time = std::chrono::system_clock::now();
     std::string method_str;
-    set<AgreeSet> agree_sets;
+    SetOfAgreeSets agree_sets;
 
     if constexpr (method == AgreeSetsGenMethod::kUsingVectorOfIDSets) {
         method_str = "`kUsingVectorOfIDSets`";
@@ -231,11 +231,11 @@ void AgreeSetFactory::calculateSupersets(SetOfVectors& max_representation,
         max_representation.erase(cluster);
 }
 
-template
-set<AgreeSet> AgreeSetFactory::genAgreeSets<AgreeSetsGenMethod::kUsingVectorOfIDSets>() const;
-template
-set<AgreeSet> AgreeSetFactory::genAgreeSets<AgreeSetsGenMethod::kUsingMapOfIDSets>() const;
-template
-set<AgreeSet> AgreeSetFactory::genAgreeSets<AgreeSetsGenMethod::kUsingGetAgreeSet>() const;
-template
-set<AgreeSet> AgreeSetFactory::genAgreeSets<AgreeSetsGenMethod::kUsingMCAndGetAgreeSet>() const;
+template AgreeSetFactory::SetOfAgreeSets
+AgreeSetFactory::genAgreeSets<AgreeSetsGenMethod::kUsingVectorOfIDSets>() const;
+template AgreeSetFactory::SetOfAgreeSets
+AgreeSetFactory::genAgreeSets<AgreeSetsGenMethod::kUsingMapOfIDSets>() const;
+template AgreeSetFactory::SetOfAgreeSets
+AgreeSetFactory::genAgreeSets<AgreeSetsGenMethod::kUsingGetAgreeSet>() const;
+template AgreeSetFactory::SetOfAgreeSets
+AgreeSetFactory::genAgreeSets<AgreeSetsGenMethod::kUsingMCAndGetAgreeSet>() const;
