@@ -6,8 +6,6 @@
 #include "FDAlgorithm.h"
 #include "ColumnLayoutRelationData.h"
 
-
-
 class FastFDs : public FDAlgorithm {
 public:
     enum class AgreeSetsGenMethod {
@@ -25,16 +23,10 @@ private:
     // Computes all difference sets of `relation_` by complementing agree sets
     void genDiffSets();
 
-    // Computes all agree sets of `relation_`
-    template<AgreeSetsGenMethod method = AgreeSetsGenMethod::kUsingVectorOfIDSets>
-    std::set<Vertical> genAgreeSets() const;
-
     /* Computes minimal difference sets
      * of `relation_` modulo `col`
      */
     std::vector<Vertical> getDiffSetsMod(Column const& col) const;
-    Vertical getAgreeSet(std::vector<int> const& tuple1,
-                         std::vector<int> const& tuple2) const;
     /* Returns initial ordering,
      * the total ordering of { schema_->getColumns() \ `attribute` } according to `diff_sets`
      */
@@ -47,7 +39,6 @@ private:
     std::set<Column, OrderingComparator> getNextOrdering(std::vector<Vertical> const& diff_sets,
                                                          Column const& attribute,
                                                          std::set<Column, OrderingComparator> const& cur_ordering) const;
-    std::set<std::vector<int>> getPLIMaxRepresentation() const;
     void findCovers(Column const& attribute, std::vector<Vertical> const& diff_sets_mod,
                     std::vector<Vertical> const& cur_diff_sets, Vertical const& path,
                     std::set<Column, OrderingComparator> const& ordering);
@@ -59,9 +50,6 @@ private:
      * false otherwise
      */
     bool isCover(Vertical const& candidate, std::vector<Vertical> const& sets) const;
-    // static non member function?
-    void calculateSupersets(std::set<std::vector<int>>& max_representation,
-                            std::deque<std::vector<int>> partition) const;
     /* Returns true if `l_col` > `r_col`,
      * false otherwise.
      * `l_col` > `r_col` iff

@@ -1,6 +1,6 @@
 #include "IdentifierSet.h"
 
-IdentifierSet::IdentifierSet(ColumnLayoutRelationData const* relation,
+IdentifierSet::IdentifierSet(ColumnLayoutRelationData const* const relation,
                              int index) : relation_(relation), tuple_index_(index) {
     data_.reserve(relation_->getNumColumns());
     for (ColumnData const& col : relation_->getColumnData()) {

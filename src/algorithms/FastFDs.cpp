@@ -4,13 +4,13 @@
 
 #include <boost/dynamic_bitset.hpp>
 
-#include "IdentifierSet.h"
+#include "AgreeSetFactory.h"
 
 #ifndef NDEBUG
     #define FASTFDS_DEBUG
 #endif
 
-using std::vector, std::shared_ptr, std::set;
+using std::vector, std::set;
 
 unsigned long long FastFDs::execute() {
     relation_ = ColumnLayoutRelationData::createFrom(inputGenerator_, true);
@@ -213,8 +213,9 @@ vector<Vertical> FastFDs::getDiffSetsMod(Column const& col) const {
 }
 
 void FastFDs::genDiffSets() {
+    AgreeSetFactory factory(relation_.get());
     // std::set to get rid of repeating agree sets during inserting
-    set<Vertical> const agree_sets = genAgreeSets();
+    set<AgreeSet> const agree_sets = factory.genAgreeSets();
 
     #ifdef FASTFDS_DEBUG
         std::cout << "Agree sets:\n";
@@ -225,7 +226,7 @@ void FastFDs::genDiffSets() {
 
     // Complement agree sets to get difference sets
     diff_sets_.reserve(agree_sets.size());
-    for (Vertical const& agree_set : agree_sets) {
+    for (AgreeSet const& agree_set : agree_sets) {
         diff_sets_.push_back(agree_set.invert());
     }
     // sort diff_sets_, it will be used further to find minimal difference sets modulo column
@@ -236,202 +237,4 @@ void FastFDs::genDiffSets() {
         for (auto const& diff_set : diff_sets_)
             std::cout << diff_set.toString() << '\n';
     #endif
-}
-
-set<vector<int>> FastFDs::getPLIMaxRepresentation() const {
-    auto start_time = std::chrono::system_clock::now();
-    vector<ColumnData> const& columns_data = relation_->getColumnData();
-    auto not_empty_pli = std::find_if(columns_data.begin(), columns_data.end(),
-                                      [](ColumnData const& c) {
-        return c.getPositionListIndex()->getSize() != 0;
-    });
-
-    if (not_empty_pli == columns_data.end()) {
-        return {};
-    }
-
-    //inefficient, metanome uses HashSet(std::unordered_set, need hash for vector, boost?)
-    set<vector<int>> max_representation(not_empty_pli->getPositionListIndex()->getIndex().begin(),
-                                        not_empty_pli->getPositionListIndex()->getIndex().end());
-
-    for (auto p = columns_data.begin(); p != columns_data.end(); ++p) {
-        if (p == not_empty_pli) //already examined
-            continue;
-
-        PositionListIndex const* pli = p->getPositionListIndex();
-        if (pli->getSize() != 0)
-            calculateSupersets(max_representation, pli->getIndex());
-    }
-
-    auto elapsed_mills_to_gen_max_representation =
-        std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::system_clock::now() - start_time
-        );
-    std::cout << "TIME TO MAX REPRESENTATION GENERATION: "
-              << elapsed_mills_to_gen_max_representation.count() << '\n';
-
-    return max_representation;
-}
-
-template<FastFDs::AgreeSetsGenMethod method>
-set<Vertical> FastFDs::genAgreeSets() const {
-    set<Vertical> agree_sets;
-
-    if constexpr (method == AgreeSetsGenMethod::kUsingVectorOfIDSets) {
-        vector<IdentifierSet> identifier_sets;
-        set<vector<int>> const max_representation = getPLIMaxRepresentation();
-
-        auto start_time = std::chrono::system_clock::now();
-
-        // compute identifier sets
-        // identifier_sets is vector
-        std::unordered_set<int> cache;
-        for (auto const& cluster : max_representation) {
-            for (auto p = cluster.begin(); p != cluster.end(); ++p) {
-                if (cache.find(*p) != cache.end())
-                    continue;
-                cache.insert(*p);
-                identifier_sets.emplace_back(relation_.get(), *p);
-            }
-        }
-
-        auto elapsed_mills_to_gen_id_sets =
-            std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::system_clock::now() - start_time
-            );
-        std::cout << "TIME TO IDENTIFIER SETS GENERATION: "
-                  << elapsed_mills_to_gen_id_sets.count() << '\n';
-
-        #ifdef FASTFDS_DEBUG
-            std::cout << "Identifier sets:\n";
-            for (auto const& id_set : identifier_sets) {
-                std::cout << id_set.toString() << '\n';
-            }
-        #endif
-
-        // compute agree sets using identifier sets
-        // using vector of identifier sets
-        if (!identifier_sets.empty()) {
-            auto back_it = std::prev(identifier_sets.end());
-            for (auto p = identifier_sets.begin(); p != back_it; ++p) {
-                for (auto q = std::next(p); q != identifier_sets.end(); ++q) {
-                    agree_sets.insert(p->intersect(*q));
-                }
-            }
-        }
-    } else if constexpr (method == AgreeSetsGenMethod::kUsingMapOfIDSets) {
-        std::unordered_map<int, IdentifierSet> identifier_sets;
-        set<vector<int>> const max_representation = getPLIMaxRepresentation();
-
-        auto start_time = std::chrono::system_clock::now();
-
-        for (auto const& cluster : max_representation) {
-            for (auto p = cluster.begin(); p != cluster.end(); ++p) {
-                identifier_sets.emplace(*p, relation_.get(), *p);
-            }
-        }
-
-        auto elapsed_mills_to_gen_id_sets =
-            std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time);
-        std::cout << "TIME TO IDENTIFIER SETS GENERATION: " << elapsed_mills_to_gen_id_sets.count() << '\n';
-
-
-        #ifdef FASTFDS_DEBUG
-            std::cout << "Identifier sets:\n";
-            for (auto const& [index, id_set] : identifier_sets) {
-                std::cout << id_set.toString() << '\n';
-            }
-        #endif
-
-
-        // compute agree sets using identifier sets
-        // metanome approach (using map of identifier sets)
-        for (auto const &cluster : max_representation) {
-            auto back_it = std::prev(cluster.end());
-            for (auto p = cluster.begin(); p != back_it; ++p) {
-                for (auto q = std::next(p); q != cluster.end(); ++q) {
-                    IdentifierSet const& id_set1 = identifier_sets.at(*p);
-                    IdentifierSet const& id_set2 = identifier_sets.at(*q);
-                    agree_sets.insert(id_set1.intersect(id_set2));
-                }
-            }
-        }
-    } else if constexpr (method == AgreeSetsGenMethod::kUsingMCAndGetAgreeSet) {
-        set<vector<int>> const max_representation = getPLIMaxRepresentation();
-
-        // Compute agree sets from maximal representation using getAgreeSet()
-        // ~3300 ms on CIPublicHighway700 (Debug build), ~250 ms (Release)
-        for (auto const& cluster : max_representation) {
-            for (auto p = cluster.begin(); p != cluster.end(); ++p) {
-                for (auto q = std::next(p); q != cluster.end(); ++q) {
-                    agree_sets.insert(getAgreeSet(relation_->getTuple(*p), relation_->getTuple(*q)));
-                }
-            }
-        }
-    } else if constexpr (method == AgreeSetsGenMethod::kUsingGetAgreeSet) {
-        vector<ColumnData> const& columns_data = relation_->getColumnData();
-
-        // Compute agree sets from stripped partitions (simplest method by Wyss)
-        // ~40436 ms on CIPublicHighway700 (Debug build)
-        for (auto const& column_data : columns_data) {
-            PositionListIndex const* const pli = column_data.getPositionListIndex();
-            for (vector<int> const& cluster : pli->getIndex()) {
-                for (auto p = cluster.begin(); p != cluster.end(); ++p) {
-                    for (auto q = std::next(p); q != cluster.end(); ++q) {
-                        agree_sets.insert(getAgreeSet(relation_->getTuple(*p), relation_->getTuple(*q)));
-                    }
-                }
-            }
-        }
-    }
-
-    // metanome kostil, doesn't work properly in general
-    agree_sets.insert(*schema_->emptyVertical);
-
-    return agree_sets;
-}
-
-void FastFDs::calculateSupersets(set<vector<int>>& max_representation,
-                                 std::deque<vector<int>> partition) const {
-    set<vector<int>> to_add;
-    set<vector<int>> to_delete;
-    auto erase_from_partition = partition.end();
-    for (auto const& max_set : max_representation) {
-        for (auto p = partition.begin(); p != partition.end(); ++p) {
-            if (max_set.size() >= p->size() &&
-                std::includes(max_set.begin(), max_set.end(), p->begin(), p->end())) {
-                to_add.erase(*p);
-                erase_from_partition = p;
-                break;
-            }
-            if (p->size() >= max_set.size() &&
-                std::includes(p->begin(), p->end(), max_set.begin(), max_set.end())) {
-                to_delete.insert(max_set);
-            }
-            to_add.insert(*p);
-        }
-
-        if (erase_from_partition != partition.end()) {
-            partition.erase(erase_from_partition);
-            erase_from_partition = partition.end();
-        }
-    }
-
-    for (auto& cluster : to_add)
-        max_representation.insert(std::move(cluster));
-    for (auto& cluster : to_delete)
-        max_representation.erase(cluster);
-}
-
-Vertical FastFDs::getAgreeSet(vector<int> const& tuple1,
-                              vector<int> const& tuple2) const {
-    assert(tuple1.size() == tuple2.size() && tuple1.size() == relation_->getNumColumns());
-    boost::dynamic_bitset<> agree_set_indices(relation_->getNumColumns());
-
-    for (size_t i = 0; i < agree_set_indices.size(); ++i) {
-        if (tuple1[i] != 0 && tuple1[i] == tuple2[i]) {
-            agree_set_indices.set(i);
-        }
-    }
-    return schema_->getVertical(agree_set_indices);
 }
