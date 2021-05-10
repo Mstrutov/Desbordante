@@ -3,6 +3,9 @@
 #include <set>
 #include <deque>
 #include <vector>
+#include <unordered_set>
+
+#include <boost/functional/hash.hpp>
 
 #include "Vertical.h"
 #include "ColumnLayoutRelationData.h"
@@ -18,6 +21,8 @@ enum class AgreeSetsGenMethod {
 
 class AgreeSetFactory {
 public:
+    using SetOfVectors = std::unordered_set<std::vector<int>, boost::hash<std::vector<int>>>;
+
     explicit AgreeSetFactory(ColumnLayoutRelationData const* const rel)
         : relation_(rel) {}
 
@@ -26,11 +31,11 @@ public:
     // Computes all agree sets of `relation_` using specified method
     template<AgreeSetsGenMethod method = AgreeSetsGenMethod::kUsingVectorOfIDSets>
     std::set<AgreeSet> genAgreeSets() const;
-    std::set<std::vector<int>> genPLIMaxRepresentation() const;
+    SetOfVectors genPLIMaxRepresentation() const;
     AgreeSet getAgreeSet(int const tuple1_index, int const tuple2_index) const;
 
 private:
-    void calculateSupersets(std::set<std::vector<int>>& max_representation,
+    void calculateSupersets(SetOfVectors& max_representation,
                             std::deque<std::vector<int>> partition) const;
     ColumnLayoutRelationData const* const relation_;
 };

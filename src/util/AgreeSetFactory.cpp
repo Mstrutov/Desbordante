@@ -15,7 +15,7 @@
 #define DEBUG_AGREESET(fmt, ...)
 #endif
 
-using std::set, std::vector;
+using std::set, std::vector, std::unordered_set;
 
 template<AgreeSetsGenMethod method>
 set<AgreeSet> AgreeSetFactory::genAgreeSets() const {
@@ -26,7 +26,7 @@ set<AgreeSet> AgreeSetFactory::genAgreeSets() const {
     if constexpr (method == AgreeSetsGenMethod::kUsingVectorOfIDSets) {
         method_str = "`kUsingVectorOfIDSets`";
         vector<IdentifierSet> identifier_sets;
-        set<vector<int>> const max_representation = genPLIMaxRepresentation();
+        SetOfVectors const max_representation = genPLIMaxRepresentation();
 
         auto start_time = std::chrono::system_clock::now();
 
@@ -67,7 +67,7 @@ set<AgreeSet> AgreeSetFactory::genAgreeSets() const {
     } else if constexpr (method == AgreeSetsGenMethod::kUsingMapOfIDSets) {
         method_str = "`kUsingMapOfIDSets`";
         std::unordered_map<int, IdentifierSet> identifier_sets;
-        set<vector<int>> const max_representation = genPLIMaxRepresentation();
+        SetOfVectors const max_representation = genPLIMaxRepresentation();
 
         auto start_time = std::chrono::system_clock::now();
 
@@ -105,7 +105,7 @@ set<AgreeSet> AgreeSetFactory::genAgreeSets() const {
         }
     } else if constexpr (method == AgreeSetsGenMethod::kUsingMCAndGetAgreeSet) {
         method_str = "`kUsingMCAndGetAgreeSet`";
-        set<vector<int>> const max_representation = genPLIMaxRepresentation();
+        SetOfVectors const max_representation = genPLIMaxRepresentation();
 
         // Compute agree sets from maximal representation using getAgreeSet()
         // ~3300 ms on CIPublicHighway700 (Debug build), ~250 ms (Release)
@@ -163,7 +163,7 @@ AgreeSet AgreeSetFactory::getAgreeSet(int const tuple1_index,
     return relation_->getSchema()->getVertical(agree_set_indices);
 }
 
-set<vector<int>> AgreeSetFactory::genPLIMaxRepresentation() const {
+AgreeSetFactory::SetOfVectors AgreeSetFactory::genPLIMaxRepresentation() const {
     auto start_time = std::chrono::system_clock::now();
     vector<ColumnData> const& columns_data = relation_->getColumnData();
     auto not_empty_pli = std::find_if(columns_data.begin(), columns_data.end(),
@@ -175,9 +175,10 @@ set<vector<int>> AgreeSetFactory::genPLIMaxRepresentation() const {
         return {};
     }
 
-    //inefficient, metanome uses HashSet(std::unordered_set, need hash for vector, boost?)
-    set<vector<int>> max_representation(not_empty_pli->getPositionListIndex()->getIndex().begin(),
-                                        not_empty_pli->getPositionListIndex()->getIndex().end());
+    SetOfVectors max_representation(
+        not_empty_pli->getPositionListIndex()->getIndex().begin(),
+        not_empty_pli->getPositionListIndex()->getIndex().end()
+    );
 
     for (auto p = columns_data.begin(); p != columns_data.end(); ++p) {
         if (p == not_empty_pli) //already examined
@@ -198,10 +199,10 @@ set<vector<int>> AgreeSetFactory::genPLIMaxRepresentation() const {
     return max_representation;
 }
 
-void AgreeSetFactory::calculateSupersets(set<vector<int>>& max_representation,
+void AgreeSetFactory::calculateSupersets(SetOfVectors& max_representation,
                                          std::deque<vector<int>> partition) const {
-    set<vector<int>> to_add;
-    set<vector<int>> to_delete;
+    SetOfVectors to_add;
+    SetOfVectors to_delete;
     auto erase_from_partition = partition.end();
     for (auto const& max_set : max_representation) {
         for (auto p = partition.begin(); p != partition.end(); ++p) {
