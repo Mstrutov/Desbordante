@@ -10,6 +10,13 @@
     #define FASTFDS_DEBUG
 #endif
 
+#ifdef FASTFDS_DEBUG
+#define DEBUG_FASTFDS(fmt, ...) \
+            do { fprintf(stderr, fmt, ##__VA_ARGS__); } while (0)
+#else
+#define DEBUG_FASTFDS(fmt, ...)
+#endif
+
 using std::vector, std::set;
 
 unsigned long long FastFDs::execute() {
@@ -202,12 +209,10 @@ vector<FastFDs::DiffSet> FastFDs::getDiffSetsMod(Column const& col) const {
         }
     }
 
-    #ifdef FASTFDS_DEBUG
-        std::cout << "Compute minimal difference sets modulo " << col.toString() << ":\n";
-        for (auto& item : diff_sets_mod) {
-            std::cout << item.toString() << '\n';
-        }
-    #endif
+    DEBUG_FASTFDS("Compute minimal difference sets modulo %s:\n", col.toString().c_str());
+    for (auto& item : diff_sets_mod) {
+         DEBUG_FASTFDS("%s\n", item.toString().c_str());
+    }
 
     return diff_sets_mod;
 }
@@ -216,12 +221,10 @@ void FastFDs::genDiffSets() {
     AgreeSetFactory factory(relation_.get());
     set<AgreeSet> const agree_sets = factory.genAgreeSets();
 
-    #ifdef FASTFDS_DEBUG
-        std::cout << "Agree sets:\n";
-        for (auto const& agree_set : agree_sets) {
-            std::cout << agree_set.toString() << '\n';
-        }
-    #endif
+    DEBUG_FASTFDS("Agree sets:\n");
+    for (auto const& agree_set : agree_sets) {
+        DEBUG_FASTFDS("%s\n", agree_set.toString().c_str());
+    }
 
     // Complement agree sets to get difference sets
     diff_sets_.reserve(agree_sets.size());
@@ -231,9 +234,7 @@ void FastFDs::genDiffSets() {
     // sort diff_sets_, it will be used further to find minimal difference sets modulo column
     std::sort(diff_sets_.begin(), diff_sets_.end());
 
-    #ifdef FASTFDS_DEBUG
-        std::cout << "Compute difference sets:\n";
-        for (auto const& diff_set : diff_sets_)
-            std::cout << diff_set.toString() << '\n';
-    #endif
+    DEBUG_FASTFDS("Compute difference sets:\n");
+    for (auto const& diff_set : diff_sets_)
+        DEBUG_FASTFDS("%s\n", diff_set.toString().c_str());
 }
