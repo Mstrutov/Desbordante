@@ -28,7 +28,7 @@ private:
         int cluster_index;
     };
 
-    ColumnLayoutRelationData const* relation_;
+    ColumnLayoutRelationData const* const relation_;
     std::vector<IdentifierSetValue> data_;
-    int tuple_index_;
+    int const tuple_index_;
 };
