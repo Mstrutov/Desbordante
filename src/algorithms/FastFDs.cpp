@@ -219,7 +219,7 @@ vector<FastFDs::DiffSet> FastFDs::getDiffSetsMod(Column const& col) const {
 
 void FastFDs::genDiffSets() {
     AgreeSetFactory factory(relation_.get());
-    set<AgreeSet> const agree_sets = factory.genAgreeSets();
+    AgreeSetFactory::SetOfAgreeSets agree_sets = factory.genAgreeSets();
 
     DEBUG_FASTFDS("Agree sets:\n");
     for (auto const& agree_set : agree_sets) {
