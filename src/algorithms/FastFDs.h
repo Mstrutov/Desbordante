@@ -8,13 +8,6 @@
 
 class FastFDs : public FDAlgorithm {
 public:
-    enum class AgreeSetsGenMethod {
-        kUsingVectorOfIDSets = 0,
-        kUsingMapOfIDSets       ,
-        kUsingGetAgreeSet       , // Simplest method by Wyss et al
-        kUsingMCAndGetAgreeSet  , // From maximal representation using getAgreeSet()
-    };
-
     using FDAlgorithm::FDAlgorithm;
     unsigned long long execute() override;
 private:
