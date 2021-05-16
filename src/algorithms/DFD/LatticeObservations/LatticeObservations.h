@@ -27,7 +27,7 @@ public:
     bool isVisited(shared_ptr<Vertical> const& vertical) { return this->find(*vertical) != this->end();} //нужна ли?
 
     NodeCategory updateDependencyCategory(shared_ptr<Vertical>  const& vertical);
-    NodeCategory updateNonDependencyCategory(shared_ptr<Vertical>  const& vertical);
+    NodeCategory updateNonDependencyCategory(shared_ptr<Vertical>  const& vertical, int rhsIndex);
 
     vertical_set getUncheckedSubsets(shared_ptr<Vertical> const& node);
     vertical_set getUncheckedSupersets(shared_ptr<Vertical> const& node);
