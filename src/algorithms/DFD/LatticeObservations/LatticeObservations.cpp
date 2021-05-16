@@ -79,24 +79,41 @@ bool LatticeObservations::isCandidate(const shared_ptr<Vertical> &node) {
 }
 
 
-LatticeObservations::vertical_set LatticeObservations::getUncheckedSubsets(const shared_ptr<Vertical> &node) {
-    vertical_set uncheckedSubsets;
+LatticeObservations::vertical_set
+LatticeObservations::getUncheckedSubsets(const shared_ptr<Vertical> &node, size_t rhsIndex) {
+    /*vertical_set uncheckedSubsets;
 
     for (auto& subsetNode : node->getParents()) {
         if (this->find(*subsetNode) == this->end()) {
             uncheckedSubsets.insert(std::move(subsetNode));
+        }
+    }*/
+
+    dynamic_bitset<> indices = node->getColumnIndices();
+    vertical_set uncheckedSubsets;
+
+    for (size_t index = 0; index < indices.size(); index++) {
+        if (index != rhsIndex && indices[index]) {
+            indices[index] = false;
+            auto subsetNode = std::make_shared<Vertical>(node->getSchema(), indices);
+
+            if (this->find(*subsetNode) == this->end()) {
+                uncheckedSubsets.insert(std::move(subsetNode));
+            }
+            indices[index] = true;
         }
     }
 
     return uncheckedSubsets;
 }
 
-LatticeObservations::vertical_set LatticeObservations::getUncheckedSupersets(const shared_ptr<Vertical> &node) {
+LatticeObservations::vertical_set
+LatticeObservations::getUncheckedSupersets(const shared_ptr<Vertical> &node, size_t rhsIndex) {
     dynamic_bitset<> indices = node->getColumnIndices();
     vertical_set uncheckedSupersets;
 
     for (size_t index = 0; index < indices.size(); index++) {
-        if (!indices[index]) {
+        if (index != rhsIndex && !indices[index]) {
             indices[index] = true;
             auto supersetNode = std::make_shared<Vertical>(node->getSchema(), indices);
 

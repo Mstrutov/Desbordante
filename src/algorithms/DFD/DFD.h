@@ -34,7 +34,7 @@ private:
     std::mt19937 gen;
 
     void findLHSs(shared_ptr<Column const> const& rhs, shared_ptr<RelationalSchema> schema); //TODO: нужен ли второй параметр?; мб переименовать типа findDeps
-    shared_ptr<Vertical> pickNextNode(shared_ptr<Vertical> const& node);
+    shared_ptr<Vertical> pickNextNode(shared_ptr<Vertical> const &node, size_t rhsIndex);
     std::list<shared_ptr<Vertical>> generateNextSeeds(shared_ptr<Column const> const& currentRHS);
     shared_ptr<Vertical> takeRandom(std::list<shared_ptr<Vertical>> & nodeList);
     shared_ptr<Vertical> takeRandom(std::vector<shared_ptr<Vertical>> const& nodeList);

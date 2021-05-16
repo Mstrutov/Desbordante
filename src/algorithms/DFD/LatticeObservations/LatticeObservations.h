@@ -29,8 +29,8 @@ public:
     NodeCategory updateDependencyCategory(shared_ptr<Vertical>  const& vertical);
     NodeCategory updateNonDependencyCategory(shared_ptr<Vertical>  const& vertical, int rhsIndex);
 
-    vertical_set getUncheckedSubsets(shared_ptr<Vertical> const& node);
-    vertical_set getUncheckedSupersets(shared_ptr<Vertical> const& node);
+    LatticeObservations::vertical_set getUncheckedSubsets(const shared_ptr<Vertical> &node, size_t rhsIndex);
+    LatticeObservations::vertical_set getUncheckedSupersets(const shared_ptr<Vertical> &node, size_t rhsIndex);
 
     bool inferCategory(shared_ptr<Vertical> const& node);
 
