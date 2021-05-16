@@ -50,7 +50,7 @@ unsigned long long DFD::execute() {
         shared_ptr<PositionListIndex> const columnPLI = columnData->getPositionListIndex();
 
         if (columnPLI->getNumNonSingletonCluster() == 0) {
-            Vertical const& lhs = Vertical(*column);
+            Vertical const lhs = Vertical(*column);
             uniqueVerticals.push_back(lhs);
             /*for (auto const& rhs : schema->getColumns()) {
                 if (rhs->getIndex() != column->getIndex()) {
@@ -68,6 +68,7 @@ unsigned long long DFD::execute() {
         dependenciesMap = DependenciesMap(relation->getSchema());
         nonDependenciesMap = NonDependenciesMap(relation->getSchema());
         observations.clear();
+        trace = std::stack<shared_ptr<Vertical>>();//TODO clear trace?
 
         //в метаноме немного по другому
         for (auto const& lhs : uniqueVerticals) {
@@ -141,13 +142,13 @@ void DFD::findLHSs(shared_ptr<Column const> const& rhs, shared_ptr<RelationalSch
                             minimalDeps.insert(node);
                         }
                     } else if (nodeCategory == NodeCategory::candidateMaximalNonDependency) {
-                        nodeCategory = observations.updateNonDependencyCategory(node);
+                        nodeCategory = observations.updateNonDependencyCategory(node, rhs->getIndex());
                         if (nodeCategory == NodeCategory::maximalNonDependency) {
                             maximalNonDeps.insert(node);
                         }
                     }
-
-                } else if (!inferCategory(node)) { //TODO переделать inferCategory
+                    //node = pickNextNode(node);
+                } else if (!inferCategory(node, rhs->getIndex())) { //TODO переделать inferCategory
                     auto nodePartition = partitionStorage->getOrCreateFor(*node);
                     auto rhsPartition = relation->getColumnData(rhs->getIndex())->getPositionListIndex();
                     auto nodeIntersectedWithRHSPartition = nodePartition->intersect(rhsPartition); //может ещё раз вызвать getOrCreateFor вместо пересечения?
@@ -157,13 +158,19 @@ void DFD::findLHSs(shared_ptr<Column const> const& rhs, shared_ptr<RelationalSch
                     ) {
                         //observations.insert(std::make_pair(*node, NodeCategory::candidateMinimalDependency));
                         observations[*node] = observations.updateDependencyCategory(node);
+                        if (observations[*node] == NodeCategory::minimalDependency) {
+                            minimalDeps.insert(node);
+                        }
                         dependenciesMap.addNewDependency(node);
                     } else {
                         //observations.insert(std::make_pair(*node, NodeCategory::candidateMaximalNonDependency));
-                        observations[*node] = observations.updateNonDependencyCategory(node);
+                        observations[*node] = observations.updateNonDependencyCategory(node, rhs->getIndex());
+                        if (observations[*node] == NodeCategory::maximalNonDependency) {
+                            maximalNonDeps.insert(node);
+                        }
                         nonDependenciesMap.addNewNonDependency(node);
                     }
-
+                    //node = pickNextNode(node);
                 }
 
                 node = pickNextNode(node);
@@ -191,15 +198,15 @@ shared_ptr<Vertical> DFD::pickNextNode(shared_ptr<Vertical> const& node) {
             vertical_set uncheckedSubsets = observations.getUncheckedSubsets(node); //TODO переписать observations в конструктор?
             vertical_set prunedNonDepSubsets = nonDependenciesMap.getPrunedSupersets(uncheckedSubsets);
             for (auto const& prunedSubset : prunedNonDepSubsets) {
-                observations[*prunedSubset] = NodeCategory::minimalDependency;
-                dependenciesMap.addNewDependency(node);
+                observations[*prunedSubset] = NodeCategory::nonDependency;
+                //dependenciesMap.addNewDependency(node);
             }
             substractSets(uncheckedSubsets, prunedNonDepSubsets);
 
             if (uncheckedSubsets.empty()) { //TODO в метаноме немнго по другому
                 minimalDeps.insert(node);
                 observations[*node] = NodeCategory::minimalDependency;
-                dependenciesMap.addNewDependency(node);
+                //dependenciesMap.addNewDependency(node);
             } else {
                 shared_ptr<Vertical> nextNode = takeRandom(uncheckedSubsets);
                 trace.push(node);
@@ -212,11 +219,11 @@ shared_ptr<Vertical> DFD::pickNextNode(shared_ptr<Vertical> const& node) {
 
             for (auto const& prunedSuperset : prunedNonDepSupersets) {
                 observations[*prunedSuperset] = NodeCategory::nonDependency;
-                nonDependenciesMap.addNewNonDependency(node);
+                //nonDependenciesMap.addNewNonDependency(node);
             }
             for (auto const& prunedSuperset : prunedDepSupersets) {
                 observations[*prunedSuperset] = NodeCategory::dependency;
-                dependenciesMap.addNewDependency(node);
+                //dependenciesMap.addNewDependency(node);
             }
 
             substractSets(uncheckedSupersets, prunedDepSupersets);
@@ -225,7 +232,7 @@ shared_ptr<Vertical> DFD::pickNextNode(shared_ptr<Vertical> const& node) {
             if (uncheckedSupersets.empty()) {
                 maximalNonDeps.insert(node);
                 observations[*node] = NodeCategory::maximalNonDependency;
-                nonDependenciesMap.addNewNonDependency(node);
+                //nonDependenciesMap.addNewNonDependency(node);
             } else {
                     shared_ptr<Vertical> nextNode = takeRandom(uncheckedSupersets);
                 trace.push(node);
@@ -250,11 +257,11 @@ std::list<shared_ptr<Vertical>> DFD::generateNextSeeds(shared_ptr<Column const> 
     dynamic_bitset<> singleColumnBitset(relation->getNumColumns(), 0);
 
     //TODO переписать под метод getColumns
-    for (auto const& node : maximalNonDeps) {
-        //shared_ptr<Vertical> complementNode = node->invert();
-        dynamic_bitset<> nodeIndices = node->getColumnIndices();
+    for (auto const& nonDep : maximalNonDeps) {
+        //shared_ptr<Vertical> complementNode = nonDep->invert();
+        dynamic_bitset<> nodeIndices = nonDep->getColumnIndices();
         nodeIndices[currentRHS->getIndex()] = true;
-        shared_ptr<Vertical> complementNode = std::make_shared<Vertical>(node->getSchema(), std::move(nodeIndices.flip()));
+        shared_ptr<Vertical> complementNode = std::make_shared<Vertical>(nonDep->getSchema(), std::move(nodeIndices.flip()));
         singleColumnBitset.reset();
         //dynamic_bitset<> complementNodeIndices = complementNode->getColumnIndices();
 
@@ -326,14 +333,20 @@ void DFD::substractSets(vertical_set & set, vertical_set const& setToSubstract) 
     }
 }
 
-bool DFD::inferCategory(shared_ptr<Vertical> const& node) {
+bool DFD::inferCategory(shared_ptr<Vertical> const &node, size_t rhsIndex) {
     if (nonDependenciesMap.canBePruned(*node)) {
-        observations[*node] = observations.updateNonDependencyCategory(node);
+        observations[*node] = observations.updateNonDependencyCategory(node, rhsIndex);
         nonDependenciesMap.addNewNonDependency(node);
+        if (observations[*node] == NodeCategory::minimalDependency) { //хз надо или нет
+            minimalDeps.insert(node);
+        }
         return true;
     } else if (dependenciesMap.canBePruned(*node)) {
         observations[*node] = observations.updateDependencyCategory(node);
         dependenciesMap.addNewDependency(node);
+        if (observations[*node] == NodeCategory::maximalNonDependency) { //хз надо или нет
+            maximalNonDeps.insert(node);
+        }
         return true;
     }
 

@@ -41,7 +41,7 @@ private:
     shared_ptr<Vertical> takeRandom(std::unordered_set<shared_ptr<Vertical>, std::hash<shared_ptr<Vertical>>, custom_comparator> &nodeSet);
     void minimize(std::unordered_set<shared_ptr<Vertical>, std::hash<shared_ptr<Vertical>>, custom_comparator> & nodeList);
     static void substractSets(vertical_set & set, vertical_set const& setToSubstract);
-    bool inferCategory(shared_ptr<Vertical> const& node);
+    bool inferCategory(shared_ptr<Vertical> const &node, size_t rhsIndex);
 
 public:
     explicit DFD(std::filesystem::path const& path, char separator = ',', bool hasHeader = true);

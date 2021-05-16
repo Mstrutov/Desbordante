@@ -37,7 +37,7 @@ int main(int argc, char const *argv[]) {
     char separator = ',';
     bool hasHeader = true;
     int seed = 0;
-    double error = 0.01;
+    double error = 0.0;
     unsigned int maxLhs = -1;
 
     po::options_description desc("Allowed options");
