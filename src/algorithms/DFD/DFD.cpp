@@ -17,6 +17,11 @@
 unsigned long long DFD::execute() {
     //shared_ptr<ColumnLayoutRelationData> relation = ColumnLayoutRelationData::createFrom(inputGenerator_, true);//second parameter?
     shared_ptr<RelationalSchema> schema = relation->getSchema();
+    if (relation->getColumnData().empty()) {
+        throw std::runtime_error("Got an empty .csv file: FD mining is meaningless.");
+    }
+
+    auto startTime = std::chrono::system_clock::now();
 
     //std::list<shared_ptr<Column>> possibleRHSs(schema->getColumns().begin(), schema->getColumns().end());
 
@@ -70,6 +75,14 @@ unsigned long long DFD::execute() {
         observations.clear();
         trace = std::stack<shared_ptr<Vertical>>();//TODO clear trace?
 
+        shared_ptr<ColumnData> const rhsData = relation->getColumnData(rhs->getIndex());
+        shared_ptr<PositionListIndex> const rhsPLI = rhsData->getPositionListIndex();
+
+        if (rhsPLI->getNepAsLong() == relation->getNumTuplePairs()) {
+            registerFD(*(schema->emptyVertical), *rhs);
+            continue;
+        }
+
         //в метаноме немного по другому
         for (auto const& lhs : uniqueVerticals) {
             if (!lhs.contains(*rhs)) {
@@ -87,8 +100,13 @@ unsigned long long DFD::execute() {
             registerFD(std::move(*minimalDependencyLHS), *rhs);
         }
     }
+    std::chrono::milliseconds elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
+    long long aprioriMillis = elapsed_milliseconds.count();
+
     std::cout << "====JSON-FD========\r\n" << FDAlgorithm::getJsonFDs() << std::endl;
     std::cout << "HASH: " << FDAlgorithm::fletcher16() << std::endl;
+
+    return aprioriMillis;
 }
 
 shared_ptr<Vertical> DFD::takeRandom(std::list<shared_ptr<Vertical>> & nodeList) {
@@ -127,6 +145,9 @@ void DFD::findLHSs(shared_ptr<Column const> const& rhs, shared_ptr<RelationalSch
         if (column->getIndex() != rhs->getIndex())
             seeds.push_back(std::make_shared<Vertical>(*column)); //TODO проверить, поменял emplace на push
     }
+
+    //auto
+
     do {
         while (!seeds.empty()) {
             shared_ptr<Vertical> node = takeRandom(seeds);
@@ -150,9 +171,9 @@ void DFD::findLHSs(shared_ptr<Column const> const& rhs, shared_ptr<RelationalSch
                     //node = pickNextNode(node);
                 } else if (!inferCategory(node, rhs->getIndex())) { //TODO переделать inferCategory
                     auto nodePartition = partitionStorage->getOrCreateFor(*node);
-                    //auto rhsPartition = relation->getColumnData(rhs->getIndex())->getPositionListIndex();
-                    //auto nodeIntersectedWithRHSPartition = nodePartition->intersect(rhsPartition); //может ещё раз вызвать getOrCreateFor вместо пересечения?
-                    auto nodeIntersectedWithRHSPartition = partitionStorage->getOrCreateFor(*(node->Union(*rhs)));
+                    auto rhsPartition = relation->getColumnData(rhs->getIndex())->getPositionListIndex();
+                    auto nodeIntersectedWithRHSPartition = nodePartition->intersect(rhsPartition); //может ещё раз вызвать getOrCreateFor вместо пересечения?
+                    //auto nodeIntersectedWithRHSPartition = partitionStorage->getOrCreateFor(*(node->Union(*rhs)));
 
                     if (nodePartition->getNepAsLong() ==
                         nodeIntersectedWithRHSPartition->getNepAsLong()
