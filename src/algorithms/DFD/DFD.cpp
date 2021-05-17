@@ -154,8 +154,8 @@ void DFD::findLHSs(shared_ptr<Column const> const& rhs, shared_ptr<RelationalSch
                     //auto nodeIntersectedWithRHSPartition = nodePartition->intersect(rhsPartition); //может ещё раз вызвать getOrCreateFor вместо пересечения?
                     auto nodeIntersectedWithRHSPartition = partitionStorage->getOrCreateFor(*(node->Union(*rhs)));
 
-                    if (nodePartition->getNumNonSingletonCluster() ==
-                        nodeIntersectedWithRHSPartition->getNumNonSingletonCluster()
+                    if (nodePartition->getNepAsLong() ==
+                        nodeIntersectedWithRHSPartition->getNepAsLong()
                     ) {
                         //observations.insert(std::make_pair(*node, NodeCategory::candidateMinimalDependency));
                         observations[*node] = observations.updateDependencyCategory(node);
