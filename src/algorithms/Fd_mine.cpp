@@ -191,21 +191,30 @@ void Fd_mine::display() {
     std::queue<dynamic_bitset<>> queue;
     dynamic_bitset<> generatedLhs(r.size());
     dynamic_bitset<> generatedLhs_tmp(r.size());
-    
+    boost::unordered_map<dynamic_bitset<>, dynamic_bitset<>> final_fdSet;
+
     for (const auto &[lhs, rhs] : fdSet) {
-        boost::unordered_map<dynamic_bitset<>, bool> observed;
+        std::unordered_map<dynamic_bitset<>, bool> observed;
 
         observed[lhs] = true;
         dynamic_bitset<> Rhs = rhs;
         queue.push(lhs);
 
-        
+        for (const auto &[eq, eqset] : eqSet) {
+            if (eq.is_subset_of(Rhs)) {
+                for (const auto &eqRhs : eqset) {
+                    Rhs |= eqRhs;
+                }
+            }
+        }
+        bool rhsWillNotChange = false;
 
         while (!queue.empty()) {
             dynamic_bitset<> currentLhs = queue.front();
             queue.pop();
+            int Rhs_count = Rhs.count();
             for (const auto &[eq, eqset] : eqSet) {
-                if (eq.is_subset_of(Rhs)) {
+                if (!rhsWillNotChange  && eq.is_subset_of(Rhs)) {
                     for (const auto &eqRhs : eqset) {
                         Rhs |= eqRhs;
                     }
@@ -224,19 +233,22 @@ void Fd_mine::display() {
                     }
                 }
             }
+            if (Rhs_count == Rhs.count()) {
+                rhsWillNotChange  = true;
+            }
         }
 
         for (auto &[lhs, rbool] : observed) {
-            if (fdSet.count(lhs)) {
-                fdSet[lhs] |= Rhs;
+            if (final_fdSet.count(lhs)) {
+                final_fdSet[lhs] |= Rhs;
             }
             else {
-                fdSet[lhs] = Rhs;
+                final_fdSet[lhs] = Rhs;
             }
         }
     }
 
-    for (auto &[lhs, rhs] : fdSet) {
+    for (auto &[lhs, rhs] : final_fdSet) {
         for (size_t j = 0; j < rhs.size(); j++) {
             if (!rhs[j] || rhs[j] && lhs[j]) continue;
             std::cout << "Discovered FD: ";
