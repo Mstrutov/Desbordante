@@ -6,7 +6,7 @@ bool DependencyStrategy::shouldResample(Vertical const& vertical, double boostFa
     if (context_->getConfiguration().sampleSize <= 0 || vertical.getArity() < 1) return false;
 
     // Do we have an exact sample already?
-    AgreeSetSample const* currentSample = context_->getAgreeSetSample(vertical);
+    auto currentSample = context_->getAgreeSetSample(vertical);
     if (currentSample->isExact()) return false;
 
     // Get an estimate of the number of equality pairs in the vertical

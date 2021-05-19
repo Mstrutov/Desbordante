@@ -7,6 +7,8 @@
 
 #include "logging/easylogging++.h"
 
+using std::shared_ptr;
+
 ProfilingContext::ProfilingContext(
         Configuration configuration, ColumnLayoutRelationData* relationData,
         std::function<void(const PartialKey &)> const& uccConsumer,
@@ -23,7 +25,8 @@ ProfilingContext::ProfilingContext(
     //       надо переделывать
     if (configuration_.sampleSize > 0) {
         auto schema = relationData_->getSchema();
-        agreeSetSamples_ = std::make_unique<VerticalMap<AgreeSetSample>>(schema);
+        agreeSetSamples_ = std::make_unique<BlockingVerticalMap<AgreeSetSample>>(schema);
+        // TODO: сделать, чтобы при одном потоке agreeSetSamples_ = std::make_unique<VerticalMap<AgreeSetSample>>(schema);
         for (auto& column : schema->getColumns()) {
             createColumnFocusedSample(static_cast<Vertical>(*column),
                                       relationData->getColumnData(column->getIndex()).getPositionListIndex(), 1);
@@ -169,8 +172,8 @@ AgreeSetSample const* ProfilingContext::createColumnFocusedSample(
 }
 
 
-AgreeSetSample const* ProfilingContext::getAgreeSetSample(Vertical const& focus) const {
-    AgreeSetSample const* sample = nullptr;
+shared_ptr<AgreeSetSample const> ProfilingContext::getAgreeSetSample(Vertical const& focus) const {
+    shared_ptr<AgreeSetSample const> sample = nullptr;
     for (auto& [key, nextSample] : agreeSetSamples_->getSubsetEntries(focus)) {
         if (sample == nullptr || nextSample->getSamplingRatio() > sample->getSamplingRatio()) {
             sample = nextSample;

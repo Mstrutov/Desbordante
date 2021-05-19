@@ -7,23 +7,28 @@ class ProfilingContext;
 #include "ProfilingContext.h"
 #include "ColumnLayoutRelationData.h"
 
+#include <mutex>
+
 class PLICache {
 private:
     class PositionListIndexRank {
     public:
         Vertical const* vertical_;
-        PositionListIndex* pli_;
+        std::shared_ptr<PositionListIndex> pli_;
         int addedArity_;
 
-        PositionListIndexRank(Vertical const* vertical, PositionListIndex* pli, int initialArity):
+        PositionListIndexRank(Vertical const* vertical, std::shared_ptr<PositionListIndex> pli, int initialArity):
             vertical_(vertical), pli_(pli), addedArity_(initialArity) {}
     };
-    using CacheMap = VerticalMap<PositionListIndex>;
+    //using CacheMap = VerticalMap<PositionListIndex>;
     ColumnLayoutRelationData* relationData_;
-    std::unique_ptr<CacheMap> index_;
+    std::unique_ptr<VerticalMap<PositionListIndex>> index_;
     //usageCounter - for parallelism
 
     int savedIntersections_ = 0;
+
+    // TODO: get rid of it -- used in getOrCreateFor
+    mutable std::mutex kostylMutex_;
 
     CachingMethod cachingMethod_;
     CacheEvictionMethod evictionMethod_;

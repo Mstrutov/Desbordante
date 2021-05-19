@@ -36,6 +36,7 @@ int main(int argc, char const *argv[]) {
     int seed = 0;
     double error = 0.01;
     unsigned int maxLhs = -1;
+    unsigned int parallelism = 0;
 
     po::options_description desc("Allowed options");
     desc.add_options()
@@ -48,6 +49,7 @@ int main(int argc, char const *argv[]) {
         ("error", po::value<double>(&error), "error for AFD algorithms. Default 0.01")
         ("maxLHS", po::value<unsigned int>(&maxLhs),
                 (std::string("max considered LHS size. Default: ") + std::to_string((unsigned int)-1)).c_str())
+        ("threads", po::value<unsigned int>(&parallelism))
     ;
 
     po::variables_map vm;
@@ -84,9 +86,9 @@ int main(int argc, char const *argv[]) {
 
     std::unique_ptr<FDAlgorithm> algorithmInstance;
     if (alg == "pyro") {
-        algorithmInstance = std::make_unique<Pyro>(path, separator, hasHeader, seed, error, maxLhs);
+        algorithmInstance = std::make_unique<Pyro>(path, separator, hasHeader, seed, error, maxLhs, parallelism);
     } else if (alg == "tane"){
-        algorithmInstance = std::make_unique<Tane>(path, separator, hasHeader);
+        algorithmInstance = std::make_unique<Tane>(path, separator, hasHeader, error, maxLhs);
     }
     try {
         unsigned long long elapsedTime = algorithmInstance->execute();
