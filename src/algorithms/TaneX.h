@@ -21,8 +21,10 @@ public:
     int countOfUCC = 0;
     long aprioriMillis = 0;
 
-    explicit Tane(std::filesystem::path const& path, char separator = ',', bool hasHeader = true, double maxError = 0)
-            : FDAlgorithm(path, separator, hasHeader), maxFdError(maxError), maxUccError(maxError) {}
+    explicit Tane(
+            std::filesystem::path const& path, char separator = ',', bool hasHeader = true,
+            double maxError = 0, unsigned int maxArity = -1)
+            : FDAlgorithm(path, separator, hasHeader), maxFdError(maxError), maxUccError(maxError), maxArity(maxArity) {}
     unsigned long long execute() override;
 
     static double calculateZeroAryFdError(ColumnData const* rhs, ColumnLayoutRelationData const* relationData);

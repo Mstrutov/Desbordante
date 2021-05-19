@@ -100,7 +100,7 @@ DependencyCandidate FdG1Strategy::createDependencyCandidate(Vertical const& vert
         return DependencyCandidate(vertical, ConfidenceInterval(0, .5, 1), false);
     }
 
-    AgreeSetSample const* agreeSetSample = context_->getAgreeSetSample(vertical);
+    auto agreeSetSample = context_->getAgreeSetSample(vertical);
     ConfidenceInterval numViolatingTuplePairs = agreeSetSample
             ->estimateMixed(vertical, static_cast<Vertical>(*rhs_), context_->getConfiguration().estimateConfidence)
             .multiply(context_->getColumnLayoutRelationData()->getNumTuplePairs());
