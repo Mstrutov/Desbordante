@@ -2,9 +2,12 @@
 
 class MAXSet : public CMAXSet{
 public:
-    MAXSet(std::shared_ptr<Column> column) : CMAXSet(column){};
+    MAXSet(Column column) : CMAXSet(column){};
     MAXSet() = default;
     bool operator<(MAXSet const& rhs) const{
-        return *(this->getColumn()) < *(rhs.getColumn());
+        return this->getColumn() < rhs.getColumn();
+    }
+    void makeNewCombinations(std::set<Vertical> comb){
+        this->columnCombinations = comb;
     }
 };

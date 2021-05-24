@@ -13,16 +13,15 @@
 
 class CMAXSet{
 
-private:
-    std::shared_ptr<Column> column;
+protected:
+    Column column;
     std::set<Vertical> columnCombinations;
 public:
-    CMAXSet(std::shared_ptr<Column> column) : column(column){};
-    CMAXSet() = default;
+    CMAXSet(Column column) : column(column){};
     void addCombination(Vertical combination){columnCombinations.insert(combination);}
     std::set<Vertical> getCombinations(){return columnCombinations;}
-    std::shared_ptr<Column> getColumn() const{ return column; }
+    Column getColumn() const{ return column; }
     bool operator<(CMAXSet const& rhs) const{
-        return *(this->getColumn()) < *(rhs.getColumn());
+        return this->getColumn() < rhs.getColumn();
     }
 };
