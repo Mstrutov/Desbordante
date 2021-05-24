@@ -2,8 +2,12 @@
 
 #include "CSVParser.h"
 #include "FDAlgorithm.h"
+#include "depminer/util/CMAXSet.h"
 
 class Depminer : public FDAlgorithm {
+private:
+    CMAXSet genFirstLi(std::set<CMAXSet> cmaxSets, Column attribute, std::set<Vertical>& li);
+    std::set<Vertical> genNextLi(std::set<Vertical> const& li);
 public:
     
     explicit Depminer(std::filesystem::path const& path, char separator = ',', bool hasHeader = true) 
@@ -12,19 +16,3 @@ public:
     unsigned long long execute() override;
 
 };
-
-/*
-
-Что написано в статье 
-"Efficient Discovery..." Jean-Mart petit, Lotfi Lakhal
-
-Striped partition database
-AgreeSets
-Maximal sets
-Complement sets
-LHS of FDs from Maximal sets
-
-
-
-*/
-//когда начинать считать время в execute? до получения базы или после

@@ -13,17 +13,24 @@
 using std::cerr;
 
 void CMAXGen::execute(std::set<Vertical> agreeSets){
+    // auto startTime = std::chrono::system_clock::now();
     this->MaxSetsGenerate(agreeSets);
+    // std::chrono::milliseconds elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
+    // std::cout << "TIME TO GENERATE MAXSETS: " << elapsed_milliseconds.count() << std::endl;
+    // auto newStartTime = std::chrono::system_clock::now();
     this->CMaxSetsGenerate();
+    // elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - newStartTime);
+    // std::cout << "TIME TO GENERATE CMAXSETS: " << elapsed_milliseconds.count() << std::endl;
+    std::cout << "TOTAL CMAX SETS: " << this->cmaxSets.size() << "\n";
 }
 
 void CMAXGen::MaxSetsGenerate(std::set<Vertical> agreeSets){
-    for(std::shared_ptr<Column> column : this->schema->getColumns()){
-        MAXSet result(column);
+    for(auto& column : this->schema->getColumns()){
+        MAXSet result(*column);
         for(Vertical ag : agreeSets){
             if(ag.contains(*column)){
-                    continue;
-                }
+                continue;
+            }
             result.addCombination(ag);
         }
         //in MAXSet need to add only maximal sets
@@ -34,11 +41,11 @@ void CMAXGen::MaxSetsGenerate(std::set<Vertical> agreeSets){
 
         for(Vertical set : result.getCombinations()){
             for(Vertical superSet : superSets){
-                if(superSet.getColumnIndices().is_subset_of(set.getColumnIndices())){
+                if(set.contains(superSet)){
                     setsDelete.insert(superSet);
                 }
                 if(toAdd){
-                    toAdd = !superSet.getColumnIndices().is_subset_of(set.getColumnIndices());
+                    toAdd = !superSet.contains(set);
                 }
             }
             for(auto toDelete : setsDelete){
@@ -51,6 +58,7 @@ void CMAXGen::MaxSetsGenerate(std::set<Vertical> agreeSets){
             }
             setsDelete.clear();
         }
+        result.makeNewCombinations(superSets);
         this->maxSets.insert(result);
     }
 }
@@ -61,7 +69,7 @@ void CMAXGen::CMaxSetsGenerate(){
         for(auto combination : maxSet.getCombinations()){
             result.addCombination(combination.invert());
         }
-        cmaxSets.insert(result);
+        this->cmaxSets.insert(result);
     }
 }
 
