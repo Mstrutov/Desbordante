@@ -90,7 +90,7 @@ unsigned long long Pyro::execute() {
             polledSpace->discover();
             millis += std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - threadStartTime).count();
         }
-        cout << "Thread" << id << " stopped working, ELAPSED TIME: " << millis << "ms.\n";
+        //cout << "Thread" << id << " stopped working, ELAPSED TIME: " << millis << "ms.\n";
     };
 
     std::vector<std::thread> threads;
@@ -103,14 +103,6 @@ unsigned long long Pyro::execute() {
         threads[i].join();
     }
 
-
-    for (auto& searchSpace : searchSpaces_) {
-
-        // searchSpace->printStats();
-//        totalErrorCalcCount += searchSpace->getErrorCalcCount();
-//        totalAscension += searchSpace->ascending / 1000000;
-//        totalTrickle += searchSpace->tricklingDown / 1000000;
-    }
     auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
 
     LOG(DEBUG) << boost::format{"FdG1 error calculation: %1% ms"} % (FdG1Strategy::nanos_ / 1000000);
