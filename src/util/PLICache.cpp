@@ -43,7 +43,7 @@ PLICache::~PLICache() {
 // obtains or calculates a PositionListIndex using cache
 std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> PLICache::getOrCreateFor(
         Vertical const &vertical, ProfilingContext* profilingContext) {
-    std::scoped_lock lock(kostylMutex_);
+    std::scoped_lock lock(gettingPLIMutex);
     LOG(DEBUG) << boost::format{"PLI for %1% requested: "} % vertical.toString();
 
     // is PLI already cached?

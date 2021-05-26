@@ -27,8 +27,7 @@ private:
 
     int savedIntersections_ = 0;
 
-    // TODO: get rid of it -- used in getOrCreateFor
-    mutable std::mutex kostylMutex_;
+    mutable std::mutex gettingPLIMutex;
 
     CachingMethod cachingMethod_;
     CacheEvictionMethod evictionMethod_;
