@@ -7,13 +7,14 @@
 class PartialKey {
 public:
     double error_;
-    std::shared_ptr<Vertical> vertical_;
+    Vertical vertical_;
     double score_;
 
-    PartialKey(std::shared_ptr<Vertical> vertical, double error, double score) : error_(error), vertical_(std::move(vertical)), score_(score) {}
+    PartialKey(Vertical vertical, double error, double score)
+        : error_(error), vertical_(std::move(vertical)), score_(score) {}
 
-    std::string toString() const { return vertical_->toString() + "~>" + boost::lexical_cast<std::string>(error_) + boost::lexical_cast<std::string>(score_); }
-    std::string toIndicesString() const { return vertical_->toIndicesString(); }
-    //double getError() const { return error_; }
-    //int getArity() const { return lhs_->getColumns().size(); }
+    std::string toIndicesString() const { return vertical_.toIndicesString(); }
+
+    std::string toString() const { return vertical_.toString() + "~>"
+        + boost::lexical_cast<std::string>(error_) + boost::lexical_cast<std::string>(score_); }
 };

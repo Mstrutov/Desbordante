@@ -16,8 +16,9 @@ if (MSVC)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG  "${CMAKE_BINARY_DIR}/target")
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE  "${CMAKE_BINARY_DIR}/target")
 else()
-    add_compile_options("$<$<CONFIG:Debug>:-Wall;-Wextra;-fno-omit-frame-pointer>")
-    add_compile_options("$<$<CONFIG:Release>:-O3>")
+    # -DELPP_THREAD_SAFE -- for easylogging++ thread safety
+    add_compile_options("$<$<CONFIG:Debug>:-O0;-DELPP_THREAD_SAFE;-g;-Wall;-Wextra;-fno-omit-frame-pointer>")
+    add_compile_options("$<$<CONFIG:Release>:-O3;-DELPP_THREAD_SAFE;-g>")
 endif()
 
 # configuring boost

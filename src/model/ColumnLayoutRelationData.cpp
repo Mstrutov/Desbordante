@@ -1,73 +1,74 @@
-#include "ColumnLayoutRelationData.h"
-
-#include "easylogging++.h"
+//
+// Created by Ilya Vologin
+// https://github.com/cupertank
+//
 
 #include <map>
 #include <memory>
 #include <utility>
 
-using namespace std;
+#include "ColumnLayoutRelationData.h"
+#include "easylogging++.h"
 
-//vector <- pass by reference
-ColumnLayoutRelationData::ColumnLayoutRelationData(shared_ptr<RelationalSchema> const& schema,
-                                                   vector<shared_ptr<ColumnData>> columnData) :
-    RelationData(schema),
-    columnData(std::move(columnData)){}
 
-vector<shared_ptr<ColumnData>> ColumnLayoutRelationData::getColumnData() const {
-    return columnData;
-}
+ColumnLayoutRelationData::ColumnLayoutRelationData(std::unique_ptr<RelationalSchema> schema,
+                                                   std::vector<ColumnData> columnData) :
+    RelationData(std::move(schema)),
+    columnData(std::move(columnData)) {}
 
-shared_ptr<ColumnData> ColumnLayoutRelationData::getColumnData(int columnIndex) const {
+
+ColumnData& ColumnLayoutRelationData::getColumnData(int columnIndex) {
     return columnData[columnIndex];
 }
 
-unsigned int ColumnLayoutRelationData::getNumRows() const {
-    return columnData[0]->getProbingTable()->size();
-}
+//ColumnData const& ColumnLayoutRelationData::getColumnData(int columnIndex) const ;
 
-vector<int> ColumnLayoutRelationData::getTuple(int tupleIndex) const {
+//unsigned int ColumnLayoutRelationData::getNumRows() const
+
+std::vector<int> ColumnLayoutRelationData::getTuple(int tupleIndex) const {
     int numColumns = schema->getNumColumns();
-    vector<int> tuple = vector<int>(numColumns);
+    std::vector<int> tuple = std::vector<int>(numColumns);
     for (int columnIndex = 0; columnIndex < numColumns; columnIndex++){
-        tuple[columnIndex] = columnData[columnIndex]->getProbingTableValue(tupleIndex);
+        tuple[columnIndex] = columnData[columnIndex].getProbingTableValue(tupleIndex);
     }
     return tuple;
 }
 
-void ColumnLayoutRelationData::shuffleColumns() {
+/*void ColumnLayoutRelationData::shuffleColumns() {
     for (auto &columnDatum : columnData){
-        columnDatum->shuffle();
+        columnDatum.shuffle();
     }
-}
+}*/
 
-shared_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::createFrom(CSVParser &fileInput, bool isNullEqNull) {
+std::unique_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::createFrom(CSVParser &fileInput, bool isNullEqNull) {
     return createFrom(fileInput, isNullEqNull, -1, -1);
 }
 
-shared_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::createFrom(CSVParser &fileInput, bool isNullEqNull, int maxCols,
-                                                              long maxRows) {
-    auto schema =  RelationalSchema::create(fileInput.getRelationName(), isNullEqNull);
-    unordered_map<string, int> valueDictionary;
+std::unique_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::createFrom(
+        CSVParser &fileInput, bool isNullEqNull, int maxCols, long maxRows) {
+    auto schema = std::make_unique<RelationalSchema>(fileInput.getRelationName(), isNullEqNull);
+    std::unordered_map<std::string, int> valueDictionary;
     int nextValueId = 1;
     const int nullValueId = -1;
     int numColumns = fileInput.getNumberOfColumns();
-    if (maxCols > 0) numColumns = min(numColumns, maxCols);
-    vector<vector<int>> columnVectors = vector<vector<int>>(numColumns);
+    if (maxCols > 0) numColumns = std::min(numColumns, maxCols);
+    std::vector<std::vector<int>> columnVectors = std::vector<std::vector<int>>(numColumns);
     int rowNum = 0;
-    vector<string> row;
+    std::vector<std::string> row;
 
     while (fileInput.getHasNext()){
-        row = std::move(fileInput.parseNext());
+        row = fileInput.parseNext();
 
-        if ((int)row.size() != numColumns) {
+        if (row.empty() && numColumns == 1) {
+            row.emplace_back("");
+        } else if ((int)row.size() != numColumns) {
             LOG(WARNING) << "Skipping incomplete rows";
             continue;
         }
 
         if (maxRows <= 0 || rowNum < maxRows){
             int index = 0;
-            for (string& field : row){
+            for (std::string& field : row){
                 if (field.empty()){
                     columnVectors[index].push_back(nullValueId);
                 } else {
@@ -92,16 +93,15 @@ shared_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::createFrom(CSVPar
         rowNum++;
     }
 
-    vector<shared_ptr<ColumnData>> columnData;
+    std::vector<ColumnData> columnData;
     for (int i = 0; i < numColumns; ++i) {
-        auto column = make_shared<Column>(schema, fileInput.getColumnName(i), i);               //numColumns instead of i - same problem as described in Column.cpp
-        schema->appendColumn(column);
+        auto column = Column(schema.get(), fileInput.getColumnName(i), i);
+        schema->appendColumn(std::move(column));
         auto pli = PositionListIndex::createFor(columnVectors[i], schema->isNullEqualNull());
-        auto colData = make_shared<ColumnData>(column, pli->getProbingTable(true), pli);
-        columnData.emplace_back(colData);
+        columnData.emplace_back(schema->getColumn(i), std::move(pli));
     }
-    // TODO: тут костыль: в RelationalSchema::create происходит инициализация битсета нулевого размера. Можно обойти через resize
+
     schema->init();
 
-    return make_shared<ColumnLayoutRelationData>(schema, columnData);
+    return std::make_unique<ColumnLayoutRelationData>(std::move(schema), std::move(columnData));
 }

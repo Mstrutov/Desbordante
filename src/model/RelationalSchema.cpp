@@ -1,112 +1,103 @@
+#include <memory>
 #include <utility>
 
 #include "RelationalSchema.h"
 #include "Vertical.h"
 #include "VerticalMap.h"
 
-using namespace std;
-
-RelationalSchema::RelationalSchema(string name, bool isNullEqNull) :
+RelationalSchema::RelationalSchema(std::string name, bool isNullEqNull) :
         columns(),
         name(std::move(name)),
         isNullEqNull(isNullEqNull),
         emptyVertical() {
-}
-// good practice is using std::make_shared instead
-shared_ptr<RelationalSchema> RelationalSchema::create(string name, bool isNullEqNull) {
-    auto schema = shared_ptr<RelationalSchema>(new RelationalSchema(std::move(name), isNullEqNull));
-    schema->init();
-    return schema;
+    init();
 }
 
-// this is hard to comprehend
 void RelationalSchema::init() {
-    emptyVertical.reset(new Vertical(std::move(Vertical::emptyVertical(shared_from_this()))));
+    emptyVertical = Vertical::emptyVertical(this);
 }
 
-//TODO: В оригинале тут что-то непонятное
-std::shared_ptr<Vertical> RelationalSchema::getVertical(dynamic_bitset<> indices) {
-    if (indices.empty()) return this->emptyVertical;
+//TODO: В оригинале тут что-то непонятное + приходится пересоздавать emptyVertical -- тут
+//должен быть unique_ptr, тк создаём в остальных случаях новую вершину и выдаём наружу с овнершипом
+Vertical RelationalSchema::getVertical(boost::dynamic_bitset<> indices) const {
+    if (indices.empty()) return *Vertical::emptyVertical(this);
 
     if (indices.count() == 1){
-        return std::make_unique<Vertical>(static_cast<Vertical>(*this->columns[indices.find_first()]));          //TODO: TEMPORAL KOSTYL'
+        return Vertical(this, std::move(indices));
     }
-    return std::make_unique<Vertical>(shared_from_this(), indices);
+    return Vertical(this, std::move(indices));
 }
 
-string RelationalSchema::getName() { return name; }
+Column const* RelationalSchema::getColumn(const std::string &colName) const {
+    auto foundEntryIterator = std::find_if(columns.begin(), columns.end(),
+                                           [&colName](auto& column) { return column->name == colName; });
+    if (foundEntryIterator != columns.end()) return foundEntryIterator->get();
 
-vector<shared_ptr<Column>> RelationalSchema::getColumns() { return columns; }
-
-//TODO: assert'ы пофиксить на нормальные эксепшены
-shared_ptr<Column> RelationalSchema::getColumn(const string &colName) {
-    for (auto &column : columns){
-        if (column->name == colName)
-            return column;
-    }
-    assert(0);
+    throw std::invalid_argument("Couldn't match column name \'"
+        + colName
+        + "\' to any of the schema's column names");
 }
 
-shared_ptr<Column> RelationalSchema::getColumn(int index) {
-    return columns[index];
+Column const* RelationalSchema::getColumn(int index) const {
+    return columns.at(index).get();
 }
 
-void RelationalSchema::appendColumn(const string& colName) {
-    columns.push_back(make_shared<Column>(shared_from_this(), colName, columns.size()));
+void RelationalSchema::appendColumn(const std::string& colName) {
+    columns.push_back(std::make_unique<Column>(this, colName, columns.size()));
 }
 
-// if you have nothing else to do: push_back through move semantics
-void RelationalSchema::appendColumn(shared_ptr<Column> column) {
-    columns.push_back(column);
+void RelationalSchema::appendColumn(Column column) {
+    columns.push_back(std::make_unique<Column>(std::move(column)));
 }
 
 int RelationalSchema::getNumColumns() const {
     return columns.size();
 }
 
-bool RelationalSchema::isNullEqualNull() { return isNullEqNull; }
+bool RelationalSchema::isNullEqualNull() const { return isNullEqNull; }
 
 // TODO: critical part - consider optimization
 // TODO: list -> vector as list doesn't have RAIterators therefore can't be sorted
-std::unordered_set<std::shared_ptr<Vertical>> RelationalSchema::calculateHittingSet(std::list<std::shared_ptr<Vertical>>&& verticals, boost::optional<std::function<bool (Vertical const&)>> pruningFunction) {
-    using std::shared_ptr;
-    //auto arityComparator = [](auto vertical1, auto vertical2) { return vertical1->getArity() < vertical2->getArity(); };
-    verticals.sort([](auto vertical1, auto vertical2) { return vertical1->getArity() < vertical2->getArity(); });
-    VerticalMap<shared_ptr<Vertical>> consolidatedVerticals(shared_from_this());
+std::unordered_set<Vertical> RelationalSchema::calculateHittingSet(
+        std::vector<Vertical> verticals, boost::optional<std::function<bool (Vertical const&)>> pruningFunction) const {
+    std::sort(verticals.begin(), verticals.end(),
+              [](auto& vertical1, auto& vertical2) { return vertical1.getArity() < vertical2.getArity(); });
+    VerticalMap<Vertical> consolidatedVerticals(this);
 
-    VerticalMap<shared_ptr<Vertical>> hittingSet(shared_from_this());
-    hittingSet.put(*emptyVertical, emptyVertical);
+    VerticalMap<Vertical> hittingSet(this);
+    hittingSet.put(*emptyVertical, Vertical::emptyVertical(this));
 
-    for (auto vertical_ptr : verticals) {
-        if (consolidatedVerticals.getAnySubsetEntry(*vertical_ptr).second != nullptr) {
+    for (auto& vertical : verticals) {
+        if (consolidatedVerticals.getAnySubsetEntry(vertical).second != nullptr) {
             continue;
         }
-        consolidatedVerticals.put(*vertical_ptr, vertical_ptr);
+        // TODO: костыль, тк VerticalMap хранит unique_ptr - лишнее копирование
+        consolidatedVerticals.put(vertical, std::make_unique<Vertical>(vertical));
 
-        auto invalidHittingSetMembers = hittingSet.getSubsetKeys(*vertical_ptr->invert());
+        auto invalidHittingSetMembers = hittingSet.getSubsetKeys(vertical.invert());
         std::sort(invalidHittingSetMembers.begin(), invalidHittingSetMembers.end(),
-                [](auto vertical1, auto vertical2) { return vertical1->getArity() < vertical2->getArity(); });
+                [](auto& vertical1, auto& vertical2) { return vertical1.getArity() < vertical2.getArity(); });
 
         for (auto& invalidHittingSetMember : invalidHittingSetMembers) {
-            hittingSet.remove(*invalidHittingSetMember);
+            hittingSet.remove(invalidHittingSetMember);
         }
 
         for (auto& invalidMember : invalidHittingSetMembers) {
-            for (size_t correctiveColumnIndex = vertical_ptr->getColumnIndices().find_first();
+            for (size_t correctiveColumnIndex = vertical.getColumnIndices().find_first();
                  correctiveColumnIndex != boost::dynamic_bitset<>::npos;
-                 correctiveColumnIndex = vertical_ptr->getColumnIndices().find_next(correctiveColumnIndex)) {
+                 correctiveColumnIndex = vertical.getColumnIndices().find_next(correctiveColumnIndex)) {
 
                 auto correctiveColumn = *getColumn(correctiveColumnIndex);
-                auto correctedMember = invalidMember->Union(static_cast<Vertical>(correctiveColumn));
+                auto correctedMember = invalidMember.Union(static_cast<Vertical>(correctiveColumn));
 
-                if (hittingSet.getAnySubsetEntry(*correctedMember).second == nullptr) {
+                if (hittingSet.getAnySubsetEntry(correctedMember).second == nullptr) {
                     if (pruningFunction) {
-                        bool isPruned = (*pruningFunction)(*correctedMember);
+                        bool isPruned = (*pruningFunction)(correctedMember);
                         if (isPruned) {
                             continue;
                         }
                     }
-                    hittingSet.put(*correctedMember, correctedMember);
+                    hittingSet.put(correctedMember, std::make_unique<Vertical>(correctedMember));
                 }
             }
         }
@@ -114,3 +105,5 @@ std::unordered_set<std::shared_ptr<Vertical>> RelationalSchema::calculateHitting
     }
     return hittingSet.keySet();
 }
+
+RelationalSchema::~RelationalSchema() = default;
