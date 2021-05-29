@@ -1,24 +1,24 @@
 #include "DependencyStrategy.h"
 #include "PLICache.h"
 
-bool DependencyStrategy::shouldResample(std::shared_ptr<Vertical> vertical, double boostFactor) {
+bool DependencyStrategy::shouldResample(Vertical const& vertical, double boostFactor) const {
 
-    if (context_->configuration_.sampleSize <= 0 || vertical->getArity() < 1) return false;
+    if (context_->getConfiguration().sampleSize <= 0 || vertical.getArity() < 1) return false;
 
     // Do we have an exact sample already?
-    std::shared_ptr<AgreeSetSample> currentSample = context_->getAgreeSetSample(vertical);
+    auto currentSample = context_->getAgreeSetSample(vertical);
     if (currentSample->isExact()) return false;
 
     // Get an estimate of the number of equality pairs in the vertical
-    std::shared_ptr<PositionListIndex> pli = context_->pliCache_->get(*vertical);
-    double nep = pli != nullptr ?
-                pli->getNepAsLong() :       // TODO: getNepAsDouble; long -> long long
-                currentSample->estimateAgreements(vertical) * context_->relationData_->getNumTuplePairs();
+    PositionListIndex* pli = context_->getPLICache()->get(vertical);
+    double nep = pli != nullptr
+            ? pli->getNepAsLong()
+            : currentSample->estimateAgreements(vertical) * context_->getColumnLayoutRelationData()->getNumTuplePairs();
 
     // Should the new sample be exact?
-    if (nep <= context_->configuration_.sampleSize * boostFactor) return true;
+    if (nep <= context_->getConfiguration().sampleSize * boostFactor) return true;
 
     // Will we achieve an improved sampling ratio?
-    double newSamplingRatio = context_->configuration_.sampleSize * boostFactor / nep;
+    double newSamplingRatio = context_->getConfiguration().sampleSize * boostFactor / nep;
     return newSamplingRatio >= 2 * currentSample->getSamplingRatio();
 }

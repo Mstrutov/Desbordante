@@ -11,9 +11,9 @@ using namespace std;
 
 double AgreeSetSample::stdDevSmoothing = 1;
 
-AgreeSetSample::AgreeSetSample(shared_ptr<ColumnLayoutRelationData> relationData, shared_ptr<Vertical> focus, unsigned int sampleSize,
+AgreeSetSample::AgreeSetSample(ColumnLayoutRelationData const* relationData, Vertical focus, unsigned int sampleSize,
                                unsigned long long populationSize):
-        relationData(std::move(relationData)),
+        relationData(relationData),
         focus(std::move(focus)),
         sampleSize(sampleSize),
         populationSize(populationSize){
@@ -28,18 +28,17 @@ double AgreeSetSample::calculateNonNegativeFraction(double a, double b) {
     return max(std::numeric_limits<double>::min(), a / b);
 }
 
-//TODO: is this manipulation with virtual and pure virtual methods even legal?
-std::shared_ptr<std::vector<unsigned long long>>
-AgreeSetSample::getNumAgreeSupersetsExt(std::shared_ptr<Vertical> agreement, std::shared_ptr<Vertical> disagreement) {
-    return std::make_shared<std::vector<unsigned long long>> (
+std::unique_ptr<std::vector<unsigned long long>>
+AgreeSetSample::getNumAgreeSupersetsExt(Vertical const& agreement, Vertical const& disagreement) const {
+    return std::make_unique<std::vector<unsigned long long>> (
             std::vector<unsigned long long> {
                 this->getNumAgreeSupersets(agreement), this->getNumAgreeSupersets(agreement, disagreement)
             }
         );
 }
 
-double AgreeSetSample::estimateAgreements(std::shared_ptr<Vertical> agreement) {
-    if (!agreement->contains(*this->focus)) {
+double AgreeSetSample::estimateAgreements(Vertical const& agreement) const {
+    if (!agreement.contains(this->focus)) {
         throw std::runtime_error("An agreement in estimateAgreemnts should contain the focus");
     }
 
@@ -49,8 +48,8 @@ double AgreeSetSample::estimateAgreements(std::shared_ptr<Vertical> agreement) {
     return observationsToRelationRatio(this->getNumAgreeSupersets(agreement));
 }
 
-ConfidenceInterval AgreeSetSample::estimateAgreements(std::shared_ptr<Vertical> agreement, double confidence) {
-    if (!agreement->contains(*this->focus)) {
+ConfidenceInterval AgreeSetSample::estimateAgreements(Vertical const& agreement, double confidence) const {
+    if (!agreement.contains(this->focus)) {
         throw std::runtime_error("An agreement in estimateAgreemnts with confidence should contain the focus");
     }
     if (populationSize == 0) {
@@ -63,8 +62,9 @@ ConfidenceInterval AgreeSetSample::estimateAgreements(std::shared_ptr<Vertical> 
     return estimateGivenNumHits(numHits, confidence);
 }
 
-ConfidenceInterval AgreeSetSample::estimateMixed(std::shared_ptr<Vertical> agreement, std::shared_ptr<Vertical> disagreement, double confidence) {
-    if (!agreement->contains(*this->focus)) {
+ConfidenceInterval AgreeSetSample::estimateMixed(
+        Vertical const& agreement, Vertical const& disagreement, double confidence) const {
+    if (!agreement.contains(this->focus)) {
         throw std::runtime_error("An agreement in estimateMixed should contain the focus");
     }
     if (populationSize == 0) {
@@ -77,10 +77,11 @@ ConfidenceInterval AgreeSetSample::estimateMixed(std::shared_ptr<Vertical> agree
     return estimateGivenNumHits(numHits, confidence);
 }
 
-ConfidenceInterval AgreeSetSample::estimateGivenNumHits(unsigned long long numHits, double confidence) {
+ConfidenceInterval AgreeSetSample::estimateGivenNumHits(unsigned long long numHits, double confidence) const {
     double sampleRatio = numHits / static_cast<double>(sampleSize);
     double relationRatio = ratioToRelationRatio(sampleRatio);
-    if (this->isExact() || confidence == -1) {       //TODO: check all the stuff with confidence interval and what confidence is; possibility to use boost::optional
+    if (this->isExact() || confidence == -1) {
+        //TODO: check all the stuff with confidence interval and what confidence is; possibility to use boost::optional
         return ConfidenceInterval(relationRatio);
     }
 
@@ -95,7 +96,7 @@ ConfidenceInterval AgreeSetSample::estimateGivenNumHits(unsigned long long numHi
 }
 
 // Inverse cumulative distribution function of normal distribution
-//taken from https://www.quantstart.com/articles/Statistical-Distributions-in-C/
+// taken from https://www.quantstart.com/articles/Statistical-Distributions-in-C/
 double AgreeSetSample::probitFunction(double quantile) const {
     // This is the Beasley-Springer-Moro algorithm which can
     // be found in Glasserman [2004].

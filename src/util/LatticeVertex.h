@@ -1,57 +1,55 @@
 #pragma once
 
 #include <list>
+#include <utility>
+#include <variant>
 #include <vector>
 
 #include <boost/dynamic_bitset.hpp>
 
-#include "RelationalSchema.h"
 #include "PositionListIndex.h"
-//#include "Column.h"
+#include "RelationalSchema.h"
 #include "Vertical.h"
 
 
-//enable_shared_from_this - if LV needs to create shared_ptr
 class LatticeVertex{
 private:
     Vertical vertical;
-    std::shared_ptr<PositionListIndex> positionListIndex;
-    dynamic_bitset<> rhsCandidates;
+    // holds either an owned PLI (unique_ptr) or a non-owned one (const*)
+    std::variant<std::unique_ptr<PositionListIndex>, PositionListIndex const*> positionListIndex_;
+    boost::dynamic_bitset<> rhsCandidates;
     bool isKeyCandidate = false;
-    std::vector<std::shared_ptr<LatticeVertex>> parents;
+    std::vector<LatticeVertex const*> parents;
     bool isInvalid = false;
 
-    //list => vector due to usage of opertor[] in Tane
-    //use pointer to vertical?
-    // Using member initialization?
 public:
-    //TODO: no default initialization of PLI
-    explicit LatticeVertex(Vertical&& _vertical) : vertical(_vertical), rhsCandidates(vertical.getSchema()->getNumColumns()) {}
-    explicit LatticeVertex(Vertical& _vertical) : vertical(_vertical), rhsCandidates(vertical.getSchema()->getNumColumns()) {}
+    explicit LatticeVertex(Vertical _vertical) : vertical(std::move(_vertical)),
+                                                 rhsCandidates(vertical.getSchema()->getNumColumns()) {}
 
-    std::vector<std::shared_ptr<LatticeVertex>>& getParents() { return parents; }
-    //TODO: const - usually other Metanome classes use these outputs, so returning const isn't possible
-    Vertical& getVertical() { return vertical; }
+    std::vector<LatticeVertex const*>& getParents() { return parents; }
+
+    Vertical const& getVertical() const { return vertical; }
     boost::dynamic_bitset<>& getRhsCandidates() { return rhsCandidates; }
+    boost::dynamic_bitset<> const& getConstRhsCandidates() const { return rhsCandidates; }
 
-    void addRhsCandidates(std::vector<std::shared_ptr<Column>>&& candidates);
+    void addRhsCandidates(std::vector<std::unique_ptr<Column>> const& candidates);
 
-    //dynamic_bitset getBlockingPrefix();
-    bool comesBeforeAndSharePrefixWith(LatticeVertex& that);
+    bool comesBeforeAndSharePrefixWith(LatticeVertex const& that) const;
     bool getIsKeyCandidate() const { return isKeyCandidate; }
     void setKeyCandidate(bool m_isKeyCandidate) { isKeyCandidate = m_isKeyCandidate; }
     bool getIsInvalid() const { return isInvalid; }
     void setInvalid(bool m_isInvalid) { isInvalid = m_isInvalid; }
 
-    //OK to store AND return ptr to PLI?
-    std::shared_ptr<PositionListIndex> getPositionListIndex() { return positionListIndex; }
-    void setPositionListIndex(shared_ptr<PositionListIndex> m_positionListIndex) { positionListIndex = m_positionListIndex; }
+    PositionListIndex const* getPositionListIndex() const;
+    void setPositionListIndex(PositionListIndex const* positionListIndex)
+    { positionListIndex_ = positionListIndex; }
+    void acquirePositionListIndex(std::unique_ptr<PositionListIndex> positionListIndex)
+    { positionListIndex_ = std::move(positionListIndex); }
 
-    //right analogy to compareTo?
-    bool operator> (LatticeVertex& that);
+    bool operator> (LatticeVertex const& that) const;
 
-    string toString();
+    std::string toString();
 
-    static bool comparator(const shared_ptr<LatticeVertex>& v1, const shared_ptr<LatticeVertex>& v2) { return *v2 > *v1; }
+    static bool comparator(LatticeVertex * v1, LatticeVertex * v2) { return *v2 > *v1; }
     friend std::ostream& operator<<(std::ostream& os, LatticeVertex& lv);
 };

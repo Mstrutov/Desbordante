@@ -1,4 +1,3 @@
-
 #include <iostream>
 
 #include "gmock/gmock.h"
@@ -14,9 +13,31 @@ using std::vector, std::string, std::cout, std::endl;
 
 class PyroTest : public LightDatasets, public HeavyDatasets, public ::testing::Test {};
 
+
+TEST_F(PyroTest, ReturnsSameHashOnLightDatasets) {
+
+    auto path = std::filesystem::current_path().append("inputData");
+
+    try {
+        for (size_t i = 0; i < LightDatasets::datasetQuantity(); i++) {
+            auto pyro = Pyro(path / LightDatasets::dataset(i), LightDatasets::separator(i),
+                             LightDatasets::hasHeader(i), 0, 0, -1);
+            pyro.execute();
+            EXPECT_EQ(pyro.FDAlgorithm::fletcher16(), LightDatasets::hash(i))
+                                << "Pyro result hash changed for " << LightDatasets::dataset(i);
+        }
+    }
+    catch (std::runtime_error& e) {
+        std::cout << "Exception raised in test: " << e.what() << std::endl;
+        FAIL();
+    }
+    SUCCEED();
+}
+
+
 TEST_F(PyroTest, ReturnsSameHashOnHeavyDatasets) {
 
-    auto path = fs::current_path().append("inputData");
+    auto path = std::filesystem::current_path().append("inputData");
 
     try {
         for (auto dataset : HeavyDatasets::datasets) {
