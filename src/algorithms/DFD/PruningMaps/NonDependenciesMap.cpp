@@ -5,18 +5,16 @@
 #include "NonDependenciesMap.h"
 //#include "CustomComparator.h"
 
-using vertical_set = std::unordered_set<shared_ptr<Vertical>, std::hash<shared_ptr<Vertical>>, custom_comparator>;
-
-NonDependenciesMap::NonDependenciesMap(shared_ptr<RelationalSchema> schema) {
+NonDependenciesMap::NonDependenciesMap(RelationalSchema const* schema) {
     for (auto const& column : schema->getColumns()) {
         this->insert(std::make_pair(Vertical(*column), vertical_set()));
     }
 }
 
-vertical_set NonDependenciesMap::getPrunedSupersets(vertical_set const& supersets) const {
+std::unordered_set<Vertical> NonDependenciesMap::getPrunedSupersets(std::unordered_set<Vertical> const& supersets) const {
     vertical_set prunedSupersets;
     for (auto const& node : supersets) {
-        if (canBePruned(*node)) {
+        if (canBePruned(node)) {
             prunedSupersets.insert(node);
         }
     }
@@ -27,8 +25,8 @@ bool NonDependenciesMap::canBePruned(const Vertical &node) const {
     for (auto const& mapRow : *this) {
         Vertical const& key = mapRow.first;
         if (node.contains(key)) {
-            for (shared_ptr<Vertical> const& nonDependency : mapRow.second) {
-                if (nonDependency->contains(node)) {
+            for (Vertical const& nonDependency : mapRow.second) {
+                if (nonDependency.contains(node)) {
                     return true;
                 }
             }
@@ -36,21 +34,21 @@ bool NonDependenciesMap::canBePruned(const Vertical &node) const {
     }
 }
 
-void NonDependenciesMap::addNewNonDependency(shared_ptr<Vertical> const& nodeToAdd) {
+void NonDependenciesMap::addNewNonDependency(Vertical const& nodeToAdd) {
     for (auto const& mapRow : *this) {
         Vertical const& key = mapRow.first;
 
-        if (nodeToAdd->contains(key)) {
+        if (nodeToAdd.contains(key)) {
             vertical_set nonDepsForKey = mapRow.second;
             bool hasSupersetEntry = false;
 
             for (auto iter = nonDepsForKey.begin(); iter != nonDepsForKey.end(); ) {
                 //если совпадают, то contains = true
-                shared_ptr<Vertical> const& nonDep = *iter;
-                if (nonDep->contains(*nodeToAdd)) {
+                Vertical const& nonDep = *iter;
+                if (nonDep.contains(nodeToAdd)) {
                     hasSupersetEntry = true;
                     break;
-                } else if (nodeToAdd->contains(*nonDep)) {
+                } else if (nodeToAdd.contains(nonDep)) {
                     iter = nonDepsForKey.erase(iter);
                 } else {
                     iter++;
