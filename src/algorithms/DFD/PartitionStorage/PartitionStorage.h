@@ -43,7 +43,7 @@ public:
 
     PositionListIndex* get(Vertical const& vertical);
     std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> getOrCreateFor(
-            Vertical const& vertical, ProfilingContext* profilingContext);
+            Vertical const& vertical);
 
     //void setMaximumEntropy(double e) { maximumEntropy_ = e; }
 

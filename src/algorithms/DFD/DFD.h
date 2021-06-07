@@ -13,7 +13,6 @@
 #include "DependenciesMap.h"
 #include "NonDependenciesMap.h"
 #include "PartitionStorage/PartitionStorage.h"
-#include "CustomComparator.h"
 #include "Vertical.h"
 
 class DFD : public FDAlgorithm {
