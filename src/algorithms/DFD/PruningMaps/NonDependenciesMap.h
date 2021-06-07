@@ -6,7 +6,6 @@
 
 #include "Vertical.h"
 #include "DFD/LatticeObservations/LatticeObservations.h"
-#include "CustomComparator.h"
 
 class NonDependenciesMap : public std::unordered_map<Vertical, std::unordered_set<Vertical>> {
     using vertical_set = std::unordered_set<Vertical>;

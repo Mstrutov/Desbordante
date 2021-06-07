@@ -7,7 +7,6 @@
 #include <unordered_map>
 #include "Vertical.h"
 #include "../src/custom/CustomHashes.h"
-#include "CustomComparator.h"
 
 enum class NodeCategory {
         dependency,

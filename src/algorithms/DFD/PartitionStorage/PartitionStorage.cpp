@@ -25,16 +25,16 @@ PartitionStorage::PartitionStorage(ColumnLayoutRelationData* relationData, Cachi
 }
 
 PartitionStorage::~PartitionStorage() {
-    for (auto& column_ptr : relationData_->getSchema()->getColumns()) {
+    //for (auto& column_ptr : relationData_->getSchema()->getColumns()) {
         //auto PLI =
-        index_->remove(static_cast<Vertical>(*column_ptr));
+    //    index_->remove(static_cast<Vertical>(*column_ptr));
         //relationData_->getColumnData(column_ptr->getIndex()).getPLI(std::move(PLI));
-    }
+    //}
 }
 
 // obtains or calculates a PositionListIndex using cache
 std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> PartitionStorage::getOrCreateFor(
-        Vertical const &vertical, ProfilingContext* profilingContext) {
+        Vertical const &vertical) {
     std::scoped_lock lock(gettingPLIMutex);
     LOG(DEBUG) << boost::format{"PLI for %1% requested: "} % vertical.toString();
 

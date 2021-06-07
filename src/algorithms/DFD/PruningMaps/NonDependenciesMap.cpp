@@ -3,7 +3,6 @@
 //
 
 #include "NonDependenciesMap.h"
-//#include "CustomComparator.h"
 
 NonDependenciesMap::NonDependenciesMap(RelationalSchema const* schema) {
     for (auto const& column : schema->getColumns()) {
