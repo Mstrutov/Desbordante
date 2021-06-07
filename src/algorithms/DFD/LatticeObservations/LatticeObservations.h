@@ -20,21 +20,21 @@ enum class NodeCategory {
 
 class LatticeObservations : public std::unordered_map<Vertical, NodeCategory> {
 public:
-    using vertical_set = std::unordered_set<shared_ptr<Vertical>, std::hash<shared_ptr<Vertical>>, custom_comparator>;
+    //using vertical_set = std::unordered_set<shared_ptr<Vertical>, std::hash<shared_ptr<Vertical>>, custom_comparator>;
     //TODO ctors
 
-    bool isCandidate(shared_ptr<Vertical> const& vertical);
-    bool isVisited(shared_ptr<Vertical> const& vertical) { return this->find(*vertical) != this->end();} //нужна ли?
+    bool isCandidate(Vertical const& vertical);
+    bool isVisited(Vertical const& vertical) { return this->find(vertical) != this->end();} //нужна ли?
 
-    NodeCategory updateDependencyCategory(shared_ptr<Vertical>  const& vertical);
-    NodeCategory updateNonDependencyCategory(shared_ptr<Vertical>  const& vertical, int rhsIndex);
+    NodeCategory updateDependencyCategory(Vertical const& vertical);
+    NodeCategory updateNonDependencyCategory(Vertical const& vertical, int rhsIndex);
 
-    LatticeObservations::vertical_set getUncheckedSubsets(const shared_ptr<Vertical> &node, size_t rhsIndex);
-    LatticeObservations::vertical_set getUncheckedSupersets(const shared_ptr<Vertical> &node, size_t rhsIndex);
+    std::unordered_set<Vertical> getUncheckedSubsets(const Vertical &node, size_t rhsIndex);
+    std::unordered_set<Vertical> getUncheckedSupersets(const Vertical &node, size_t rhsIndex);
 
-    bool inferCategory(shared_ptr<Vertical> const& node);
+    bool inferCategory(Vertical const& node);
 
-    bool getCategory(shared_ptr<Vertical> node); //TODO чтобы не возиться с end
+    bool getCategory(Vertical const& node); //TODO чтобы не возиться с end
 
 };
 
