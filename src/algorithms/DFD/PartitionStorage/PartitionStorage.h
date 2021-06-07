@@ -1,43 +1,54 @@
-//
-// Created by alex on 22.04.2021.
-//
-
 #pragma once
+
+class ProfilingContext;
 
 #include "CacheEvictionMethod.h"
 #include "CachingMethod.h"
 #include "ProfilingContext.h"
 #include "ColumnLayoutRelationData.h"
 
+#include <mutex>
+
 class PartitionStorage {
 private:
     class PositionListIndexRank {
     public:
-        std::shared_ptr<Vertical> vertical_;
+        Vertical const* vertical_;
         std::shared_ptr<PositionListIndex> pli_;
         int addedArity_;
 
-        PositionListIndexRank(std::shared_ptr<Vertical> vertical, std::shared_ptr<PositionListIndex> pli, int initialArity):
+        PositionListIndexRank(Vertical const* vertical, std::shared_ptr<PositionListIndex> pli, int initialArity):
                 vertical_(vertical), pli_(pli), addedArity_(initialArity) {}
     };
-    using CacheMap = VerticalMap<std::shared_ptr<PositionListIndex>>;
-    std::weak_ptr<ColumnLayoutRelationData> relationData_;
-    std::shared_ptr<CacheMap> index_;    //unique_ptr?
+    //using CacheMap = VerticalMap<PositionListIndex>;
+    ColumnLayoutRelationData* relationData_;
+    std::unique_ptr<VerticalMap<PositionListIndex>> index_;
     //usageCounter - for parallelism
 
     int savedIntersections_ = 0;
 
+    mutable std::mutex gettingPLIMutex;
+
     CachingMethod cachingMethod_;
     CacheEvictionMethod evictionMethod_;
+    double cachingMethodValue_;
     //long long maximumAvailableMemory_ = 0;
 
-    //void cachingProcess(Vertical const& vertical, std::shared_ptr<PositionListIndex> pli);
+    double medianInvertedEntropy_;
 
+    std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> cachingProcess(Vertical const& vertical,
+                                                                                        std::unique_ptr<PositionListIndex> pli);
 public:
-    PartitionStorage(std::shared_ptr<ColumnLayoutRelationData> relationData, CachingMethod cachingMethod, CacheEvictionMethod evictionMethod);
+    PartitionStorage(ColumnLayoutRelationData* relationData, CachingMethod cachingMethod, CacheEvictionMethod evictionMethod);
 
-    std::shared_ptr<PositionListIndex> get(Vertical const& vertical);
-    std::shared_ptr<PositionListIndex> getOrCreateFor(Vertical const& vertical);
+    PositionListIndex* get(Vertical const& vertical);
+    std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> getOrCreateFor(
+            Vertical const& vertical, ProfilingContext* profilingContext);
+
+    //void setMaximumEntropy(double e) { maximumEntropy_ = e; }
 
     size_t size() const;
+
+    // returns ownership of single column PLIs back to ColumnLayoutRelationData
+    virtual ~PartitionStorage();
 };
