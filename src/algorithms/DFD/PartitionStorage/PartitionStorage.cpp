@@ -1,7 +1,3 @@
-//
-// Created by alex on 22.04.2021.
-//
-
 #include <boost/optional.hpp>
 
 #include "logging/easylogging++.h"
@@ -10,30 +6,40 @@
 #include "VerticalMap.h"
 
 
-std::shared_ptr<PositionListIndex> PartitionStorage::get(Vertical const &vertical) {
-    //VerticalMap<std::shared_ptr<PositionListIndex>> obj(nullptr);
-    return index_->get(vertical);
+PositionListIndex* PartitionStorage::get(Vertical const &vertical) {
+    return index_->get(vertical).get();
 }
 
-PartitionStorage::PartitionStorage(std::shared_ptr<ColumnLayoutRelationData> relationData, CachingMethod cachingMethod,
+PartitionStorage::PartitionStorage(ColumnLayoutRelationData* relationData, CachingMethod cachingMethod,
                    CacheEvictionMethod evictionMethod) :
         relationData_(relationData),
-        index_(std::make_shared<CacheMap>(relationData->getSchema())),
+        // TODO: сделать index_(std::make_unique<VerticalMap<PositionListIndex>>(relationData->getSchema())) при одном потоке
+        index_(std::make_unique<BlockingVerticalMap<PositionListIndex>>(relationData->getSchema())),
         cachingMethod_(cachingMethod),
         evictionMethod_(evictionMethod) {
     for (auto& column_ptr : relationData->getSchema()->getColumns()) {
-        index_->put(static_cast<Vertical>(*column_ptr), relationData->getColumnData(column_ptr->getIndex())->getPositionListIndex());
+        index_->put(
+                static_cast<Vertical>(*column_ptr),
+                relationData->getColumnData(column_ptr->getIndex()).getPLIOwnership());
     }
-    // usageCounter, decayCounter, statistics
+}
+
+PartitionStorage::~PartitionStorage() {
+    for (auto& column_ptr : relationData_->getSchema()->getColumns()) {
+        //auto PLI =
+        index_->remove(static_cast<Vertical>(*column_ptr));
+        //relationData_->getColumnData(column_ptr->getIndex()).getPLI(std::move(PLI));
+    }
 }
 
 // obtains or calculates a PositionListIndex using cache
-std::shared_ptr<PositionListIndex>
-PartitionStorage::getOrCreateFor(Vertical const &vertical) {
+std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> PartitionStorage::getOrCreateFor(
+        Vertical const &vertical, ProfilingContext* profilingContext) {
+    std::scoped_lock lock(gettingPLIMutex);
     LOG(DEBUG) << boost::format{"PLI for %1% requested: "} % vertical.toString();
 
     // is PLI already cached?
-    std::shared_ptr<PositionListIndex> pli = get(vertical);
+    PositionListIndex* pli = get(vertical);
     if (pli != nullptr) {
         pli->incFreq();
         LOG(DEBUG) << boost::format{"Served from PLI cache."};
@@ -46,7 +52,8 @@ PartitionStorage::getOrCreateFor(Vertical const &vertical) {
     std::vector<PositionListIndexRank> ranks;
     ranks.reserve(subsetEntries.size());
     for (auto& [subVertical, subPLI_ptr] : subsetEntries) {
-        PositionListIndexRank pliRank(subVertical, subPLI_ptr, subVertical->getArity());
+        // TODO: избавиться от таких const_cast, которые сбрасывают константность
+        PositionListIndexRank pliRank(&subVertical, std::const_pointer_cast<PositionListIndex>(subPLI_ptr), subVertical.getArity());
         ranks.push_back(pliRank);
         if (!smallestPliRank
             || smallestPliRank->pli_->getSize() > pliRank.pli_->getSize()
@@ -57,8 +64,8 @@ PartitionStorage::getOrCreateFor(Vertical const &vertical) {
     assert(smallestPliRank);            // check if smallestPliRank is initialized
 
     std::vector<PositionListIndexRank> operands;
-    boost::dynamic_bitset<> cover(relationData_.lock()->getNumColumns());
-    boost::dynamic_bitset<> coverTester(relationData_.lock()->getNumColumns());
+    boost::dynamic_bitset<> cover(relationData_->getNumColumns());
+    boost::dynamic_bitset<> coverTester(relationData_->getNumColumns());
     if (smallestPliRank) {
         smallestPliRank->pli_->incFreq();
         operands.push_back(*smallestPliRank);
@@ -91,69 +98,67 @@ PartitionStorage::getOrCreateFor(Vertical const &vertical) {
             }
         }
     }
+
+    // TODO: конкретные костыли, надо делать Column : Vertical
+    std::vector<std::unique_ptr<Vertical>> verticalColumns;
+
     for (auto& column : vertical.getColumns()) {
         if (!cover[column->getIndex()]) {
-            auto columnData = relationData_.lock()->getColumnData(column->getIndex());
-            operands.emplace_back(std::make_shared<Vertical>(static_cast<Vertical>(*column)),
-                                  columnData->getPositionListIndex(), 1);
-            columnData->getPositionListIndex()->incFreq();
+            verticalColumns.push_back(std::make_unique<Vertical>(static_cast<Vertical>(*column)));
+            auto columnPLI = index_->get(**verticalColumns.rbegin());
+            operands.emplace_back(verticalColumns.rbegin()->get(), columnPLI, 1);
+            columnPLI->incFreq();
         }
     }
     // sort operands by ascending order
-    std::sort(operands.begin(), operands.end(), [](auto& el1, auto& el2) { return el1.pli_->getSize() < el2.pli_->getSize(); });
+    std::sort(operands.begin(), operands.end(),
+              [](auto& el1, auto& el2) { return el1.pli_->getSize() < el2.pli_->getSize(); });
     // TODO: Profiling context stuff
 
     LOG(DEBUG) << boost::format {"Intersecting %1%."} % "[UNIMPLEMENTED]";
+
+    if (operands.empty()) {
+        throw std::logic_error("Current implementation assumes operands.size() > 0");
+    }
+
+    // TODO: тут не очень понятно: cachingProcess может забрать себе PLI, а может и отдать обратно,
+    //  поэтому приходится через variant разбирать. Проверить, насколько много платим за обёртку.
     // Intersect and cache
+    std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> variantIntersectionPLI;
     if (operands.size() >= 4) {
         PositionListIndexRank basePliRank = operands[0];
-        pli = basePliRank.pli_->probeAll(*vertical.without(*basePliRank.vertical_), *relationData_.lock());
-        //cachingProcess(vertical, pli, profilingContext);
-        index_->put(vertical, pli);
+        auto intersectionPLI = basePliRank.pli_->probeAll(vertical.without(*basePliRank.vertical_), *relationData_);
+        variantIntersectionPLI = cachingProcess(vertical, std::move(intersectionPLI));
     } else {
-        std::shared_ptr<Vertical> currentVertical = nullptr;
-        for (auto& operand : operands) {
-            if (pli == nullptr) {
-                currentVertical = operand.vertical_;
-                pli = operand.pli_;
-            } else {
-                currentVertical = currentVertical->Union(*operand.vertical_);
-                pli = pli->intersect(operand.pli_);
-                //cachingProcess(*currentVertical, pli, profilingContext);
-                index_->put(*currentVertical, pli);
-            }
+        Vertical currentVertical = *operands.begin()->vertical_;
+        variantIntersectionPLI = operands.begin()->pli_.get();
+
+        for (size_t i = 1; i < operands.size(); i++) {
+            currentVertical = currentVertical.Union(*operands[i].vertical_);
+            variantIntersectionPLI =
+                    std::holds_alternative<PositionListIndex*>(variantIntersectionPLI)
+                    ? std::get<PositionListIndex*>(variantIntersectionPLI)->intersect(operands[i].pli_.get())
+                    : std::get<std::unique_ptr<PositionListIndex>>(variantIntersectionPLI)->intersect(operands[i].pli_.get());
+            variantIntersectionPLI = cachingProcess(
+                    currentVertical,
+                    std::move(std::get<std::unique_ptr<PositionListIndex>>(variantIntersectionPLI)));
         }
     }
 
     LOG(DEBUG) << boost::format {"Calculated from %1% sub-PLIs (saved %2% intersections)."}
                   % operands.size() % (vertical.getArity() - operands.size());
 
-    return pli;
+    return variantIntersectionPLI;
 }
 
 size_t PartitionStorage::size() const {
     return index_->getSize();
 }
 
-/*void PartitionStorage::cachingProcess(Vertical const &vertical, std::shared_ptr<PositionListIndex> pli, ProfilingContext* profilingContext) {
-    switch (cachingMethod_) {
-        case CachingMethod::COIN:
-            if (profilingContext->customRandom_.nextDouble() < profilingContext->configuration_.cachingProbability) {
-                index_->put(vertical, pli);
-            }
-            break;
-        case CachingMethod::NOCACHING:
-            //index_->put(vertical, pli);
-            // newUsageInfo - parallel
-            break;
-        case CachingMethod::ALLCACHING:
-            index_->put(vertical, pli);
-            break;
-        default:
-            //index_->put(vertical, pli);
-            // doubts on necessity of statistics => no implementation yet
-            throw std::runtime_error("Only NOCACHING and ALLCACHING strategies are currently available");
-            //break;
-    }
-}*/
+std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> PartitionStorage::cachingProcess(
+        Vertical const &vertical, std::unique_ptr<PositionListIndex> pli) {
+    auto pliPointer = pli.get();
+    index_->put(vertical, std::move(pli));
+    return pliPointer;
+}
 
