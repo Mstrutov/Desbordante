@@ -14,34 +14,35 @@
 #include "NonDependenciesMap.h"
 #include "PartitionStorage/PartitionStorage.h"
 #include "CustomComparator.h"
+#include "Vertical.h"
 
 class DFD : public FDAlgorithm {
 private:
-    using vertical_set = std::unordered_set<shared_ptr<Vertical>, std::hash<shared_ptr<Vertical>>, custom_comparator>;
+    //using vertical_set = std::unordered_set<shared_ptr<Vertical>, std::hash<shared_ptr<Vertical>>, custom_comparator>;
 
     LatticeObservations observations;
-    shared_ptr<PartitionStorage> partitionStorage;
+    std::unique_ptr<PartitionStorage> partitionStorage;
     DependenciesMap dependenciesMap;
     NonDependenciesMap nonDependenciesMap;
-    shared_ptr<ColumnLayoutRelationData> relation;
+    std::unique_ptr<ColumnLayoutRelationData> relation;
 
-    std::unordered_set<shared_ptr<Vertical>> minimalDeps; //TODO мб их определять либо в функции execute, либо полями класса
-    std::unordered_set<shared_ptr<Vertical>> maximalNonDeps;
+    std::unordered_set<Vertical> minimalDeps; //TODO мб их определять либо в функции execute, либо полями класса
+    std::unordered_set<Vertical> maximalNonDeps;
 
-    std::stack<shared_ptr<Vertical>> trace;
+    std::stack<Vertical> trace;
 
     std::random_device rd; // для генерации случайных чисел
     std::mt19937 gen;
 
-    void findLHSs(shared_ptr<Column const> const& rhs, shared_ptr<RelationalSchema> schema); //TODO: нужен ли второй параметр?; мб переименовать типа findDeps
-    shared_ptr<Vertical> pickNextNode(shared_ptr<Vertical> const &node, size_t rhsIndex);
-    std::list<shared_ptr<Vertical>> generateNextSeeds(shared_ptr<Column const> const& currentRHS);
-    shared_ptr<Vertical> takeRandom(std::list<shared_ptr<Vertical>> & nodeList);
-    shared_ptr<Vertical> takeRandom(std::vector<shared_ptr<Vertical>> const& nodeList);
-    shared_ptr<Vertical> takeRandom(std::unordered_set<shared_ptr<Vertical>, std::hash<shared_ptr<Vertical>>, custom_comparator> &nodeSet);
-    void minimize(std::unordered_set<shared_ptr<Vertical>, std::hash<shared_ptr<Vertical>>, custom_comparator> & nodeList);
-    static void substractSets(vertical_set & set, vertical_set const& setToSubstract);
-    bool inferCategory(shared_ptr<Vertical> const &node, size_t rhsIndex);
+    void findLHSs(Column const* const rhs, RelationalSchema const* const schema); //TODO: нужен ли второй параметр?; мб переименовать типа findDeps
+    Vertical pickNextNode(Vertical const &node, size_t rhsIndex);
+    std::list<Vertical> generateNextSeeds(Column const* const currentRHS);
+    Vertical takeRandom(std::list<Vertical> & nodeList);
+    Vertical takeRandom(std::vector<Vertical> const& nodeList);
+    Vertical takeRandom(std::unordered_set<Vertical>&);
+    void minimize(std::unordered_set<Vertical> &);
+    static void substractSets(std::unordered_set<Vertical> & set, std::unordered_set<Vertical> const& setToSubstract);
+    bool inferCategory(Vertical const& node, size_t rhsIndex);
 
 public:
     explicit DFD(std::filesystem::path const& path, char separator = ',', bool hasHeader = true);

@@ -16,7 +16,7 @@
 
 unsigned long long DFD::execute() {
     //shared_ptr<ColumnLayoutRelationData> relation = ColumnLayoutRelationData::createFrom(inputGenerator_, true);//second parameter?
-    shared_ptr<RelationalSchema> schema = relation->getSchema();
+    RelationalSchema const* const schema = relation->getSchema();
     if (relation->getColumnData().empty()) {
         throw std::runtime_error("Got an empty .csv file: FD mining is meaningless.");
     }
@@ -51,8 +51,8 @@ unsigned long long DFD::execute() {
     std::vector<Vertical> uniqueVerticals;
 
     for (auto const& column : schema->getColumns()) {
-        shared_ptr<ColumnData> const columnData = relation->getColumnData(column->getIndex());
-        shared_ptr<PositionListIndex> const columnPLI = columnData->getPositionListIndex();
+        ColumnData& columnData = relation->getColumnData(column->getIndex());
+        PositionListIndex const* const columnPLI = columnData.getPositionListIndex();
 
         if (columnPLI->getNumNonSingletonCluster() == 0) {
             Vertical const lhs = Vertical(*column);
@@ -73,10 +73,10 @@ unsigned long long DFD::execute() {
         dependenciesMap = DependenciesMap(relation->getSchema());
         nonDependenciesMap = NonDependenciesMap(relation->getSchema());
         observations.clear();
-        trace = std::stack<shared_ptr<Vertical>>();//TODO clear trace?
+        trace = std::stack<Vertical>();//TODO clear trace?
 
-        shared_ptr<ColumnData> const rhsData = relation->getColumnData(rhs->getIndex());
-        shared_ptr<PositionListIndex> const rhsPLI = rhsData->getPositionListIndex();
+        ColumnData const& rhsData = relation->getColumnData(rhs->getIndex());
+        PositionListIndex const* const rhsPLI = rhsData.getPositionListIndex();
 
         if (rhsPLI->getNepAsLong() == relation->getNumTuplePairs()) {
             registerFD(*(schema->emptyVertical), *rhs);
@@ -89,7 +89,7 @@ unsigned long long DFD::execute() {
                 observations[lhs] = NodeCategory::minimalDependency;
                 //разобраться с шаред поинтерами
                 dependenciesMap.addNewDependency(std::make_shared<Vertical>(lhs));//TODO костыль
-                minimalDeps.insert(std::make_shared<Vertical>(lhs));
+                minimalDeps.insert(lhs);
             }
         }
 
@@ -109,7 +109,7 @@ unsigned long long DFD::execute() {
     return aprioriMillis;
 }
 
-shared_ptr<Vertical> DFD::takeRandom(std::list<shared_ptr<Vertical>> & nodeList) {
+Vertical DFD::takeRandom(std::list<Vertical> & nodeList) {
     std::uniform_int_distribution<> dis(0, std::distance(nodeList.begin(), nodeList.end()) - 1);
     auto iterator = nodeList.begin();
     std::advance(iterator, dis(this->gen));
@@ -118,7 +118,7 @@ shared_ptr<Vertical> DFD::takeRandom(std::list<shared_ptr<Vertical>> & nodeList)
     return node;
 }
 
-shared_ptr<Vertical> DFD::takeRandom(vertical_set & nodeSet) {
+Vertical DFD::takeRandom(std::unordered_set<Vertical> & nodeSet) {
     std::uniform_int_distribution<> dis(0, std::distance(nodeSet.begin(), nodeSet.end()) - 1);
     auto iterator = nodeSet.begin();
     std::advance(iterator, dis(this->gen));
@@ -127,16 +127,16 @@ shared_ptr<Vertical> DFD::takeRandom(vertical_set & nodeSet) {
     return node;
 }
 
-shared_ptr<Vertical> DFD::takeRandom(std::vector<shared_ptr<Vertical>> const& nodeVector) {
+Vertical DFD::takeRandom(std::vector<Vertical> const& nodeVector) {
     std::uniform_int_distribution<> dis(0, std::distance(nodeVector.begin(), nodeVector.end()) - 1);
     auto iterator = nodeVector.begin();
     std::advance(iterator, dis(this->gen));
     return *iterator;
 }
 
-void DFD::findLHSs(shared_ptr<Column const> const& rhs, shared_ptr<RelationalSchema> schema) {
+void DFD::findLHSs(Column const* const  rhs, RelationalSchema const* const schema) {
 
-    std::list<shared_ptr<Vertical>> seeds; //TODO лист или вектор?
+    std::list<Vertical> seeds; //TODO лист или вектор?
 
     //initialize seeds nodes
     for (auto const& column : schema->getColumns()) {
@@ -205,12 +205,12 @@ void DFD::findLHSs(shared_ptr<Column const> const& rhs, shared_ptr<RelationalSch
 DFD::DFD(const std::filesystem::path &path, char separator, bool hasHeader)
         : FDAlgorithm(path, separator, hasHeader), gen(rd()), observations() {
     relation = ColumnLayoutRelationData::createFrom(inputGenerator_, true);
-    partitionStorage = std::make_shared<PartitionStorage>(relation, CachingMethod::ALLCACHING, CacheEvictionMethod::MEDAINUSAGE);
+    partitionStorage = std::make_unique<PartitionStorage>(relation, CachingMethod::ALLCACHING, CacheEvictionMethod::MEDAINUSAGE);
     dependenciesMap = DependenciesMap(relation->getSchema());
     nonDependenciesMap = NonDependenciesMap(relation->getSchema());
 }
 
-shared_ptr<Vertical> DFD::pickNextNode(shared_ptr<Vertical> const &node, size_t rhsIndex) {
+Vertical DFD::pickNextNode(Vertical const &node, size_t rhsIndex) {
     dynamic_bitset<> columnIndices = node->getColumnIndices();
     auto nodeIter = observations.find(*node);
 
@@ -272,7 +272,7 @@ shared_ptr<Vertical> DFD::pickNextNode(shared_ptr<Vertical> const &node, size_t 
 }
 
 
-std::list<shared_ptr<Vertical>> DFD::generateNextSeeds(shared_ptr<Column const> const& currentRHS) {
+std::list<Vertical> DFD::generateNextSeeds(Column const* const currentRHS) {
 
     vertical_set seeds;
     vertical_set newSeeds;
@@ -334,7 +334,7 @@ std::list<shared_ptr<Vertical>> DFD::generateNextSeeds(shared_ptr<Column const> 
 }
 
 //TODO пока что дикий костыль за квадрат
-void DFD::minimize(std::unordered_set<shared_ptr<Vertical>, std::hash<shared_ptr<Vertical>>, custom_comparator> & nodeList) {
+void DFD::minimize(std::unordered_set<Vertical>& nodeList) {
     for (auto nodeIter = nodeList.begin(); nodeIter != nodeList.end(); nodeIter++) {
         for (auto nodeToCheckIter = nodeList.begin(); nodeToCheckIter != nodeList.end(); ) {
             if ( !(**nodeIter == **nodeToCheckIter) && (*nodeToCheckIter)->contains(**nodeIter)) {
@@ -346,7 +346,8 @@ void DFD::minimize(std::unordered_set<shared_ptr<Vertical>, std::hash<shared_ptr
     }
 }
 
-void DFD::substractSets(vertical_set & set, vertical_set const& setToSubstract) {
+
+void DFD::substractSets(std::unordered_set<Vertical> & set, std::unordered_set<Vertical> const& setToSubstract) {
     for (const auto & nodeToDelete : setToSubstract) {
         auto foundElementIter = set.find(nodeToDelete);
         if (foundElementIter != set.end()) {
@@ -355,7 +356,7 @@ void DFD::substractSets(vertical_set & set, vertical_set const& setToSubstract) 
     }
 }
 
-bool DFD::inferCategory(shared_ptr<Vertical> const &node, size_t rhsIndex) {
+bool DFD::inferCategory(Vertical const& node, size_t rhsIndex) {
     if (nonDependenciesMap.canBePruned(*node)) {
         observations[*node] = observations.updateNonDependencyCategory(node, rhsIndex);
         nonDependenciesMap.addNewNonDependency(node);
