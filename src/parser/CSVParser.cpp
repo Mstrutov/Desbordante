@@ -5,19 +5,17 @@
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <utility>
 #include <vector>
-
-
-using namespace std;
 
 inline std::string & CSVParser::rtrim(std::string &s) {
     s.erase(std::find_if(s.rbegin(), s.rend(), [](int c) {return !std::isspace(c);}).base(), s.end());
     return s;
 }
 
-CSVParser::CSVParser(fs::path path): CSVParser(path, ',', true) {}
+CSVParser::CSVParser(const std::filesystem::path& path): CSVParser(path, ',', true) {}
 
-CSVParser::CSVParser(fs::path path, char separator, bool hasHeader) :
+CSVParser::CSVParser(const std::filesystem::path& path, char separator, bool hasHeader) :
     source(path),
     separator(separator),
     hasHeader(hasHeader),
@@ -40,7 +38,7 @@ CSVParser::CSVParser(fs::path path, char separator, bool hasHeader) :
     } else {
         peekNext();
     }
-    vector<string> nextParsed = std::move(parseNext());
+    std::vector<std::string> nextParsed = parseNext();
     numberOfColumns = nextParsed.size();
     columnNames = std::move(nextParsed);
     if (!hasHeader) {
@@ -50,26 +48,20 @@ CSVParser::CSVParser(fs::path path, char separator, bool hasHeader) :
     }
 }
 
-/*
-bool CSVParser::isSameChar(char separator, char escape) {
-    return separator != '\0' && separator == escape;
-}
-*/
-
 void CSVParser::getNext(){
     nextLine = "";
     getline(source, nextLine);
     rtrim(nextLine);
 }
 
-void CSVParser::peekNext(){
+void CSVParser::peekNext() {
     int len = source.tellg();
     getNext();
     source.seekg(len, std::ios_base::beg);
 }
 
-vector<string> CSVParser::parseNext() {
-    vector<string> result = vector<string>();
+std::vector<std::string> CSVParser::parseNext() {
+    std::vector<std::string> result = std::vector<std::string>();
 
     auto nextTokenBegin = nextLine.begin();
     auto nextTokenEnd = nextLine.begin();
@@ -84,7 +76,9 @@ vector<string> CSVParser::parseNext() {
             nextTokenEnd++;
         }
     }
-    result.emplace_back(nextTokenBegin, nextTokenEnd);
+    if (nextTokenBegin != nextLine.begin() || nextTokenBegin != nextTokenEnd) {
+        result.emplace_back(nextTokenBegin, nextTokenEnd);
+    }
 
     hasNext = !source.eof();
     if(hasNext){
@@ -93,9 +87,3 @@ vector<string> CSVParser::parseNext() {
 
     return result;
 }
-
-bool CSVParser::getHasNext() { return hasNext;}
-char CSVParser::getSeparator() { return separator;}
-int CSVParser::getNumberOfColumns() { return numberOfColumns; }
-string CSVParser::getColumnName(int index) { return columnNames[index]; }
-string CSVParser::getRelationName() { return relationName; }

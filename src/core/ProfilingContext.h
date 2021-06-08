@@ -3,65 +3,71 @@
 #include <iostream>
 #include <random>
 #include <string>
+
+#include "AgreeSetSample.h"
+#include "CacheEvictionMethod.h"
+#include "CachingMethod.h"
+#include "Configuration.h"
+#include "custom/CustomRandom.h"
+#include "PartialFD.h"
+#include "PartialKey.h"
+#include "DependencyConsumer.h"
+
 //forward declaration
 class PLICache;
 
 template<class Value>
 class VerticalMap;
-#include "Configuration.h"
-#include "custom/CustomRandom.h"
-#include "AgreeSetSample.h"
-#include "PartialFD.h"
-#include "PartialKey.h"
-#include "CacheEvictionMethod.h"
-#include "CachingMethod.h"
-#include "AgreeSetSample.h"
-#include "DependencyConsumer.h"
-//#include "PLICache.h"
-
-
 
 //Dependency Consumer?
 class ProfilingContext : public DependencyConsumer {
+private:
+    Configuration configuration_;
+    std::unique_ptr<PLICache> pliCache_;
+    std::unique_ptr<VerticalMap<AgreeSetSample>> agreeSetSamples_;     //unique_ptr?
+    ColumnLayoutRelationData* relationData_;
+    std::mt19937 random_;
+    CustomRandom customRandom_;
+
+    AgreeSetSample const* createColumnFocusedSample(
+            Vertical const& focus, PositionListIndex const* restrictionPLI, double boostFactor);
+
 public:
     enum class ObjectToCache {
         PLI,
         AS
     };
 
-    Configuration configuration_;
-    std::shared_ptr<PLICache> pliCache_;            //unique_ptr?
-    std::shared_ptr<VerticalMap<std::shared_ptr<AgreeSetSample>>> agreeSetSamples_;     //unique_ptr?
-
-    std::shared_ptr<ColumnLayoutRelationData> relationData_;
-    std::mt19937 random_;
-    CustomRandom customRandom_;
-
-
-    //std::function<void (PartialFD const&)> fdConsumer_;
-    //std::function<void (PartialKey const&)> uccConsumer_;
-
-    // initialize random_ using std::random_device
-    ProfilingContext(Configuration const& configuration, std::shared_ptr<ColumnLayoutRelationData> relationData,
-            std::function<void (PartialKey const&)> const& uccConsumer, std::function<void (PartialFD const&)> const& fdConsumer,
+    ProfilingContext(Configuration  configuration, ColumnLayoutRelationData* relationData,
+            std::function<void (PartialKey const&)> const& uccConsumer,
+            std::function<void (PartialFD const&)> const& fdConsumer,
             CachingMethod const& cachingMethod, CacheEvictionMethod const& evictionMethod, double cachingMethodValue);
 
-    std::shared_ptr<AgreeSetSample> createFocusedSample(std::shared_ptr<Vertical> focus, double boostFactor);
-    // Retrieve an AgreeSetSample with a best possible sampling ratio
-    std::shared_ptr<AgreeSetSample> getAgreeSetSample(std::shared_ptr<Vertical> focus);
-    std::shared_ptr<RelationalSchema> getSchema() { return relationData_->getSchema(); }
+    // Non-const as RandomGenerator state gets changed
+    AgreeSetSample const* createFocusedSample(Vertical const& focus, double boostFactor);
+    AgreeSetSample const* getAgreeSetSample(Vertical const& focus) const;
+    PLICache* getPLICache() { return pliCache_.get(); }
+    bool isAgreeSetSamplesEmpty() const { return agreeSetSamples_ == nullptr; }
+    RelationalSchema const* getSchema() const { return relationData_->getSchema(); }
+
+    Configuration const& getConfiguration() const { return configuration_; }
+    ColumnLayoutRelationData const* getColumnLayoutRelationData() const { return relationData_; }
+    PLICache const* getPLICache() const { return pliCache_.get(); }
 
     // get int in range [0, upperBound) from the uniform distribution
     // int nextInt(int upperBound) { return std::uniform_int_distribution<int>{0, upperBound}(random_); }
     int nextInt(int upperBound) { return customRandom_.nextInt(upperBound); }
+    double nextDouble() { return customRandom_.nextDouble(); }
 
-    static double getMaximumEntropy(std::shared_ptr<ColumnLayoutRelationData> relationData);
-    static double getMinEntropy(std::shared_ptr<ColumnLayoutRelationData> relationData);
-    static double getMedianEntropy(std::shared_ptr<ColumnLayoutRelationData> relationData);
-    static double getMedianInvertedEntropy(std::shared_ptr<ColumnLayoutRelationData> relationData);
-    static double getMeanEntropy(std::shared_ptr<ColumnLayoutRelationData> relationData);
-    static double getMedianGini(std::shared_ptr<ColumnLayoutRelationData> relationData);
+    ~ProfilingContext();
+
+    static double getMaximumEntropy(ColumnLayoutRelationData const* cd1);
+    static double getMinEntropy(ColumnLayoutRelationData const* cd1);
+    static double getMedianEntropy(ColumnLayoutRelationData const* relationData);
+    static double getMedianInvertedEntropy(ColumnLayoutRelationData const* relationData);
+    static double getMeanEntropy(ColumnLayoutRelationData const* relationData);
+    static double getMedianGini(ColumnLayoutRelationData const* relationData);
 private:
     static double getMedianValue(std::vector<double> && values, std::string const& measureName);
-    static double setMaximumEntropy(std::shared_ptr<ColumnLayoutRelationData> relationData, CachingMethod const & cachingMethod);
+    static double setMaximumEntropy(ColumnLayoutRelationData const* relationData, CachingMethod const & cachingMethod);
 };

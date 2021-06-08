@@ -14,13 +14,14 @@
 #include "RelationalSchema.h"
 class SearchSpace : public std::enable_shared_from_this<SearchSpace> {
 private:
-    std::shared_ptr<ProfilingContext> context_;
-    std::shared_ptr<DependencyStrategy> strategy_;
-    std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> globalVisitees_;              //should be stored as unique_ptr to avoid huge memory chunk allocation problems?
+    ProfilingContext* context_;
+    std::unique_ptr<DependencyStrategy> strategy_;
+    std::unique_ptr<VerticalMap<VerticalInfo>> localVisitees_ = nullptr;
+    std::unique_ptr<VerticalMap<VerticalInfo>> globalVisitees_;
     std::set<DependencyCandidate, std::function<bool (DependencyCandidate const&, DependencyCandidate const&)>> launchPads_;
-    VerticalMap<std::shared_ptr<DependencyCandidate>> launchPadIndex_;
+    std::unique_ptr<VerticalMap<DependencyCandidate>> launchPadIndex_;
     std::list<DependencyCandidate> deferredLaunchPads_;
-    std::unique_ptr<VerticalMap<std::shared_ptr<Vertical>>> scope_;
+    std::unique_ptr<VerticalMap<Vertical>> scope_;
     double sampleBoost_;
     int recursionDepth_;
     bool isAscendRandomly_ = false;
@@ -28,21 +29,31 @@ private:
     int numNested = 0;
 
 
-    void discover(std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees);
-    std::shared_ptr<DependencyCandidate> pollLaunchPad(std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees);
-    void escapeLaunchPad(std::shared_ptr<Vertical> lanchPad, std::list<std::shared_ptr<Vertical>>&& pruningSupersets, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees);
+    // void discover(std::unique_ptr<VerticalMap<VerticalInfo>> localVisitees);
+    std::optional<DependencyCandidate> pollLaunchPad();
+    void escapeLaunchPad(Vertical const& launchPad, std::vector<Vertical> pruningSupersets);
     void returnLaunchPad(DependencyCandidate const& launchPad, bool isDefer);
-    bool ascend(DependencyCandidate const& launchPad, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees);
-    void checkEstimate(std::shared_ptr<DependencyStrategy> strategy, DependencyCandidate const& traversalCandidate);
-    void trickleDown(std::shared_ptr<Vertical> mainPeak, double mainPeakError, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees);
-    std::shared_ptr<Vertical> trickleDownFrom(DependencyCandidate & minDepCandidate,
-            std::shared_ptr<DependencyStrategy> strategy, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> allegedMinDeps,
-            std::unordered_set<Vertical> & allegedNonDeps, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> localVisitees,
-            std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> globalVisitees, double boostFactor);
-    static void requireMinimalDependency(std::shared_ptr<DependencyStrategy> strategy, std::shared_ptr<Vertical> minDependency);
-    static std::list<std::shared_ptr<Vertical>> getSubsetDeps(std::shared_ptr<Vertical> vertical, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> verticalInfos); // no idea of return type
-    static bool isImpliedByMinDep(std::shared_ptr<Vertical> vertical, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> verticalInfos);
-    static bool isKnownNonDependency(std::shared_ptr<Vertical> vertical, std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> verticalInfos);
+
+    bool ascend(DependencyCandidate const& launchPad);
+    void checkEstimate(DependencyStrategy* strategy, DependencyCandidate const& traversalCandidate);
+    void trickleDown(Vertical const& mainPeak, double mainPeakError);
+    std::optional<Vertical> trickleDownFrom(
+            DependencyCandidate minDepCandidate, DependencyStrategy* strategy,
+            VerticalMap<VerticalInfo>* allegedMinDeps, std::unordered_set<Vertical> & allegedNonDeps,
+            VerticalMap<VerticalInfo>* globalVisitees, double boostFactor);
+
+    // CAREFUL: resets globalVisitees_, therefore SearchSpace could become invalidated
+    std::unique_ptr<VerticalMap<VerticalInfo>> moveOutGlobalVisitees() { return std::move(globalVisitees_); }
+    // CAREFUL: resets localVisitees_, therefore SearchSpace could become invalidated
+    std::unique_ptr<VerticalMap<VerticalInfo>> moveOutLocalVisitees() { return std::move(localVisitees_); }
+    void moveInLocalVisitees(std::unique_ptr<VerticalMap<VerticalInfo>> localVisitees) {
+        localVisitees_ = std::move(localVisitees); }
+
+
+    static void requireMinimalDependency(DependencyStrategy* strategy, Vertical const& minDependency);
+    static std::vector<Vertical> getSubsetDeps(Vertical const& vertical, VerticalMap<VerticalInfo>* verticalInfos);
+    static bool isImpliedByMinDep(Vertical const& vertical, VerticalMap<VerticalInfo>* verticalInfos);
+    static bool isKnownNonDependency(Vertical const& vertical, VerticalMap<VerticalInfo>* verticalInfos);
     static std::string formatArityHistogram() = delete;
     static std::string formatArityHistogram(VerticalMap<int*>) = delete;
 
@@ -58,29 +69,29 @@ public:
     bool isInitialized_ = false;
     int id_;
 
-    // check if globalVisitees should be stored by shared_ptr, unique_ptr or value
-    SearchSpace(int id, std::shared_ptr<DependencyStrategy> strategy, std::unique_ptr<VerticalMap<std::shared_ptr<Vertical>>> scope,
-            std::shared_ptr<VerticalMap<std::shared_ptr<VerticalInfo>>> globalVisitees, std::shared_ptr<RelationalSchema> schema,
+    SearchSpace(int id, std::unique_ptr<DependencyStrategy> strategy, std::unique_ptr<VerticalMap<Vertical>> scope,
+            std::unique_ptr<VerticalMap<VerticalInfo>> globalVisitees, RelationalSchema const* schema,
             std::function<bool (DependencyCandidate const&, DependencyCandidate const&)> const& dependencyCandidateComparator,
             int recursionDepth, double sampleBoost) :
-                strategy_(std::move(strategy)), globalVisitees_(std::move(globalVisitees)), launchPads_(dependencyCandidateComparator),
-                launchPadIndex_(std::move(schema)), scope_(std::move(scope)), sampleBoost_(sampleBoost), recursionDepth_(recursionDepth), id_(id) {}
+                strategy_(std::move(strategy)), globalVisitees_(std::move(globalVisitees)),
+                launchPads_(dependencyCandidateComparator),
+                launchPadIndex_(std::make_unique<VerticalMap<DependencyCandidate>>(schema)),
+                scope_(std::move(scope)), sampleBoost_(sampleBoost), recursionDepth_(recursionDepth), id_(id) {}
 
-    // shared_ptr<RelationalSchema> --constructor--> VerticalMap<...> --make_shared--> shared_ptr<VerticalInfo<...>>
-    SearchSpace(int id, std::shared_ptr<DependencyStrategy> strategy, std::shared_ptr<RelationalSchema> schema,
+    SearchSpace(int id, std::unique_ptr<DependencyStrategy> strategy, RelationalSchema const* schema,
             std::function<bool (DependencyCandidate const&, DependencyCandidate const&)> const& dependencyCandidateComparator):
-            SearchSpace(id, strategy, nullptr,
-                    std::make_shared<VerticalMap<std::shared_ptr<VerticalInfo>>>(static_cast<VerticalMap<std::shared_ptr<VerticalInfo>>>(schema)),
-                            schema, dependencyCandidateComparator, 0, 1) {}
+            SearchSpace(id, std::move(strategy), nullptr,
+                        std::make_unique<VerticalMap<VerticalInfo>>(schema),
+                        schema, dependencyCandidateComparator, 0, 1) {}
 
     void ensureInitialized();
-    void discover() { discover(nullptr); }
+    void discover();
     void addLaunchPad(DependencyCandidate const& launchPad);
-    void setContext(std::shared_ptr<ProfilingContext> context)  {
+    void setContext(ProfilingContext* context)  {
         context_ = context;
         strategy_->context_ = context;
     }
-    std::shared_ptr<ProfilingContext> getContext() { return context_; }
+    ProfilingContext* getContext() { return context_; }
     unsigned int getErrorCalcCount() { return strategy_->calcCount_; }
     void printStats() const;
 };

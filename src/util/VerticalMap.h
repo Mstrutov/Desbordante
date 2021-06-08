@@ -8,12 +8,10 @@
 
 #include <boost/dynamic_bitset.hpp>
 
+#include "custom/CustomHashes.h"
 #include "ProfilingContext.h"
-#include "RelationalSchema.h"
-#include "Vertical.h"
 
 
-//TODO: Expect linking problems. Implement function constructing specific objects to give the compiler necessary info - done at the end of .cpp
 
 //difficulties with const methods
 
@@ -22,14 +20,15 @@
 template <class Value>
 class VerticalMap {
 private:
-    //in Java nested class has implicitly a reference to a parent - is this used? - looks like no
     using bitset = boost::dynamic_bitset<>;
+
+    // Each node corresponds to a bit in a bitset. Each node also has a vector of the possible consequent set bits.
     class SetTrie {
     private:
         size_t offset_;
         size_t dimension_;
-        std::vector<std::shared_ptr<SetTrie>> subtries_; //unique_ptr?
-        Value value_;
+        std::vector<std::unique_ptr<SetTrie>> subtries_; //unique_ptr?
+        std::shared_ptr<Value> value_;
 
         bool isEmpty() const;
 
@@ -37,110 +36,95 @@ private:
         explicit SetTrie(size_t dimension) : SetTrie(0, dimension) {}
         SetTrie(size_t offset, size_t dimension) : offset_(offset), dimension_(dimension) {}
 
-        Value associate(bitset const& key, size_t nextBit, Value value);
-        Value get(bitset const& key, size_t nextBit);
-        Value remove(bitset const& key, size_t nextBit);
-        //unchecked// - TODO: shared_ptr<SetTrie>
-        std::shared_ptr<SetTrie> getOrCreateSubTrie(size_t index);
-        //unchecked//
-        std::shared_ptr<SetTrie> getSubtrie(size_t index);
-        bool collectSubsetKeys(bitset const& key, size_t nextBit, bitset& subsetKey, std::function<bool(bitset&&, Value)> const& collector);
-        bool collectSupersetKeys(bitset const& key, size_t nextBit, bitset& supersetKey, std::function<bool(bitset&&, Value)> const& collector);
-        bool collectRestrictedSupersetKeys(bitset const& key, bitset const& blacklist, size_t nextBit, bitset& supersetKey, std::function<void(bitset&&, Value)> const& collector);
+        // Sets given key to a given value
+        // Returns the old value with ownership
+        // Not a const method as SetTrie gets changed
+        std::shared_ptr<Value> associate(bitset const& key, size_t nextBit, std::shared_ptr<Value> value);
 
-        void traverseEntries(bitset& subsetKey, std::function<void(bitset const&, Value)> collector);
+        // Returns a pointer to the value mapped by the given key
+        Value const* get(bitset const& key, size_t nextBit) const;
+
+        // Erases an entry with the given key
+        // Returns the old value with ownership
+        std::shared_ptr<Value> remove(bitset const& key, size_t nextBit);
+
+        // Gets the subtrie with the given index. If such a subtrie does not exist, creates one
+        // Not a const method as a SetTrie may be created
+        SetTrie* getOrCreateSubTrie(size_t index);
+
+        // Gets the subtrie with the given index
+        // Non-const version of the method
+        SetTrie* getSubtrie(size_t index);
+
+        // Gets the subtrie with the given index
+        // Const version of the method
+        SetTrie const* getSubtrie(size_t index) const;
+
+        // Calls collector on every trie that is a subset of the given subsetKey
+        bool collectSubsetKeys(bitset const& key, size_t nextBit, bitset& subsetKey,
+                               std::function<bool(bitset const&, Value const*)> const& collector) const;
+
+        // Calls collector on every trie that is a superset of the given subsetKey
+        bool collectSupersetKeys(bitset const& key, size_t nextBit, bitset& supersetKey,
+                                 std::function<bool(bitset const&, Value const*)> const& collector) const;
+
+        // Calls collector on every trie that is a superset of the given subsetKey with no bits from the blacklist
+        bool collectRestrictedSupersetKeys(bitset const& key, bitset const& blacklist, size_t nextBit,
+                                           bitset& supersetKey,
+                                           std::function<void(bitset const&, Value const*)> const& collector) const;
+
+        // Calls collector on every entry
+        void traverseEntries(bitset& subsetKey, std::function<void(bitset const&, Value const*)> collector) const;
     };
 
-    std::weak_ptr<RelationalSchema> relation_;
+    RelationalSchema const* relation_;
     size_t size_ = 0;
     long long shrinkInvocations_ = 0;
     long long timeSpentOnShrinking_ = 0;
-    //std::unordered_map<Vertical, Value> map_;
     SetTrie setTrie_;
 
-    unsigned int removeFromUsageCounter (std::unordered_map<Vertical, unsigned int>& usageCounter, Vertical key);
+    unsigned int removeFromUsageCounter (std::unordered_map<Vertical, unsigned int>& usageCounter, const Vertical& key);
 public:
-    //key = shared_ptr<const Vertical>?? Attempt to achieve const Vertical?
-    using Entry = std::pair<std::shared_ptr<Vertical>, Value>;
-    explicit VerticalMap(std::shared_ptr<RelationalSchema> relation) : relation_(relation), setTrie_(relation->getNumColumns()) {}
+    using Entry = std::pair<Vertical, Value const*>;
+    explicit VerticalMap(RelationalSchema const* relation) :
+        relation_(relation), setTrie_(relation->getNumColumns()) {}
     size_t getSize() const { return size_; }
     bool isEmpty() const { return size_ == 0; }
 
-    Value get(Vertical const &key);
-    Value get(bitset const &key);
-
+    // basic get-check-insert-remove operations
+    Value const* get(Vertical const &key) const;
+    Value const* get(bitset const &key) const;
     bool containsKey(Vertical const& key) { return get(key) != nullptr; }
-    Value put(Vertical const& key, Value value);
+    std::shared_ptr<Value> put(Vertical const& key, std::shared_ptr<Value> value);
+    std::shared_ptr<Value> remove(Vertical const& key);
+    std::shared_ptr<Value> remove(bitset const& key);
 
-    Value remove(Vertical const& key);
-    Value remove(bitset const& key);
+    // non-const version of get() for костыль purposes
+    Value* get(Vertical const& key);
 
-    std::vector<std::shared_ptr<Vertical>> getSubsetKeys(Vertical const& vertical);
-    std::vector<Entry> getSubsetEntries(Vertical const& vertical);
-    Entry getAnySubsetEntry(Vertical const& vertical);
-    Entry getAnySubsetEntry(Vertical const& vertical, std::function<bool(Vertical*, Value)> const& condition);
-    std::vector<Entry> getSupersetEntries(Vertical const& vertical);
-    Entry getAnySupersetEntry(Vertical const& vertical);
-    Entry getAnySupersetEntry(Vertical const& vertical, std::function<bool(Vertical*, Value)> condition);
-    std::vector<Entry> getRestrictedSupersetEntries(Vertical const& vertical, Vertical const& exclusion);
+    // get all keys/values/entries for traversing
+    std::unordered_set<Vertical> keySet();
+    std::vector<Value const*> values();
+    std::unordered_set<Entry> entrySet();
+
+    // get specific entries for traversing
+    std::vector<Vertical> getSubsetKeys(Vertical const& vertical) const;
+    std::vector<Entry> getSubsetEntries(Vertical const& vertical) const;
+    Entry getAnySubsetEntry(Vertical const& vertical) const;
+    Entry getAnySubsetEntry(Vertical const& vertical, std::function<bool(Vertical const*, Value const*)> const& condition) const;
+    std::vector<Entry> getSupersetEntries(Vertical const& vertical) const;
+    Entry getAnySupersetEntry(Vertical const& vertical) const;
+    Entry getAnySupersetEntry(Vertical const& vertical, std::function<bool(Vertical const*, Value const*)> condition) const;
+    std::vector<Entry> getRestrictedSupersetEntries(Vertical const& vertical, Vertical const& exclusion) const;
     bool removeSupersetEntries(Vertical const& key);
     bool removeSubsetEntries(Vertical const& key);
-    std::unordered_set<std::shared_ptr<Vertical>> keySet();
-    std::vector<Value> values();
-    std::unordered_set<Entry> entrySet();
-    void shrink(double factor, std::function<bool(Entry, Entry)> const& compare, std::function<bool (Entry)> const& canRemove, ProfilingContext::ObjectToCache cacheObject);
+
+    // methods to shrink the map by deleting removable entries
+    void shrink(double factor, std::function<bool(Entry, Entry)> const& compare,
+                std::function<bool (Entry)> const& canRemove, ProfilingContext::ObjectToCache cacheObject);
     void shrink(std::unordered_map<Vertical, unsigned int>& usageCounter, std::function<bool (Entry)> const& canRemove);
-    void shrink() = delete; //concurrent shrink?
 
     long long getShrinkInvocations() { return shrinkInvocations_; }
     long long getTimeSpentOnShrinking() { return timeSpentOnShrinking_; }
 };
-
-namespace std {
-    template<>
-    struct hash<Vertical> {
-        size_t operator()(Vertical const& k) const {
-            return k.getColumnIndices().to_ulong();
-        }
-    };
-
-    template<>
-    struct hash<Column> {
-        size_t operator()(Column const& k) const {
-            boost::dynamic_bitset<> columnIndex(k.getSchema()->getNumColumns());
-            columnIndex.set(k.getIndex());
-            return columnIndex.to_ulong();
-        }
-    };
-
-    template<>
-    struct hash<std::shared_ptr<Vertical>> {
-        size_t operator()(std::shared_ptr<Vertical> const& k) const {
-            return k->getColumnIndices().to_ulong();
-        }
-    };
-
-    template<>
-    struct hash<std::shared_ptr<Column>> {
-        size_t operator()(std::shared_ptr<Column> const& k) const {
-            boost::dynamic_bitset<> columnIndex(k->getSchema()->getNumColumns());
-            columnIndex.set(k->getIndex());
-            return columnIndex.to_ulong();
-        }
-    };
-
-    template<class T>
-    struct hash<std::pair<Vertical, T>> {
-        size_t operator()(std::pair<Vertical, T> const& k) const {
-            return k.first.getColumnIndices().to_ulong();
-        }
-    };
-
-    template<class T>
-    struct hash<std::pair<std::shared_ptr<Vertical>, T>> {
-        size_t operator()(std::pair<std::shared_ptr<Vertical>, T> const& k) const {
-            return k.first->getColumnIndices().to_ulong();
-        }
-    };
-}
 

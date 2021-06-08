@@ -10,8 +10,6 @@
 
 #include "logging/easylogging++.h"
 
-#include "ColumnLayoutRelationData.h"
-#include "ConfigParser.h"
 #include "algorithms/Pyro.h"
 #include "algorithms/TaneX.h"
 #include "algorithms/Fd_mine.h"
@@ -43,8 +41,8 @@ int main(int argc, char const *argv[]) {
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help", "print help")
-        ("algo", po::value<string>(&alg), "algorithm [pyro|tane]")
-        ("data", po::value<string>(&dataset), "path to dataset CSV file")
+        ("algo", po::value<std::string>(&alg), "algorithm [pyro|tane]")
+        ("data", po::value<std::string>(&dataset), "path to CSV file, relative to ./inputData")
         ("sep", po::value<char>(&separator), "CSV separator")
         ("hasHeader", po::value<bool>(&hasHeader), "CSV header presence flag [true|false]. Default true")
         ("seed", po::value<int>(&seed), "RNG seed")

@@ -1,6 +1,8 @@
 //
-// Created by kek on 12.07.19.
+// Created by Ilya Vologin
+// https://github.com/cupertank
 //
+
 
 #include "ColumnData.h"
 
@@ -8,23 +10,58 @@
 #include <random>
 #include <utility>
 
-using namespace std;
 
-ColumnData::ColumnData(shared_ptr<Column>& column, vector<int> probingTable, shared_ptr<PositionListIndex>& positionListIndex):
-    column(column),
-    probingTable(std::make_unique<vector<int>>(std::move(probingTable))),
-    positionListIndex(positionListIndex)
-    {}
+ColumnData::ColumnData(Column const* column, std::unique_ptr<PositionListIndex> positionListIndex):
+        column(column),
+        positionListIndex_(std::move(positionListIndex)) {
+        //std::get<std::unique_ptr<PositionListIndex>>(positionListIndex_)->forceCacheProbingTable();
+        positionListIndex_->forceCacheProbingTable();
+    }
 
-//TODO: Random проверь
-void ColumnData::shuffle() {
-    random_device rd;
-    mt19937 random(rd());
-    std::shuffle(probingTable->begin(), probingTable->end(), random);
-}
-
+/*void ColumnData::shuffle() {
+    std::random_device rd;
+    std::mt19937 random(rd());
+    std::shuffle(probingTable.begin(), probingTable.end(), random);
+}*/
 
 bool ColumnData::operator==(const ColumnData &rhs) {
     if (this == &rhs) return true;
     return this->column == rhs.column;
 }
+
+//std::vector<int> const &ColumnData::getProbingTable() const {
+//    /*if (std::holds_alternative<std::unique_ptr<PositionListIndex>>(positionListIndex_)) {
+//        return *std::get<std::unique_ptr<PositionListIndex>>(positionListIndex_)->getProbingTable();
+//    } else {
+//        return *std::get<PositionListIndex*>(positionListIndex_)->getProbingTable();
+//    }*/
+//    return *positionListIndex_->getProbingTable();
+//}
+//
+//int ColumnData::getProbingTableValue(int tupleIndex) const {
+////    if (std::holds_alternative<std::unique_ptr<PositionListIndex>>(positionListIndex_)) {
+////        return (*std::get<std::unique_ptr<PositionListIndex>>(positionListIndex_)->getProbingTable())[tupleIndex];
+////    } else {
+////        return (*std::get<PositionListIndex*>(positionListIndex_)->getProbingTable())[tupleIndex];
+////    }
+//
+//}
+//
+//PositionListIndex const *ColumnData::getPositionListIndex() const {
+////    if (std::holds_alternative<std::unique_ptr<PositionListIndex>>(positionListIndex_)) {
+////        return std::get<std::unique_ptr<PositionListIndex>>(positionListIndex_).get();
+////    } else {
+////        return std::get<PositionListIndex*>(positionListIndex_);
+////    }
+//    return positionListIndex_.get();
+//}
+
+//std::unique_ptr<PositionListIndex> ColumnData::moveOutPositionListIndex() {
+//    if (std::holds_alternative<std::unique_ptr<PositionListIndex>>(positionListIndex_)) {
+//        auto ownedPtr = std::move(std::get<std::unique_ptr<PositionListIndex>>(positionListIndex_));
+//        positionListIndex_ = ownedPtr.get();
+//        return ownedPtr;
+//    } else {
+//        throw std::logic_error("PLI is already moved out");
+//    }
+//}
