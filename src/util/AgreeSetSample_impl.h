@@ -1,23 +1,21 @@
 #pragma once
 
-#include <iterator>
+#include <functional>
+#include <unordered_map>
 #include <random>
 
 #include "AgreeSetSample.h"
 
 #include "easylogging++.h"
 
-//#include <utility>
-//TODO: рандом проверь
-//template<typename T, typename enable_if<is_base_of<AgreeSetSample, T>::value>::type*>
 template <typename T>
-shared_ptr<T> AgreeSetSample::createFor(shared_ptr<ColumnLayoutRelationData> relationData, int sampleSize) {
+std::unique_ptr<T> AgreeSetSample::createFor(ColumnLayoutRelationData* relationData, int sampleSize) {
     static_assert(std::is_base_of<AgreeSetSample, T>::value);
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> random(0, relationData->getNumRows());
 
-    std::unordered_map<dynamic_bitset<>, int> agreeSetCounters;
+    std::unordered_map<boost::dynamic_bitset<>, int> agreeSetCounters;
     sampleSize = std::min((unsigned long long)sampleSize, relationData->getNumTuplePairs());
 
     for (long i = 0; i < sampleSize; i++){
@@ -28,42 +26,43 @@ shared_ptr<T> AgreeSetSample::createFor(shared_ptr<ColumnLayoutRelationData> rel
             continue;
         }
 
-        dynamic_bitset<> agreeSet(relationData->getNumColumns());
+        boost::dynamic_bitset<> agreeSet(relationData->getNumColumns());
         for (auto & columnData : relationData->getColumnData()){
-            int value1 = columnData->getProbingTableValue(tupleIndex1);
-            if (value1 != PositionListIndex::singletonValueId && value1 == columnData->getProbingTableValue(tupleIndex2)){
-                agreeSet[columnData->getColumn()->getIndex()] = true;
+            int value1 = columnData.getProbingTableValue(tupleIndex1);
+            if (value1 != PositionListIndex::singletonValueId && value1 == columnData.getProbingTableValue(tupleIndex2)){
+                agreeSet[columnData.getColumn()->getIndex()] = true;
             }
         }
 
         agreeSetCounters[agreeSet]++;
     }
 
-    T instance = std::make_shared<T>(relationData, relationData->getSchema()->emptyVertical, (int) sampleSize, relationData->getNumTuplePairs(), agreeSetCounters);
+    auto instance = std::make_unique<T>(relationData, relationData->getSchema()->emptyVertical,
+                                        (int) sampleSize, relationData->getNumTuplePairs(), agreeSetCounters);
     return instance;
 }
 
-//template<typename T, typename enable_if<is_base_of<AgreeSetSample, T>::value>::type*>
 template<typename T>
-shared_ptr<T> AgreeSetSample::createFocusedFor(shared_ptr<ColumnLayoutRelationData> relation,
-                                               shared_ptr<Vertical> restrictionVertical,
-                                               shared_ptr<PositionListIndex> restrictionPli, unsigned int sampleSize,
+std::unique_ptr<T> AgreeSetSample::createFocusedFor(ColumnLayoutRelationData const* relation,
+                                               Vertical const& restrictionVertical,
+                                               PositionListIndex const* restrictionPli, unsigned int sampleSize,
                                                CustomRandom& random) {
     static_assert(std::is_base_of<AgreeSetSample, T>::value);
     //std::random_device rd;
     //std::mt19937 gen(rd());
     //std::uniform_real_distribution<> random_double;
 
-    dynamic_bitset<> freeColumnIndices(relation->getNumColumns());
+    boost::dynamic_bitset<> freeColumnIndices(relation->getNumColumns());
     freeColumnIndices.set();
-    //auto restrictionVerticalNotIndices = ~restrictionVertical->getColumnIndices();    // ВОТ ТУТ ПОМЕНЯЛ. БЫЛО freeColumnIndices &=...; freeColumnIndices ~= freeColumnIndices
-    freeColumnIndices &= ~restrictionVertical->getColumnIndices();
-    vector<shared_ptr<ColumnData>> relevantColumnData;
-    for (size_t columnIndex = freeColumnIndices.find_first(); columnIndex < freeColumnIndices.size(); columnIndex = freeColumnIndices.find_next(columnIndex)){
-        relevantColumnData.push_back(relation->getColumnData(columnIndex));
+    freeColumnIndices &= ~restrictionVertical.getColumnIndices();
+    std::vector<std::reference_wrapper<const ColumnData>> relevantColumnData;
+    for (size_t columnIndex = freeColumnIndices.find_first();
+         columnIndex != boost::dynamic_bitset<>::npos;
+         columnIndex = freeColumnIndices.find_next(columnIndex)){
+        relevantColumnData.emplace_back(relation->getColumnData(columnIndex));
     }
-    dynamic_bitset<> agreeSetPrototype(restrictionVertical->getColumnIndices());
-    std::unordered_map<dynamic_bitset<>, int> agreeSetCounters;
+    boost::dynamic_bitset<> agreeSetPrototype(restrictionVertical.getColumnIndices());
+    std::unordered_map<boost::dynamic_bitset<>, int> agreeSetCounters;
 
     unsigned long long restrictionNep = restrictionPli->getNepAsLong();
     sampleSize = std::min(static_cast<unsigned long long>(sampleSize), restrictionNep);
@@ -74,11 +73,12 @@ shared_ptr<T> AgreeSetSample::createFocusedFor(shared_ptr<ColumnLayoutRelationDa
                 for (unsigned int j = i + 1; j < cluster.size(); j++){
                     int tupleIndex2 = cluster[j];
 
-                    dynamic_bitset<> agreeSet(agreeSetPrototype);
+                    boost::dynamic_bitset<> agreeSet(agreeSetPrototype);
                     for (auto & columnData : relevantColumnData){
-                        int value1 = columnData->getProbingTableValue(tupleIndex1);
-                        if (value1 != PositionListIndex::singletonValueId && value1 == columnData->getProbingTableValue(tupleIndex2)){
-                            agreeSet.set(columnData->getColumn()->getIndex());
+                        int value1 = columnData.get().getProbingTableValue(tupleIndex1);
+                        if (value1 != PositionListIndex::singletonValueId
+                             && value1 == columnData.get().getProbingTableValue(tupleIndex2)){
+                            agreeSet.set(columnData.get().getColumn()->getIndex());
                         }
                     }
                     auto location = agreeSetCounters.find(agreeSet);
@@ -91,7 +91,7 @@ shared_ptr<T> AgreeSetSample::createFocusedFor(shared_ptr<ColumnLayoutRelationDa
             }
         }
     } else {
-        vector<unsigned long long> clusterSizes(restrictionPli->getNumNonSingletonCluster() - 1);
+        std::vector<unsigned long long> clusterSizes(restrictionPli->getNumNonSingletonCluster() - 1);
         for (unsigned int i = 0; i < clusterSizes.size(); i++){
             unsigned long long clusterSize = restrictionPli->getIndex()[i].size();
             unsigned long long numTuplePairs = clusterSize * (clusterSize - 1) / 2;
@@ -120,11 +120,12 @@ shared_ptr<T> AgreeSetSample::createFocusedFor(shared_ptr<ColumnLayoutRelationDa
             tupleIndex2 = cluster[tupleIndex2];
 
 
-            dynamic_bitset<> agreeSet(agreeSetPrototype);
+            boost::dynamic_bitset<> agreeSet(agreeSetPrototype);
             for (auto & columnData : relevantColumnData){
-                int value1 = columnData->getProbingTableValue(tupleIndex1);
-                if (value1 != PositionListIndex::singletonValueId && value1 == columnData->getProbingTableValue(tupleIndex2)){
-                    agreeSet.set(columnData->getColumn()->getIndex());
+                int value1 = columnData.get().getProbingTableValue(tupleIndex1);
+                if (value1 != PositionListIndex::singletonValueId
+                     && value1 == columnData.get().getProbingTableValue(tupleIndex2)){
+                    agreeSet.set(columnData.get().getColumn()->getIndex());
                 }
             }
 
@@ -151,6 +152,5 @@ shared_ptr<T> AgreeSetSample::createFocusedFor(shared_ptr<ColumnLayoutRelationDa
 
     LOG(DEBUG) << boost::format {"Created sample focused on %1%: %2%"} % restrictionVertical->toString() % agreeSetCountersStr;
     */
-    shared_ptr<T> sample = std::make_shared<T>(relation, restrictionVertical, sampleSize, restrictionNep, std::move(agreeSetCounters));
-    return sample;
+    return std::make_unique<T>(relation, restrictionVertical, sampleSize, restrictionNep, std::move(agreeSetCounters));
 }

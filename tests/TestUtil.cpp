@@ -7,7 +7,11 @@
 #include "ListAgreeSetSample.h"
 
 using ::testing::ContainerEq, ::testing::Eq;
-using namespace std;
+using std::deque, std::vector, std::cout, std::endl, std::unique_ptr;
+
+namespace fs = std::filesystem;
+
+namespace fs = std::filesystem;
 
 std::string get_selfpath();
 
@@ -26,13 +30,13 @@ TEST(pliChecker, first){
         CSVParser csvParser(path);
         auto test = ColumnLayoutRelationData::createFrom(csvParser, true);
         auto columnData = test->getColumnData(0);
-        index = columnData->getPositionListIndex()->getIndex();
+        index = columnData.getPositionListIndex()->getIndex();
     }
     catch (std::runtime_error& e) {
-        cout << "Excepion raised in test: " << e.what() << endl;
+        cout << "Exception raised in test: " << e.what() << endl;
         FAIL();
     }
-    ASSERT_THAT(ans, ContainerEq(index));
+    ASSERT_THAT( index, ContainerEq(ans));
 }
 
 TEST(pliChecker, second){
@@ -48,20 +52,20 @@ TEST(pliChecker, second){
         CSVParser csvParser(path);
         auto test = ColumnLayoutRelationData::createFrom(csvParser, false);
         auto columnData = test->getColumnData(0);
-        index = columnData->getPositionListIndex()->getIndex();
+        index = columnData.getPositionListIndex()->getIndex();
     }
     catch (std::runtime_error& e) {
-        cout << "Excepion raised in test: " << e.what() << endl;
+        cout << "Exception raised in test: " << e.what() << endl;
         FAIL();
     }
-    ASSERT_THAT(ans, ContainerEq(index));
+    ASSERT_THAT( index, ContainerEq(ans));
 }
 
 TEST(pliIntersectChecker, first){
     deque<vector<int>> ans = {
             {2, 5}
     };
-    shared_ptr<PositionListIndex> intersection;
+    std::shared_ptr<PositionListIndex> intersection;
 
     try {
         auto path = fs::current_path().append("inputData");
@@ -70,13 +74,13 @@ TEST(pliIntersectChecker, first){
 
         auto test1 = ColumnLayoutRelationData::createFrom(csvParser1, false);
         auto test2 = ColumnLayoutRelationData::createFrom(csvParser2, false);
-        auto pli1 = test1->getColumnData(0)->getPositionListIndex();
-        auto pli2 = test2->getColumnData(0)->getPositionListIndex();
+        auto pli1 = test1->getColumnData(0).getPositionListIndex();
+        auto pli2 = test2->getColumnData(0).getPositionListIndex();
 
         intersection = pli1->intersect(pli2);
     }
     catch (std::runtime_error& e) {
-        cout << "Excepion raised in test: " << e.what() << endl;
+        cout << "Exception raised in test: " << e.what() << endl;
         FAIL();
     }
     ASSERT_THAT(intersection->getIndex(), ContainerEq(ans));
@@ -87,7 +91,7 @@ TEST(testingBitsetToLonglong, first){
     boost::dynamic_bitset<> simple_bitset{20, encoded_num};
 
     auto res_vector = *ListAgreeSetSample::bitSetToLongLongVector(simple_bitset);
-    ASSERT_EQ(1, res_vector.size());
+    ASSERT_EQ(res_vector.size(), 1);
     for (auto long_long_repr : res_vector)
         ASSERT_EQ(encoded_num, long_long_repr);
 }

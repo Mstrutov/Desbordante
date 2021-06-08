@@ -9,17 +9,19 @@ unsigned long long Pyro::execute() {
 
     auto relation = ColumnLayoutRelationData::createFrom(inputGenerator_, configuration_.isNullEqualNull);
     auto schema = relation->getSchema();
+    if (relation->getColumnData().empty()) {
+        throw std::runtime_error("Got an empty .csv file: FD mining is meaningless.");
+    }
 
-    auto profilingContext = std::make_shared<ProfilingContext>(
+    auto profilingContext = std::make_unique<ProfilingContext>(
             configuration_,
-            relation,
+            relation.get(),
             uccConsumer_,
             fdConsumer_,
             cachingMethod_,
             evictionMethod_,
             cachingMethodValue
             );
-
 
     std::function<bool(DependencyCandidate const&, DependencyCandidate const&)> launchPadOrder;
     if (configuration_.launchPadOrder == "arity") {
@@ -32,25 +34,23 @@ unsigned long long Pyro::execute() {
 
     int nextId = 0;
     if (configuration_.isFindKeys) {
-        std::shared_ptr<DependencyStrategy> strategy;
+        std::unique_ptr<DependencyStrategy> strategy;
         if (configuration_.uccErrorMeasure == "g1prime") {
-            strategy = std::dynamic_pointer_cast<DependencyStrategy>(
-                    std::make_shared<KeyG1Strategy>(configuration_.maxUccError, configuration_.errorDev));
+            strategy = std::make_unique<KeyG1Strategy>(configuration_.maxUccError, configuration_.errorDev);
         } else {
             throw std::runtime_error("Unknown key error measure.");
         }
-        searchSpaces_.push_back(std::make_shared<SearchSpace>(nextId++, strategy, schema, launchPadOrder));
+        searchSpaces_.push_back(std::make_unique<SearchSpace>(nextId++, std::move(strategy), schema, launchPadOrder));
     }
     if (configuration_.isFindFds) {
-        for (auto rhs : schema->getColumns()) {
-            std::shared_ptr<DependencyStrategy> strategy;
+        for (auto& rhs : schema->getColumns()) {
+            std::unique_ptr<DependencyStrategy> strategy;
             if (configuration_.uccErrorMeasure == "g1prime") {
-                strategy = std::dynamic_pointer_cast<DependencyStrategy>(
-                        std::make_shared<FdG1Strategy>(rhs, configuration_.maxUccError, configuration_.errorDev));
+                strategy = std::make_unique<FdG1Strategy>(rhs.get(), configuration_.maxUccError, configuration_.errorDev);
             } else {
                 throw std::runtime_error("Unknown key error measure.");
             }
-            searchSpaces_.push_back(std::make_shared<SearchSpace>(nextId++, strategy, schema, launchPadOrder));
+            searchSpaces_.push_back(std::make_unique<SearchSpace>(nextId++, std::move(strategy), schema, launchPadOrder));
         }
     }
     unsigned long long initTimeMillis = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime).count();
@@ -60,7 +60,7 @@ unsigned long long Pyro::execute() {
     unsigned long long totalAscension = 0;
     unsigned long long totalTrickle = 0;
     for (auto& searchSpace : searchSpaces_) {
-        searchSpace->setContext(profilingContext);
+        searchSpace->setContext(profilingContext.get());
         searchSpace->ensureInitialized();
         searchSpace->discover();
         // searchSpace->printStats();
@@ -77,20 +77,22 @@ unsigned long long Pyro::execute() {
     std::cout << "Total ascension time: " << totalAscension << "ms" << std::endl;
     std::cout << "Total trickle time: " << totalTrickle << "ms" << std::endl;
     std::cout << "Total intersection time: " << PositionListIndex::micros / 1000 << "ms" << std::endl;
-    std::cout << "====RESULTS-FD====\r\n" << fdsToString();
+    /*std::cout << "====RESULTS-FD====\r\n" << fdsToString();
     std::cout << "====RESULTS-UCC====\r\n" << uccsToString();
-    std::cout << "====JSON-FD========\r\n" << FDAlgorithm::getJsonFDs() << std::endl;
+    std::cout << "====JSON-FD========\r\n" << FDAlgorithm::getJsonFDs() << std::endl;*/
+
     std::cout << "HASH: " << FDAlgorithm::fletcher16() << std::endl;
     return elapsed_milliseconds.count();
 }
 
-Pyro::Pyro(fs::path const &path, char separator, bool hasHeader, int seed, double maxError, unsigned int maxLHS) :
+
+Pyro::Pyro(std::filesystem::path const &path, char separator, bool hasHeader, int seed, double maxError, unsigned int maxLHS) :
         FDAlgorithm(path, separator, hasHeader),
         cachingMethod_(CachingMethod::COIN),
         evictionMethod_(CacheEvictionMethod::DEFAULT) {
     uccConsumer_ = [this](auto const& key) { this->discoveredUCCs_.push_back(key); };
     fdConsumer_ = [this](auto const& fd) {
-        this->discoveredFDs_.push_back(fd); this->fdCollection_.emplace_back(*fd.lhs_, *fd.rhs_); };
+        this->discoveredFDs_.push_back(fd); this->fdCollection_.emplace_back(fd.lhs_, fd.rhs_); };
     configuration_.seed = seed;
     configuration_.maxUccError = maxError;
     configuration_.maxUccError = maxError;

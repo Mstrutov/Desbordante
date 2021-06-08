@@ -4,21 +4,24 @@
 
 class KeyG1Strategy : public DependencyStrategy {
 private:
-    double calculateKeyError(std::shared_ptr<PositionListIndex> pli);
-    double calculateKeyError(double numViolatingTuplePairs);
-    ConfidenceInterval calculateKeyError(ConfidenceInterval const& numViolations);
+    double calculateKeyError(PositionListIndex* pli) const;
+    double calculateKeyError(double numViolatingTuplePairs) const;
+    ConfidenceInterval calculateKeyError(ConfidenceInterval const& numViolations) const;
 public:
     KeyG1Strategy(double maxError, double deviation) : DependencyStrategy(maxError, deviation) {}
 
-    void ensureInitialized(std::shared_ptr<SearchSpace> searchSpace) override;
-    double calculateError(std::shared_ptr<Vertical> keyCandidate) override;
-    DependencyCandidate createDependencyCandidate(std::shared_ptr<Vertical> vertical) override;
-    std::string format(std::shared_ptr<Vertical> vertical) override { return (boost::format("key(%s)") % std::string(*vertical)).str(); }
-    explicit operator std::string() const override
-    { return (boost::format("key[g1\u2264(%.3f..%.3f)]") % minNonDependencyError_ % maxDependencyError_).str(); }
-    void registerDependency(std::shared_ptr<Vertical> vertical, double error, const DependencyConsumer &discoveryUnit) override;
-    // TODO: how to get rid of unused parameter?
-    bool isIrrelevantColumn(unsigned int columnIndex) override { return false; }
-    unsigned int getNumIrrelevantColumns() override { return 0; }
-    Vertical getIrrelevantColumns() override { return *context_->relationData_->getSchema()->emptyVertical; }
+    void ensureInitialized(SearchSpace* searchSpace) const override;
+    double calculateError(Vertical const& keyCandidate) const override;
+    DependencyCandidate createDependencyCandidate(Vertical const& vertical) const override;
+    std::string format(Vertical const& vertical) const override {
+        return (boost::format("key(%s)") % std::string(vertical)).str(); }
+    explicit operator std::string() const override {
+        return (boost::format("key[g1\u2264(%.3f..%.3f)]") % minNonDependencyError_ % maxDependencyError_).str(); }
+    void registerDependency(Vertical const& vertical, double error, DependencyConsumer const& discoveryUnit) const override;
+    bool isIrrelevantColumn(unsigned int columnIndex) const override { return false; }
+    unsigned int getNumIrrelevantColumns() const override { return 1; }
+    Vertical getIrrelevantColumns() const override {
+        return *context_->getColumnLayoutRelationData()->getSchema()->emptyVertical; }
+
+    std::unique_ptr<DependencyStrategy> createClone() override;
 };
