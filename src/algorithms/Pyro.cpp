@@ -1,10 +1,17 @@
 #include <chrono>
+#include <mutex>
+#include <thread>
 
 #include "FdG1Strategy.h"
 #include "KeyG1Strategy.h"
 #include "Pyro.h"
 
+std::mutex searchSpacesMutex;
+
+
+
 unsigned long long Pyro::execute() {
+    using std::cout;
     auto startTime = std::chrono::system_clock::now();
 
     auto relation = ColumnLayoutRelationData::createFrom(inputGenerator_, configuration_.isNullEqualNull);
@@ -55,19 +62,47 @@ unsigned long long Pyro::execute() {
     }
     unsigned long long initTimeMillis = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime).count();
 
+
     startTime = std::chrono::system_clock::now();
     unsigned int totalErrorCalcCount = 0;
     unsigned long long totalAscension = 0;
     unsigned long long totalTrickle = 0;
-    for (auto& searchSpace : searchSpaces_) {
-        searchSpace->setContext(profilingContext.get());
-        searchSpace->ensureInitialized();
-        searchSpace->discover();
-        // searchSpace->printStats();
-        totalErrorCalcCount += searchSpace->getErrorCalcCount();
-        totalAscension += searchSpace->ascending / 1000000;
-        totalTrickle += searchSpace->tricklingDown / 1000000;
+
+
+
+    std::function<void(std::list<std::unique_ptr<SearchSpace>>&, ProfilingContext*, int)> workOnSearchSpace =
+            [](auto& searchSpaces, auto profilingContext, auto id) {
+        unsigned long long millis = 0;
+        while (true) {
+            auto threadStartTime = std::chrono::system_clock::now();
+            std::unique_ptr<SearchSpace> polledSpace;
+            {
+                std::scoped_lock<std::mutex> lock(searchSpacesMutex);
+                if (searchSpaces.empty()) {
+                    break;
+                }
+                polledSpace = std::move(searchSpaces.front());
+                searchSpaces.pop_front();
+            }
+            LOG(TRACE) << "Thread" << id << " got SearchSpace";
+            polledSpace->setContext(profilingContext);
+            polledSpace->ensureInitialized();
+            polledSpace->discover();
+            millis += std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - threadStartTime).count();
+        }
+        //cout << "Thread" << id << " stopped working, ELAPSED TIME: " << millis << "ms.\n";
+    };
+
+    std::vector<std::thread> threads;
+    for (int i = 0; i < configuration_.parallelism; i++) {
+        //std::thread();
+        threads.emplace_back(workOnSearchSpace, std::ref(searchSpaces_), profilingContext.get(), i);
     }
+
+    for (int i = 0; i < configuration_.parallelism; i++) {
+        threads[i].join();
+    }
+
     auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
 
     LOG(DEBUG) << boost::format{"FdG1 error calculation: %1% ms"} % (FdG1Strategy::nanos_ / 1000000);
@@ -86,7 +121,8 @@ unsigned long long Pyro::execute() {
 }
 
 
-Pyro::Pyro(std::filesystem::path const &path, char separator, bool hasHeader, int seed, double maxError, unsigned int maxLHS) :
+Pyro::Pyro(std::filesystem::path const &path, char separator, bool hasHeader, int seed, double maxError,
+           unsigned int maxLHS, int parallelism) :
         FDAlgorithm(path, separator, hasHeader),
         cachingMethod_(CachingMethod::COIN),
         evictionMethod_(CacheEvictionMethod::DEFAULT) {
@@ -97,4 +133,15 @@ Pyro::Pyro(std::filesystem::path const &path, char separator, bool hasHeader, in
     configuration_.maxUccError = maxError;
     configuration_.maxUccError = maxError;
     configuration_.maxLHS = maxLHS;
+    configuration_.parallelism = parallelism <= 0 ? std::thread::hardware_concurrency() : parallelism;
+}
+
+void Pyro::registerFD(FD fdToRegister) {
+    std::scoped_lock lock(fdCollectionMutex_);
+    FDAlgorithm::registerFD(fdToRegister);
+}
+
+void Pyro::registerFD(Vertical lhs, Column rhs) {
+    std::scoped_lock lock(fdCollectionMutex_);
+    FDAlgorithm::registerFD(std::move(lhs), std::move(rhs));
 }

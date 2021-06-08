@@ -37,19 +37,21 @@ int main(int argc, char const *argv[]) {
     int seed = 0;
     double error = 0.01;
     unsigned int maxLhs = -1;
+    unsigned int parallelism = 0;
 
     po::options_description desc("Allowed options");
     desc.add_options()
-        ("help", "print help")
-        ("algo", po::value<std::string>(&alg), "algorithm [pyro|tane]")
-        ("data", po::value<std::string>(&dataset), "path to CSV file, relative to ./inputData")
-        ("sep", po::value<char>(&separator), "CSV separator")
-        ("hasHeader", po::value<bool>(&hasHeader), "CSV header presence flag [true|false]. Default true")
-        ("seed", po::value<int>(&seed), "RNG seed")
-        ("error", po::value<double>(&error), "error for AFD algorithms. Default 0.01")
-        ("maxLHS", po::value<unsigned int>(&maxLhs),
-                (std::string("max considered LHS size. Default: ") + std::to_string((unsigned int)-1)).c_str())
-    ;
+            ("help", "print help")
+            ("algo", po::value<std::string>(&alg), "algorithm [pyro|tane]")
+            ("data", po::value<std::string>(&dataset), "path to CSV file, relative to ./inputData")
+            ("sep", po::value<char>(&separator), "CSV separator")
+            ("hasHeader", po::value<bool>(&hasHeader), "CSV header presence flag [true|false]. Default true")
+            ("seed", po::value<int>(&seed), "RNG seed")
+            ("error", po::value<double>(&error), "error for AFD algorithms. Default 0.01")
+            ("maxLHS", po::value<unsigned int>(&maxLhs),
+             (std::string("max considered LHS size. Default: ") + std::to_string((unsigned int)-1)).c_str())
+            ("threads", po::value<unsigned int>(&parallelism))
+            ;
 
     po::variables_map vm;
     try {
@@ -82,32 +84,21 @@ int main(int argc, char const *argv[]) {
               << "\" with separator \'" << separator
               << "\'. Header is " << (hasHeader ? "" : "not ") << "present. " << std::endl;
     auto path = std::filesystem::current_path() / "inputData" / dataset;
+
+    std::unique_ptr<FDAlgorithm> algorithmInstance;
     if (alg == "pyro") {
-        try {
-            Pyro algInstance(path, separator, hasHeader, seed, error, maxLhs);
-            double elapsedTime = algInstance.execute();
-            std::cout << "> ELAPSED TIME: " << elapsedTime << std::endl;
-        } catch (std::runtime_error& e) {
-            std::cout << e.what() << std::endl;
-            return 1;
-        }
+        algorithmInstance = std::make_unique<Pyro>(path, separator, hasHeader, seed, error, maxLhs, parallelism);
     } else if (alg == "tane"){
-        try {
-            Tane algInstance(path, separator, hasHeader);
-            algInstance.execute();
-            std::cout << "another test test" << std::endl;
-        } catch (std::runtime_error& e) {
-            std::cout << e.what() << std::endl;
-            return 1;
-        }
+        algorithmInstance = std::make_unique<Tane>(path, separator, hasHeader, error, maxLhs);
     } else if (alg == "fdmine"){
-        try {
-            Fd_mine algInstance(path);
-            algInstance.execute();
-        } catch (std::runtime_error& e) {
-            std::cout << e.what() << std::endl;
-            return 1;
-        }
+        algorithmInstance = std::make_unique<Fd_mine>(path);
+    }
+    try {
+        unsigned long long elapsedTime = algorithmInstance->execute();
+        std::cout << "> ELAPSED TIME: " << elapsedTime << std::endl;
+    } catch (std::runtime_error& e) {
+        std::cout << e.what() << std::endl;
+        return 1;
     }
     return 0;
 }
