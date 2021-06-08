@@ -45,7 +45,7 @@ public:
 
     // Non-const as RandomGenerator state gets changed
     AgreeSetSample const* createFocusedSample(Vertical const& focus, double boostFactor);
-    AgreeSetSample const* getAgreeSetSample(Vertical const& focus) const;
+    std::shared_ptr<AgreeSetSample const> getAgreeSetSample(Vertical const& focus) const;
     PLICache* getPLICache() { return pliCache_.get(); }
     bool isAgreeSetSamplesEmpty() const { return agreeSetSamples_ == nullptr; }
     RelationalSchema const* getSchema() const { return relationData_->getSchema(); }

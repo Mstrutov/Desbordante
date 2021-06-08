@@ -7,14 +7,15 @@
 
 
 PositionListIndex* PLICache::get(Vertical const &vertical) {
-    return index_->get(vertical);
+    return index_->get(vertical).get();
 }
 
 PLICache::PLICache(ColumnLayoutRelationData* relationData, CachingMethod cachingMethod,
                    CacheEvictionMethod evictionMethod, double cachingMethodValue, double minEntropy, double meanEntropy,
                    double medianEntropy, double maximumEntropy, double medianGini, double medianInvertedEntropy) :
         relationData_(relationData),
-        index_(std::make_unique<CacheMap>(relationData->getSchema())),
+        // TODO: сделать index_(std::make_unique<VerticalMap<PositionListIndex>>(relationData->getSchema())) при одном потоке
+        index_(std::make_unique<BlockingVerticalMap<PositionListIndex>>(relationData->getSchema())),
         cachingMethod_(cachingMethod),
         evictionMethod_(evictionMethod),
         cachingMethodValue_(cachingMethodValue),
@@ -42,6 +43,7 @@ PLICache::~PLICache() {
 // obtains or calculates a PositionListIndex using cache
 std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> PLICache::getOrCreateFor(
         Vertical const &vertical, ProfilingContext* profilingContext) {
+    std::scoped_lock lock(gettingPLIMutex);
     LOG(DEBUG) << boost::format{"PLI for %1% requested: "} % vertical.toString();
 
     // is PLI already cached?
@@ -59,7 +61,7 @@ std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> PLICache::g
     ranks.reserve(subsetEntries.size());
     for (auto& [subVertical, subPLI_ptr] : subsetEntries) {
         // TODO: избавиться от таких const_cast, которые сбрасывают константность
-        PositionListIndexRank pliRank(&subVertical, const_cast<PositionListIndex*>(subPLI_ptr), subVertical.getArity());
+        PositionListIndexRank pliRank(&subVertical, std::const_pointer_cast<PositionListIndex>(subPLI_ptr), subVertical.getArity());
         ranks.push_back(pliRank);
         if (!smallestPliRank
             || smallestPliRank->pli_->getSize() > pliRank.pli_->getSize()
@@ -137,14 +139,14 @@ std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> PLICache::g
         variantIntersectionPLI = cachingProcess(vertical, std::move(intersectionPLI), profilingContext);
     } else {
         Vertical currentVertical = *operands.begin()->vertical_;
-        variantIntersectionPLI = operands.begin()->pli_;
+        variantIntersectionPLI = operands.begin()->pli_.get();
 
         for (size_t i = 1; i < operands.size(); i++) {
             currentVertical = currentVertical.Union(*operands[i].vertical_);
             variantIntersectionPLI =
                 std::holds_alternative<PositionListIndex*>(variantIntersectionPLI)
-                ? std::get<PositionListIndex*>(variantIntersectionPLI)->intersect(operands[i].pli_)
-                : std::get<std::unique_ptr<PositionListIndex>>(variantIntersectionPLI)->intersect(operands[i].pli_);
+                ? std::get<PositionListIndex*>(variantIntersectionPLI)->intersect(operands[i].pli_.get())
+                : std::get<std::unique_ptr<PositionListIndex>>(variantIntersectionPLI)->intersect(operands[i].pli_.get());
             variantIntersectionPLI = cachingProcess(
                 currentVertical,
                 std::move(std::get<std::unique_ptr<PositionListIndex>>(variantIntersectionPLI)),

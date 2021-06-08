@@ -147,6 +147,14 @@ std::unique_ptr<PositionListIndex> PositionListIndex::probe(std::shared_ptr<cons
 
     for (auto & positions : index){
         for (int position : positions){
+            if (probingTable == nullptr) std::cout << "NULLPTR" << std::endl;
+            if (position < 0 || position >= probingTable->size()) {
+                std::cout << "position: " + std::to_string(position) +
+                             ", size: " + std::to_string(probingTable->size()) << std::endl;
+                for (size_t i = 0; i < positions.size(); ++i) {
+                    std::cout << "Position " + std::to_string(positions[i]);
+                }
+            }
             int probingTableValueId = (*probingTable)[position];
             if (probingTableValueId == singletonValueId)
                 continue;

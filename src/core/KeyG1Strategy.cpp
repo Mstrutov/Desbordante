@@ -56,7 +56,7 @@ DependencyCandidate KeyG1Strategy::createDependencyCandidate(Vertical const& ver
         return DependencyCandidate(vertical, ConfidenceInterval(0, .5, 1), false);
     }
 
-    AgreeSetSample const* agreeSetSample = context_->getAgreeSetSample(vertical);
+    auto agreeSetSample = context_->getAgreeSetSample(vertical);
     ConfidenceInterval estimatedEqualityPairs = agreeSetSample
             ->estimateAgreements(vertical, context_->getConfiguration().estimateConfidence)
             .multiply(context_->getColumnLayoutRelationData()->getNumTuplePairs());
