@@ -65,19 +65,23 @@ unsigned long long Depminer::execute(){
         }
         std::cerr << "\n";
     }
-
+    
     //LHS
 
     for(auto& attribute : schema->getColumns()){
         std::set<Vertical> li;
         CMAXSet correct = genFirstLi(cmaxSet.getCmaxSets(), *attribute, li);
-        if(schema->getNumColumns() != 1
-            && correct.getCombinations().begin().operator*().getColumns().size()
-             == schema->getColumns().size()){
-            this->registerFD(Vertical(), *attribute);
+        auto pli = relation->getColumnData(attribute->getIndex()).getPositionListIndex();
+        bool column_contains_only_equal_values =
+            pli->getNumNonSingletonCluster() == 1 && pli->getSize() == relation->getNumRows();
+        if (column_contains_only_equal_values) {
+            std::cout << "Registered FD: " << schema->emptyVertical->toString()
+                      << "->" << attribute->toString() << '\n';
+            registerFD(Vertical(), *attribute);
             continue;
         }
         while(!li.empty()){
+            std::set<Vertical> liCopy = li;
             for(Vertical l : li){
                 bool isFD = true;
                 for(auto combination : correct.getCombinations()){
@@ -90,21 +94,21 @@ unsigned long long Depminer::execute(){
                     if(!l.contains(*attribute)){
                         this->registerFD(l, *attribute);
                     }
-                    li.erase(l);
+                    liCopy.erase(l);
                 }
-                if(li.size() == 0){
+                if(liCopy.size() == 0){
                     break;
                 }
             }
-            li = genNextLi(li);
+            li = genNextLi(liCopy);
         }
     }
 
     cout << "TOTAL FD COUNT: " << this->fdCollection_.size() << "\n";
 
-    // for(auto const& fd : this->fdCollection_){
-    //     std::cout << "Registered FD: " << fd.getLhs().toString() << "->" << fd.getRhs().toString() << "\n";
-    // }
+    for(auto const& fd : this->fdCollection_){
+        std::cout << "Registered FD: " << fd.getLhs().toString() << "->" << fd.getRhs().toString() << "\n";
+    }
     std::chrono::milliseconds elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
     return elapsed_milliseconds.count();
 }
