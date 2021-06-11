@@ -56,6 +56,16 @@ unsigned long long Depminer::execute(){
         std::cerr << "\n";
     }
 
+    std::cerr << "-----------MAXSETS::::::" << std::endl;
+
+    for(auto set : cmaxSet.getMaxSets()){
+        std::cerr << set.getColumn().toString();
+        for(auto comb : set.getCombinations()){
+            std::cerr << "\t\t" << comb.toString() << "\n";
+        }
+        std::cerr << "\n";
+    }
+
     //LHS
 
     for(auto& attribute : schema->getColumns()){
@@ -92,6 +102,9 @@ unsigned long long Depminer::execute(){
 
     cout << "TOTAL FD COUNT: " << this->fdCollection_.size() << "\n";
 
+    // for(auto const& fd : this->fdCollection_){
+    //     std::cout << "Registered FD: " << fd.getLhs().toString() << "->" << fd.getRhs().toString() << "\n";
+    // }
     std::chrono::milliseconds elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
     return elapsed_milliseconds.count();
 }
