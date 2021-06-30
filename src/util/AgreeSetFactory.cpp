@@ -35,9 +35,9 @@ AgreeSetFactory::SetOfAgreeSets AgreeSetFactory::genAgreeSets() const {
         std::unordered_set<int> cache;
         for (auto const& cluster : max_representation) {
             for (auto p = cluster.begin(); p != cluster.end(); ++p) {
-                if (cache.find(*p) != cache.end())
+                if (!cache.insert(*p).second) {
                     continue;
-                cache.insert(*p);
+                }
                 identifier_sets.emplace_back(IdentifierSet(relation_, *p));
             }
         }
@@ -181,12 +181,15 @@ AgreeSetFactory::SetOfVectors AgreeSetFactory::genPLIMaxRepresentation() const {
     );
 
     for (auto p = columns_data.begin(); p != columns_data.end(); ++p) {
-        if (p == not_empty_pli) //already examined
+        //already examined
+        if (p == not_empty_pli) {
             continue;
+        }
 
         PositionListIndex const* pli = p->getPositionListIndex();
-        if (pli->getSize() != 0)
+        if (pli->getSize() != 0) {
             calculateSupersets(max_representation, pli->getIndex());
+        }
     }
 
     auto elapsed_mills_to_gen_max_representation =
