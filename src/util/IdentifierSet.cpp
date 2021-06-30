@@ -32,11 +32,14 @@ Vertical IdentifierSet::intersect(IdentifierSet const& other) const {
 }
 
 std::string IdentifierSet::toString() const {
-    if (data_.empty())
+    if (data_.empty()) {
         return "[]";
+    }
+
     std::string str = "[";
-    for (auto p = data_.begin(); p != data_.end() - 1; ++p)
+    for (auto p = data_.begin(); p != data_.end() - 1; ++p) {
         str += "(" + p->attribute->getName() + ", " + std::to_string(p->cluster_index) + "), ";
+    }
     str += "(" + data_.back().attribute->getName() + ", " + std::to_string(data_.back().cluster_index) + ")]";
     return str;
 }

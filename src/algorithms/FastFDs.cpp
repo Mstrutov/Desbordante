@@ -23,8 +23,9 @@ unsigned long long FastFDs::execute() {
     relation_ = ColumnLayoutRelationData::createFrom(inputGenerator_, true);
     schema_ = relation_->getSchema();
 
-    if (schema_->getNumColumns() == 0)
+    if (schema_->getNumColumns() == 0) {
         throw std::runtime_error("Got an empty .csv file: FD mining is meaningless.");
+    }
 
     auto start_time = std::chrono::system_clock::now();
 
@@ -81,8 +82,9 @@ bool FastFDs::columnContainsOnlyEqualValues(Column const& column) const {
 void FastFDs::findCovers(Column const& attribute, vector<DiffSet> const& diff_sets_mod,
                          vector<DiffSet> const& cur_diff_sets, Vertical const& path,
                          set<Column, OrderingComparator> const& ordering) {
-    if (ordering.size() == 0 && !cur_diff_sets.empty())
+    if (ordering.size() == 0 && !cur_diff_sets.empty()) {
         return; // no FDs here
+    }
 
     if (cur_diff_sets.empty()) {
         if (coverMinimal(path, diff_sets_mod)) {
@@ -97,8 +99,9 @@ void FastFDs::findCovers(Column const& attribute, vector<DiffSet> const& diff_se
     for (Column const& column : ordering) {
         vector<DiffSet> next_diff_sets;
         for (DiffSet const& diff_set : cur_diff_sets) {
-            if (!diff_set.contains(column))
+            if (!diff_set.contains(column)) {
                 next_diff_sets.push_back(diff_set);
+            }
         }
 
         auto next_ordering = getNextOrdering(next_diff_sets, column, ordering);
@@ -124,8 +127,9 @@ bool FastFDs::coverMinimal(Vertical const& cover,
     for (Column const* column : cover.getColumns()) {
         Vertical subset = cover.without(*column);
         bool subset_covers = isCover(subset, diff_sets_mod);
-        if (subset_covers)
+        if (subset_covers) {
             return false; // cover is not minimal
+        }
     }
     return true; // cover is minimal
 }
@@ -136,14 +140,17 @@ bool FastFDs::orderingComp(vector<DiffSet> const& diff_sets,
     unsigned cov_r = 0;
 
     for (DiffSet const& diff_set : diff_sets) {
-        if (diff_set.contains(l_col))
+        if (diff_set.contains(l_col)) {
             ++cov_l;
-        if (diff_set.contains(r_col))
+        }
+        if (diff_set.contains(r_col)) {
             ++cov_r;
+        }
     }
 
-    if (cov_l != cov_r)
+    if (cov_l != cov_r) {
         return cov_l > cov_r;
+    }
 
     return l_col > r_col;
 }
@@ -156,8 +163,9 @@ FastFDs::getInitOrdering(vector<DiffSet> const& diff_sets, Column const& attribu
     set<Column, OrderingComparator> ordering(ordering_comp);
 
     for (auto const& col : schema_->getColumns()) {
-        if (*col != attribute)
+        if (*col != attribute) {
             ordering.insert(*col);
+        }
     }
 
     return ordering;
@@ -208,8 +216,9 @@ vector<FastFDs::DiffSet> FastFDs::getDiffSetsMod(Column const& col) const {
                 }
             }
 
-            if (is_miminal)
+            if (is_miminal) {
                 diff_sets_mod.push_back(diff_set.without(col));
+            }
         }
     }
 
