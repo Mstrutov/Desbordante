@@ -14,10 +14,52 @@
 using AgreeSet = Vertical;
 
 enum class AgreeSetsGenMethod {
-    kUsingVectorOfIDSets = 0,
-    kUsingMapOfIDSets       ,
-    kUsingGetAgreeSet       , // Simplest method by Wyss et al
-    kUsingMCAndGetAgreeSet  , // From maximal representation using getAgreeSet()
+    kUsingVectorOfIDSets = 0, /*< Generates agree sets using identifier sets.
+                               *  Algorithm works as follows:
+                               *  1. Generates maximal representation
+                               *     (check out the `kUsingMCAndGetAgreeSet` description).
+                               *  2. Fills vector<IdentifierSet> with identifier sets by
+                               *     iterating over each cluster in max representation.
+                               *     In order to avoid adding identifier set of the same tuple
+                               *     twice (the same tuple can be in different clusters), the
+                               *     set of ids of the already added tuples is used.
+                               *  3. Iterates over all pairs of identifier sets from vector.
+                               *  4. Gets agree set for current pair by intersecting.
+                               */
+    kUsingMapOfIDSets       , /*< Metanome approach.
+                               *  Generates agree sets using identifier sets.
+                               *  Algorithm works as follows:
+                               *  1. Generates maximal representation
+                               *     (check out the `kUsingMCAndGetAgreeSet` description).
+                               *  2. Fills map<int, IdentifierSet> with <tuple index, tuple idset>
+                               *     pairs by iterating over each cluster in max representation.
+                               *  3. Iterates over all pairs of tuples from each cluster
+                               *     of maximal representation.
+                               *  4. Gets agree set for current pair of tuples by intersecting
+                               *     their identifier sets.
+                               */
+    kUsingGetAgreeSet       , /*< The most naive (so the slowest) way to generate agree sets.
+                               *  Generates agree set for all pairs of tuples that
+                               *  can form agree set. Tuples can form agree set if
+                               *  they have the same value in at least one attribute.
+                               *  Such tuples are in the same cluster of pli.
+                               *  So algorithm works as follows:
+                               *  1. Iterates over all table attributes.
+                               *  2. Iterates over all pairs of tuples from each cluster
+                               *     of current attribute pli.
+                               *  3. Gets agree set for current pair using getAgreeSet.
+                               */
+    kUsingMCAndGetAgreeSet  , /*< In `kUsingGetAgreeSet` method, the same pair of tuples
+                               *  can be processed (passed to getAgreeSet) multiple times.
+                               *  This method similar to `kUsingGetAgreeSet`,
+                               *  but avoids the above problem.
+                               *  It reduces the number of redundant tuple comparisons by
+                               *  transforming partitions into its maximal representation.
+                               *  And processes tuple pairs from maximal representation clusters.
+                               *  Algorithm of maximal representation generation was taken from
+                               *  Metanome. For more information about maximal representation
+                               *  check out http://www.vldb.org/pvldb/vol8/p1082-papenbrock.pdf
+                               */
 };
 
 class AgreeSetFactory {
