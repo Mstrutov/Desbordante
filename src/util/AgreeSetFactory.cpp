@@ -200,35 +200,45 @@ AgreeSetFactory::SetOfVectors AgreeSetFactory::genPLIMaxRepresentation() const {
 }
 
 void AgreeSetFactory::calculateSupersets(SetOfVectors& max_representation,
-                                         std::deque<vector<int>> partition) const {
-    SetOfVectors to_add;
-    SetOfVectors to_delete;
-    auto erase_from_partition = partition.end();
+                                         std::deque<vector<int>> const& partition) const {
+    SetOfVectors to_add_to_mc;
+    SetOfVectors to_delete_from_mc;
+    //auto erase_from_partition = partition.end();
+    set<std::deque<vector<int>>::const_iterator> to_exclude_from_partition;
     for (auto const& max_set : max_representation) {
-        for (auto p = partition.begin(); p != partition.end(); ++p) {
+        for (auto p = partition.begin();
+             to_exclude_from_partition.size() != partition.size() && p != partition.end();
+             ++p) {
+            if (to_exclude_from_partition.find(p) != to_exclude_from_partition.end()) {
+                continue;
+            }
+
             if (max_set.size() >= p->size() &&
                 std::includes(max_set.begin(), max_set.end(), p->begin(), p->end())) {
-                to_add.erase(*p);
-                erase_from_partition = p;
+                to_add_to_mc.erase(*p);
+                //erase_from_partition = p;
+                to_exclude_from_partition.insert(p);
                 break;
             }
             if (p->size() >= max_set.size() &&
                 std::includes(p->begin(), p->end(), max_set.begin(), max_set.end())) {
-                to_delete.insert(max_set);
+                to_delete_from_mc.insert(max_set);
             }
-            to_add.insert(*p);
+            to_add_to_mc.insert(*p);
         }
 
-        if (erase_from_partition != partition.end()) {
+        /*if (erase_from_partition != partition.end()) {
             partition.erase(erase_from_partition);
             erase_from_partition = partition.end();
-        }
+        }*/
     }
 
-    for (auto& cluster : to_add)
+    for (auto& cluster : to_add_to_mc) {
         max_representation.insert(std::move(cluster));
-    for (auto& cluster : to_delete)
+    }
+    for (auto& cluster : to_delete_from_mc) {
         max_representation.erase(cluster);
+    }
 }
 
 template AgreeSetFactory::SetOfAgreeSets
