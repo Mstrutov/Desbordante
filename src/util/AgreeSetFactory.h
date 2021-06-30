@@ -38,6 +38,6 @@ public:
 
 private:
     void calculateSupersets(SetOfVectors& max_representation,
-                            std::deque<std::vector<int>> partition) const;
+                            std::deque<std::vector<int>> const& partition) const;
     ColumnLayoutRelationData const* const relation_;
 };
