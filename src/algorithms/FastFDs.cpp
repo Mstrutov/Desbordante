@@ -5,17 +5,7 @@
 #include <boost/dynamic_bitset.hpp>
 
 #include "AgreeSetFactory.h"
-
-#ifndef NDEBUG
-    #define FASTFDS_DEBUG
-#endif
-
-#ifdef FASTFDS_DEBUG
-#define DEBUG_FASTFDS(fmt, ...) \
-            do { fprintf(stderr, fmt, ##__VA_ARGS__); } while (0)
-#else
-#define DEBUG_FASTFDS(fmt, ...)
-#endif
+#include "logging/easylogging++.h"
 
 using std::vector, std::set;
 
@@ -35,8 +25,8 @@ unsigned long long FastFDs::execute() {
         std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now() - start_time
         );
-    std::cout << "TIME TO DIFF SETS GENERATION: "
-              << elapsed_mills_to_gen_diff_sets.count() << '\n';
+    LOG(INFO) << "TIME TO DIFF SETS GENERATION: "
+              << elapsed_mills_to_gen_diff_sets.count();
 
     if (diff_sets_.size() == 1 && diff_sets_.back() == *schema_->emptyVertical) {
         auto elapsed_milliseconds =
@@ -48,8 +38,8 @@ unsigned long long FastFDs::execute() {
 
     for (auto const& column : schema_->getColumns()) {
         if (columnContainsOnlyEqualValues(*column)) {
-            std::cout << "Registered FD: " << schema_->emptyVertical->toString()
-                      << "->" << column->toString() << '\n';
+            LOG(INFO) << "Registered FD: " << schema_->emptyVertical->toString()
+                      << "->" << column->toString();
             registerFD(Vertical(), *column);
             continue;
         }
@@ -88,8 +78,8 @@ void FastFDs::findCovers(Column const& attribute, vector<DiffSet> const& diff_se
 
     if (cur_diff_sets.empty()) {
         if (coverMinimal(path, diff_sets_mod)) {
-            std::cout << "Registered FD: " << path.toString()
-                      << "->" << attribute.toString() << '\n';
+            LOG(INFO) << "Registered FD: " << path.toString()
+                      << "->" << attribute.toString();
             registerFD(path, attribute);
             return;
         }
@@ -222,9 +212,10 @@ vector<FastFDs::DiffSet> FastFDs::getDiffSetsMod(Column const& col) const {
         }
     }
 
-    DEBUG_FASTFDS("Compute minimal difference sets modulo %s:\n", col.toString().c_str());
+    LOG(DEBUG) << "Compute minimal difference sets modulo "
+               << col.toString() << ":";
     for (auto& item : diff_sets_mod) {
-         DEBUG_FASTFDS("%s\n", item.toString().c_str());
+         LOG(DEBUG) << item.toString();
     }
 
     return diff_sets_mod;
@@ -234,9 +225,9 @@ void FastFDs::genDiffSets() {
     AgreeSetFactory factory(relation_.get());
     AgreeSetFactory::SetOfAgreeSets agree_sets = factory.genAgreeSets();
 
-    DEBUG_FASTFDS("Agree sets:\n");
+    LOG(DEBUG) << "Agree sets:";
     for (auto const& agree_set : agree_sets) {
-        DEBUG_FASTFDS("%s\n", agree_set.toString().c_str());
+        LOG(DEBUG) << agree_set.toString();
     }
 
     // Complement agree sets to get difference sets
@@ -247,7 +238,8 @@ void FastFDs::genDiffSets() {
     // sort diff_sets_, it will be used further to find minimal difference sets modulo column
     std::sort(diff_sets_.begin(), diff_sets_.end());
 
-    DEBUG_FASTFDS("Compute difference sets:\n");
-    for (auto const& diff_set : diff_sets_)
-        DEBUG_FASTFDS("%s\n", diff_set.toString().c_str());
+    LOG(DEBUG) << "Compute difference sets:";
+    for (auto const& diff_set : diff_sets_) {
+        LOG(DEBUG) << diff_set.toString();
+    }
 }

@@ -3,17 +3,7 @@
 #include <unordered_set>
 
 #include "IdentifierSet.h"
-
-#ifndef NDEBUG
-#define AGREESET_DEBUG
-#endif
-
-#ifdef AGREESET_DEBUG
-#define DEBUG_AGREESET(fmt, ...) \
-            do { fprintf(stderr, fmt, ##__VA_ARGS__); } while (0)
-#else
-#define DEBUG_AGREESET(fmt, ...)
-#endif
+#include "logging/easylogging++.h"
 
 using std::set, std::vector, std::unordered_set;
 
@@ -46,12 +36,12 @@ AgreeSetFactory::SetOfAgreeSets AgreeSetFactory::genAgreeSets() const {
             std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::system_clock::now() - start_time
             );
-        std::cout << "TIME TO IDENTIFIER SETS GENERATION: "
-                  << elapsed_mills_to_gen_id_sets.count() << '\n';
+        LOG(INFO) << "TIME TO IDENTIFIER SETS GENERATION: "
+                  << elapsed_mills_to_gen_id_sets.count();
 
-        DEBUG_AGREESET("Identifier sets:\n");
+        LOG(DEBUG) << "Identifier sets:";
         for (auto const& id_set : identifier_sets) {
-            DEBUG_AGREESET("%s\n", id_set.toString().c_str());
+            LOG(DEBUG) << id_set.toString();
         }
 
         // compute agree sets using identifier sets
@@ -81,13 +71,13 @@ AgreeSetFactory::SetOfAgreeSets AgreeSetFactory::genAgreeSets() const {
             std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::system_clock::now() - start_time
             );
-        std::cout << "TIME TO IDENTIFIER SETS GENERATION: "
-                  << elapsed_mills_to_gen_id_sets.count() << '\n';
+        LOG(INFO) << "TIME TO IDENTIFIER SETS GENERATION: "
+                  << elapsed_mills_to_gen_id_sets.count();
 
 
-        DEBUG_AGREESET("Identifier sets:\n");
+        LOG(DEBUG) << "Identifier sets:";
         for (auto const& [index, id_set] : identifier_sets) {
-            DEBUG_AGREESET("%s\n", id_set.toString().c_str());
+            LOG(DEBUG) << id_set.toString();
         }
 
 
@@ -141,9 +131,9 @@ AgreeSetFactory::SetOfAgreeSets AgreeSetFactory::genAgreeSets() const {
             std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::system_clock::now() - start_time
             );
-    std::cout << "TIME TO AGREE SETS GENERATION WITH METHOD "
+    LOG(INFO) << "TIME TO AGREE SETS GENERATION WITH METHOD "
               << method_str << ": "
-              << elapsed_mills_to_gen_agree_sets.count() << '\n';
+              << elapsed_mills_to_gen_agree_sets.count();
 
     return agree_sets;
 }
@@ -196,8 +186,8 @@ AgreeSetFactory::SetOfVectors AgreeSetFactory::genPLIMaxRepresentation() const {
         std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now() - start_time
         );
-    std::cout << "TIME TO MAX REPRESENTATION GENERATION: "
-              << elapsed_mills_to_gen_max_representation.count() << '\n';
+    LOG(INFO) << "TIME TO MAX REPRESENTATION GENERATION: "
+              << elapsed_mills_to_gen_max_representation.count();
 
     return max_representation;
 }
