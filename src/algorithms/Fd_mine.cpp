@@ -1,18 +1,12 @@
 #include "Fd_mine.h"
 
 #include <boost/unordered_map.hpp>
-#include <map>
 #include <queue>
-#include <set>
 #include <vector>
-
-#include "ColumnLayoutRelationData.h"
-#include "LatticeVertex.h"
-#include "Vertical.h"
 
 unsigned long long Fd_mine::execute() {
     // 1
-    relation = ColumnLayoutRelationData::createUnstrippedFrom(inputGenerator_, true);
+    relation = ColumnLayoutRelationData::createFrom(inputGenerator_, true);
     schema = relation->getSchema();
     auto startTime = std::chrono::system_clock::now();
 
