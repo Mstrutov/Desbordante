@@ -61,7 +61,7 @@ public:
     double getNep()                             const { return (double) nep; }
     unsigned long long getNepAsLong()           const { return nep; }
     unsigned int getNumNonSingletonCluster()    const { return index.size(); }
-    virtual unsigned int getNumCluster()        const { return index.size(); }
+    unsigned int getNumCluster()                const { return index.size() + originalRelationSize - size; }
     unsigned int getFreq()                      const { return freq_; }
     unsigned int getSize()                      const { return size; }
     double getEntropy()                         const { return entropy; }
