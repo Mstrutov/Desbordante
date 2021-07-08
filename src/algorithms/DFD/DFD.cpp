@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <random>
+#include <list>
 
 #include "ColumnLayoutRelationData.h"
 #include "RelationalSchema.h"
@@ -322,10 +323,10 @@ std::list<Vertical> DFD::generateNextSeeds(Column const* const currentRHS) {
                 }
             }
 
-            minimize(newSeeds);
+            std::vector<Vertical> minimizedNewSeeds = minimize(newSeeds);
             seeds.clear();
-            for (auto const& newSeed : newSeeds) {
-                seeds.insert(newSeed);
+            for (auto & newSeed : minimizedNewSeeds) {
+                seeds.insert(std::move(newSeed));
             }
             newSeeds.clear();
         }
@@ -346,16 +347,46 @@ std::list<Vertical> DFD::generateNextSeeds(Column const* const currentRHS) {
 }
 
 //TODO пока что дикий костыль за квадрат
-void DFD::minimize(std::unordered_set<Vertical>& nodeList) {
-    for (auto nodeIter = nodeList.begin(); nodeIter != nodeList.end(); nodeIter++) {
-        for (auto nodeToCheckIter = nodeList.begin(); nodeToCheckIter != nodeList.end(); ) {
-            if (*nodeIter != *nodeToCheckIter && (*nodeToCheckIter).contains(*nodeIter)) {
-                nodeToCheckIter = nodeList.erase(nodeToCheckIter);
-            } else {
-                nodeToCheckIter++;
+std::vector<Vertical> DFD::minimize(std::unordered_set<Vertical> const& nodeList) {
+    long long maxCardinality = 0;
+    std::unordered_map<long long, std::list<Vertical>> seedsBySize;
+    for (auto const& seed : nodeList) {
+        long long cardinalityOfSeed = seed.getArity(); //TODO check
+        maxCardinality = std::max(maxCardinality, cardinalityOfSeed);
+        if (seedsBySize.find(cardinalityOfSeed) == seedsBySize.end()) {
+            seedsBySize[cardinalityOfSeed] = std::list<Vertical>();
+        }
+        seedsBySize[cardinalityOfSeed].push_back(seed);
+    }
+
+    for (long long lowerBound = 1; lowerBound < maxCardinality; lowerBound++) {
+        if (seedsBySize.find(lowerBound) != seedsBySize.end()) {
+            std::list<Vertical> const& lowerBoundSeeds = seedsBySize.find(lowerBound)->second;
+            for (long long upperBound = maxCardinality; upperBound > lowerBound; upperBound--) {
+                if (seedsBySize.find(upperBound) != seedsBySize.end()) {
+                    std::list<Vertical> & upperBoundSeeds = seedsBySize.find(upperBound)->second;
+                    for (auto lowerIt = lowerBoundSeeds.begin(); lowerIt != lowerBoundSeeds.end(); lowerIt++) {
+                        //Vertical const& lowerSeed = *lowerIt;
+                        for (auto upperIt = upperBoundSeeds.begin(); upperIt != upperBoundSeeds.end();) {
+                            if (upperIt->contains(*lowerIt)) {
+                                upperIt = upperBoundSeeds.erase(upperIt);
+                            } else {
+                                upperIt++;
+                            }
+                        }
+                    }
+                }
             }
         }
     }
+
+    std::vector<Vertical> newSeeds();
+    for (auto seedList : seedsBySize) {
+        for (Vertical seed : seedList.second) {
+            newSeeds.push_back(std::move(seed));
+        }
+    }
+    return newSeeds;
 }
 
 

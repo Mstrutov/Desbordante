@@ -39,7 +39,7 @@ private:
     Vertical takeRandom(std::list<Vertical> & nodeList);
     Vertical takeRandom(std::vector<Vertical> const& nodeList);
     Vertical takeRandom(std::unordered_set<Vertical>&);
-    void minimize(std::unordered_set<Vertical> &);
+    std::vector<Vertical> minimize(std::unordered_set<Vertical> const&);
     static void substractSets(std::unordered_set<Vertical> & set, std::unordered_set<Vertical> const& setToSubstract);
     bool inferCategory(Vertical const& node, size_t rhsIndex);
 
