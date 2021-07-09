@@ -21,11 +21,11 @@ std::unordered_set<Vertical> DependenciesMap::getPrunedSubsets(std::unordered_se
 }
 
 void DependenciesMap::addNewDependency(Vertical const& nodeToAdd) { //пока версия без балансировок
-    for (auto const& mapRow : *this) {
+    for (auto& mapRow : *this) {
         Vertical const& key = mapRow.first;
 
         if (nodeToAdd.contains(key)) {
-            vertical_set depsForKey = mapRow.second;
+            std::unordered_set<Vertical>& depsForKey = mapRow.second;
             bool hasSubsetEntry = false;
 
             for (auto iter = depsForKey.begin(); iter != depsForKey.end(); ) {
@@ -48,22 +48,6 @@ void DependenciesMap::addNewDependency(Vertical const& nodeToAdd) { //пока �
     }
     //rebalance();
 }
-
-/*std::vector<shared_ptr<Vertical>> DependenciesMap::getUncheckedSubsets(shared_ptr<Vertical> node, LatticeObservations & observations) {
-    std::vector<shared_ptr<Vertical>> uncheckedSubsets;
-
-    for (auto& subsetNode : node->getParents()) {
-        if (observations.find(*subsetNode) == observations.end()) {
-            if (!canBePruned(*subsetNode)) {
-                uncheckedSubsets.push_back(std::move(subsetNode));
-            } else {
-                observations[*subsetNode] = NodeCategory::nonDependency;
-            }
-        }
-    }
-
-    return uncheckedSubsets;
-}*/
 
 bool DependenciesMap::canBePruned(Vertical const& node) const {
     for (auto const& mapRow : *this) {
