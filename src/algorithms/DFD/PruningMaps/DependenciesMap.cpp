@@ -4,14 +4,11 @@
 
 #include "DependenciesMap.h"
 
-DependenciesMap::DependenciesMap(RelationalSchema const* schema) {
-    for (auto const& column : schema->getColumns()) {
-        this->insert(std::make_pair(Vertical(*column), vertical_set()));
-    }
-}
+DependenciesMap::DependenciesMap(RelationalSchema const* schema)
+    : PruningMap(schema) {}
 
 std::unordered_set<Vertical> DependenciesMap::getPrunedSubsets(std::unordered_set<Vertical> const& subsets) const {
-    vertical_set prunedSubsets;
+    std::unordered_set<Vertical> prunedSubsets;
     for (auto const& node : subsets) {
         if (canBePruned(node)) {
             prunedSubsets.insert(node);
@@ -20,7 +17,7 @@ std::unordered_set<Vertical> DependenciesMap::getPrunedSubsets(std::unordered_se
     return prunedSubsets;
 }
 
-void DependenciesMap::addNewDependency(Vertical const& nodeToAdd) { //пока версия без балансировок
+void DependenciesMap::addNewDependency(Vertical const& nodeToAdd) {
     for (auto& mapRow : *this) {
         Vertical const& key = mapRow.first;
 
@@ -46,7 +43,7 @@ void DependenciesMap::addNewDependency(Vertical const& nodeToAdd) { //пока �
             }
         }
     }
-    //rebalance();
+    rebalance();
 }
 
 bool DependenciesMap::canBePruned(Vertical const& node) const {

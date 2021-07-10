@@ -4,11 +4,8 @@
 
 #include "NonDependenciesMap.h"
 
-NonDependenciesMap::NonDependenciesMap(RelationalSchema const* schema) {
-    for (auto const& column : schema->getColumns()) {
-        this->insert(std::make_pair(Vertical(*column), vertical_set()));
-    }
-}
+NonDependenciesMap::NonDependenciesMap(RelationalSchema const* schema)
+    : PruningMap(schema) {}
 
 std::unordered_set<Vertical> NonDependenciesMap::getPrunedSupersets(std::unordered_set<Vertical> const& supersets) const {
     std::unordered_set<Vertical> prunedSupersets;
@@ -59,5 +56,5 @@ void NonDependenciesMap::addNewNonDependency(Vertical const& nodeToAdd) {
             }
         }
     }
-    //rebalance();
+    rebalance();
 }
