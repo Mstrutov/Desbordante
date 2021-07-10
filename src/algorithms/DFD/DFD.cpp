@@ -18,39 +18,17 @@
 unsigned long long DFD::execute() {
     //shared_ptr<ColumnLayoutRelationData> relation = ColumnLayoutRelationData::createFrom(inputGenerator_, true);//second parameter?
     RelationalSchema const* const schema = relation->getSchema();
+
+    //обработка случая, когда пустая таблица
     if (relation->getColumnData().empty()) {
         throw std::runtime_error("Got an empty .csv file: FD mining is meaningless.");
     }
 
     auto startTime = std::chrono::system_clock::now();
 
-    //std::list<shared_ptr<Column>> possibleRHSs(schema->getColumns().begin(), schema->getColumns().end());
-
-    /*std::list<shared_ptr<Column>> possibleRHSs;
-    for (auto const& column : schema->getColumns()) {
-        possibleRHSs.push_back(column);
-    }
-
-    //first loop of DFD
-    for (auto columnIter = possibleRHSs.begin(); columnIter != possibleRHSs.end(); ) {
-        shared_ptr<ColumnData> columnData = relation->getColumnData((*columnIter)->getIndex());
-        shared_ptr<PositionListIndex> columnPLI = columnData->getPositionListIndex();
-        auto nextIter = std::next(columnIter);
-
-        //if current column is unique
-        if (columnPLI->getNumNonSingletonCluster() == 0) {
-            Vertical const& lhs = Vertical(**columnIter);//наверно стоит убрать, потому что при первом запуске же будет мув
-            possibleRHSs.erase(columnIter);
-
-            for (auto const& rhs : possibleRHSs) {
-                this->registerFD(lhs, *rhs); //TODO ptrs???
-            }
-        }
-        columnIter = nextIter;
-    }*/
-    //TODO может переделать на сет, потому что проверям лежит ли элемент там
     std::vector<Vertical> uniqueVerticals;
 
+    //ищем уникальные столбцы
     for (auto const& column : schema->getColumns()) {
         ColumnData& columnData = relation->getColumnData(column->getIndex());
         PositionListIndex const* const columnPLI = columnData.getPositionListIndex();
@@ -58,11 +36,7 @@ unsigned long long DFD::execute() {
         if (columnPLI->getNumNonSingletonCluster() == 0) {
             Vertical const lhs = Vertical(*column);
             uniqueVerticals.push_back(lhs);
-            /*for (auto const& rhs : schema->getColumns()) {
-                if (rhs->getIndex() != column->getIndex()) {
-                    registerFD(lhs, *rhs);
-                }
-            }*/
+            //в метаноме регаем зависимость сразу, а тут нет, чтобы сначала рассмотреть пустые
         }
     }
 
@@ -79,24 +53,26 @@ unsigned long long DFD::execute() {
         ColumnData const& rhsData = relation->getColumnData(rhs->getIndex());
         PositionListIndex const* const rhsPLI = rhsData.getPositionListIndex();
 
+        //если все строки имеют одинаковое значение, то добавляем зависимость с пустым lhs
         if (rhsPLI->getNepAsLong() == relation->getNumTuplePairs()) {
             this->registerFD(*(schema->emptyVertical), *rhs);
             continue;
+            //минимальная зависимость []->RHS, меньше точно не найти, поэтому берем следующий RHS
         }
 
-        //в метаноме немного по другому
+        //в метаноме немного по-другому, но суть такая же
+        //тут обрабатываем найденные уникальные столбцы
         for (auto const& lhs : uniqueVerticals) {
             if (!lhs.contains(*rhs)) {
                 observations[lhs] = NodeCategory::minimalDependency;
-                //разобраться с шаред поинтерами
                 dependenciesMap.addNewDependency(Vertical(lhs));//TODO костыль
-                minimalDeps.insert(lhs);
+                minimalDeps.insert(lhs); //вот теперь добавляем
             }
         }
 
         findLHSs(rhs.get(), schema);
 
-        //TODO не заьыть зареать все зависимости из списка
+        //регистрируем полученные зависимости для текущего RHS
         for (auto const& minimalDependencyLHS : minimalDeps) {
             registerFD(minimalDependencyLHS, *rhs);
         }
@@ -380,7 +356,7 @@ std::vector<Vertical> DFD::minimize(std::unordered_set<Vertical> const& nodeList
         }
     }
 
-    std::vector<Vertical> newSeeds();
+    std::vector<Vertical> newSeeds;
     for (auto seedList : seedsBySize) {
         for (Vertical seed : seedList.second) {
             newSeeds.push_back(std::move(seed));
