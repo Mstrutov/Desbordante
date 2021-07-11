@@ -205,7 +205,7 @@ Vertical DFD::pickNextNode(Vertical const &node, size_t rhsIndex) {
     //можно зарефакторить, если сделать категорию undefined?
     if (nodeIter != observations.end()) {
         if (nodeIter->second == NodeCategory::candidateMinimalDependency) {
-            std::unordered_set<Vertical> uncheckedSubsets = observations.getUncheckedSubsets(node, rhsIndex); //TODO переписать observations в конструктор?
+            std::unordered_set<Vertical> uncheckedSubsets = observations.getUncheckedSubsets(node, rhsIndex);
             std::unordered_set<Vertical> prunedNonDepSubsets = nonDependenciesMap.getPrunedSupersets(uncheckedSubsets);
             for (auto const& prunedSubset : prunedNonDepSubsets) {
                 observations[prunedSubset] = NodeCategory::nonDependency;
@@ -213,12 +213,13 @@ Vertical DFD::pickNextNode(Vertical const &node, size_t rhsIndex) {
             }
             substractSets(uncheckedSubsets, prunedNonDepSubsets);
 
-            if (uncheckedSubsets.empty()) { //TODO в метаноме немнго по другому
+            if (uncheckedSubsets.empty() && prunedNonDepSubsets.empty()) { //TODO в метаноме немнго по другому
                 minimalDeps.insert(node);
                 observations[node] = NodeCategory::minimalDependency;
                 //dependenciesMap.addNewDependency(node);
-            } else {
+            } else if (!uncheckedSubsets.empty()) {
                 Vertical nextNode = takeRandom(uncheckedSubsets);
+                //Vertical nextNode = *uncheckedSubsets.begin();
                 trace.push(node);
                 return nextNode;
             }
@@ -239,12 +240,13 @@ Vertical DFD::pickNextNode(Vertical const &node, size_t rhsIndex) {
             substractSets(uncheckedSupersets, prunedDepSupersets);
             substractSets(uncheckedSupersets, prunedNonDepSupersets);
 
-            if (uncheckedSupersets.empty()) {
+            if (uncheckedSupersets.empty() && prunedNonDepSupersets.empty()) {
                 maximalNonDeps.insert(node);
                 observations[node] = NodeCategory::maximalNonDependency;
                 //nonDependenciesMap.addNewNonDependency(node);
-            } else {
-                    Vertical nextNode = takeRandom(uncheckedSupersets);
+            } else if (!uncheckedSupersets.empty()) {
+                Vertical nextNode = takeRandom(uncheckedSupersets);
+                //Vertical nextNode = *uncheckedSupersets.begin();
                 trace.push(node);
                 return nextNode;
             }
@@ -262,44 +264,47 @@ Vertical DFD::pickNextNode(Vertical const &node, size_t rhsIndex) {
 
 
 std::list<Vertical> DFD::generateNextSeeds(Column const* const currentRHS) {
-
     std::unordered_set<Vertical> seeds;
     std::unordered_set<Vertical> newSeeds;
-    boost::dynamic_bitset<> singleColumnBitset(relation->getNumColumns(), 0);
 
     //TODO переписать под метод getColumns
     for (auto const& nonDep : maximalNonDeps) {
-        //shared_ptr<Vertical> complementNode = nonDep->invert();
         boost::dynamic_bitset<> nodeIndices = nonDep.getColumnIndices();
         nodeIndices[currentRHS->getIndex()] = true;
-        Vertical complementNode = Vertical(nonDep.getSchema(), std::move(nodeIndices.flip()));
-        singleColumnBitset.reset();
+        //Vertical complementNode = Vertical(nonDep.getSchema(), std::move(nodeIndices.flip()));
+        boost::dynamic_bitset<> complementIndices = nodeIndices.operator~();
         //dynamic_bitset<> complementNodeIndices = complementNode->getColumnIndices();
 
         if (seeds.empty()) {
-            for (size_t columnIndex = complementNode.getColumnIndices().find_first();
-                 columnIndex < complementNode.getColumnIndices().size();
-                 columnIndex = complementNode.getColumnIndices().find_next(columnIndex)
+            boost::dynamic_bitset<> singleColumnBitset(relation->getNumColumns(), 0);
+            singleColumnBitset.reset();
+
+            for (size_t columnIndex = complementIndices.find_first();
+                 columnIndex < complementIndices.size();
+                 columnIndex = complementIndices.find_next(columnIndex)
             ) {
                 singleColumnBitset[columnIndex] = true;
                 seeds.insert(Vertical(relation->getSchema(), singleColumnBitset));
                 singleColumnBitset[columnIndex] = false;
+                //seeds.insert(Vertical(*relation->getSchema()->getColumn(columnIndex)));
             }
         } else {
             for (auto const& dependency : seeds) {
-                for (size_t columnIndex = complementNode.getColumnIndices().find_first();
-                     columnIndex < complementNode.getColumnIndices().size();
-                     columnIndex = complementNode.getColumnIndices().find_next(columnIndex)
+                for (size_t columnIndex = complementIndices.find_first();
+                     columnIndex < complementIndices.size();
+                     columnIndex = complementIndices.find_next(columnIndex)
                 ) {
                     //TODO дикие костыли
-                    singleColumnBitset[columnIndex] = true;
-                    singleColumnBitset |= dependency.getColumnIndices();
-                    newSeeds.insert(Vertical(relation->getSchema(), singleColumnBitset));
-                    singleColumnBitset.reset();
+                    //singleColumnBitset[columnIndex] = true;
+                    //singleColumnBitset |= dependency.getColumnIndices();
+                    boost::dynamic_bitset<> newCombination = dependency.getColumnIndices();
+                    newCombination.set(columnIndex);
+                    newSeeds.insert(Vertical(relation->getSchema(), newCombination));
+                    //singleColumnBitset.reset();
                 }
             }
 
-            std::vector<Vertical> minimizedNewSeeds = minimize(newSeeds);
+            std::list<Vertical> minimizedNewSeeds = minimize(newSeeds);
             seeds.clear();
             for (auto & newSeed : minimizedNewSeeds) {
                 seeds.insert(std::move(newSeed));
@@ -308,11 +313,8 @@ std::list<Vertical> DFD::generateNextSeeds(Column const* const currentRHS) {
         }
     }
 
-    //TODO может быть затратно?
-    std::unordered_set<Vertical> discoveredMinimalDepsSet(minimalDeps.begin(), minimalDeps.end());
-
     for (auto seedIter = seeds.begin(); seedIter != seeds.end(); ) {
-        if (discoveredMinimalDepsSet.find(*seedIter) != discoveredMinimalDepsSet.end()) {
+        if (minimalDeps.find(*seedIter) != minimalDeps.end()) {
             seedIter = seeds.erase(seedIter);
         } else {
             seedIter++;
@@ -323,11 +325,11 @@ std::list<Vertical> DFD::generateNextSeeds(Column const* const currentRHS) {
 }
 
 //TODO пока что дикий костыль за квадрат
-std::vector<Vertical> DFD::minimize(std::unordered_set<Vertical> const& nodeList) {
+std::list<Vertical> DFD::minimize(std::unordered_set<Vertical> const& nodeList) {
     long long maxCardinality = 0;
     std::unordered_map<long long, std::list<Vertical>> seedsBySize;
     for (auto const& seed : nodeList) {
-        long long cardinalityOfSeed = seed.getArity(); //TODO check
+        long long cardinalityOfSeed = seed.getArity();
         maxCardinality = std::max(maxCardinality, cardinalityOfSeed);
         if (seedsBySize.find(cardinalityOfSeed) == seedsBySize.end()) {
             seedsBySize[cardinalityOfSeed] = std::list<Vertical>();
@@ -356,9 +358,9 @@ std::vector<Vertical> DFD::minimize(std::unordered_set<Vertical> const& nodeList
         }
     }
 
-    std::vector<Vertical> newSeeds;
-    for (auto seedList : seedsBySize) {
-        for (Vertical seed : seedList.second) {
+    std::list<Vertical> newSeeds;
+    for (auto & seedList : seedsBySize) {
+        for (Vertical& seed : seedList.second) {
             newSeeds.push_back(std::move(seed));
         }
     }
