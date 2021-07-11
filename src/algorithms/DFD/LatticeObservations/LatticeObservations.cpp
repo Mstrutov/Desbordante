@@ -6,16 +6,16 @@
 
 NodeCategory LatticeObservations::updateDependencyCategory(Vertical const& vertical) {
     //бежим по множеству подмножеств и смотрим. если получили все независимости, то это мин зависимость
-
     if (vertical.getArity() > 1) {
         boost::dynamic_bitset<> columnIndices = vertical.getColumnIndices(); //копируем индексы
         bool hasUncheckedSubset = false;
 
         for (size_t index = columnIndices.find_first();
-             index < columnIndices.size(); index = columnIndices.find_next(index)) {
+             index < columnIndices.size();
+             index = columnIndices.find_next(index))
+        {
             columnIndices[index] = false; //убираем одну из колонок
-            auto const subsetVerticalIter = this->find(
-                    Vertical(vertical.getSchema(), columnIndices)); //TODO передаем временнй объект??
+            auto const subsetVerticalIter = this->find(Vertical(vertical.getSchema(), columnIndices));
 
             //если какое-то подмножество не посещено либо оно не является антизависимостью, то не подходит
 
@@ -40,7 +40,7 @@ NodeCategory LatticeObservations::updateDependencyCategory(Vertical const& verti
     }
 }
 
-NodeCategory LatticeObservations::updateNonDependencyCategory(Vertical const& vertical, int rhsIndex) {
+/*NodeCategory LatticeObservations::updateNonDependencyCategory(Vertical const& vertical, int rhsIndex) {
     boost::dynamic_bitset<> columnIndices = vertical.getColumnIndices();
     //columnIndices[rhsIndex] = true;
     bool hasUncheckedSuperset = false;
@@ -66,6 +66,35 @@ NodeCategory LatticeObservations::updateNonDependencyCategory(Vertical const& ve
         }
     }
     return hasUncheckedSuperset ? NodeCategory::candidateMaximalNonDependency : NodeCategory::maximalNonDependency;
+}*/
+
+NodeCategory LatticeObservations::updateNonDependencyCategory(Vertical const& vertical, int rhsIndex) {
+    boost::dynamic_bitset<> columnIndices = vertical.getColumnIndices();
+    columnIndices[rhsIndex] = true;
+    columnIndices.flip();
+
+    bool hasUncheckedSuperset = false;
+
+    for (size_t index = columnIndices.find_first();
+         index < columnIndices.size();
+         index = columnIndices.find_next(index))
+    {
+        auto const supersetVerticalIter = this->find(vertical.Union(*vertical.getSchema()->getColumn(index))); //TODO !!!лучше переделать без второго flip а просто бежать циклом по нулям
+
+        if (supersetVerticalIter == this->end()) {
+            //если нашли нерассмотренное надмножество
+            hasUncheckedSuperset = true;
+        } else {
+            NodeCategory const &supersetVerticalCategory = supersetVerticalIter->second;
+            if (supersetVerticalCategory == NodeCategory::maximalNonDependency ||
+                supersetVerticalCategory == NodeCategory::nonDependency ||
+                supersetVerticalCategory == NodeCategory::candidateMaximalNonDependency
+            ) {
+                return NodeCategory::nonDependency;
+            }
+        }
+    }
+    return hasUncheckedSuperset ? NodeCategory::candidateMaximalNonDependency : NodeCategory::maximalNonDependency;
 }
 
 bool LatticeObservations::isCandidate(Vertical const& node) {
@@ -81,19 +110,11 @@ bool LatticeObservations::isCandidate(Vertical const& node) {
 
 std::unordered_set<Vertical>
 LatticeObservations::getUncheckedSubsets(Vertical const& node, size_t rhsIndex) {
-    /*vertical_set uncheckedSubsets;
-
-    for (auto& subsetNode : node->getParents()) {
-        if (this->find(*subsetNode) == this->end()) {
-            uncheckedSubsets.insert(std::move(subsetNode));
-        }
-    }*/
-
     boost::dynamic_bitset<> indices = node.getColumnIndices();
     std::unordered_set<Vertical> uncheckedSubsets;
 
-    for (size_t index = 0; index < indices.size(); index++) {
-        if (index != rhsIndex && indices[index]) {
+    for (size_t index = indices.find_first(); index < indices.size(); index = indices.find_next(index)) {
+        if (index != rhsIndex) {    //в метаноме этого условия нет
             indices[index] = false;
             Vertical subsetNode = Vertical(node.getSchema(), indices);
 
