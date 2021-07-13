@@ -14,6 +14,7 @@
 #include "NonDependenciesMap.h"
 #include "PartitionStorage/PartitionStorage.h"
 #include "Vertical.h"
+#include "ColumnOrder/ColumnOrder.h"
 
 class DFD : public FDAlgorithm {
 private:
@@ -24,6 +25,7 @@ private:
     DependenciesMap dependenciesMap;
     NonDependenciesMap nonDependenciesMap;
     std::unique_ptr<ColumnLayoutRelationData> relation;
+    ColumnOrder columnOrder;
 
     std::unordered_set<Vertical> minimalDeps; //TODO мб их определять либо в функции execute, либо полями класса
     std::unordered_set<Vertical> maximalNonDeps;
@@ -35,10 +37,10 @@ private:
 
     void findLHSs(Column const* const rhs, RelationalSchema const* const schema); //TODO: нужен ли второй параметр?; мб переименовать типа findDeps
     Vertical pickNextNode(Vertical const &node, size_t rhsIndex);
-    std::list<Vertical> generateNextSeeds(Column const* const currentRHS);
+    std::stack<Vertical> generateNextSeeds(Column const* const currentRHS);
     Vertical takeRandom(std::list<Vertical> & nodeList);
     Vertical takeRandom(std::vector<Vertical> const& nodeList);
-    Vertical takeRandom(std::unordered_set<Vertical>&);
+    const Vertical & takeRandom(std::unordered_set<Vertical> &nodeSet);
     std::list<Vertical> minimize(std::unordered_set<Vertical> const&);
     static void substractSets(std::unordered_set<Vertical> & set, std::unordered_set<Vertical> const& setToSubstract);
     bool inferCategory(Vertical const& node, size_t rhsIndex);

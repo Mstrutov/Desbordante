@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <random>
 #include <list>
+#include <stack>
 
 #include "ColumnLayoutRelationData.h"
 #include "RelationalSchema.h"
@@ -95,12 +96,12 @@ Vertical DFD::takeRandom(std::list<Vertical> & nodeList) {
     return node;
 }
 
-Vertical DFD::takeRandom(std::unordered_set<Vertical> & nodeSet) {
+const Vertical & DFD::takeRandom(std::unordered_set<Vertical> & nodeSet) {
     std::uniform_int_distribution<> dis(0, std::distance(nodeSet.begin(), nodeSet.end()) - 1);
     auto iterator = nodeSet.begin();
     std::advance(iterator, dis(this->gen));
-    Vertical node = *iterator;
-    nodeSet.erase(iterator);
+    Vertical const& node = *iterator;
+    //nodeSet.erase(iterator);
     return node;
 }
 
@@ -113,21 +114,34 @@ Vertical DFD::takeRandom(std::vector<Vertical> const& nodeVector) {
 
 void DFD::findLHSs(Column const* const  rhs, RelationalSchema const* const schema) {
 
-    std::list<Vertical> seeds; //TODO лист или вектор?
+    std::stack<Vertical> seeds; //TODO лист или вектор?
 
-    //initialize seeds nodes
+    /*//initialize seeds nodes
     for (auto const& column : schema->getColumns()) {
         //add to seeds all columns except rhs
         //seeds.push_back(schema->emptyVertical);
         if (column->getIndex() != rhs->getIndex())
             seeds.push_back(Vertical(*column)); //TODO проверить, поменял emplace на push
-    }
+    }*/
 
-    //auto
+    //TODO проверить, переделка из метанома
+    for (int partitionIndex : columnOrder.getOrderHighDistinctCount(Vertical(*rhs).invert())) {
+        if (partitionIndex != rhs->getIndex()) {
+            seeds.push(Vertical(*schema->getColumn(partitionIndex)));
+        }
+    }
 
     do {
         while (!seeds.empty()) {
-            Vertical node = takeRandom(seeds);
+            //
+            Vertical node;
+            if (!seeds.empty()) {
+                node = seeds.top();
+                seeds.pop();
+            } else {
+                node = *schema->emptyVertical;
+            }
+
             do {
                 auto const nodeObservationIter = observations.find(node); //const?
 
@@ -196,6 +210,7 @@ DFD::DFD(const std::filesystem::path &path, char separator, bool hasHeader)
     partitionStorage = std::make_unique<PartitionStorage>(relation.get(), CachingMethod::ALLCACHING, CacheEvictionMethod::MEDAINUSAGE);
     dependenciesMap = DependenciesMap(relation->getSchema());
     nonDependenciesMap = NonDependenciesMap(relation->getSchema());
+    columnOrder = ColumnOrder(relation.get());
 }
 
 Vertical DFD::pickNextNode(Vertical const &node, size_t rhsIndex) {
@@ -205,7 +220,7 @@ Vertical DFD::pickNextNode(Vertical const &node, size_t rhsIndex) {
     //можно зарефакторить, если сделать категорию undefined?
     if (nodeIter != observations.end()) {
         if (nodeIter->second == NodeCategory::candidateMinimalDependency) {
-            std::unordered_set<Vertical> uncheckedSubsets = observations.getUncheckedSubsets(node, rhsIndex);
+            std::unordered_set<Vertical> uncheckedSubsets = observations.getUncheckedSubsets(node, rhsIndex, columnOrder);
             std::unordered_set<Vertical> prunedNonDepSubsets = nonDependenciesMap.getPrunedSupersets(uncheckedSubsets);
             for (auto const& prunedSubset : prunedNonDepSubsets) {
                 observations[prunedSubset] = NodeCategory::nonDependency;
@@ -218,13 +233,13 @@ Vertical DFD::pickNextNode(Vertical const &node, size_t rhsIndex) {
                 observations[node] = NodeCategory::minimalDependency;
                 //dependenciesMap.addNewDependency(node);
             } else if (!uncheckedSubsets.empty()) {
-                Vertical nextNode = takeRandom(uncheckedSubsets);
-                //Vertical nextNode = *uncheckedSubsets.begin();
+                Vertical const& nextNode = takeRandom(uncheckedSubsets);
+                //Vertical const& nextNode = *uncheckedSubsets.begin();
                 trace.push(node);
                 return nextNode;
             }
         } else if (nodeIter->second == NodeCategory::candidateMaximalNonDependency) {
-            std::unordered_set<Vertical> uncheckedSupersets = observations.getUncheckedSupersets(node, rhsIndex);
+            std::unordered_set<Vertical> uncheckedSupersets = observations.getUncheckedSupersets(node, rhsIndex, columnOrder);
             std::unordered_set<Vertical> prunedNonDepSupersets = nonDependenciesMap.getPrunedSupersets(uncheckedSupersets);
             std::unordered_set<Vertical> prunedDepSupersets = dependenciesMap.getPrunedSubsets(uncheckedSupersets);
 
@@ -245,8 +260,8 @@ Vertical DFD::pickNextNode(Vertical const &node, size_t rhsIndex) {
                 observations[node] = NodeCategory::maximalNonDependency;
                 //nonDependenciesMap.addNewNonDependency(node);
             } else if (!uncheckedSupersets.empty()) {
-                Vertical nextNode = takeRandom(uncheckedSupersets);
-                //Vertical nextNode = *uncheckedSupersets.begin();
+                Vertical const& nextNode = takeRandom(uncheckedSupersets);
+                //Vertical const& nextNode = *uncheckedSupersets.begin();
                 trace.push(node);
                 return nextNode;
             }
@@ -263,7 +278,7 @@ Vertical DFD::pickNextNode(Vertical const &node, size_t rhsIndex) {
 }
 
 
-std::list<Vertical> DFD::generateNextSeeds(Column const* const currentRHS) {
+std::stack<Vertical> DFD::generateNextSeeds(Column const* const currentRHS) {
     std::unordered_set<Vertical> seeds;
     std::unordered_set<Vertical> newSeeds;
 
@@ -321,10 +336,16 @@ std::list<Vertical> DFD::generateNextSeeds(Column const* const currentRHS) {
         }
     }
 
-    return std::list(seeds.begin(), seeds.end());
+    std::stack<Vertical> remainingSeeds;
+
+    for (auto& newSeed : seeds) {
+        remainingSeeds.push(newSeed);
+    }
+
+    return remainingSeeds;
 }
 
-//TODO пока что дикий костыль за квадрат
+
 std::list<Vertical> DFD::minimize(std::unordered_set<Vertical> const& nodeList) {
     long long maxCardinality = 0;
     std::unordered_map<long long, std::list<Vertical>> seedsBySize;
