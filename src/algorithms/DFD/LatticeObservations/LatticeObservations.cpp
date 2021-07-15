@@ -109,21 +109,9 @@ bool LatticeObservations::isCandidate(Vertical const& node) {
 
 
 std::unordered_set<Vertical>
-LatticeObservations::getUncheckedSubsets(Vertical const& node, size_t rhsIndex, ColumnOrder const& columnOrder) {
+LatticeObservations::getUncheckedSubsets(Vertical const& node, ColumnOrder const& columnOrder) {
     boost::dynamic_bitset<> indices = node.getColumnIndices();
     std::unordered_set<Vertical> uncheckedSubsets;
-
-    /*for (size_t index = indices.find_first(); index < indices.size(); index = indices.find_next(index)) {
-        if (index != rhsIndex) {    //в метаноме этого условия нет
-            indices[index] = false;
-            Vertical subsetNode = Vertical(node.getSchema(), indices);
-
-            if (this->find(subsetNode) == this->end()) {
-                uncheckedSubsets.insert(std::move(subsetNode));
-            }
-            indices[index] = true;
-        }
-    }*/
 
     for (int columnIndex : columnOrder.getOrderHighDistinctCount(node)) {
         indices[columnIndex] = false;
@@ -142,17 +130,6 @@ LatticeObservations::getUncheckedSupersets(Vertical const& node, size_t rhsIndex
     boost::dynamic_bitset<> flippedIndices = node.getColumnIndices().flip();
     std::unordered_set<Vertical> uncheckedSupersets;
 
-    /*for (size_t index = 0; index < indices.size(); index++) {
-        if (index != rhsIndex && !indices[index]) {
-            indices[index] = true;
-            Vertical supersetNode = Vertical(node.getSchema(), indices);
-
-            if (this->find(supersetNode) == this->end()) {
-                uncheckedSupersets.insert(std::move(supersetNode));
-            }
-            indices[index] = false;
-        }
-    }*/
     flippedIndices[rhsIndex] = false;
 
     for (int columnIndex : columnOrder.getOrderHighDistinctCount(Vertical(node.getSchema(), flippedIndices))) {

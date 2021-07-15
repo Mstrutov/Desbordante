@@ -29,7 +29,7 @@ public:
     NodeCategory updateDependencyCategory(Vertical const& vertical);
     NodeCategory updateNonDependencyCategory(Vertical const& vertical, int rhsIndex);
 
-    std::unordered_set<Vertical> getUncheckedSubsets(const Vertical &node, size_t rhsIndex, ColumnOrder const&);
+    std::unordered_set<Vertical> getUncheckedSubsets(const Vertical &node, ColumnOrder const&);
     std::unordered_set<Vertical> getUncheckedSupersets(const Vertical &node, size_t rhsIndex, ColumnOrder const&);
 
     bool inferCategory(Vertical const& node);
