@@ -156,10 +156,12 @@ AgreeSet AgreeSetFactory::getAgreeSet(int const tuple1_index,
 AgreeSetFactory::SetOfVectors AgreeSetFactory::genPLIMaxRepresentation() const {
     auto start_time = std::chrono::system_clock::now();
     vector<ColumnData> const& columns_data = relation_->getColumnData();
-    auto not_empty_pli = std::find_if(columns_data.begin(), columns_data.end(),
-                                      [](ColumnData const& c) {
-        return c.getPositionListIndex()->getSize() != 0;
-    });
+    auto not_empty_pli =
+        std::find_if(columns_data.begin(), columns_data.end(),
+                     [](ColumnData const& c) {
+                         return c.getPositionListIndex()->getSize() != 0;
+                     }
+        );
 
     if (not_empty_pli == columns_data.end()) {
         return {};
@@ -170,12 +172,7 @@ AgreeSetFactory::SetOfVectors AgreeSetFactory::genPLIMaxRepresentation() const {
         not_empty_pli->getPositionListIndex()->getIndex().end()
     );
 
-    for (auto p = columns_data.begin(); p != columns_data.end(); ++p) {
-        //already examined
-        if (p == not_empty_pli) {
-            continue;
-        }
-
+    for (auto p = std::next(not_empty_pli); p != columns_data.end(); ++p) {
         PositionListIndex const* pli = p->getPositionListIndex();
         if (pli->getSize() != 0) {
             calculateSupersets(max_representation, pli->getIndex());
@@ -196,8 +193,8 @@ void AgreeSetFactory::calculateSupersets(SetOfVectors& max_representation,
                                          std::deque<vector<int>> const& partition) const {
     SetOfVectors to_add_to_mc;
     SetOfVectors to_delete_from_mc;
-    //auto erase_from_partition = partition.end();
     set<std::deque<vector<int>>::const_iterator> to_exclude_from_partition;
+
     for (auto const& max_set : max_representation) {
         for (auto p = partition.begin();
              to_exclude_from_partition.size() != partition.size() && p != partition.end();
@@ -209,21 +206,17 @@ void AgreeSetFactory::calculateSupersets(SetOfVectors& max_representation,
             if (max_set.size() >= p->size() &&
                 std::includes(max_set.begin(), max_set.end(), p->begin(), p->end())) {
                 to_add_to_mc.erase(*p);
-                //erase_from_partition = p;
                 to_exclude_from_partition.insert(p);
                 break;
             }
+
             if (p->size() >= max_set.size() &&
                 std::includes(p->begin(), p->end(), max_set.begin(), max_set.end())) {
                 to_delete_from_mc.insert(max_set);
             }
+
             to_add_to_mc.insert(*p);
         }
-
-        /*if (erase_from_partition != partition.end()) {
-            partition.erase(erase_from_partition);
-            erase_from_partition = partition.end();
-        }*/
     }
 
     for (auto& cluster : to_add_to_mc) {
