@@ -220,7 +220,7 @@ Vertical DFD::pickNextNode(Vertical const &node, size_t rhsIndex) {
     //можно зарефакторить, если сделать категорию undefined?
     if (nodeIter != observations.end()) {
         if (nodeIter->second == NodeCategory::candidateMinimalDependency) {
-            std::unordered_set<Vertical> uncheckedSubsets = observations.getUncheckedSubsets(node, rhsIndex, columnOrder);
+            std::unordered_set<Vertical> uncheckedSubsets = observations.getUncheckedSubsets(node, columnOrder);
             std::unordered_set<Vertical> prunedNonDepSubsets = nonDependenciesMap.getPrunedSupersets(uncheckedSubsets);
             for (auto const& prunedSubset : prunedNonDepSubsets) {
                 observations[prunedSubset] = NodeCategory::nonDependency;
