@@ -309,13 +309,9 @@ std::stack<Vertical> DFD::generateNextSeeds(Column const* const currentRHS) {
                      columnIndex < complementIndices.size();
                      columnIndex = complementIndices.find_next(columnIndex)
                 ) {
-                    //TODO дикие костыли
-                    //singleColumnBitset[columnIndex] = true;
-                    //singleColumnBitset |= dependency.getColumnIndices();
                     boost::dynamic_bitset<> newCombination = dependency.getColumnIndices();
                     newCombination.set(columnIndex);
                     newSeeds.insert(Vertical(relation->getSchema(), newCombination));
-                    //singleColumnBitset.reset();
                 }
             }
 
@@ -348,26 +344,26 @@ std::stack<Vertical> DFD::generateNextSeeds(Column const* const currentRHS) {
 
 std::list<Vertical> DFD::minimize(std::unordered_set<Vertical> const& nodeList) {
     long long maxCardinality = 0;
-    std::unordered_map<long long, std::list<Vertical>> seedsBySize;
+    std::unordered_map<long long, std::list<Vertical const*>> seedsBySize(nodeList.size());
     for (auto const& seed : nodeList) {
         long long cardinalityOfSeed = seed.getArity();
         maxCardinality = std::max(maxCardinality, cardinalityOfSeed);
         if (seedsBySize.find(cardinalityOfSeed) == seedsBySize.end()) {
-            seedsBySize[cardinalityOfSeed] = std::list<Vertical>();
+            seedsBySize[cardinalityOfSeed] = std::list<Vertical const*>();
         }
-        seedsBySize[cardinalityOfSeed].push_back(seed);
+        seedsBySize[cardinalityOfSeed].push_back(&seed);
     }
 
     for (long long lowerBound = 1; lowerBound < maxCardinality; lowerBound++) {
         if (seedsBySize.find(lowerBound) != seedsBySize.end()) {
-            std::list<Vertical> const& lowerBoundSeeds = seedsBySize.find(lowerBound)->second;
+            std::list<Vertical const*> const& lowerBoundSeeds = seedsBySize.find(lowerBound)->second;
             for (long long upperBound = maxCardinality; upperBound > lowerBound; upperBound--) {
                 if (seedsBySize.find(upperBound) != seedsBySize.end()) {
-                    std::list<Vertical> & upperBoundSeeds = seedsBySize.find(upperBound)->second;
+                    std::list<Vertical const*> & upperBoundSeeds = seedsBySize.find(upperBound)->second;
                     for (auto lowerIt = lowerBoundSeeds.begin(); lowerIt != lowerBoundSeeds.end(); lowerIt++) {
-                        //Vertical const& lowerSeed = *lowerIt;
+                        Vertical const* lowerSeed = *lowerIt;
                         for (auto upperIt = upperBoundSeeds.begin(); upperIt != upperBoundSeeds.end();) {
-                            if (upperIt->contains(*lowerIt)) {
+                            if ((*upperIt)->contains(*lowerSeed)) {
                                 upperIt = upperBoundSeeds.erase(upperIt);
                             } else {
                                 upperIt++;
@@ -381,8 +377,8 @@ std::list<Vertical> DFD::minimize(std::unordered_set<Vertical> const& nodeList) 
 
     std::list<Vertical> newSeeds;
     for (auto & seedList : seedsBySize) {
-        for (Vertical& seed : seedList.second) {
-            newSeeds.push_back(std::move(seed));
+        for (Vertical const* & seed : seedList.second) {
+            newSeeds.push_back(*seed);
         }
     }
     return newSeeds;
