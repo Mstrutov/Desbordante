@@ -131,7 +131,7 @@ AgreeSetFactory::SetOfAgreeSets AgreeSetFactory::genAgreeSets() const {
             std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::system_clock::now() - start_time
             );
-    LOG(INFO) << "TIME TO AGREE SETS GENERATION WITH METHOD "
+    LOG(INFO) << "TIME TO GENERATE AGREE SETS WITH METHOD "
               << method_str << ": "
               << elapsed_mills_to_gen_agree_sets.count();
 
@@ -153,40 +153,127 @@ AgreeSet AgreeSetFactory::getAgreeSet(int const tuple1_index,
     return relation_->getSchema()->getVertical(agree_set_indices);
 }
 
+/* It seems very cumbersome (so is the genAgreeSet method),
+ * maybe need to revise the algorithm for choosing the desired method.
+ */
+template<MCGenMethod method>
 AgreeSetFactory::SetOfVectors AgreeSetFactory::genPLIMaxRepresentation() const {
     auto start_time = std::chrono::system_clock::now();
     vector<ColumnData> const& columns_data = relation_->getColumnData();
-    auto not_empty_pli =
-        std::find_if(columns_data.begin(), columns_data.end(),
-                     [](ColumnData const& c) {
-                         return c.getPositionListIndex()->getSize() != 0;
-                     }
-        );
+    std::string method_str;
+    SetOfVectors max_representation;
 
-    if (not_empty_pli == columns_data.end()) {
-        return {};
-    }
+    if constexpr (method == MCGenMethod::kUsingCalculateSupersets) {
+        method_str = "`kUsingCalculateSupersets`";
+        auto not_empty_pli =
+            std::find_if(columns_data.begin(), columns_data.end(),
+                         [](ColumnData const& c) {
+                             return c.getPositionListIndex()->getSize() != 0;
+                         }
+            );
 
-    SetOfVectors max_representation(
-        not_empty_pli->getPositionListIndex()->getIndex().begin(),
-        not_empty_pli->getPositionListIndex()->getIndex().end()
-    );
-
-    for (auto p = std::next(not_empty_pli); p != columns_data.end(); ++p) {
-        PositionListIndex const* pli = p->getPositionListIndex();
-        if (pli->getSize() != 0) {
-            calculateSupersets(max_representation, pli->getIndex());
+        if (not_empty_pli == columns_data.end()) {
+            goto OUT;
         }
+
+        max_representation.insert(not_empty_pli->getPositionListIndex()->getIndex().begin(),
+                                  not_empty_pli->getPositionListIndex()->getIndex().end());
+
+        for (auto p = std::next(not_empty_pli); p != columns_data.end(); ++p) {
+            PositionListIndex const* pli = p->getPositionListIndex();
+            if (pli->getSize() != 0) {
+                calculateSupersets(max_representation, pli->getIndex());
+            }
+        }
+    } else if constexpr (method == MCGenMethod::kUsingHandleEqvClass) {
+        method_str = "`kUsingHandleEqvClass`";
+        // set of all equivalence classes of all paritions
+        auto comp = [](vector<int> const& lhs, vector<int> const& rhs) {
+            if (lhs.size() != rhs.size()) {
+                return lhs.size() < rhs.size();
+            }
+            return std::lexicographical_compare(lhs.begin(), lhs.end(),
+                                                rhs.begin(), rhs.end());
+        };
+        set<vector<int>, decltype(comp)> sorted_eqv_classes(comp);
+
+        // Fill sorted_partitions
+        for (ColumnData const& data : columns_data) {
+            std::deque<vector<int>> const& index = data.getPositionListIndex()->getIndex();
+            sorted_eqv_classes.insert(index.begin(), index.end());
+        }
+
+        if (sorted_eqv_classes.empty()) {
+            goto OUT;
+        }
+
+
+        // Maximize partitions
+        size_t const min_size = sorted_eqv_classes.begin()->size();
+        std::unordered_map<size_t, SetOfVectors> max_sets;
+        SetOfVectors min_set;
+
+        auto const first_not_min
+            = std::find_if_not(sorted_eqv_classes.begin(), sorted_eqv_classes.end(),
+                               [min_size](auto const& p) { return p.size() == min_size; });
+
+        min_set.insert(sorted_eqv_classes.begin(), first_not_min);
+        max_sets.emplace(min_size, std::move(min_set));
+
+        for (auto it = first_not_min; it != sorted_eqv_classes.end();) {
+            // So that the eqv_class can be modified
+            vector<int> eqv_class = sorted_eqv_classes.extract(it++).value();
+            handleEqvClass(eqv_class, max_sets, true);
+        }
+
+
+        // Metanome `mergeResult`
+        max_representation.reserve(max_sets.size());
+        for (auto it = max_sets.begin(); it != max_sets.end();) {
+            SetOfVectors set = max_sets.extract(it++).mapped();
+            max_representation.insert(std::make_move_iterator(set.begin()),
+                                      std::make_move_iterator(set.end()));
+        }
+        assert(max_sets.empty());
     }
 
+OUT:
     auto elapsed_mills_to_gen_max_representation =
         std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now() - start_time
         );
-    LOG(INFO) << "TIME TO MAX REPRESENTATION GENERATION: "
+    LOG(INFO) << "TIME TO GENERATE MAX REPRESENTATION WITH METHOD "
+              << method_str << ": "
               << elapsed_mills_to_gen_max_representation.count();
 
     return max_representation;
+}
+
+void AgreeSetFactory::handleEqvClass(vector<int>& eqv_class,
+                                     std::unordered_map<size_t, SetOfVectors>& max_sets,
+                                     bool const first_step) const {
+    for (auto it = eqv_class.begin(); it != eqv_class.end(); ++it) {
+        vector<int> copy(eqv_class.begin(), it);
+        copy.insert(copy.end(), std::next(it), eqv_class.end());
+
+        size_t const size = copy.size();
+        assert(size == eqv_class.size() - 1);
+
+        /* Need to check if an element with copy.size() key exists before accessing it
+         * to avoid new SetOfVectors() creation if it doesn't.
+         */
+        if (max_sets.count(size) != 0 &&
+            max_sets[size].find(copy) != max_sets[size].end()) {
+            max_sets[size].erase(copy);
+        } else {
+            if (size > 2) {
+                handleEqvClass(copy, max_sets, false);
+            }
+        }
+    }
+
+    if (first_step)
+        max_sets[eqv_class.size()].insert(std::move(eqv_class));
 }
 
 void AgreeSetFactory::calculateSupersets(SetOfVectors& max_representation,
@@ -227,6 +314,7 @@ void AgreeSetFactory::calculateSupersets(SetOfVectors& max_representation,
     }
 }
 
+
 template AgreeSetFactory::SetOfAgreeSets
 AgreeSetFactory::genAgreeSets<AgreeSetsGenMethod::kUsingVectorOfIDSets>() const;
 template AgreeSetFactory::SetOfAgreeSets
@@ -235,3 +323,9 @@ template AgreeSetFactory::SetOfAgreeSets
 AgreeSetFactory::genAgreeSets<AgreeSetsGenMethod::kUsingGetAgreeSet>() const;
 template AgreeSetFactory::SetOfAgreeSets
 AgreeSetFactory::genAgreeSets<AgreeSetsGenMethod::kUsingMCAndGetAgreeSet>() const;
+
+template AgreeSetFactory::SetOfVectors
+AgreeSetFactory::genPLIMaxRepresentation<MCGenMethod::kUsingCalculateSupersets>() const;
+template AgreeSetFactory::SetOfVectors
+AgreeSetFactory::genPLIMaxRepresentation<MCGenMethod::kUsingHandleEqvClass>() const;
+
