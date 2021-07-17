@@ -52,6 +52,7 @@ public:
     bool operator>(Vertical const& rhs) const { return !(*this < rhs && *this == rhs); }
 
     boost::dynamic_bitset<> getColumnIndices() const { return columnIndices; }
+    boost::dynamic_bitset<> const& getColumnIndicesRef() const { return columnIndices; }
     RelationalSchema const* getSchema() const { return schema; }
 
     bool contains(Vertical const& that) const;
