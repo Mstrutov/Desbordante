@@ -279,10 +279,13 @@ void AgreeSetFactory::handleEqvClass(vector<int>& eqv_class,
 void AgreeSetFactory::calculateSupersets(SetOfVectors& max_representation,
                                          std::deque<vector<int>> const& partition) const {
     SetOfVectors to_add_to_mc;
-    SetOfVectors to_delete_from_mc;
+    auto hash = [beg = max_representation.begin()](SetOfVectors::const_iterator it) {
+        return std::distance<SetOfVectors::const_iterator>(beg, it);
+    };
+    unordered_set<SetOfVectors::const_iterator, decltype(hash)> to_delete_from_mc(1, hash);
     set<std::deque<vector<int>>::const_iterator> to_exclude_from_partition;
 
-    for (auto const& max_set : max_representation) {
+    for (auto it = max_representation.begin(); it != max_representation.end(); ++it) {
         for (auto p = partition.begin();
              to_exclude_from_partition.size() != partition.size() && p != partition.end();
              ++p) {
@@ -290,16 +293,16 @@ void AgreeSetFactory::calculateSupersets(SetOfVectors& max_representation,
                 continue;
             }
 
-            if (max_set.size() >= p->size() &&
-                std::includes(max_set.begin(), max_set.end(), p->begin(), p->end())) {
+            if (it->size() >= p->size() &&
+                std::includes(it->begin(), it->end(), p->begin(), p->end())) {
                 to_add_to_mc.erase(*p);
                 to_exclude_from_partition.insert(p);
                 break;
             }
 
-            if (p->size() >= max_set.size() &&
-                std::includes(p->begin(), p->end(), max_set.begin(), max_set.end())) {
-                to_delete_from_mc.insert(max_set);
+            if (p->size() >= it->size() &&
+                std::includes(p->begin(), p->end(), it->begin(), it->end())) {
+                to_delete_from_mc.insert(it);
             }
 
             to_add_to_mc.insert(*p);
@@ -309,8 +312,8 @@ void AgreeSetFactory::calculateSupersets(SetOfVectors& max_representation,
     for (auto& cluster : to_add_to_mc) {
         max_representation.insert(std::move(cluster));
     }
-    for (auto& cluster : to_delete_from_mc) {
-        max_representation.erase(cluster);
+    for (auto it : to_delete_from_mc) {
+        max_representation.erase(it);
     }
 }
 
