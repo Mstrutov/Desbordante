@@ -214,7 +214,7 @@ DFD::DFD(const std::filesystem::path &path, char separator, bool hasHeader)
 }
 
 Vertical DFD::pickNextNode(Vertical const &node, size_t rhsIndex) {
-    boost::dynamic_bitset<> columnIndices = node.getColumnIndices();
+    boost::dynamic_bitset<> const& columnIndices = node.getColumnIndicesRef();
     auto nodeIter = observations.find(node);
 
     //можно зарефакторить, если сделать категорию undefined?
@@ -284,11 +284,17 @@ std::stack<Vertical> DFD::generateNextSeeds(Column const* const currentRHS) {
 
     //TODO переписать под метод getColumns
     for (auto const& nonDep : maximalNonDeps) {
-        boost::dynamic_bitset<> nodeIndices = nonDep.getColumnIndices();
+        /*
+        boost::dynamic_bitset<> nodeIndices = nonDep.getColumnIndicesRef();
         nodeIndices[currentRHS->getIndex()] = true;
         //Vertical complementNode = Vertical(nonDep.getSchema(), std::move(nodeIndices.flip()));
         boost::dynamic_bitset<> complementIndices = nodeIndices.operator~();
         //dynamic_bitset<> complementNodeIndices = complementNode->getColumnIndices();
+         */
+
+        boost::dynamic_bitset<> complementIndices = nonDep.getColumnIndicesRef();
+        complementIndices[currentRHS->getIndex()] = true;
+        complementIndices.flip();
 
         if (seeds.empty()) {
             boost::dynamic_bitset<> singleColumnBitset(relation->getNumColumns(), 0);
@@ -305,13 +311,15 @@ std::stack<Vertical> DFD::generateNextSeeds(Column const* const currentRHS) {
             }
         } else {
             for (auto const& dependency : seeds) {
+                boost::dynamic_bitset<> newCombination = dependency.getColumnIndicesRef();
+
                 for (size_t columnIndex = complementIndices.find_first();
                      columnIndex < complementIndices.size();
                      columnIndex = complementIndices.find_next(columnIndex)
                 ) {
-                    boost::dynamic_bitset<> newCombination = dependency.getColumnIndices();
-                    newCombination.set(columnIndex);
+                    newCombination[columnIndex] = true;
                     newSeeds.insert(Vertical(relation->getSchema(), newCombination));
+                    newCombination[columnIndex] = dependency.getColumnIndicesRef()[columnIndex];
                 }
             }
 
@@ -334,7 +342,7 @@ std::stack<Vertical> DFD::generateNextSeeds(Column const* const currentRHS) {
 
     std::stack<Vertical> remainingSeeds;
 
-    for (auto& newSeed : seeds) {
+    for (Vertical const& newSeed : seeds) {
         remainingSeeds.push(newSeed);
     }
 
@@ -344,7 +352,7 @@ std::stack<Vertical> DFD::generateNextSeeds(Column const* const currentRHS) {
 
 std::list<Vertical> DFD::minimize(std::unordered_set<Vertical> const& nodeList) {
     long long maxCardinality = 0;
-    std::unordered_map<long long, std::list<Vertical const*>> seedsBySize(nodeList.size());
+    std::unordered_map<long long, std::list<Vertical const*>> seedsBySize(nodeList.size()/relation->getNumColumns());
     for (auto const& seed : nodeList) {
         long long cardinalityOfSeed = seed.getArity();
         maxCardinality = std::max(maxCardinality, cardinalityOfSeed);
@@ -360,8 +368,7 @@ std::list<Vertical> DFD::minimize(std::unordered_set<Vertical> const& nodeList) 
             for (long long upperBound = maxCardinality; upperBound > lowerBound; upperBound--) {
                 if (seedsBySize.find(upperBound) != seedsBySize.end()) {
                     std::list<Vertical const*> & upperBoundSeeds = seedsBySize.find(upperBound)->second;
-                    for (auto lowerIt = lowerBoundSeeds.begin(); lowerIt != lowerBoundSeeds.end(); lowerIt++) {
-                        Vertical const* lowerSeed = *lowerIt;
+                    for (auto const& lowerSeed : lowerBoundSeeds) {
                         for (auto upperIt = upperBoundSeeds.begin(); upperIt != upperBoundSeeds.end();) {
                             if ((*upperIt)->contains(*lowerSeed)) {
                                 upperIt = upperBoundSeeds.erase(upperIt);
