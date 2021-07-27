@@ -249,6 +249,80 @@ OUT:
     return max_representation;
 }
 
+AgreeSetFactory::SetOfVectors AgreeSetFactory::genPLIMaxRepresentation2() const {
+    vector<ColumnData> const& columns_data = relation_->getColumnData();
+    // set of all equivalence classes of all paritions
+    auto greater = [](vector<int> const& lhs, vector<int> const& rhs) {
+        if (lhs.size() != rhs.size()) {
+            return lhs.size() > rhs.size();
+        }
+        return std::lexicographical_compare(lhs.begin(), lhs.end(),
+                                            rhs.begin(), rhs.end(),
+                                            std::greater<int>());
+    };
+    set<vector<int>, decltype(greater)> sorted_eqv_classes(greater);
+    SetOfVectors max_representation;
+    /* maps tuple_index to set of eqv_classes (each eqv_class represented
+     * by index in sorted_eqv_classes, so set<size_t>) in which this tuple_index appears.
+     * It would be possible to use decltype(sorted_eqv_classes)::const_iterator to
+     * represent elements of sorted_eqv_classes, but imo this would overcomplicate the code.
+     */
+    std::unordered_map<int, unordered_set<size_t>> index;
+
+    // Fill sorted_partitions
+    for (ColumnData const& data : columns_data) {
+        std::deque<vector<int>> const& index = data.getPositionListIndex()->getIndex();
+        sorted_eqv_classes.insert(index.begin(), index.end());
+    }
+
+
+    size_t eqv_class_index = 0;
+    for (auto it = sorted_eqv_classes.begin();
+         it != sorted_eqv_classes.end();
+         ++it, ++eqv_class_index) {
+        // handlePartition method in Metanome
+        if (!isSubset(*it, index)) {
+            for (int tuple_index : *it) {
+                index[tuple_index].insert(eqv_class_index);
+            }
+            max_representation.insert(std::move(*it));
+        }
+    }
+
+    return max_representation;
+}
+
+bool AgreeSetFactory::isSubset(vector<int> const& eqv_class,
+                               std::unordered_map<int, unordered_set<size_t>> const& index) const {
+    unordered_set<size_t> intersection;
+    auto intersect = [&intersection, &index] (int tuple_index) {
+        for (auto it = intersection.begin(); it != intersection.end();) {
+            auto p = it++;
+            if (index.at(tuple_index).count(*p) == 0) {
+                intersection.erase(*p);
+            }
+        }
+    };
+
+    for (auto it = eqv_class.begin(); it != eqv_class.end(); ++it) {
+        if (index.count(*it) == 0) {
+            return false;
+        }
+
+        if (intersection.empty()) {
+            intersection.insert(index.at(*it).begin(), index.at(*it).end());
+        }
+
+        intersect(*it);
+
+        if (intersection.empty()) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 void AgreeSetFactory::handleEqvClass(vector<int>& eqv_class,
                                      std::unordered_map<size_t, SetOfVectors>& max_sets,
                                      bool const first_step) const {

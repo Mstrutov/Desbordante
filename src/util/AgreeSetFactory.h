@@ -67,10 +67,11 @@ enum class AgreeSetsGenMethod {
 enum class MCGenMethod {
     kUsingHandleEqvClass = 0, /*< Naive way to generate maximal representation.
                                *  It sorts all equivalence classes (represented by vector<int>)
-                               *  from all partitions. One equivalence class is less than another
-                               *  iff its size is less or sizes are equal and one is
-                               *  lexicographically smaller. After equivalence classes are sorted
-                               *  by insertion into set, algorithm proceeds to maximize partitions.
+                               *  from all partitions in ascending order. One equivalence class
+                               *  is less than another iff its size is less or sizes are equal
+                               *  and one is lexicographically smaller. After equivalence classes
+                               *  are sorted by insertion into set, algorithm proceeds to maximize
+                               *  partitions.
                                *  It maintains map<eqv_class_size, Set<eqv_class>>:
                                *  1. Adds set of equivalence classes with minimum size to the map.
                                *  2. Iterates over sorted equivalence classes with non minimal size,
@@ -80,6 +81,15 @@ enum class MCGenMethod {
                                *  After all equivalence classes have been processed, map stores the
                                *  maximum representation.
                                */
+    kUsingHandlePartition,     /*< Sorts all equivalence classes from all partitions in descending
+                                *  order using std::set. Definition of comparison for equivalence
+                                *  classes is same as for kUsingHandleEqvClass. Iterates over
+                                *  sorted_eqv_classes and maintains index as std::map<int, set<int>>.
+                                *  A more detailed description of index is in the implementation.
+                                *  For current eqv_class checks if it has superset in the index using
+                                *  isSubset(), if not, adds it to the index and to
+                                *  max_representation.
+                                */
     kUsingCalculateSupersets,  /*< Fills max_representation with equivalence classes from first not
                                 *  empty partition. Then iterates over the remaining partitions
                                 *  and edits max_representation on the fly using calculateSupersets:
@@ -114,6 +124,7 @@ public:
     AgreeSet getAgreeSet(int const tuple1_index, int const tuple2_index) const;
 
 private:
+    SetOfVectors genPLIMaxRepresentation2() const;
     void calculateSupersets(SetOfVectors& max_representation,
                             std::deque<std::vector<int>> const& partition) const;
     /* From Metanome: `handleList`.
@@ -123,6 +134,11 @@ private:
     void handleEqvClass(std::vector<int>& eqv_class,
                         std::unordered_map<size_t, SetOfVectors>& max_sets,
                         bool const first_step) const;
+    /* From Metanome.
+     * Checks if index 'contains' eqvivalence class which is superset of eqv_class.
+     */
+    bool isSubset(std::vector<int> const& eqv_class,
+                  std::unordered_map<int, std::unordered_set<size_t>> const& index) const;
 
     ColumnLayoutRelationData const* const relation_;
 };
