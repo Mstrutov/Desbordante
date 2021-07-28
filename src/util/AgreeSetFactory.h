@@ -104,27 +104,55 @@ enum class MCGenMethod {
 
 class AgreeSetFactory {
 public:
+    struct Configuration {
+        AgreeSetsGenMethod as_gen_method = AgreeSetsGenMethod::kUsingVectorOfIDSets;
+        MCGenMethod mc_gen_method = MCGenMethod::kUsingCalculateSupersets;
+        ushort threads_num = 1;
+
+        /* Not using default keyword because of gcc bug:
+         * https://gcc.gnu.org/bugzilla/show_bug.cgi?id=88165
+         */
+        Configuration() noexcept {}
+        explicit Configuration(AgreeSetsGenMethod as_gen_m,
+                               MCGenMethod mc_gen_m,
+                               ushort threads_num) noexcept
+            : as_gen_method(as_gen_m), mc_gen_method(mc_gen_m), threads_num(threads_num) {}
+        explicit Configuration(AgreeSetsGenMethod as_gen_m) noexcept
+            : as_gen_method(as_gen_m) {}
+        explicit Configuration(MCGenMethod mc_gen_m) noexcept
+            : mc_gen_method(mc_gen_m) {}
+        explicit Configuration(ushort threads_num) noexcept
+            : threads_num(threads_num) {}
+    };
     using SetOfVectors = std::unordered_set<std::vector<int>,
                                             boost::hash<std::vector<int>>>;
     using SetOfAgreeSets = std::unordered_set<AgreeSet>;
 
-    explicit AgreeSetFactory(ColumnLayoutRelationData const* const rel)
-        : relation_(rel) {}
+    explicit AgreeSetFactory(ColumnLayoutRelationData const* const rel,
+                             Configuration const& c = Configuration())
+        : relation_(rel), config_(c) {}
 
     ColumnLayoutRelationData const* getRelation() const { return relation_; }
+    void SetConfiguration(Configuration const& c) { config_ = c; }
 
     // Computes all agree sets of `relation_` using specified method
-    template<AgreeSetsGenMethod method = AgreeSetsGenMethod::kUsingVectorOfIDSets>
     SetOfAgreeSets genAgreeSets() const;
 
-    template<MCGenMethod method
-                = MCGenMethod::kUsingCalculateSupersets>
     SetOfVectors genPLIMaxRepresentation() const;
 
     AgreeSet getAgreeSet(int const tuple1_index, int const tuple2_index) const;
-
 private:
-    SetOfVectors genPLIMaxRepresentation2() const;
+    /* Implementations of generation agree sets algorithms */
+    SetOfAgreeSets genASUsingVectorOfIDSets() const;
+    SetOfAgreeSets genASUsingMapOfIDSets() const;
+    SetOfAgreeSets genASUsingGetAgreeSets() const;
+    SetOfAgreeSets genASUsingMCAndGetAgreeSets() const;
+
+    /* Implementations of generation MC algorithms */
+    SetOfVectors genMCUsingHandleEqvClass() const;
+    SetOfVectors genMCUsingHandlePartition() const;
+    SetOfVectors genMCUsingCalculateSupersets() const;
+
     void calculateSupersets(SetOfVectors& max_representation,
                             std::deque<std::vector<int>> const& partition) const;
     /* From Metanome: `handleList`.
@@ -141,4 +169,7 @@ private:
                   std::unordered_map<int, std::unordered_set<size_t>> const& index) const;
 
     ColumnLayoutRelationData const* const relation_;
+
+    Configuration config_;
 };
+
