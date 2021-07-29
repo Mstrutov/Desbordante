@@ -13,8 +13,6 @@ using std::deque, std::vector, std::cout, std::endl, std::unique_ptr;
 
 namespace fs = std::filesystem;
 
-namespace fs = std::filesystem;
-
 std::string get_selfpath();
 
 TEST(pliChecker, first){
@@ -227,3 +225,19 @@ TEST(AgreeSetFactoryTest, UsingMCAndGetAgreeSet) {
     AgreeSetFactory::Configuration c(AgreeSetsGenMethod::kUsingMCAndGetAgreeSet);
     testAgreeSetFactory(c);
 }
+
+TEST(AgreeSetFactoryTest, UsingHandleEqvClass) {
+    AgreeSetFactory::Configuration c(MCGenMethod::kUsingHandleEqvClass);
+    testAgreeSetFactory(c);
+}
+
+TEST(AgreeSetFactoryTest, UsingCalculateSupersets) {
+    AgreeSetFactory::Configuration c(MCGenMethod::kUsingCalculateSupersets);
+    testAgreeSetFactory(c);
+}
+
+TEST(AgreeSetFactoryTest, UsingHandlePartition) {
+    AgreeSetFactory::Configuration c(MCGenMethod::kUsingHandlePartition);
+    testAgreeSetFactory(c);
+}
+
