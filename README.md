@@ -82,11 +82,17 @@ https://github.com/cupertank implemented essential data structures presented in 
 # Developers
 
 Ilya Shchuckin      &mdash; FD_Mine implementation
+
 Michael Polyntsov   &mdash; FastFDs implementation
+
 Ilya Vologin        &mdash; core classes
+
 Maxim Strutovsky    &mdash; team lead, Pyro & TANE implementation
+
 Nikita Bobrov       &mdash; product owner, consult, papers
+
 Kirill Smirnov      &mdash; product owner, code quality, infrastructure, consult
+
 George Chernishev   &mdash; product owner, consult, papers
 
 # Cite
