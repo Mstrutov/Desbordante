@@ -1,5 +1,5 @@
 //
-// Created by alex on 09.07.2021.
+// Created by alexandrsmirn
 //
 
 #include "PruningMap.h"
@@ -32,7 +32,7 @@ void PruningMap::rebalanceGroup(Vertical const& key) {
          columnIndex < invertedColumns.size();
          columnIndex = invertedColumns.find_next(columnIndex))
     {
-        //TODO может быть не очень быстро
+        //может быть не очень быстро?
         Vertical newKey = key.Union(*key.getSchema()->getColumn(columnIndex));
         std::unordered_set<Vertical> newGroup;
         this->insert(std::make_pair(newKey, newGroup));

@@ -18,16 +18,14 @@
 
 class DFD : public FDAlgorithm {
 private:
-    //using vertical_set = std::unordered_set<shared_ptr<Vertical>, std::hash<shared_ptr<Vertical>>, custom_comparator>;
-
-    LatticeObservations observations;
     std::unique_ptr<PartitionStorage> partitionStorage;
+    std::unique_ptr<ColumnLayoutRelationData> relation;
     DependenciesMap dependenciesMap;
     NonDependenciesMap nonDependenciesMap;
-    std::unique_ptr<ColumnLayoutRelationData> relation;
+    LatticeObservations observations;
     ColumnOrder columnOrder;
 
-    std::unordered_set<Vertical> minimalDeps; //TODO мб их определять либо в функции execute, либо полями класса
+    std::unordered_set<Vertical> minimalDeps;
     std::unordered_set<Vertical> maximalNonDeps;
 
     std::stack<Vertical> trace;
@@ -35,15 +33,14 @@ private:
     std::random_device rd; // для генерации случайных чисел
     std::mt19937 gen;
 
-    void findLHSs(Column const* const rhs, RelationalSchema const* const schema); //TODO: нужен ли второй параметр?; мб переименовать типа findDeps
+    void findLHSs(Column const* const rhs);
+    bool inferCategory(Vertical const& node, size_t rhsIndex);
     Vertical pickNextNode(Vertical const &node, size_t rhsIndex);
     std::stack<Vertical> generateNextSeeds(Column const* const currentRHS);
-    Vertical takeRandom(std::list<Vertical> & nodeList);
-    Vertical takeRandom(std::vector<Vertical> const& nodeList);
-    const Vertical & takeRandom(std::unordered_set<Vertical> &nodeSet);
+
     std::list<Vertical> minimize(std::unordered_set<Vertical> const&);
+    const Vertical & takeRandom(std::unordered_set<Vertical> &nodeSet);
     static void substractSets(std::unordered_set<Vertical> & set, std::unordered_set<Vertical> const& setToSubstract);
-    bool inferCategory(Vertical const& node, size_t rhsIndex);
 
 public:
     explicit DFD(std::filesystem::path const& path, char separator = ',', bool hasHeader = true);

@@ -1,5 +1,5 @@
 //
-// Created by alex on 11.07.2021.
+// Created by alexandrsmirn
 //
 
 #pragma once
@@ -12,10 +12,7 @@ private:
     std::vector<int> order;
 public:
     explicit ColumnOrder(ColumnLayoutRelationData const* const relationData);
-
     ColumnOrder() = default;
-    //ColumnOrder(ColumnOrder const& other) = delete;
-    //ColumnOrder& operator=(ColumnOrder const& other) = delete;
 
     std::vector<int> getOrderHighDistinctCount(Vertical const& columns) const;
     std::vector<int> getOrderLowDistinctCount(Vertical const& columns) const;
