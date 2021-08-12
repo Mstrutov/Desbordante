@@ -1,5 +1,5 @@
 //
-// Created by alex on 11.07.2021.
+// Created by alexandrsmirn
 //
 
 #include "ColumnOrder.h"
@@ -9,7 +9,7 @@
 #include "RelationalSchema.h"
 
 ColumnOrder::ColumnOrder(ColumnLayoutRelationData const* const relationData)
-        : order(relationData->getSchema()->getNumColumns()) { //TODO check
+        : order(relationData->getSchema()->getNumColumns()) {
     std::set<OrderedPartition> partitions;
     for (auto const& columnData : relationData->getColumnData()) {
         partitions.emplace(columnData.getPositionListIndex(), relationData->getNumRows(), columnData.getColumn()->getIndex());
@@ -22,7 +22,7 @@ ColumnOrder::ColumnOrder(ColumnLayoutRelationData const* const relationData)
 }
 
 std::vector<int> ColumnOrder::getOrderHighDistinctCount(const Vertical &columns) const {
-    std::vector<int> orderForColumns(columns.getArity()); //TODO возможно getArity прожорливый?
+    std::vector<int> orderForColumns(columns.getArity());
 
     int currentOrderIndex = 0;
     for (int i = 0; i < this->order.size(); ++i) {
@@ -35,7 +35,7 @@ std::vector<int> ColumnOrder::getOrderHighDistinctCount(const Vertical &columns)
 }
 
 std::vector<int> ColumnOrder::getOrderLowDistinctCount(const Vertical &columns) const {
-    std::vector<int> orderForColumns(columns.getArity()); //TODO возможно getArity прожорливый?
+    std::vector<int> orderForColumns(columns.getArity());
 
     int currentOrderIndex = 0;
     for (int i = this->order.size() - 1; i >= 0; --i) {

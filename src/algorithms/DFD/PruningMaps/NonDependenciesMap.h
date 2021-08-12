@@ -9,7 +9,6 @@
 
 class NonDependenciesMap : public PruningMap {
 public:
-
     explicit NonDependenciesMap(RelationalSchema const* schema);
     NonDependenciesMap() = default;
 

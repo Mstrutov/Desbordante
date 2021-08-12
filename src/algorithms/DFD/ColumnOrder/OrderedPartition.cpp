@@ -1,5 +1,5 @@
 //
-// Created by alex on 11.07.2021.
+// Created by alexandrsmirn
 //
 
 #include "OrderedPartition.h"

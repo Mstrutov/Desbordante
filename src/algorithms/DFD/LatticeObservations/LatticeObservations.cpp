@@ -1,5 +1,5 @@
 //
-// Created by alex on 13.04.2021.
+// Created by alexandrsmirn
 //
 
 #include "LatticeObservations.h"
@@ -31,7 +31,7 @@ NodeCategory LatticeObservations::updateDependencyCategory(Vertical const& verti
                     return NodeCategory::dependency;
                 }
             }
-            //если все норм
+            //если все нормально
             columnIndices[index] = true; //возвращаем как было
         }
         return hasUncheckedSubset ? NodeCategory::candidateMinimalDependency : NodeCategory::minimalDependency;
@@ -48,7 +48,7 @@ NodeCategory LatticeObservations::updateDependencyCategory(Vertical const& verti
     for (size_t index = 0; index < columnIndices.size(); index++) {
         if (!columnIndices[index] && index != rhsIndex) {
             columnIndices[index] = true; //убираем одну из колонок
-            auto const supersetVerticalIter = this->find(Vertical(vertical.getSchema(), columnIndices)); //TODO !!!лучше переделать без второго flip а просто бежать циклом по нулям
+            auto const supersetVerticalIter = this->find(Vertical(vertical.getSchema(), columnIndices));
 
             if (supersetVerticalIter == this->end()) {
                 //если нашли нерассмотренное надмножество
@@ -79,7 +79,7 @@ NodeCategory LatticeObservations::updateNonDependencyCategory(Vertical const& ve
          index < columnIndices.size();
          index = columnIndices.find_next(index))
     {
-        auto const supersetVerticalIter = this->find(vertical.Union(*vertical.getSchema()->getColumn(index))); //TODO !!!лучше переделать без второго flip а просто бежать циклом по нулям
+        auto const supersetVerticalIter = this->find(vertical.Union(*vertical.getSchema()->getColumn(index)));
 
         if (supersetVerticalIter == this->end()) {
             //если нашли нерассмотренное надмножество
