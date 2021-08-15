@@ -1,4 +1,5 @@
 #include <iostream>
+#include <thread>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -238,6 +239,13 @@ TEST(AgreeSetFactoryTest, UsingCalculateSupersets) {
 
 TEST(AgreeSetFactoryTest, UsingHandlePartition) {
     AgreeSetFactory::Configuration c(MCGenMethod::kUsingHandlePartition);
+    testAgreeSetFactory(c);
+}
+
+TEST(AgreeSetFactoryTest, MCGenParallel) {
+    AgreeSetFactory::Configuration c(AgreeSetsGenMethod::kUsingVectorOfIDSets,
+                                     MCGenMethod::kParallel,
+                                     std::thread::hardware_concurrency());
     testAgreeSetFactory(c);
 }
 
