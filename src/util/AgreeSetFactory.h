@@ -86,6 +86,7 @@ enum class MCGenMethod {
                                 *  classes is same as for kUsingHandleEqvClass. Iterates over
                                 *  sorted_eqv_classes and maintains index as std::map<int, set<int>>.
                                 *  A more detailed description of index is in the implementation.
+                                *  'handlePartition':
                                 *  For current eqv_class checks if it has superset in the index using
                                 *  isSubset(), if not, adds it to the index and to
                                 *  max_representation.
@@ -99,6 +100,10 @@ enum class MCGenMethod {
                                 *     has been fully processed) it from the max_representation.
                                 *     And adds (also delayed) appropriate equivalence class to
                                 *     max_representation.
+                                */
+    kParallel                  /*< Algorithm is the same as in kUsingHandlePartition method.
+                                *  Uses thread pool of config_.threads_num threads to perform
+                                *  'handlePartition' part on equivalence classes of the same size.
                                 */
 };
 
@@ -152,6 +157,7 @@ private:
     SetOfVectors genMCUsingHandleEqvClass() const;
     SetOfVectors genMCUsingHandlePartition() const;
     SetOfVectors genMCUsingCalculateSupersets() const;
+    SetOfVectors genMCParallel() const;
 
     void calculateSupersets(SetOfVectors& max_representation,
                             std::deque<std::vector<int>> const& partition) const;
@@ -167,6 +173,8 @@ private:
      */
     bool isSubset(std::vector<int> const& eqv_class,
                   std::unordered_map<int, std::unordered_set<size_t>> const& index) const;
+    auto genSortedEqvClasses() const;
+
 
     ColumnLayoutRelationData const* const relation_;
 

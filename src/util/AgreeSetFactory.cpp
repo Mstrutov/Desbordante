@@ -1,6 +1,18 @@
 #include "AgreeSetFactory.h"
 
+#include <atomic>
+#include <condition_variable>
+#include <thread>
+#include <shared_mutex>
 #include <unordered_set>
+
+#include <boost/asio/post.hpp>
+#include <boost/thread/shared_mutex.hpp>
+#include <boost/asio/thread_pool.hpp>
+
+#define BOOST_THREAD_PROVIDES_FUTURE_WHEN_ALL_WHEN_ANY
+#include <boost/thread.hpp>
+#include <boost/thread/future.hpp>
 
 #include "IdentifierSet.h"
 #include "logging/easylogging++.h"
@@ -210,6 +222,11 @@ AgreeSetFactory::SetOfVectors AgreeSetFactory::genPLIMaxRepresentation() const {
         max_representation = genMCUsingHandlePartition();
         break;
       }
+      case MCGenMethod::kParallel: {
+        method_str = "`kParallel`";
+        max_representation = genMCParallel();
+        break;
+      }
     }
 
     auto elapsed_mills_to_gen_max_representation =
@@ -259,7 +276,7 @@ AgreeSetFactory::SetOfVectors AgreeSetFactory::genMCUsingHandleEqvClass() const 
             return lhs.size() < rhs.size();
         }
         return std::lexicographical_compare(lhs.begin(), lhs.end(),
-                rhs.begin(), rhs.end());
+                                            rhs.begin(), rhs.end());
     };
     set<vector<int>, decltype(comp)> sorted_eqv_classes(comp);
 
@@ -303,7 +320,7 @@ AgreeSetFactory::SetOfVectors AgreeSetFactory::genMCUsingHandleEqvClass() const 
     return max_representation;
 }
 
-AgreeSetFactory::SetOfVectors AgreeSetFactory::genMCUsingHandlePartition() const {
+auto AgreeSetFactory::genSortedEqvClasses() const {
     vector<ColumnData> const& columns_data = relation_->getColumnData();
     // set of all equivalence classes of all paritions
     auto greater = [](vector<int> const& lhs, vector<int> const& rhs) {
@@ -315,13 +332,6 @@ AgreeSetFactory::SetOfVectors AgreeSetFactory::genMCUsingHandlePartition() const
                                             std::greater<int>());
     };
     set<vector<int>, decltype(greater)> sorted_eqv_classes(greater);
-    SetOfVectors max_representation;
-    /* maps tuple_index to set of eqv_classes (each eqv_class represented
-     * by index in sorted_eqv_classes, so set<size_t>) in which this tuple_index appears.
-     * It would be possible to use decltype(sorted_eqv_classes)::const_iterator to
-     * represent elements of sorted_eqv_classes, but imo this would overcomplicate the code.
-     */
-    std::unordered_map<int, unordered_set<size_t>> index;
 
     // Fill sorted_partitions
     for (ColumnData const& data : columns_data) {
@@ -329,6 +339,18 @@ AgreeSetFactory::SetOfVectors AgreeSetFactory::genMCUsingHandlePartition() const
         sorted_eqv_classes.insert(index.begin(), index.end());
     }
 
+    return sorted_eqv_classes;
+}
+
+AgreeSetFactory::SetOfVectors AgreeSetFactory::genMCUsingHandlePartition() const {
+    SetOfVectors max_representation;
+    auto sorted_eqv_classes = genSortedEqvClasses();
+    /* maps tuple_index to set of eqv_classes (each eqv_class represented
+     * by index in sorted_eqv_classes, so set<size_t>) in which this tuple_index appears.
+     * It would be possible to use decltype(sorted_eqv_classes)::const_iterator to
+     * represent elements of sorted_eqv_classes, but imo this would overcomplicate the code.
+     */
+    std::unordered_map<int, unordered_set<size_t>> index;
 
     size_t eqv_class_index = 0;
     for (auto it = sorted_eqv_classes.begin();
@@ -344,7 +366,62 @@ AgreeSetFactory::SetOfVectors AgreeSetFactory::genMCUsingHandlePartition() const
     }
 
     return max_representation;
+}
 
+// TODO: Fix helgrind data race errors
+AgreeSetFactory::SetOfVectors AgreeSetFactory::genMCParallel() const {
+    if (config_.threads_num == 1) {
+        LOG(WARNING) << "Using parallel max representation generation"
+                        " method with 1 thread specified";
+    }
+
+    SetOfVectors max_representation;
+    auto sorted_eqv_classes = genSortedEqvClasses();
+    std::unordered_map<int, unordered_set<size_t>> index;
+
+    boost::asio::thread_pool pool(config_.threads_num);
+    boost::shared_mutex mutex;
+    auto handle_partition = [this, &index, &max_representation, &mutex]
+                (vector<int>&& cur_eqv_class, size_t const eqv_class_index) {
+        boost::shared_lock read_lock(mutex);
+        bool is_subset = isSubset(cur_eqv_class, index);
+        if (!is_subset) {
+            read_lock.unlock();
+            // At every moment in time only one thread can modify index and max_representation
+            boost::unique_lock write_lock(mutex);
+
+            for (int tuple_index : cur_eqv_class) {
+                index[tuple_index].insert(eqv_class_index);
+            }
+            max_representation.insert(std::move(cur_eqv_class));
+        }
+    };
+
+    using Task = boost::packaged_task<void>;
+    std::vector<boost::unique_future<void>> futures;
+    size_t eqv_class_index = 0;
+    size_t cur_size = 0;
+    for (auto it = sorted_eqv_classes.begin();
+         it != sorted_eqv_classes.end();
+         ++eqv_class_index) {
+        if (cur_size != it->size()) {
+            cur_size = it->size();
+            boost::when_all(futures.begin(), futures.end());
+            futures.clear();
+        }
+
+        //Task t(std::bind(task, std::ref(eqv_class), eqv_class_index));
+        Task t([eqv_class = std::move(sorted_eqv_classes.extract(it++).value()),
+                eqv_class_index, handle_partition] () mutable
+                { handle_partition(std::move(eqv_class), eqv_class_index); }
+        );
+        futures.push_back(t.get_future());
+        boost::asio::post(pool, std::move(t));
+    }
+
+    pool.join();
+
+    return max_representation;
 }
 
 bool AgreeSetFactory::isSubset(vector<int> const& eqv_class,
