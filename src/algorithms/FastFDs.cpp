@@ -1,6 +1,8 @@
 #include "FastFDs.h"
 
 #include <algorithm>
+#include <mutex>
+#include <thread>
 
 #include <boost/dynamic_bitset.hpp>
 
@@ -232,9 +234,43 @@ void FastFDs::genDiffSets() {
 
     // Complement agree sets to get difference sets
     diff_sets_.reserve(agree_sets.size());
-    for (AgreeSet const& agree_set : agree_sets) {
-        diff_sets_.push_back(agree_set.invert());
+    if (threads_num_ > 1) {
+        size_t agree_sets_per_thread = agree_sets.size() / threads_num_;
+        std::mutex m;
+        std::vector<std::thread> threads;
+        auto task = [&m, this](AgreeSetFactory::SetOfAgreeSets::const_iterator first,
+                               AgreeSetFactory::SetOfAgreeSets::const_iterator last) {
+            for (; first != last; ++first) {
+                DiffSet diff_set = first->invert();
+                std::lock_guard lock(m);
+                diff_sets_.push_back(std::move(diff_set));
+            }
+        };
+
+        threads.reserve(threads_num_);
+
+        auto p = agree_sets.begin();
+        auto q = agree_sets.end();
+        for (ushort i = 0; i < threads_num_; ++i) {
+            auto prev = p;
+
+            if (i != threads_num_ - 1) {
+                std::advance(p, agree_sets_per_thread);
+            } else {
+                p = q;
+            }
+            threads.emplace_back(task, prev, p);
+        }
+
+        for (auto& thread : threads) {
+            thread.join();
+        }
+    } else {
+        for (AgreeSet const& agree_set : agree_sets) {
+            diff_sets_.push_back(agree_set.invert());
+        }
     }
+
     // sort diff_sets_, it will be used further to find minimal difference sets modulo column
     std::sort(diff_sets_.begin(), diff_sets_.end());
 
@@ -243,3 +279,4 @@ void FastFDs::genDiffSets() {
         LOG(DEBUG) << diff_set.toString();
     }
 }
+

@@ -8,7 +8,10 @@
 
 class FastFDs : public FDAlgorithm {
 public:
-    using FDAlgorithm::FDAlgorithm;
+    explicit FastFDs(std::filesystem::path const& path,
+                     char separator = ',', bool hasHeader = true,
+                     ushort threads_num = 1)
+        : FDAlgorithm(path, separator, hasHeader), threads_num_(threads_num) {}
     unsigned long long execute() override;
 private:
     using OrderingComparator = std::function<bool (Column const&, Column const&)>;
@@ -58,5 +61,6 @@ private:
     std::unique_ptr<ColumnLayoutRelationData> relation_;
     RelationalSchema const* schema_;
     std::vector<DiffSet> diff_sets_;
+    ushort threads_num_;
 };
 
