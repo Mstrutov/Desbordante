@@ -173,7 +173,8 @@ private:
      */
     bool isSubset(std::vector<int> const& eqv_class,
                   std::unordered_map<int, std::unordered_set<size_t>> const& index) const;
-    auto genSortedEqvClasses() const;
+    using VectorComp = std::function<bool (std::vector<int> const&, std::vector<int> const&)>;
+    std::set<std::vector<int>, VectorComp> genSortedEqvClasses(VectorComp comp) const;
 
 
     ColumnLayoutRelationData const* const relation_;
