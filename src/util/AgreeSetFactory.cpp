@@ -268,23 +268,16 @@ AgreeSetFactory::SetOfVectors AgreeSetFactory::genMCUsingCalculateSupersets() co
 }
 
 AgreeSetFactory::SetOfVectors AgreeSetFactory::genMCUsingHandleEqvClass() const {
-    vector<ColumnData> const& columns_data = relation_->getColumnData();
     SetOfVectors max_representation;
     // set of all equivalence classes of all paritions
-    auto comp = [](vector<int> const& lhs, vector<int> const& rhs) {
+    auto less = [](vector<int> const& lhs, vector<int> const& rhs) {
         if (lhs.size() != rhs.size()) {
             return lhs.size() < rhs.size();
         }
         return std::lexicographical_compare(lhs.begin(), lhs.end(),
                                             rhs.begin(), rhs.end());
     };
-    set<vector<int>, decltype(comp)> sorted_eqv_classes(comp);
-
-    // Fill sorted_partitions
-    for (ColumnData const& data : columns_data) {
-        std::deque<vector<int>> const& index = data.getPositionListIndex()->getIndex();
-        sorted_eqv_classes.insert(index.begin(), index.end());
-    }
+    auto sorted_eqv_classes = genSortedEqvClasses(less);
 
     if (sorted_eqv_classes.empty()) {
         return max_representation;
@@ -320,18 +313,11 @@ AgreeSetFactory::SetOfVectors AgreeSetFactory::genMCUsingHandleEqvClass() const 
     return max_representation;
 }
 
-auto AgreeSetFactory::genSortedEqvClasses() const {
+set<vector<int>, AgreeSetFactory::VectorComp>
+AgreeSetFactory::genSortedEqvClasses(VectorComp comp) const {
     vector<ColumnData> const& columns_data = relation_->getColumnData();
     // set of all equivalence classes of all paritions
-    auto greater = [](vector<int> const& lhs, vector<int> const& rhs) {
-        if (lhs.size() != rhs.size()) {
-            return lhs.size() > rhs.size();
-        }
-        return std::lexicographical_compare(lhs.begin(), lhs.end(),
-                                            rhs.begin(), rhs.end(),
-                                            std::greater<int>());
-    };
-    set<vector<int>, decltype(greater)> sorted_eqv_classes(greater);
+    set<vector<int>, VectorComp> sorted_eqv_classes(comp);
 
     // Fill sorted_partitions
     for (ColumnData const& data : columns_data) {
@@ -344,7 +330,15 @@ auto AgreeSetFactory::genSortedEqvClasses() const {
 
 AgreeSetFactory::SetOfVectors AgreeSetFactory::genMCUsingHandlePartition() const {
     SetOfVectors max_representation;
-    auto sorted_eqv_classes = genSortedEqvClasses();
+    auto greater = [](vector<int> const& lhs, vector<int> const& rhs) {
+        if (lhs.size() != rhs.size()) {
+            return lhs.size() > rhs.size();
+        }
+        return std::lexicographical_compare(lhs.begin(), lhs.end(),
+                                            rhs.begin(), rhs.end(),
+                                            std::greater<int>());
+    };
+    auto sorted_eqv_classes = genSortedEqvClasses(greater);
     /* maps tuple_index to set of eqv_classes (each eqv_class represented
      * by index in sorted_eqv_classes, so set<size_t>) in which this tuple_index appears.
      * It would be possible to use decltype(sorted_eqv_classes)::const_iterator to
@@ -376,7 +370,15 @@ AgreeSetFactory::SetOfVectors AgreeSetFactory::genMCParallel() const {
     }
 
     SetOfVectors max_representation;
-    auto sorted_eqv_classes = genSortedEqvClasses();
+    auto greater = [](vector<int> const& lhs, vector<int> const& rhs) {
+        if (lhs.size() != rhs.size()) {
+            return lhs.size() > rhs.size();
+        }
+        return std::lexicographical_compare(lhs.begin(), lhs.end(),
+                                            rhs.begin(), rhs.end(),
+                                            std::greater<int>());
+    };
+    auto sorted_eqv_classes = genSortedEqvClasses(greater);
     std::unordered_map<int, unordered_set<size_t>> index;
 
     boost::asio::thread_pool pool(config_.threads_num);
