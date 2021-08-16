@@ -1,6 +1,9 @@
 #pragma once
 
 #include <functional>
+#include <thread>
+
+#include <boost/thread/mutex.hpp>
 
 #include "Vertical.h"
 #include "FDAlgorithm.h"
@@ -10,8 +13,18 @@ class FastFDs : public FDAlgorithm {
 public:
     explicit FastFDs(std::filesystem::path const& path,
                      char separator = ',', bool hasHeader = true,
-                     ushort threads_num = 1)
-        : FDAlgorithm(path, separator, hasHeader), threads_num_(threads_num) {}
+                     ushort parallelism = 0)
+        : FDAlgorithm(path, separator, hasHeader) {
+            if (parallelism == 0) {
+                threads_num_ = std::thread::hardware_concurrency();
+                if (threads_num_ == 0) {
+                    throw std::runtime_error("Unable to detect number of concurrent"
+                                             " threads supported. Specify it manually.");
+                }
+            } else {
+                threads_num_ = parallelism;
+            }
+        }
     unsigned long long execute() override;
 private:
     using OrderingComparator = std::function<bool (Column const&, Column const&)>;
@@ -57,10 +70,12 @@ private:
     bool orderingComp(std::vector<DiffSet> const& diff_sets,
                       Column const& l_col, Column const& r_col) const;
     bool columnContainsOnlyEqualValues(Column const& column) const;
+    void registerFD(Vertical lhs, Column rhs) override;
 
     std::unique_ptr<ColumnLayoutRelationData> relation_;
     RelationalSchema const* schema_;
     std::vector<DiffSet> diff_sets_;
     ushort threads_num_;
+    boost::mutex register_mutex_;
 };
 

@@ -4,12 +4,26 @@
 #include <mutex>
 #include <thread>
 
+#include <boost/asio/post.hpp>
+#include <boost/asio/thread_pool.hpp>
 #include <boost/dynamic_bitset.hpp>
+#include <boost/thread.hpp>
 
 #include "AgreeSetFactory.h"
 #include "logging/easylogging++.h"
 
 using std::vector, std::set;
+
+
+// Should be FDAlgorithm method I think
+void FastFDs::registerFD(Vertical lhs, Column rhs) {
+    if (threads_num_ > 1) {
+        boost::lock_guard<boost::mutex> lock(register_mutex_);
+        FDAlgorithm::registerFD(std::move(lhs), std::move(rhs));
+    } else {
+        FDAlgorithm::registerFD(std::move(lhs), std::move(rhs));
+    }
+}
 
 unsigned long long FastFDs::execute() {
     relation_ = ColumnLayoutRelationData::createFrom(inputGenerator_, true);
@@ -38,20 +52,35 @@ unsigned long long FastFDs::execute() {
         return elapsed_milliseconds.count();
     }
 
-    for (auto const& column : schema_->getColumns()) {
+    auto task = [this](std::unique_ptr<Column> const& column) {
         if (columnContainsOnlyEqualValues(*column)) {
             LOG(INFO) << "Registered FD: " << schema_->emptyVertical->toString()
                       << "->" << column->toString();
             registerFD(Vertical(), *column);
-            continue;
+            return;
         }
 
         vector<DiffSet> diff_sets_mod = getDiffSetsMod(*column);
         assert(!diff_sets_mod.empty());
         if (!(diff_sets_mod.size() == 1 && diff_sets_mod.back() == *schema_->emptyVertical)) {
-            // use vector instead of set?
             set<Column, OrderingComparator> init_ordering = getInitOrdering(diff_sets_mod, *column);
-            findCovers(*column, diff_sets_mod, diff_sets_mod, *schema_->emptyVertical, init_ordering);
+            findCovers(*column, diff_sets_mod, diff_sets_mod,
+                       *schema_->emptyVertical, init_ordering);
+        }
+
+    };
+
+    if (threads_num_ > 1) {
+        boost::asio::thread_pool pool(threads_num_);
+
+        for (std::unique_ptr<Column> const& column : schema_->getColumns()) {
+            boost::asio::post(pool, [&column, task](){ return task(column); });
+        }
+
+        pool.join();
+    } else {
+        for (std::unique_ptr<Column> const& column : schema_->getColumns()) {
+            task(column);
         }
     }
 
@@ -224,7 +253,13 @@ vector<FastFDs::DiffSet> FastFDs::getDiffSetsMod(Column const& col) const {
 }
 
 void FastFDs::genDiffSets() {
-    AgreeSetFactory factory(relation_.get());
+    AgreeSetFactory::Configuration c;
+    c.threads_num = threads_num_;
+    if (threads_num_ > 1) {
+        // TODO: Need to fix data races first
+        //c.mc_gen_method = MCGenMethod::kParallel;
+    }
+    AgreeSetFactory factory(relation_.get(), c);
     AgreeSetFactory::SetOfAgreeSets agree_sets = factory.genAgreeSets();
 
     LOG(DEBUG) << "Agree sets:";
