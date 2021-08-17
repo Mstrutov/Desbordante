@@ -10,89 +10,89 @@ unsigned long long Fd_mine::execute() {
     schema = relation->getSchema();
     auto startTime = std::chrono::system_clock::now();
 
-    r = dynamic_bitset<>(schema->getNumColumns());
+    relationIndices = dynamic_bitset<>(schema->getNumColumns());
 
     for (size_t columnIndex = 0; columnIndex < schema->getNumColumns(); columnIndex++) {
         dynamic_bitset<> tmp(schema->getNumColumns());
         tmp[columnIndex] = 1;
-        r[columnIndex] = 1;
+        relationIndices[columnIndex] = 1;
         candidateSet.insert(std::move(tmp));
     }
 
-    for (auto &xi : candidateSet) {
-        closure[xi] = dynamic_bitset<>(schema->getNumColumns());
+    for (auto const& candidate : candidateSet) {
+        closure[candidate] = dynamic_bitset<>(schema->getNumColumns());
     }
 
     // 2
     while (!candidateSet.empty()) {
-        for (auto &xi : candidateSet) {
-            computeNonTrivialClosure(xi);
-            obtainFDandKey(xi);
+        for (auto const& candidate : candidateSet) {
+            computeNonTrivialClosure(candidate);
+            obtainFDandKey(candidate);
         }
         obtainEQSet();
         pruneCandidates();
-        generateCandidates();
+        generateNextLevelCandidates();
     }
 
     // 3
     reconstruct();
     display();
 
-    std::chrono::milliseconds elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
+    auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
     return elapsed_milliseconds.count();
 }
 
-void Fd_mine::computeNonTrivialClosure(dynamic_bitset<> xi) {
-    if (!closure.count(xi)) {
-        closure[xi] = dynamic_bitset<>(xi.size());
+void Fd_mine::computeNonTrivialClosure(dynamic_bitset<> const& candidateX) {
+    if (!closure.count(candidateX)) {
+        closure[candidateX] = dynamic_bitset<>(candidateX.size());
     }
     for (int columnIndex = 0; columnIndex < schema->getNumColumns(); columnIndex++) {
-        if ((r - xi - closure[xi])[columnIndex]) {
-            dynamic_bitset<> xiy = xi;
-            dynamic_bitset<> y(schema->getNumColumns());
-            xiy[columnIndex] = 1;
-            y[columnIndex] = 1;
+        if ((relationIndices - candidateX - closure[candidateX])[columnIndex]) {
+            dynamic_bitset<> candidateXY = candidateX;
+            dynamic_bitset<> candidateY(schema->getNumColumns());
+            candidateXY[columnIndex] = 1;
+            candidateY[columnIndex] = 1;
 
-            if (xi.count() == 1) {
-                PositionListIndex const *xiPli = relation->getColumnData(xi.find_first()).getPositionListIndex();
-                PositionListIndex const *yPli = relation->getColumnData(columnIndex).getPositionListIndex();
+            if (candidateX.count() == 1) {
+                auto candidateXPli = relation->getColumnData(candidateX.find_first()).getPositionListIndex();
+                auto candidateYPli = relation->getColumnData(columnIndex).getPositionListIndex();
 
-                plis[xiy] = xiPli->intersect(yPli);
+                plis[candidateXY] = candidateXPli->intersect(candidateYPli);
 
-                if (xiPli->getNumCluster() == plis[xiy]->getNumCluster()) {
-                    closure[xi][columnIndex] = 1;
+                if (candidateXPli->getNumCluster() == plis[candidateXY]->getNumCluster()) {
+                    closure[candidateX][columnIndex] = 1;
                 }
 
                 continue;
             }
 
-            if (!plis.count(xiy)) {
-                PositionListIndex const *yPli = relation->getColumnData(y.find_first()).getPositionListIndex();
-                plis[xiy] = plis[xi]->intersect(yPli);
+            if (!plis.count(candidateXY)) {
+                auto candidateYPli = relation->getColumnData(candidateY.find_first()).getPositionListIndex();
+                plis[candidateXY] = plis[candidateX]->intersect(candidateYPli);
             }
 
-            if (plis[xi]->getNumCluster() == plis[xiy]->getNumCluster()) {
-                closure[xi][columnIndex] = 1;
+            if (plis[candidateX]->getNumCluster() == plis[candidateXY]->getNumCluster()) {
+                closure[candidateX][columnIndex] = 1;
             }
         }
     }
 }
 
-void Fd_mine::obtainFDandKey(dynamic_bitset<> xi) {
-    fdSet[xi] = closure[xi];
-    if (r == (xi | closure[xi])) {
-        keySet.insert(xi);
+void Fd_mine::obtainFDandKey(dynamic_bitset<> const& candidate) {
+    fdSet[candidate] = closure[candidate];
+    if (relationIndices == (candidate | closure[candidate])) {
+        keySet.insert(candidate);
     }
 }
 
 void Fd_mine::obtainEQSet() {
-    for (auto &xi : candidateSet) {
-        for (auto &[x, xClosure] : fdSet) {
-            dynamic_bitset<> z = xi & x;
-            if ((xi - z).is_subset_of(xClosure) && (x - z).is_subset_of(closure[xi])) {
-                if (x != xi) {
-                    eqSet[x].insert(xi);
-                    eqSet[xi].insert(x);
+    for (auto const& candidate: candidateSet) {
+        for (auto &[lhs, Closure] : fdSet) {
+            auto commonAtrs = candidate & lhs;
+            if ((candidate - commonAtrs).is_subset_of(Closure) && (lhs - commonAtrs).is_subset_of(closure[candidate])) {
+                if (lhs != candidate) {
+                    eqSet[lhs].insert(candidate);
+                    eqSet[candidate].insert(lhs);
                 }
             }
         }
@@ -100,12 +100,12 @@ void Fd_mine::obtainEQSet() {
 }
 
 void Fd_mine::pruneCandidates() {
-    std::set<dynamic_bitset<>>::iterator it = candidateSet.begin();
+    auto it = candidateSet.begin();
     while (it != candidateSet.end()) {
         bool found = false;
-        const dynamic_bitset<> &xi = *it;
+        auto const& xi = *it;
 
-        for (auto &xj : eqSet[xi]) {
+        for (auto const& xj : eqSet[xi]) {
             if (candidateSet.find(xj) != candidateSet.end()) {
                 it = candidateSet.erase(it);
                 found = true;
@@ -123,27 +123,27 @@ void Fd_mine::pruneCandidates() {
     }
 }
 
-void Fd_mine::generateCandidates() {
+void Fd_mine::generateNextLevelCandidates() {
     std::vector<dynamic_bitset<>> candidates(candidateSet.begin(), candidateSet.end());
 
-    dynamic_bitset<> xi;
-    dynamic_bitset<> xj;
-    dynamic_bitset<> xij;
+    dynamic_bitset<> candidateI;
+    dynamic_bitset<> candidateJ;
+    dynamic_bitset<> candidateIJ;
 
     for (size_t i = 0; i < candidates.size(); i++) {
-        xi = candidates[i];
+        candidateI = candidates[i];
 
         for (size_t j = i + 1; j < candidates.size(); j++) {
-            xj = candidates[j];
+            candidateJ = candidates[j];
 
             // apriori-gen
             bool similar = true;
-            int set_bits = 0;
+            int setBits = 0;
 
-            for (int k = 0; set_bits < xi.count() - 1; k++) {
-                if (xi[k] == xj[k]) {
-                    if (xi[k]) {
-                        set_bits++;
+            for (int k = 0; setBits < candidateI.count() - 1; k++) {
+                if (candidateI[k] == candidateJ[k]) {
+                    if (candidateI[k]) {
+                        setBits++;
                     }
                 } else {
                     similar = false;
@@ -153,41 +153,41 @@ void Fd_mine::generateCandidates() {
             //
 
             if (similar) {
-                xij = xi | xj;
+                candidateIJ = candidateI | candidateJ;
 
-                if (!(xj).is_subset_of(fdSet[xi]) && !(xi).is_subset_of(fdSet[xj])) {
-                    if (xi.count() == 1) {
-                        PositionListIndex const *xiPli = relation->getColumnData(xi.find_first()).getPositionListIndex();
-                        PositionListIndex const *xjPli = relation->getColumnData(xj.find_first()).getPositionListIndex();
-                        plis[xij] = xiPli->intersect(xjPli);
+                if (!(candidateJ).is_subset_of(fdSet[candidateI]) && !(candidateI).is_subset_of(fdSet[candidateJ])) {
+                    if (candidateI.count() == 1) {
+                        auto candidateIPli = relation->getColumnData(candidateI.find_first()).getPositionListIndex();
+                        auto candidateJPli = relation->getColumnData(candidateJ.find_first()).getPositionListIndex();
+                        plis[candidateIJ] = candidateIPli->intersect(candidateJPli);
                     } else {
-                        plis[xij] = plis[xi]->intersect(plis[xj].get());
+                        plis[candidateIJ] = plis[candidateI]->intersect(plis[candidateJ].get());
                     }
 
-                    dynamic_bitset<> closureXij = closure[xi] | closure[xj];
-                    if (r == (xij | closureXij)) {
-                        keySet.insert(xij);
+                    auto closureIJ = closure[candidateI] | closure[candidateJ];
+                    if (relationIndices == (candidateIJ | closureIJ)) {
+                        keySet.insert(candidateIJ);
                     } else {
-                        candidateSet.insert(xij);
+                        candidateSet.insert(candidateIJ);
                     }
                 }
             }
         }
 
-        candidateSet.erase(xi);
+        candidateSet.erase(candidateI);
     }
 }
 
 void Fd_mine::reconstruct() {
     std::queue<dynamic_bitset<>> queue;
-    dynamic_bitset<> generatedLhs(r.size());
-    dynamic_bitset<> generatedLhs_tmp(r.size());
+    dynamic_bitset<> generatedLhs(relationIndices.size());
+    dynamic_bitset<> generatedLhs_tmp(relationIndices.size());
 
     for (const auto &[lhs, rhs] : fdSet) {
         std::unordered_map<dynamic_bitset<>, bool> observed;
 
         observed[lhs] = true;
-        dynamic_bitset<> Rhs = rhs;
+        auto Rhs = rhs;
         queue.push(lhs);
 
         for (const auto &[eq, eqset] : eqSet) {
@@ -241,17 +241,17 @@ void Fd_mine::reconstruct() {
 void Fd_mine::display() {
     unsigned int fd_counter = 0;
 
-    for (auto &[lhs, rhs] : final_fdSet) {
+    for (auto const& [lhs, rhs] : final_fdSet) {
         for (size_t j = 0; j < rhs.size(); j++) {
             if (!rhs[j] || rhs[j] && lhs[j]) continue;
             std::cout << "Discovered FD: ";
             for (size_t i = 0; i < lhs.size(); i++) {
                 if (lhs[i]) std::cout << schema->getColumn(i)->getName() << " ";
             }
-            std::cout << "-> " << schema->getColumn(j)->getName() << std::endl;
+            std::cout << "-> " << schema->getColumn(j)->getName() << "\n";
             registerFD(Vertical(schema, lhs), *schema->getColumn(j));
             fd_counter++;
         }
     }
-    std::cout << "TOTAL FDs " << fd_counter << std::endl;
+    std::cout << "TOTAL FDs " << fd_counter << "\n";
 }

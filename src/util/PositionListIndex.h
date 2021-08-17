@@ -4,7 +4,6 @@
 //
 
 #pragma once
-#include <iostream>
 #include <memory>
 #include <deque>
 #include <vector>
@@ -72,13 +71,9 @@ public:
 
     void incFreq() { freq_++; }
 
-    virtual std::unique_ptr<PositionListIndex> intersect(PositionListIndex const* that) const;
-    virtual std::unique_ptr<PositionListIndex> probe(std::shared_ptr<const std::vector<int>> probingTable) const;
+    std::unique_ptr<PositionListIndex> intersect(PositionListIndex const* that) const;
+    std::unique_ptr<PositionListIndex> probe(std::shared_ptr<const std::vector<int>> probingTable) const;
     std::unique_ptr<PositionListIndex> probeAll(Vertical const& probingColumns,
                                                 ColumnLayoutRelationData & relationData);
     std::string toString() const;
-
-    friend class UnstrippedPositionListIndex;
-    virtual ~PositionListIndex() {};
-
 };
