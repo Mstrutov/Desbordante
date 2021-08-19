@@ -1,7 +1,3 @@
-//
-// Created by alexandrsmirn
-//
-
 #include "PruningMap.h"
 
 PruningMap::PruningMap(RelationalSchema const* schema) {
@@ -26,8 +22,9 @@ void PruningMap::rebalance() {
 }
 
 void PruningMap::rebalanceGroup(Vertical const& key) {
-    std::unordered_set<Vertical> const& depsOfGroup = this->at(key);
-    boost::dynamic_bitset<> invertedColumns = key.getColumnIndices().operator~();
+    auto const& depsOfGroup = this->at(key);
+    auto invertedColumns = key.getColumnIndices().operator~();
+
     for (size_t columnIndex = invertedColumns.find_first();
          columnIndex < invertedColumns.size();
          columnIndex = invertedColumns.find_next(columnIndex))
@@ -37,7 +34,7 @@ void PruningMap::rebalanceGroup(Vertical const& key) {
         std::unordered_set<Vertical> newGroup;
         this->insert(std::make_pair(newKey, newGroup));
 
-        for (Vertical const& depOfGroup : depsOfGroup) {
+        for (auto const& depOfGroup : depsOfGroup) {
             if (depOfGroup.contains(newKey)) {
                 newGroup.insert(depOfGroup);
             }
@@ -45,4 +42,3 @@ void PruningMap::rebalanceGroup(Vertical const& key) {
     }
     this->erase(key);
 }
-

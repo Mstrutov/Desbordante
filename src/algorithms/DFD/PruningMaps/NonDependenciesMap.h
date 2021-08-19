@@ -1,7 +1,3 @@
-//
-// Created by alexandrsmirn
-//
-
 #pragma once
 
 #include "Vertical.h"
@@ -16,4 +12,3 @@ public:
     void addNewNonDependency(Vertical const& node);
     bool canBePruned(Vertical const& node) const;
 };
-

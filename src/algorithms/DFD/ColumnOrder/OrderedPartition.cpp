@@ -1,7 +1,3 @@
-//
-// Created by alexandrsmirn
-//
-
 #include "OrderedPartition.h"
 
 OrderedPartition::OrderedPartition(const PositionListIndex *const partition, unsigned int numberOfRows, unsigned int columnIndex)
@@ -15,5 +11,3 @@ bool OrderedPartition::operator<(OrderedPartition const& other) const {
     }
     return this->distinctiveness < other.distinctiveness;
 }
-
-

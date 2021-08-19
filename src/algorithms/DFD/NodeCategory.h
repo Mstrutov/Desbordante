@@ -1,7 +1,3 @@
-//
-// Created by alexandrsmirn
-//
-
 #pragma once
 
 enum class NodeCategory {

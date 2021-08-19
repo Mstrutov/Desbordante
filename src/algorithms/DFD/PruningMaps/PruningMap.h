@@ -1,11 +1,8 @@
-//
-// Created by alexandrsmirn
-//
-
 #pragma once
 
 #include <unordered_set>
 #include <unordered_map>
+
 #include "Vertical.h"
 #include "DFD/LatticeObservations/LatticeObservations.h"
 
