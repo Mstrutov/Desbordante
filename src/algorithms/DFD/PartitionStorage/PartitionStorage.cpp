@@ -13,7 +13,6 @@ PositionListIndex* PartitionStorage::get(Vertical const &vertical) {
 PartitionStorage::PartitionStorage(ColumnLayoutRelationData* relationData, CachingMethod cachingMethod,
                    CacheEvictionMethod evictionMethod) :
         relationData_(relationData),
-        // TODO: сделать index_(std::make_unique<VerticalMap<PositionListIndex>>(relationData->getSchema())) при одном потоке
         index_(std::make_unique<BlockingVerticalMap<PositionListIndex>>(relationData->getSchema())),
         cachingMethod_(cachingMethod),
         evictionMethod_(evictionMethod) {
@@ -24,13 +23,7 @@ PartitionStorage::PartitionStorage(ColumnLayoutRelationData* relationData, Cachi
     }
 }
 
-PartitionStorage::~PartitionStorage() {
-    //for (auto& column_ptr : relationData_->getSchema()->getColumns()) {
-        //auto PLI =
-    //    index_->remove(static_cast<Vertical>(*column_ptr));
-        //relationData_->getColumnData(column_ptr->getIndex()).getPLI(std::move(PLI));
-    //}
-}
+PartitionStorage::~PartitionStorage() {}
 
 // obtains or calculates a PositionListIndex using cache
 std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> PartitionStorage::getOrCreateFor(
@@ -52,7 +45,6 @@ std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> PartitionSt
     std::vector<PositionListIndexRank> ranks;
     ranks.reserve(subsetEntries.size());
     for (auto& [subVertical, subPLI_ptr] : subsetEntries) {
-        // TODO: избавиться от таких const_cast, которые сбрасывают константность
         PositionListIndexRank pliRank(&subVertical, std::const_pointer_cast<PositionListIndex>(subPLI_ptr), subVertical.getArity());
         ranks.push_back(pliRank);
         if (!smallestPliRank
@@ -99,7 +91,6 @@ std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> PartitionSt
         }
     }
 
-    // TODO: конкретные костыли, надо делать Column : Vertical
     std::vector<std::unique_ptr<Vertical>> verticalColumns;
 
     for (auto& column : vertical.getColumns()) {
@@ -113,7 +104,6 @@ std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> PartitionSt
     // sort operands by ascending order
     std::sort(operands.begin(), operands.end(),
               [](auto& el1, auto& el2) { return el1.pli_->getSize() < el2.pli_->getSize(); });
-    // TODO: Profiling context stuff
 
     LOG(DEBUG) << boost::format {"Intersecting %1%."} % "[UNIMPLEMENTED]";
 
@@ -121,8 +111,6 @@ std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> PartitionSt
         throw std::logic_error("Current implementation assumes operands.size() > 0");
     }
 
-    // TODO: тут не очень понятно: cachingProcess может забрать себе PLI, а может и отдать обратно,
-    //  поэтому приходится через variant разбирать. Проверить, насколько много платим за обёртку.
     // Intersect and cache
     std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> variantIntersectionPLI;
     if (operands.size() >= 4) {
@@ -161,4 +149,3 @@ std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> PartitionSt
     index_->put(vertical, std::move(pli));
     return pliPointer;
 }
-
