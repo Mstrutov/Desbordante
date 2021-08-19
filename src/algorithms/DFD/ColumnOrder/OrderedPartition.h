@@ -2,10 +2,11 @@
 
 #include "PositionListIndex.h"
 
-class OrderedPartition : public PositionListIndex {
+class OrderedPartition {
 private:
+    //PositionListIndex const* const partition;
     double distinctiveness;
-    unsigned int numberOfRows;
+    //unsigned int numberOfRows;
     unsigned int columnIndex;
 public:
     OrderedPartition() = delete;
