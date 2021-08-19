@@ -1,7 +1,3 @@
-//
-// Created by alexandrsmirn
-//
-
 #include "DependenciesMap.h"
 
 DependenciesMap::DependenciesMap(RelationalSchema const* schema)
@@ -22,7 +18,7 @@ void DependenciesMap::addNewDependency(Vertical const& nodeToAdd) {
         Vertical const& key = mapRow.first;
 
         if (nodeToAdd.contains(key)) {
-            std::unordered_set<Vertical>& depsForKey = mapRow.second;
+            auto& depsForKey = mapRow.second;
             bool hasSubsetEntry = false;
 
             for (auto iter = depsForKey.begin(); iter != depsForKey.end(); ) {

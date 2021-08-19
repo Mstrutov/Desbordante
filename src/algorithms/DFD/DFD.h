@@ -1,20 +1,15 @@
-//
-// Created by alexandrsmirn
-//
-
 #pragma once
 
 #include <random>
 #include <stack>
 
 #include "FDAlgorithm.h"
-#include "DFD/LatticeObservations/LatticeObservations.h"
-#include "PLICache.h"
-#include "DependenciesMap.h"
-#include "NonDependenciesMap.h"
-#include "PartitionStorage/PartitionStorage.h"
 #include "Vertical.h"
-#include "ColumnOrder/ColumnOrder.h"
+#include "DFD/ColumnOrder/ColumnOrder.h"
+#include "DFD/LatticeObservations/LatticeObservations.h"
+#include "DFD/PruningMaps/DependenciesMap.h"
+#include "DFD/PruningMaps/NonDependenciesMap.h"
+#include "DFD/PartitionStorage/PartitionStorage.h"
 
 class DFD : public FDAlgorithm {
 private:

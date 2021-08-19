@@ -1,7 +1,3 @@
-//
-// Created by alexandrsmirn
-//
-
 #include "ColumnOrder.h"
 
 #include "OrderedPartition.h"
@@ -16,7 +12,7 @@ ColumnOrder::ColumnOrder(ColumnLayoutRelationData const* const relationData)
     }
 
     int orderIndex = 0;
-    for (OrderedPartition const& partition : partitions) {
+    for (auto const& partition : partitions) {
         order[orderIndex++] = partition.getColumnIndex();
     }
 }

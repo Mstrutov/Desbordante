@@ -1,7 +1,3 @@
-//
-// Created by alexandrsmirn
-//
-
 #include "NonDependenciesMap.h"
 
 NonDependenciesMap::NonDependenciesMap(RelationalSchema const* schema)
@@ -35,7 +31,7 @@ void NonDependenciesMap::addNewNonDependency(Vertical const& nodeToAdd) {
         Vertical const& key = mapRow.first;
 
         if (nodeToAdd.contains(key)) {
-            std::unordered_set<Vertical>& nonDepsForKey = mapRow.second;
+            auto& nonDepsForKey = mapRow.second;
             bool hasSupersetEntry = false;
 
             for (auto iter = nonDepsForKey.begin(); iter != nonDepsForKey.end(); ) {
