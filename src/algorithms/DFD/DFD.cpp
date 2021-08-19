@@ -74,13 +74,14 @@ unsigned long long DFD::execute() {
     auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
     long long aprioriMillis = elapsed_milliseconds.count();
 
+    //можно вывести найденные зависимости в формате Json:
     //std::cout << "====JSON-FD========\r\n" << getJsonFDs() << std::endl;
     std::cout << "HASH: " << FDAlgorithm::fletcher16() << std::endl;
 
     return aprioriMillis;
 }
 
-const Vertical & DFD::takeRandom(std::unordered_set<Vertical> & nodeSet) {
+Vertical const& DFD::takeRandom(std::unordered_set<Vertical> & nodeSet) {
     std::uniform_int_distribution<> dis(0, std::distance(nodeSet.begin(), nodeSet.end()) - 1);
     auto iterator = nodeSet.begin();
     std::advance(iterator, dis(this->gen));
@@ -139,14 +140,12 @@ void DFD::findLHSs(Column const* const  rhs) {
                     if (nodePliPointer->getNepAsLong() ==
                         intersectrdPLIPointer->getNepAsLong()
                     ) {
-                        //observations[node] = observations.updateDependencyCategory(node);
                         observations.updateDependencyCategory(node);
                         if (observations[node] == NodeCategory::minimalDependency) {
                             minimalDeps.insert(node);
                         }
                         dependenciesMap.addNewDependency(node);
                     } else {
-                        //observations[node] = observations.updateNonDependencyCategory(node, rhs->getIndex());
                         observations.updateNonDependencyCategory(node, rhs->getIndex());
                         if (observations[node] == NodeCategory::maximalNonDependency) {
                             maximalNonDeps.insert(node);
@@ -180,17 +179,16 @@ Vertical DFD::pickNextNode(Vertical const &node, size_t rhsIndex) {
             auto prunedNonDepSubsets = nonDependenciesMap.getPrunedSupersets(uncheckedSubsets);
             for (auto const& prunedSubset : prunedNonDepSubsets) {
                 observations[prunedSubset] = NodeCategory::nonDependency;
-                //dependenciesMap.addNewDependency(node);
             }
             substractSets(uncheckedSubsets, prunedNonDepSubsets);
 
             if (uncheckedSubsets.empty() && prunedNonDepSubsets.empty()) {
                 minimalDeps.insert(node);
                 observations[node] = NodeCategory::minimalDependency;
-                //dependenciesMap.addNewDependency(node);
             } else if (!uncheckedSubsets.empty()) {
-                Vertical const& nextNode = takeRandom(uncheckedSubsets);
-                //Vertical const& nextNode = *uncheckedSubsets.begin(); -- выбирать одинаковый путь при каждом запуске
+                auto const& nextNode = takeRandom(uncheckedSubsets);
+                //чтобы при каждом запуске выбирать одинаковый путь, нужно заменить строчку выше на строку ниже
+                //auto const& nextNode = *uncheckedSubsets.begin();
                 trace.push(node);
                 return nextNode;
             }
@@ -201,11 +199,9 @@ Vertical DFD::pickNextNode(Vertical const &node, size_t rhsIndex) {
 
             for (auto const& prunedSuperset : prunedNonDepSupersets) {
                 observations[prunedSuperset] = NodeCategory::nonDependency;
-                //nonDependenciesMap.addNewNonDependency(node);
             }
             for (auto const& prunedSuperset : prunedDepSupersets) {
                 observations[prunedSuperset] = NodeCategory::dependency;
-                //dependenciesMap.addNewDependency(node);
             }
 
             substractSets(uncheckedSupersets, prunedDepSupersets);
@@ -214,10 +210,10 @@ Vertical DFD::pickNextNode(Vertical const &node, size_t rhsIndex) {
             if (uncheckedSupersets.empty() && prunedNonDepSupersets.empty()) {
                 maximalNonDeps.insert(node);
                 observations[node] = NodeCategory::maximalNonDependency;
-                //nonDependenciesMap.addNewNonDependency(node);
             } else if (!uncheckedSupersets.empty()) {
-                Vertical const& nextNode = takeRandom(uncheckedSupersets);
-                //Vertical const& nextNode = *uncheckedSupersets.begin(); -- выбирать одинаковый путь при каждом запуске
+                auto const& nextNode = takeRandom(uncheckedSupersets);
+                //чтобы при каждом запуске выбирать одинаковый путь, нужно заменить строчку выше на строку ниже
+                //auto const& nextNode = *uncheckedSupersets.begin();
                 trace.push(node);
                 return nextNode;
             }
@@ -250,7 +246,6 @@ std::stack<Vertical> DFD::generateNextSeeds(Column const* const currentRHS) {
                  columnIndex = complementIndices.find_next(columnIndex)
             ) {
                 singleColumnBitset[columnIndex] = true;
-                //seeds.insert(Vertical(relation->getSchema(), singleColumnBitset));
                 seeds.emplace(relation->getSchema(), singleColumnBitset);
                 singleColumnBitset[columnIndex] = false;
             }
@@ -263,7 +258,6 @@ std::stack<Vertical> DFD::generateNextSeeds(Column const* const currentRHS) {
                      columnIndex = complementIndices.find_next(columnIndex)
                 ) {
                     newCombination[columnIndex] = true;
-                    //newSeeds.insert(Vertical(relation->getSchema(), newCombination));
                     newSeeds.emplace(relation->getSchema(), newCombination);
                     newCombination[columnIndex] = dependency.getColumnIndicesRef()[columnIndex];
                 }
@@ -288,7 +282,7 @@ std::stack<Vertical> DFD::generateNextSeeds(Column const* const currentRHS) {
 
     std::stack<Vertical> remainingSeeds;
 
-    for (Vertical const& newSeed : seeds) {
+    for (auto const& newSeed : seeds) {
         remainingSeeds.push(newSeed);
     }
 
@@ -347,14 +341,14 @@ void DFD::substractSets(std::unordered_set<Vertical> & set, std::unordered_set<V
 
 bool DFD::inferCategory(Vertical const& node, size_t rhsIndex) {
     if (nonDependenciesMap.canBePruned(node)) {
-        observations[node] = observations.updateNonDependencyCategory(node, rhsIndex);
+        observations.updateNonDependencyCategory(node, rhsIndex);
         nonDependenciesMap.addNewNonDependency(node);
         if (observations[node] == NodeCategory::minimalDependency) {
             minimalDeps.insert(node);
         }
         return true;
     } else if (dependenciesMap.canBePruned(node)) {
-        observations[node] = observations.updateDependencyCategory(node);
+        observations.updateDependencyCategory(node);
         dependenciesMap.addNewDependency(node);
         if (observations[node] == NodeCategory::maximalNonDependency) {
             maximalNonDeps.insert(node);

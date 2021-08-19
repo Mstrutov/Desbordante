@@ -34,7 +34,7 @@ private:
     std::stack<Vertical> generateNextSeeds(Column const* const currentRHS);
 
     std::list<Vertical> minimize(std::unordered_set<Vertical> const&);
-    const Vertical & takeRandom(std::unordered_set<Vertical> &nodeSet);
+    Vertical const& takeRandom(std::unordered_set<Vertical> &nodeSet);
     static void substractSets(std::unordered_set<Vertical> & set, std::unordered_set<Vertical> const& setToSubstract);
 
 public:

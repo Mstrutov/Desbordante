@@ -20,10 +20,8 @@ private:
         PositionListIndexRank(Vertical const* vertical, std::shared_ptr<PositionListIndex> pli, int initialArity):
                 vertical_(vertical), pli_(pli), addedArity_(initialArity) {}
     };
-    //using CacheMap = VerticalMap<PositionListIndex>;
     ColumnLayoutRelationData* relationData_;
     std::unique_ptr<VerticalMap<PositionListIndex>> index_;
-    //usageCounter - for parallelism
 
     int savedIntersections_ = 0;
 
@@ -32,7 +30,6 @@ private:
     CachingMethod cachingMethod_;
     CacheEvictionMethod evictionMethod_;
     double cachingMethodValue_;
-    //long long maximumAvailableMemory_ = 0;
 
     double medianInvertedEntropy_;
 
@@ -45,10 +42,7 @@ public:
     std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> getOrCreateFor(
             Vertical const& vertical);
 
-    //void setMaximumEntropy(double e) { maximumEntropy_ = e; }
-
     size_t size() const;
 
-    // returns ownership of single column PLIs back to ColumnLayoutRelationData
     virtual ~PartitionStorage();
 };

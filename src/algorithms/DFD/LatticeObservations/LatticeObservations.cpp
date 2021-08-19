@@ -44,34 +44,6 @@ NodeCategory LatticeObservations::updateDependencyCategory(Vertical const& verti
     return newCategory;
 }
 
-/*NodeCategory LatticeObservations::updateNonDependencyCategory(Vertical const& vertical, int rhsIndex) {
-    boost::dynamic_bitset<> columnIndices = vertical.getColumnIndices();
-    //columnIndices[rhsIndex] = true;
-    bool hasUncheckedSuperset = false;
-
-    for (size_t index = 0; index < columnIndices.size(); index++) {
-        if (!columnIndices[index] && index != rhsIndex) {
-            columnIndices[index] = true; //убираем одну из колонок
-            auto const supersetVerticalIter = this->find(Vertical(vertical.getSchema(), columnIndices));
-
-            if (supersetVerticalIter == this->end()) {
-                //если нашли нерассмотренное надмножество
-                hasUncheckedSuperset = true;
-            } else {
-                NodeCategory const &supersetVerticalCategory = supersetVerticalIter->second;
-                if (supersetVerticalCategory == NodeCategory::maximalNonDependency ||
-                    supersetVerticalCategory == NodeCategory::nonDependency ||
-                    supersetVerticalCategory == NodeCategory::candidateMaximalNonDependency
-                ) {
-                    return NodeCategory::nonDependency;
-                }
-            }
-            columnIndices[index] = false; //возвращаем как было
-        }
-    }
-    return hasUncheckedSuperset ? NodeCategory::candidateMaximalNonDependency : NodeCategory::maximalNonDependency;
-}*/
-
 NodeCategory LatticeObservations::updateNonDependencyCategory(Vertical const& vertical, int rhsIndex) {
     auto columnIndices = vertical.getColumnIndicesRef();
     columnIndices[rhsIndex] = true;
