@@ -3,8 +3,11 @@
 NodeCategory LatticeObservations::updateDependencyCategory(Vertical const& vertical) {
     //бежим по множеству подмножеств и смотрим. если получили все независимости, то это мин зависимость
 
+    NodeCategory newCategory;
     if (vertical.getArity() <= 1) {
-        return NodeCategory::minimalDependency;
+        newCategory = NodeCategory::minimalDependency;
+        (*this)[vertical] = newCategory;
+        return newCategory;
     }
 
     auto columnIndices = vertical.getColumnIndicesRef(); //копируем индексы
@@ -28,13 +31,17 @@ NodeCategory LatticeObservations::updateDependencyCategory(Vertical const& verti
                 subsetVerticalCategory == NodeCategory::dependency ||
                 subsetVerticalCategory == NodeCategory::candidateMinimalDependency
             ) {
-                return NodeCategory::dependency;
+                newCategory = NodeCategory::dependency;
+                (*this)[vertical] = newCategory;
+                return newCategory;
             }
         }
         //если все нормально
         columnIndices[index] = true; //возвращаем как было
     }
-    return hasUncheckedSubset ? NodeCategory::candidateMinimalDependency : NodeCategory::minimalDependency;
+    newCategory = hasUncheckedSubset ? NodeCategory::candidateMinimalDependency : NodeCategory::minimalDependency;
+    (*this)[vertical] = newCategory;
+    return newCategory;
 }
 
 /*NodeCategory LatticeObservations::updateNonDependencyCategory(Vertical const& vertical, int rhsIndex) {
@@ -70,6 +77,7 @@ NodeCategory LatticeObservations::updateNonDependencyCategory(Vertical const& ve
     columnIndices[rhsIndex] = true;
     columnIndices.flip();
 
+    NodeCategory newCategory;
     bool hasUncheckedSuperset = false;
 
     for (size_t index = columnIndices.find_first();
@@ -87,11 +95,15 @@ NodeCategory LatticeObservations::updateNonDependencyCategory(Vertical const& ve
                 supersetVerticalCategory == NodeCategory::nonDependency ||
                 supersetVerticalCategory == NodeCategory::candidateMaximalNonDependency
             ) {
-                return NodeCategory::nonDependency;
+                newCategory = NodeCategory::nonDependency;
+                (*this)[vertical] = newCategory;
+                return newCategory;
             }
         }
     }
-    return hasUncheckedSuperset ? NodeCategory::candidateMaximalNonDependency : NodeCategory::maximalNonDependency;
+    newCategory = hasUncheckedSuperset ? NodeCategory::candidateMaximalNonDependency : NodeCategory::maximalNonDependency;
+    (*this)[vertical] = newCategory;
+    return newCategory;
 }
 
 bool LatticeObservations::isCandidate(Vertical const& node) const {

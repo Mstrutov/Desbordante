@@ -139,13 +139,15 @@ void DFD::findLHSs(Column const* const  rhs) {
                     if (nodePliPointer->getNepAsLong() ==
                         intersectrdPLIPointer->getNepAsLong()
                     ) {
-                        observations[node] = observations.updateDependencyCategory(node);
+                        //observations[node] = observations.updateDependencyCategory(node);
+                        observations.updateDependencyCategory(node);
                         if (observations[node] == NodeCategory::minimalDependency) {
                             minimalDeps.insert(node);
                         }
                         dependenciesMap.addNewDependency(node);
                     } else {
-                        observations[node] = observations.updateNonDependencyCategory(node, rhs->getIndex());
+                        //observations[node] = observations.updateNonDependencyCategory(node, rhs->getIndex());
+                        observations.updateNonDependencyCategory(node, rhs->getIndex());
                         if (observations[node] == NodeCategory::maximalNonDependency) {
                             maximalNonDeps.insert(node);
                         }
