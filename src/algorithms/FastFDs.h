@@ -1,7 +1,6 @@
 #pragma once
 
 #include <functional>
-#include <thread>
 
 #include <boost/thread/mutex.hpp>
 
@@ -13,18 +12,7 @@ class FastFDs : public FDAlgorithm {
 public:
     explicit FastFDs(std::filesystem::path const& path,
                      char separator = ',', bool hasHeader = true,
-                     ushort parallelism = 0)
-        : FDAlgorithm(path, separator, hasHeader) {
-            if (parallelism == 0) {
-                threads_num_ = std::thread::hardware_concurrency();
-                if (threads_num_ == 0) {
-                    throw std::runtime_error("Unable to detect number of concurrent"
-                                             " threads supported. Specify it manually.");
-                }
-            } else {
-                threads_num_ = parallelism;
-            }
-        }
+                     ushort parallelism = 0);
     unsigned long long execute() override;
 private:
     using OrderingComparator = std::function<bool (Column const&, Column const&)>;

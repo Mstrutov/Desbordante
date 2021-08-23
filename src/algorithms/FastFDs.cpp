@@ -14,6 +14,21 @@
 
 using std::vector, std::set;
 
+FastFDs::FastFDs(std::filesystem::path const& path,
+                 char separator, bool hasHeader,
+                 ushort parallelism) :
+FDAlgorithm(path, separator, hasHeader) {
+    if (parallelism == 0) {
+        threads_num_ = std::thread::hardware_concurrency();
+        if (threads_num_ == 0) {
+            throw std::runtime_error("Unable to detect number of concurrent"
+                                     " threads supported. Specify it manually.");
+        }
+    } else {
+        threads_num_ = parallelism;
+    }
+}
+
 
 // Should be FDAlgorithm method I think
 void FastFDs::registerFD(Vertical lhs, Column rhs) {
