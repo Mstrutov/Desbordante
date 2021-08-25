@@ -14,6 +14,8 @@
 
 using std::vector, std::set;
 
+constexpr static double kFindCoversTotalPercent = 5.0;
+
 FastFDs::FastFDs(std::filesystem::path const& path,
                  char separator, bool hasHeader,
                  ushort parallelism) :
@@ -43,6 +45,7 @@ void FastFDs::registerFD(Vertical lhs, Column rhs) {
 unsigned long long FastFDs::execute() {
     relation_ = ColumnLayoutRelationData::createFrom(inputGenerator_, true);
     schema_ = relation_->getSchema();
+    percent_per_col_ = kFindCoversTotalPercent / schema_->getNumColumns();
 
     if (schema_->getNumColumns() == 0) {
         throw std::runtime_error("Got an empty .csv file: FD mining is meaningless.");
@@ -81,8 +84,9 @@ unsigned long long FastFDs::execute() {
             set<Column, OrderingComparator> init_ordering = getInitOrdering(diff_sets_mod, *column);
             findCovers(*column, diff_sets_mod, diff_sets_mod,
                        *schema_->emptyVertical, init_ordering);
+        } else {
+            addProgress(percent_per_col_);
         }
-
     };
 
     if (threads_num_ > 1) {
@@ -98,6 +102,8 @@ unsigned long long FastFDs::execute() {
             task(column);
         }
     }
+
+    setProgress(100);
 
     auto elapsed_milliseconds =
         std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -118,6 +124,7 @@ bool FastFDs::columnContainsOnlyEqualValues(Column const& column) const {
 void FastFDs::findCovers(Column const& attribute, vector<DiffSet> const& diff_sets_mod,
                          vector<DiffSet> const& cur_diff_sets, Vertical const& path,
                          set<Column, OrderingComparator> const& ordering) {
+
     if (ordering.size() == 0 && !cur_diff_sets.empty()) {
         return; // no FDs here
     }
@@ -142,6 +149,11 @@ void FastFDs::findCovers(Column const& attribute, vector<DiffSet> const& diff_se
 
         auto next_ordering = getNextOrdering(next_diff_sets, column, ordering);
         findCovers(attribute, diff_sets_mod, next_diff_sets, path.Union(column), next_ordering);
+
+        // First findCovers call, calculate progress
+        if (path.getArity() == 0) {
+            addProgress(percent_per_col_ / ordering.size());
+        }
     }
 }
 
@@ -274,7 +286,7 @@ void FastFDs::genDiffSets() {
         // TODO: Need to fix data races first
         //c.mc_gen_method = MCGenMethod::kParallel;
     }
-    AgreeSetFactory factory(relation_.get(), c);
+    AgreeSetFactory factory(relation_.get(), c, this);
     AgreeSetFactory::SetOfAgreeSets agree_sets = factory.genAgreeSets();
 
     LOG(DEBUG) << "Agree sets:";

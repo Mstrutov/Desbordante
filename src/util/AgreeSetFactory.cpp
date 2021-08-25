@@ -19,6 +19,9 @@
 
 using std::set, std::vector, std::unordered_set;
 
+constexpr static double kASGenTotalPercent = 85.0;
+constexpr static double kMCGenTotalPercent = 10.0;
+
 AgreeSetFactory::SetOfAgreeSets AgreeSetFactory::genAgreeSets() const {
     auto start_time = std::chrono::system_clock::now();
     std::string method_str;
@@ -37,7 +40,7 @@ AgreeSetFactory::SetOfAgreeSets AgreeSetFactory::genAgreeSets() const {
       }
       case AgreeSetsGenMethod::kUsingMCAndGetAgreeSet: {
         method_str = "`kUsingMCAndGetAgreeSet`";
-        agree_sets = genASUsingMapOfIDSets();
+        agree_sets = genASUsingMCAndGetAgreeSets();
         break;
       }
       case AgreeSetsGenMethod::kUsingGetAgreeSet: {
@@ -95,10 +98,15 @@ AgreeSetFactory::SetOfAgreeSets AgreeSetFactory::genASUsingVectorOfIDSets() cons
     // compute agree sets using identifier sets
     // using vector of identifier sets
     if (!identifier_sets.empty()) {
+        size_t const size = identifier_sets.size();
+        size_t const pairs_num = (size_t)(size * (size - 1) / 2);
+        double const percent_per_idset = (pairs_num == 0) ? kASGenTotalPercent :
+                                         kASGenTotalPercent / pairs_num;
         auto back_it = std::prev(identifier_sets.end());
         for (auto p = identifier_sets.begin(); p != back_it; ++p) {
             for (auto q = std::next(p); q != identifier_sets.end(); ++q) {
                 agree_sets.insert(p->intersect(*q));
+                addProgress(percent_per_idset);
             }
         }
     }
@@ -132,9 +140,11 @@ AgreeSetFactory::SetOfAgreeSets AgreeSetFactory::genASUsingMapOfIDSets() const {
         LOG(DEBUG) << id_set.toString();
     }
 
-
     // compute agree sets using identifier sets
     // metanome approach (using map of identifier sets)
+    double const percent_per_cluster = max_representation.empty() ?
+                                       kASGenTotalPercent :
+                                       kASGenTotalPercent / max_representation.size();
     for (auto const &cluster : max_representation) {
         auto back_it = std::prev(cluster.end());
         for (auto p = cluster.begin(); p != back_it; ++p) {
@@ -144,6 +154,7 @@ AgreeSetFactory::SetOfAgreeSets AgreeSetFactory::genASUsingMapOfIDSets() const {
                 agree_sets.insert(id_set1.intersect(id_set2));
             }
         }
+        addProgress(percent_per_cluster);
     }
 
     return agree_sets;
@@ -257,11 +268,15 @@ AgreeSetFactory::SetOfVectors AgreeSetFactory::genMCUsingCalculateSupersets() co
     max_representation.insert(not_empty_pli->getPositionListIndex()->getIndex().begin(),
                               not_empty_pli->getPositionListIndex()->getIndex().end());
 
+    auto const dist = std::distance(not_empty_pli, columns_data.end());
+    double const percent_per_col = (dist == 1) ? kMCGenTotalPercent :
+                                   kMCGenTotalPercent / (dist - 1);
     for (auto p = std::next(not_empty_pli); p != columns_data.end(); ++p) {
         PositionListIndex const* pli = p->getPositionListIndex();
         if (pli->getSize() != 0) {
             calculateSupersets(max_representation, pli->getIndex());
         }
+        addProgress(percent_per_col);
     }
 
     return max_representation;
@@ -339,6 +354,9 @@ AgreeSetFactory::SetOfVectors AgreeSetFactory::genMCUsingHandlePartition() const
                                             std::greater<int>());
     };
     auto sorted_eqv_classes = genSortedEqvClasses(greater);
+    if (sorted_eqv_classes.empty()) {
+        return max_representation;
+    }
     /* maps tuple_index to set of eqv_classes (each eqv_class represented
      * by index in sorted_eqv_classes, so set<size_t>) in which this tuple_index appears.
      * It would be possible to use decltype(sorted_eqv_classes)::const_iterator to
@@ -347,6 +365,7 @@ AgreeSetFactory::SetOfVectors AgreeSetFactory::genMCUsingHandlePartition() const
     std::unordered_map<int, unordered_set<size_t>> index;
 
     size_t eqv_class_index = 0;
+    double const percent_per_eqv_class = kMCGenTotalPercent / sorted_eqv_classes.size();
     for (auto it = sorted_eqv_classes.begin();
          it != sorted_eqv_classes.end();
          ++it, ++eqv_class_index) {
@@ -357,6 +376,7 @@ AgreeSetFactory::SetOfVectors AgreeSetFactory::genMCUsingHandlePartition() const
             }
             max_representation.insert(std::move(*it));
         }
+        addProgress(percent_per_eqv_class);
     }
 
     return max_representation;

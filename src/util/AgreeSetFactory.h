@@ -11,6 +11,7 @@
 #include "Vertical.h"
 #include "ColumnLayoutRelationData.h"
 #include "custom/CustomHashes.h"
+#include "FDAlgorithm.h"
 
 using AgreeSet = Vertical;
 
@@ -134,8 +135,9 @@ public:
     using SetOfAgreeSets = std::unordered_set<AgreeSet>;
 
     explicit AgreeSetFactory(ColumnLayoutRelationData const* const rel,
-                             Configuration const& c = Configuration())
-        : relation_(rel), config_(c) {}
+                             Configuration const& c = Configuration(),
+                             FDAlgorithm* algo = nullptr)
+        : relation_(rel), config_(c), algo_(algo) {}
 
     ColumnLayoutRelationData const* getRelation() const { return relation_; }
     void SetConfiguration(Configuration const& c) { config_ = c; }
@@ -176,9 +178,16 @@ private:
     using VectorComp = std::function<bool (std::vector<int> const&, std::vector<int> const&)>;
     std::set<std::vector<int>, VectorComp> genSortedEqvClasses(VectorComp comp) const;
 
+    void addProgress(double const val) const noexcept {
+        if (algo_ != nullptr) {
+            algo_->addProgress(val);
+        }
+    }
+
 
     ColumnLayoutRelationData const* const relation_;
 
     Configuration config_;
+    FDAlgorithm* algo_;
 };
 
