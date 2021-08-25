@@ -65,5 +65,6 @@ private:
     std::vector<DiffSet> diff_sets_;
     ushort threads_num_;
     boost::mutex register_mutex_;
+    double percent_per_col_;
 };
 
