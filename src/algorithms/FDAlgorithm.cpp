@@ -42,6 +42,7 @@ unsigned int FDAlgorithm::fletcher16() {
 }
 
 void FDAlgorithm::addProgress(double const val) noexcept {
+        assert(val >= 0);
 #ifdef __cpp_lib_atomic_float
         progress_.fetch_add(val);
         assert(progress_.load() < 101);
@@ -53,7 +54,7 @@ void FDAlgorithm::addProgress(double const val) noexcept {
 }
 
 void FDAlgorithm::setProgress(double const val) noexcept {
-        assert(val < 101);
+        assert(0 <= val && val < 101);
 #ifdef __cpp_lib_atomic_float
         progress_.store(val);
 #else
