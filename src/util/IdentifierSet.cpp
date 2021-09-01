@@ -9,28 +9,6 @@ IdentifierSet::IdentifierSet(ColumnLayoutRelationData const* const relation,
     }
 }
 
-Vertical IdentifierSet::intersect(IdentifierSet const& other) const {
-    boost::dynamic_bitset<> intersection(relation_->getNumColumns());
-    auto p = data_.begin();
-    auto q = other.data_.begin();
-
-    while (p != data_.end() && q != other.data_.end()) {
-        if (p->attribute->getIndex() < q->attribute->getIndex()) {
-            ++p;
-        } else {
-            if (q->attribute->getIndex() == p->attribute->getIndex() &&
-                p->cluster_index != 0 &&
-                p->cluster_index == q->cluster_index) {
-                intersection.set(p->attribute->getIndex());
-                ++p;
-            }
-            ++q;
-        }
-    }
-
-    return relation_->getSchema()->getVertical(intersection);
-}
-
 std::string IdentifierSet::toString() const {
     if (data_.empty()) {
         return "[]";

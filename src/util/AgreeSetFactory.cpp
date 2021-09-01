@@ -79,7 +79,7 @@ AgreeSetFactory::SetOfAgreeSets AgreeSetFactory::genASUsingVectorOfIDSets() cons
             if (!cache.insert(*p).second) {
                 continue;
             }
-            identifier_sets.emplace_back(IdentifierSet(relation_, *p));
+            identifier_sets.emplace_back(relation_, *p);
         }
     }
 
@@ -123,7 +123,7 @@ AgreeSetFactory::SetOfAgreeSets AgreeSetFactory::genASUsingMapOfIDSets() const {
 
     for (auto const& cluster : max_representation) {
         for (auto p = cluster.begin(); p != cluster.end(); ++p) {
-            identifier_sets.emplace(*p, IdentifierSet(relation_, *p));
+            identifier_sets.try_emplace(*p, relation_, *p);
         }
     }
 
@@ -321,7 +321,7 @@ AgreeSetFactory::SetOfVectors AgreeSetFactory::genMCUsingHandleEqvClass() const 
     for (auto it = max_sets.begin(); it != max_sets.end();) {
         SetOfVectors set = max_sets.extract(it++).mapped();
         max_representation.insert(std::make_move_iterator(set.begin()),
-                std::make_move_iterator(set.end()));
+                                  std::make_move_iterator(set.end()));
     }
     assert(max_sets.empty());
 
