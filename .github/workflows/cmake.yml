@@ -1,11 +1,11 @@
 name: CMake
 on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
   push:
     branches:
       - main
-      - setup-ci
-  pull_request:
-    types: [opened, edited, synchronize, reopened]
+  workflow_dispatch:
 env:
   BUILD_TYPE: Release
 jobs:
