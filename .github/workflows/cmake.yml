@@ -1,38 +1,55 @@
 name: CMake
-
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+      - setup-ci
   pull_request:
-    branches: [ main ]
-
+    types: [opened, edited, synchronize, reopened]
 env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
-
 jobs:
   build:
-    # The CMake configure and build commands are platform agnostic and should work equally
-    # well on Windows or Mac.  You can convert this to a matrix build if you need
-    # cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
-
+    runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v2
-
+    - name: Install build tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install gcc-8 g++-8 cmake build-essential
+    - name: Cache Boost
+      uses: actions/cache@v2
+      id: cache-boost
+      with:
+        path: /usr/boost
+        key: ${{ runner.os }}-boost
+    - name: Cache googletest
+      uses: actions/cache@v2
+      id: cache-googletest
+      with:
+        path: ${{github.workspace}}/lib/googletest
+        key: ${{ runner.os }}-googletest
+    - name: Install Boost
+      run: |
+        wget -O boost_1_72_0.tar.gz https://sourceforge.net/projects/boost/files/boost/1.72.0/boost_1_72_0.tar.gz/download
+        tar xzvf boost_1_72_0.tar.gz
+        cd boost_1_72_0
+        ./bootstrap.sh --prefix=/usr/boost
+        ./b2
+        sudo ./b2 install
+      if: steps.cache-boost.outputs.cache-hit != 'true'
+    - name: Download googletest
+      run: |
+        mkdir lib
+        cd lib
+        git clone https://github.com/google/googletest/ --branch release-1.10.0
+      if: steps.cache-googletest.outputs.cache-hit != 'true'
     - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-
+      run: >
+        cmake -B ${{github.workspace}}/build
+        -DCMAKE_C_COMPILER=gcc-8
+        -DCMAKE_CXX_COMPILER=g++-8
+        -DBOOST_ROOT=/usr/boost/
+        -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
     - name: Build
-      # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-
-    # - name: Test
-      # working-directory: ${{github.workspace}}/build
-      # Execute tests defined by the CMake configuration.  
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      # run: ctest -C ${{env.BUILD_TYPE}}
-      
