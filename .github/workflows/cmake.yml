@@ -21,7 +21,7 @@ jobs:
       uses: actions/cache@v2
       id: cache-boost
       with:
-        path: /usr/boost
+        path: ${{github.workspace}}/lib/boost
         key: ${{ runner.os }}-boost
     - name: Cache googletest
       uses: actions/cache@v2
@@ -34,13 +34,13 @@ jobs:
         wget -O boost_1_72_0.tar.gz https://sourceforge.net/projects/boost/files/boost/1.72.0/boost_1_72_0.tar.gz/download
         tar xzvf boost_1_72_0.tar.gz
         cd boost_1_72_0
-        ./bootstrap.sh --prefix=/usr/boost
+        ./bootstrap.sh --prefix=${{github.workspace}}/lib/boost
         ./b2
         sudo ./b2 install
       if: steps.cache-boost.outputs.cache-hit != 'true'
     - name: Download googletest
       run: |
-        mkdir lib
+        mkdir -p lib
         cd lib
         git clone https://github.com/google/googletest/ --branch release-1.10.0
       if: steps.cache-googletest.outputs.cache-hit != 'true'
@@ -49,7 +49,7 @@ jobs:
         cmake -B ${{github.workspace}}/build
         -DCMAKE_C_COMPILER=gcc-8
         -DCMAKE_CXX_COMPILER=g++-8
-        -DBOOST_ROOT=/usr/boost/
+        -DBOOST_ROOT=${{github.workspace}}/lib/boost
         -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
