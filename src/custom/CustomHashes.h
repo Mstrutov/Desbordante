@@ -7,7 +7,7 @@ namespace std {
     template<>
     struct hash<Vertical> {
         size_t operator()(Vertical const& k) const {
-            return k.getColumnIndices().to_ulong();
+            return k.getColumnIndicesRef().to_ulong();
         }
     };
 

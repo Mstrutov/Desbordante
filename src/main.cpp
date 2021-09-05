@@ -12,6 +12,7 @@
 
 #include "algorithms/Pyro.h"
 #include "algorithms/TaneX.h"
+#include "algorithms/DFD/DFD.h"
 #include "algorithms/Fd_mine.h"
 #include "algorithms/FastFDs.h"
 
@@ -20,7 +21,7 @@ namespace po = boost::program_options;
 INITIALIZE_EASYLOGGINGPP
 
 bool checkOptions(std::string const& alg, double error) {
-    if (alg != "pyro" && alg != "tane" && alg != "fdmine" && alg != "fastfds") {
+    if (alg != "pyro" && alg != "tane" && alg != "dfd" && alg != "fastfds" && alg != "fdmine") {
         std::cout << "ERROR: no matching algorithm. Available algorithms are:\n\tpyro\n\ttane.\n" << std::endl;
         return false;
     }
@@ -36,7 +37,7 @@ int main(int argc, char const *argv[]) {
     char separator = ',';
     bool hasHeader = true;
     int seed = 0;
-    double error = 0.01;
+    double error = 0.0;
     unsigned int maxLhs = -1;
     unsigned int parallelism = 0;
 
@@ -93,6 +94,8 @@ int main(int argc, char const *argv[]) {
         algorithmInstance = std::make_unique<Tane>(path, separator, hasHeader, error, maxLhs);
     } else if (alg == "fdmine"){
         algorithmInstance = std::make_unique<Fd_mine>(path);
+    } else if (alg == "dfd") {
+        algorithmInstance = std::make_unique<DFD>(path, separator, hasHeader);
     } else if (alg == "fastfds") {
         algorithmInstance = std::make_unique<FastFDs>(path, separator, hasHeader, parallelism);
     }

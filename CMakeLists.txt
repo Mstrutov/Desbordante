@@ -30,6 +30,7 @@ message(${Boost_INCLUDE_DIRS})
 # providing subdirectories for header inclusion
 include_directories(
     "src/algorithms"
+    "src/algorithms/DFD"
     "src/model"
     "src/util"
     "src/parser"

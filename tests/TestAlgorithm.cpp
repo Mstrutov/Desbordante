@@ -10,6 +10,7 @@
 #include "Pyro.h"
 #include "algorithms/TaneX.h"
 #include "RelationalSchema.h"
+#include "DFD.h"
 
 
 using ::testing::ContainerEq, ::testing::Eq;
