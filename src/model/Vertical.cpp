@@ -16,12 +16,7 @@ bool Vertical::contains(Vertical const& that) const {
     boost::dynamic_bitset<> const& thatIndices = that.columnIndices;
     if (columnIndices.size() < thatIndices.size()) return false;
 
-    for (size_t columnIndex = thatIndices.find_first();
-         columnIndex < thatIndices.size();
-         columnIndex = thatIndices.find_next(columnIndex)) {
-        if (!(columnIndices[columnIndex])) return false;
-    }
-    return true;
+    return that.columnIndices.is_subset_of(columnIndices);
 }
 
 
