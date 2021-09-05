@@ -1,17 +1,51 @@
 #include "FastFDs.h"
 
 #include <algorithm>
+#include <mutex>
+#include <thread>
 
+#include <boost/asio/post.hpp>
+#include <boost/asio/thread_pool.hpp>
 #include <boost/dynamic_bitset.hpp>
+#include <boost/thread.hpp>
 
 #include "AgreeSetFactory.h"
 #include "logging/easylogging++.h"
 
 using std::vector, std::set;
 
+constexpr static double kFindCoversTotalPercent = 5.0;
+
+FastFDs::FastFDs(std::filesystem::path const& path,
+                 char separator, bool hasHeader,
+                 ushort parallelism) :
+FDAlgorithm(path, separator, hasHeader) {
+    if (parallelism == 0) {
+        threads_num_ = std::thread::hardware_concurrency();
+        if (threads_num_ == 0) {
+            throw std::runtime_error("Unable to detect number of concurrent"
+                                     " threads supported. Specify it manually.");
+        }
+    } else {
+        threads_num_ = parallelism;
+    }
+}
+
+
+// Should be FDAlgorithm method I think
+void FastFDs::registerFD(Vertical lhs, Column rhs) {
+    if (threads_num_ > 1) {
+        boost::lock_guard<boost::mutex> lock(register_mutex_);
+        FDAlgorithm::registerFD(std::move(lhs), std::move(rhs));
+    } else {
+        FDAlgorithm::registerFD(std::move(lhs), std::move(rhs));
+    }
+}
+
 unsigned long long FastFDs::execute() {
     relation_ = ColumnLayoutRelationData::createFrom(inputGenerator_, true);
     schema_ = relation_->getSchema();
+    percent_per_col_ = kFindCoversTotalPercent / schema_->getNumColumns();
 
     if (schema_->getNumColumns() == 0) {
         throw std::runtime_error("Got an empty .csv file: FD mining is meaningless.");
@@ -36,22 +70,40 @@ unsigned long long FastFDs::execute() {
         return elapsed_milliseconds.count();
     }
 
-    for (auto const& column : schema_->getColumns()) {
+    auto task = [this](std::unique_ptr<Column> const& column) {
         if (columnContainsOnlyEqualValues(*column)) {
             LOG(INFO) << "Registered FD: " << schema_->emptyVertical->toString()
                       << "->" << column->toString();
             registerFD(Vertical(), *column);
-            continue;
+            return;
         }
 
         vector<DiffSet> diff_sets_mod = getDiffSetsMod(*column);
         assert(!diff_sets_mod.empty());
         if (!(diff_sets_mod.size() == 1 && diff_sets_mod.back() == *schema_->emptyVertical)) {
-            // use vector instead of set?
             set<Column, OrderingComparator> init_ordering = getInitOrdering(diff_sets_mod, *column);
-            findCovers(*column, diff_sets_mod, diff_sets_mod, *schema_->emptyVertical, init_ordering);
+            findCovers(*column, diff_sets_mod, diff_sets_mod,
+                       *schema_->emptyVertical, init_ordering);
+        } else {
+            addProgress(percent_per_col_);
+        }
+    };
+
+    if (threads_num_ > 1) {
+        boost::asio::thread_pool pool(threads_num_);
+
+        for (std::unique_ptr<Column> const& column : schema_->getColumns()) {
+            boost::asio::post(pool, [&column, task](){ return task(column); });
+        }
+
+        pool.join();
+    } else {
+        for (std::unique_ptr<Column> const& column : schema_->getColumns()) {
+            task(column);
         }
     }
+
+    setProgress(100);
 
     auto elapsed_milliseconds =
         std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -72,6 +124,7 @@ bool FastFDs::columnContainsOnlyEqualValues(Column const& column) const {
 void FastFDs::findCovers(Column const& attribute, vector<DiffSet> const& diff_sets_mod,
                          vector<DiffSet> const& cur_diff_sets, Vertical const& path,
                          set<Column, OrderingComparator> const& ordering) {
+
     if (ordering.size() == 0 && !cur_diff_sets.empty()) {
         return; // no FDs here
     }
@@ -96,6 +149,11 @@ void FastFDs::findCovers(Column const& attribute, vector<DiffSet> const& diff_se
 
         auto next_ordering = getNextOrdering(next_diff_sets, column, ordering);
         findCovers(attribute, diff_sets_mod, next_diff_sets, path.Union(column), next_ordering);
+
+        // First findCovers call, calculate progress
+        if (path.getArity() == 0) {
+            addProgress(percent_per_col_ / ordering.size());
+        }
     }
 }
 
@@ -222,7 +280,13 @@ vector<FastFDs::DiffSet> FastFDs::getDiffSetsMod(Column const& col) const {
 }
 
 void FastFDs::genDiffSets() {
-    AgreeSetFactory factory(relation_.get());
+    AgreeSetFactory::Configuration c;
+    c.threads_num = threads_num_;
+    if (threads_num_ > 1) {
+        // TODO: Need to fix data races first
+        //c.mc_gen_method = MCGenMethod::kParallel;
+    }
+    AgreeSetFactory factory(relation_.get(), c, this);
     AgreeSetFactory::SetOfAgreeSets agree_sets = factory.genAgreeSets();
 
     LOG(DEBUG) << "Agree sets:";
@@ -232,9 +296,43 @@ void FastFDs::genDiffSets() {
 
     // Complement agree sets to get difference sets
     diff_sets_.reserve(agree_sets.size());
-    for (AgreeSet const& agree_set : agree_sets) {
-        diff_sets_.push_back(agree_set.invert());
+    if (threads_num_ > 1) {
+        size_t agree_sets_per_thread = agree_sets.size() / threads_num_;
+        std::mutex m;
+        std::vector<std::thread> threads;
+        auto task = [&m, this](AgreeSetFactory::SetOfAgreeSets::const_iterator first,
+                               AgreeSetFactory::SetOfAgreeSets::const_iterator last) {
+            for (; first != last; ++first) {
+                DiffSet diff_set = first->invert();
+                std::lock_guard lock(m);
+                diff_sets_.push_back(std::move(diff_set));
+            }
+        };
+
+        threads.reserve(threads_num_);
+
+        auto p = agree_sets.begin();
+        auto q = agree_sets.end();
+        for (ushort i = 0; i < threads_num_; ++i) {
+            auto prev = p;
+
+            if (i != threads_num_ - 1) {
+                std::advance(p, agree_sets_per_thread);
+            } else {
+                p = q;
+            }
+            threads.emplace_back(task, prev, p);
+        }
+
+        for (auto& thread : threads) {
+            thread.join();
+        }
+    } else {
+        for (AgreeSet const& agree_set : agree_sets) {
+            diff_sets_.push_back(agree_set.invert());
+        }
     }
+
     // sort diff_sets_, it will be used further to find minimal difference sets modulo column
     std::sort(diff_sets_.begin(), diff_sets_.end());
 
@@ -243,3 +341,4 @@ void FastFDs::genDiffSets() {
         LOG(DEBUG) << diff_set.toString();
     }
 }
+

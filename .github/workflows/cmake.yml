@@ -1,0 +1,55 @@
+name: CMake
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, labeled]
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+env:
+  BUILD_TYPE: Release
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install build tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install gcc-8 g++-8 cmake build-essential
+    - name: Cache Boost
+      uses: actions/cache@v2
+      id: cache-boost
+      with:
+        path: /usr/boost
+        key: ${{ runner.os }}-boost
+    - name: Cache googletest
+      uses: actions/cache@v2
+      id: cache-googletest
+      with:
+        path: ${{github.workspace}}/lib/googletest
+        key: ${{ runner.os }}-googletest
+    - name: Install Boost
+      run: |
+        wget -O boost_1_72_0.tar.gz https://sourceforge.net/projects/boost/files/boost/1.72.0/boost_1_72_0.tar.gz/download
+        tar xzvf boost_1_72_0.tar.gz
+        cd boost_1_72_0
+        ./bootstrap.sh --prefix=/usr/boost
+        ./b2
+        sudo ./b2 install
+      if: steps.cache-boost.outputs.cache-hit != 'true'
+    - name: Download googletest
+      run: |
+        mkdir lib
+        cd lib
+        git clone https://github.com/google/googletest/ --branch release-1.10.0
+      if: steps.cache-googletest.outputs.cache-hit != 'true'
+    - name: Configure CMake
+      run: >
+        cmake -B ${{github.workspace}}/build
+        -DCMAKE_C_COMPILER=gcc-8
+        -DCMAKE_CXX_COMPILER=g++-8
+        -DBOOST_ROOT=/usr/boost/
+        -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
