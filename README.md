@@ -8,7 +8,7 @@ https://github.com/cupertank implemented essential data structures presented in 
 
   - GNU g++ compiler, version 8+
   - CMake, version 3.10+
-  - Boost library, version 1.65.1+
+  - Boost library, version 1.72.0+
 
   ### Building the project
   Firstly, navigate to a desired directory.

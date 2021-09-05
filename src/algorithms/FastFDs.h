@@ -2,13 +2,17 @@
 
 #include <functional>
 
+#include <boost/thread/mutex.hpp>
+
 #include "Vertical.h"
 #include "FDAlgorithm.h"
 #include "ColumnLayoutRelationData.h"
 
 class FastFDs : public FDAlgorithm {
 public:
-    using FDAlgorithm::FDAlgorithm;
+    explicit FastFDs(std::filesystem::path const& path,
+                     char separator = ',', bool hasHeader = true,
+                     ushort parallelism = 0);
     unsigned long long execute() override;
 private:
     using OrderingComparator = std::function<bool (Column const&, Column const&)>;
@@ -54,9 +58,13 @@ private:
     bool orderingComp(std::vector<DiffSet> const& diff_sets,
                       Column const& l_col, Column const& r_col) const;
     bool columnContainsOnlyEqualValues(Column const& column) const;
+    void registerFD(Vertical lhs, Column rhs) override;
 
     std::unique_ptr<ColumnLayoutRelationData> relation_;
     RelationalSchema const* schema_;
     std::vector<DiffSet> diff_sets_;
+    ushort threads_num_;
+    boost::mutex register_mutex_;
+    double percent_per_col_;
 };
 

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <thread>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -10,8 +11,6 @@
 
 using ::testing::ContainerEq, ::testing::Eq;
 using std::deque, std::vector, std::cout, std::endl, std::unique_ptr;
-
-namespace fs = std::filesystem;
 
 namespace fs = std::filesystem;
 
@@ -171,8 +170,7 @@ TEST(IdentifierSetTest, Intersection) {
 }
 
 
-template<AgreeSetsGenMethod method>
-void testAgreeSetFactory() {
+void testAgreeSetFactory(AgreeSetFactory::Configuration c) {
     std::set<std::string> agree_sets_actual; // id set intersection result
     std::set<std::string> agree_sets_ans = {
         "[A D F]",
@@ -197,8 +195,8 @@ void testAgreeSetFactory() {
         auto path = fs::current_path().append("inputData").append("BernoulliRelation.csv");
         CSVParser parser(path);
         auto relation = ColumnLayoutRelationData::createFrom(parser, false);
-        AgreeSetFactory factory(relation.get());
-        for (AgreeSet const& agree_set : factory.genAgreeSets<method>()) {
+        AgreeSetFactory factory(relation.get(), c);
+        for (AgreeSet const& agree_set : factory.genAgreeSets()) {
             agree_sets_actual.insert(agree_set.toString());
         }
     }
@@ -210,17 +208,44 @@ void testAgreeSetFactory() {
 }
 
 TEST(AgreeSetFactoryTest, UsingVectorOfIDSets) {
-    testAgreeSetFactory<AgreeSetsGenMethod::kUsingVectorOfIDSets>();
+    AgreeSetFactory::Configuration c(AgreeSetsGenMethod::kUsingVectorOfIDSets);
+    testAgreeSetFactory(c);
 }
 
 TEST(AgreeSetFactoryTest, UsingMapOfIDSets) {
-    testAgreeSetFactory<AgreeSetsGenMethod::kUsingMapOfIDSets>();
+    AgreeSetFactory::Configuration c(AgreeSetsGenMethod::kUsingMapOfIDSets);
+    testAgreeSetFactory(c);
 }
 
 TEST(AgreeSetFactoryTest, UsingGetAgreeSet) {
-    testAgreeSetFactory<AgreeSetsGenMethod::kUsingGetAgreeSet>();
+    AgreeSetFactory::Configuration c(AgreeSetsGenMethod::kUsingGetAgreeSet);
+    testAgreeSetFactory(c);
 }
 
 TEST(AgreeSetFactoryTest, UsingMCAndGetAgreeSet) {
-    testAgreeSetFactory<AgreeSetsGenMethod::kUsingMCAndGetAgreeSet>();
+    AgreeSetFactory::Configuration c(AgreeSetsGenMethod::kUsingMCAndGetAgreeSet);
+    testAgreeSetFactory(c);
 }
+
+TEST(AgreeSetFactoryTest, UsingHandleEqvClass) {
+    AgreeSetFactory::Configuration c(MCGenMethod::kUsingHandleEqvClass);
+    testAgreeSetFactory(c);
+}
+
+TEST(AgreeSetFactoryTest, UsingCalculateSupersets) {
+    AgreeSetFactory::Configuration c(MCGenMethod::kUsingCalculateSupersets);
+    testAgreeSetFactory(c);
+}
+
+TEST(AgreeSetFactoryTest, UsingHandlePartition) {
+    AgreeSetFactory::Configuration c(MCGenMethod::kUsingHandlePartition);
+    testAgreeSetFactory(c);
+}
+
+TEST(AgreeSetFactoryTest, MCGenParallel) {
+    AgreeSetFactory::Configuration c(AgreeSetsGenMethod::kUsingVectorOfIDSets,
+                                     MCGenMethod::kParallel,
+                                     std::thread::hardware_concurrency());
+    testAgreeSetFactory(c);
+}
+
