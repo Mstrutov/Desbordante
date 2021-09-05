@@ -32,6 +32,8 @@ unsigned long long DFD::execute() {
         }
     }
 
+    double progressStep = 100.0 / schema->getNumColumns();
+
     //second loop of DFD
     for (auto & rhs : schema->getColumns()) {
         //тут строим новую решетку, соответственно нужно обнулить/завести некоторые структуры данных
@@ -48,6 +50,7 @@ unsigned long long DFD::execute() {
         //если все строки имеют одинаковое значение, то добавляем зависимость с пустым lhs
         if (rhsPLI->getNepAsLong() == relation->getNumTuplePairs()) {
             this->registerFD(*(schema->emptyVertical), *rhs);
+            addProgress(progressStep);
             continue;
             //минимальная зависимость []->RHS, меньше точно не найти, поэтому берем следующий RHS
         }
@@ -69,6 +72,7 @@ unsigned long long DFD::execute() {
         for (auto const& minimalDependencyLHS : minimalDeps) {
             registerFD(minimalDependencyLHS, *rhs);
         }
+        addProgress(progressStep);
     }
 
     auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
@@ -77,6 +81,8 @@ unsigned long long DFD::execute() {
     //можно вывести найденные зависимости в формате Json:
     //std::cout << "====JSON-FD========\r\n" << getJsonFDs() << std::endl;
     std::cout << "HASH: " << FDAlgorithm::fletcher16() << std::endl;
+
+    setProgress(100);
 
     return aprioriMillis;
 }
