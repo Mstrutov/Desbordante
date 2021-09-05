@@ -26,7 +26,7 @@ private:
     unsigned int originalRelationSize;
     std::shared_ptr<const std::vector<int>> probingTableCache;
     unsigned int freq_ = 0;
-
+    int clusterNum = -1;
 
     static unsigned long long calculateNep(unsigned int numElements) {
         return static_cast<unsigned long long>(numElements) * (numElements - 1) / 2;
@@ -62,6 +62,7 @@ public:
     double getNep()                             const { return (double) nep; }
     unsigned long long getNepAsLong()           const { return nep; }
     unsigned int getNumNonSingletonCluster()    const { return index.size(); }
+    unsigned int getNumCluster()                const { return index.size() + originalRelationSize - size; }
     unsigned int getFreq()                      const { return freq_; }
     unsigned int getSize()                      const { return size; }
     double getEntropy()                         const { return entropy; }
