@@ -40,3 +40,34 @@ unsigned int FDAlgorithm::fletcher16() {
     }
     return (sum2 << 8) | sum1;
 }
+
+void FDAlgorithm::addProgress(double const val) noexcept {
+        assert(val >= 0);
+#ifdef __cpp_lib_atomic_float
+        progress_.fetch_add(val);
+        assert(progress_.load() < 101);
+#else
+        std::scoped_lock lock(progress_mutex_);
+        progress_ += val;
+        assert(progress_ < 101);
+#endif
+}
+
+void FDAlgorithm::setProgress(double const val) noexcept {
+        assert(0 <= val && val < 101);
+#ifdef __cpp_lib_atomic_float
+        progress_.store(val);
+#else
+        std::scoped_lock lock(progress_mutex_);
+        progress_ = val;
+#endif
+}
+
+double FDAlgorithm::getProgress() const noexcept {
+#ifdef __cpp_lib_atomic_float
+        return progress_.load();
+#else
+        std::scoped_lock lock(progress_mutex_);
+        return progress_;
+#endif
+}
