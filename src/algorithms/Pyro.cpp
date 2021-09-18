@@ -8,8 +8,6 @@
 
 std::mutex searchSpacesMutex;
 
-
-
 unsigned long long Pyro::execute() {
     using std::cout;
     auto startTime = std::chrono::system_clock::now();
@@ -62,16 +60,15 @@ unsigned long long Pyro::execute() {
     }
     unsigned long long initTimeMillis = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime).count();
 
-
     startTime = std::chrono::system_clock::now();
     unsigned int totalErrorCalcCount = 0;
     unsigned long long totalAscension = 0;
     unsigned long long totalTrickle = 0;
+    double progressStep = 100.0 / searchSpaces_.size();
 
-
-
-    std::function<void(std::list<std::unique_ptr<SearchSpace>>&, ProfilingContext*, int)> workOnSearchSpace =
-            [](auto& searchSpaces, auto profilingContext, auto id) {
+    const auto workOnSearchSpace = [this, &progressStep](
+               std::list<std::unique_ptr<SearchSpace>>& searchSpaces,
+               ProfilingContext* profilingContext, int id) {
         unsigned long long millis = 0;
         while (true) {
             auto threadStartTime = std::chrono::system_clock::now();
@@ -88,6 +85,8 @@ unsigned long long Pyro::execute() {
             polledSpace->setContext(profilingContext);
             polledSpace->ensureInitialized();
             polledSpace->discover();
+            addProgress(progressStep);
+            
             millis += std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - threadStartTime).count();
         }
         //cout << "Thread" << id << " stopped working, ELAPSED TIME: " << millis << "ms.\n";
@@ -103,6 +102,7 @@ unsigned long long Pyro::execute() {
         threads[i].join();
     }
 
+    setProgress(100);
     auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
 
     LOG(DEBUG) << boost::format{"FdG1 error calculation: %1% ms"} % (FdG1Strategy::nanos_ / 1000000);
