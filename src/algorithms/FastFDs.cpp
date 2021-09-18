@@ -14,12 +14,11 @@
 
 using std::vector, std::set;
 
-constexpr static double kFindCoversTotalPercent = 5.0;
-
 FastFDs::FastFDs(std::filesystem::path const& path,
                  char separator, bool hasHeader,
                  ushort parallelism) :
-FDAlgorithm(path, separator, hasHeader) {
+    FDAlgorithm(path, separator, hasHeader,
+                { "Agree sets generation", "Finding minimal covers" }) {
     if (parallelism == 0) {
         threads_num_ = std::thread::hardware_concurrency();
         if (threads_num_ == 0) {
@@ -45,7 +44,7 @@ void FastFDs::registerFD(Vertical lhs, Column rhs) {
 unsigned long long FastFDs::execute() {
     relation_ = ColumnLayoutRelationData::createFrom(inputGenerator_, true);
     schema_ = relation_->getSchema();
-    percent_per_col_ = kFindCoversTotalPercent / schema_->getNumColumns();
+    percent_per_col_ = kTotalProgressPercent / schema_->getNumColumns();
 
     if (schema_->getNumColumns() == 0) {
         throw std::runtime_error("Got an empty .csv file: FD mining is meaningless.");
@@ -54,6 +53,8 @@ unsigned long long FastFDs::execute() {
     auto start_time = std::chrono::system_clock::now();
 
     genDiffSets();
+    setProgress(kTotalProgressPercent);
+    toNextProgressPhase();
 
     auto elapsed_mills_to_gen_diff_sets =
         std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -103,7 +104,7 @@ unsigned long long FastFDs::execute() {
         }
     }
 
-    setProgress(100);
+    setProgress(kTotalProgressPercent);
 
     auto elapsed_milliseconds =
         std::chrono::duration_cast<std::chrono::milliseconds>(
