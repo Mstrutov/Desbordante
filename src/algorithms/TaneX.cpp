@@ -68,6 +68,7 @@ unsigned long long Tane::execute() {
              << avgPartners << " partners on average." << std::endl;
     }
     auto startTime = std::chrono::system_clock::now();
+    double progressStep = 100.0 / (schema->getNumColumns() + 1);
 
     //Initialize level 0
     std::vector<std::unique_ptr<LatticeLevel>> levels;
@@ -76,6 +77,7 @@ unsigned long long Tane::execute() {
     level0->add(std::make_unique<LatticeVertex>(*(schema->emptyVertical)));
     LatticeVertex const* emptyVertex = level0->getVertices().begin()->second.get();
     levels.push_back(std::move(level0));
+    addProgress(progressStep);
 
     //Initialize level1
     dynamic_bitset<> zeroaryFdRhs(schema->getNumColumns());
@@ -132,6 +134,7 @@ unsigned long long Tane::execute() {
         }
     }
     levels.push_back(std::move(level1));
+    addProgress(progressStep);
 
     for (unsigned int arity = 2; arity <= maxArity; arity++) {
         //auto startTime = std::chrono::system_clock::now();
@@ -247,7 +250,10 @@ unsigned long long Tane::execute() {
 
         //cout << "Pruned level: " << level->getArity() << ". " << level->getVertices().size() << " vertices" << endl;
         //TODO: printProfilingData
+        addProgress(progressStep);
     }
+    
+    setProgress(100);
     std::chrono::milliseconds elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
     aprioriMillis += elapsed_milliseconds.count();
 
