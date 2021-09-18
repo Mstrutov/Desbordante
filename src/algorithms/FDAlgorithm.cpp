@@ -43,31 +43,27 @@ unsigned int FDAlgorithm::fletcher16() {
 
 void FDAlgorithm::addProgress(double const val) noexcept {
         assert(val >= 0);
-#ifdef __cpp_lib_atomic_float
-        progress_.fetch_add(val);
-        assert(progress_.load() < 101);
-#else
         std::scoped_lock lock(progress_mutex_);
-        progress_ += val;
-        assert(progress_ < 101);
-#endif
+        cur_phase_progress_ += val;
+        assert(cur_phase_progress_ < 101);
 }
 
 void FDAlgorithm::setProgress(double const val) noexcept {
         assert(0 <= val && val < 101);
-#ifdef __cpp_lib_atomic_float
-        progress_.store(val);
-#else
         std::scoped_lock lock(progress_mutex_);
-        progress_ = val;
-#endif
+        cur_phase_progress_ = val;
 }
 
-double FDAlgorithm::getProgress() const noexcept {
-#ifdef __cpp_lib_atomic_float
-        return progress_.load();
-#else
+std::pair<uint8_t, double> FDAlgorithm::getProgress() const noexcept {
         std::scoped_lock lock(progress_mutex_);
-        return progress_;
-#endif
+        return std::make_pair(cur_phase_id, cur_phase_progress_);
 }
+
+void FDAlgorithm::toNextProgressPhase() noexcept {
+    std::scoped_lock lock(progress_mutex_);
+    ++cur_phase_id;
+    assert(cur_phase_id < phase_names_.size());
+    assert(cur_phase_progress_ >= 100);
+    cur_phase_progress_ = 0;
+}
+
