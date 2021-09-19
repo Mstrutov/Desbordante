@@ -267,14 +267,11 @@ AgreeSetFactory::SetOfVectors AgreeSetFactory::genMCUsingCalculateSupersets() co
                               not_empty_pli->getPositionListIndex()->getIndex().end());
 
     auto const dist = std::distance(not_empty_pli, columns_data.end());
-    /*double const percent_per_col = (dist == 1) ? kMCGenTotalPercent :
-                                   kMCGenTotalPercent / (dist - 1);*/
     for (auto p = std::next(not_empty_pli); p != columns_data.end(); ++p) {
         PositionListIndex const* pli = p->getPositionListIndex();
         if (pli->getSize() != 0) {
             calculateSupersets(max_representation, pli->getIndex());
         }
-        //addProgress(percent_per_col);
     }
 
     return max_representation;
@@ -363,7 +360,6 @@ AgreeSetFactory::SetOfVectors AgreeSetFactory::genMCUsingHandlePartition() const
     std::unordered_map<int, unordered_set<size_t>> index;
 
     size_t eqv_class_index = 0;
-    //double const percent_per_eqv_class = kMCGenTotalPercent / sorted_eqv_classes.size();
     for (auto it = sorted_eqv_classes.begin();
          it != sorted_eqv_classes.end();
          ++it, ++eqv_class_index) {
@@ -374,7 +370,6 @@ AgreeSetFactory::SetOfVectors AgreeSetFactory::genMCUsingHandlePartition() const
             }
             max_representation.insert(std::move(*it));
         }
-        //addProgress(percent_per_eqv_class);
     }
 
     return max_representation;
