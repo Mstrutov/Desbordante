@@ -24,6 +24,7 @@ bool NonDependenciesMap::canBePruned(const Vertical &node) const {
             }
         }
     }
+    return false;
 }
 
 void NonDependenciesMap::addNewNonDependency(Vertical const& nodeToAdd) {

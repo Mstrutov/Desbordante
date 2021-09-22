@@ -53,4 +53,5 @@ bool DependenciesMap::canBePruned(Vertical const& node) const {
             }
         }
     }
+    return false;
 }
