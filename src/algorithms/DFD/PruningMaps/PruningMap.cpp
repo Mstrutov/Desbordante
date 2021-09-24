@@ -11,9 +11,13 @@ void PruningMap::rebalance() {
 
     do {
         rebalancedGroup = false;
-        for (auto const& mapRow : *this) {
-            Vertical const& key = mapRow.first;
-            if (mapRow.second.size() > 1000) {
+        for (auto iter = this->begin(); iter != this->end(); ) {
+            Vertical const& key = iter->first;
+            auto const& relatedVerticals = iter->second;
+
+            //метод rebalanceGroup инвалидирует этот итератор, т.к. удаляет элемент
+            ++iter;
+            if (relatedVerticals.size() > 1000) {
                 rebalanceGroup(key);
                 rebalancedGroup = true;
             }
@@ -29,16 +33,16 @@ void PruningMap::rebalanceGroup(Vertical const& key) {
          columnIndex < invertedColumns.size();
          columnIndex = invertedColumns.find_next(columnIndex))
     {
-        //может быть не очень быстро?
         Vertical newKey = key.Union(*key.getSchema()->getColumn(columnIndex));
         std::unordered_set<Vertical> newGroup;
-        this->insert(std::make_pair(newKey, newGroup));
 
         for (auto const& depOfGroup : depsOfGroup) {
             if (depOfGroup.contains(newKey)) {
                 newGroup.insert(depOfGroup);
             }
         }
+
+        this->insert(std::make_pair(std::move(newKey), std::move(newGroup)));
     }
     this->erase(key);
 }
