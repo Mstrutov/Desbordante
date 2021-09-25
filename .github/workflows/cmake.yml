@@ -41,6 +41,7 @@ jobs:
     - name: Download googletest
       run: |
         mkdir -p lib
+        sudo chown -R $USER lib 
         cd lib
         git clone https://github.com/google/googletest/ --branch release-1.10.0
       if: steps.cache-googletest.outputs.cache-hit != 'true'
