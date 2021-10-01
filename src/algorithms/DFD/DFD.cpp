@@ -73,16 +73,18 @@ unsigned long long DFD::execute() {
             registerFD(minimalDependencyLHS, *rhs);
         }
         addProgress(progressStep);
+        std::cout << (int)getProgress() << "%\n";
     }
 
     auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
     long long aprioriMillis = elapsed_milliseconds.count();
 
+    setProgress(100);
+
     //можно вывести найденные зависимости в формате Json:
     //std::cout << "====JSON-FD========\r\n" << getJsonFDs() << std::endl;
-    std::cout << "HASH: " << FDAlgorithm::fletcher16() << std::endl;
-
-    setProgress(100);
+    std::cout << "> FD COUNT: " << fdCollection_.size() << std::endl;
+    std::cout << "> HASH: " << FDAlgorithm::fletcher16() << std::endl;
 
     return aprioriMillis;
 }
