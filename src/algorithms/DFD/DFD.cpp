@@ -73,7 +73,7 @@ unsigned long long DFD::execute() {
             registerFD(minimalDependencyLHS, *rhs);
         }
         addProgress(progressStep);
-        std::cout << (int)getProgress() << "%\n";
+        std::cout << (int)getProgress().second << "%\n";
     }
 
     auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
