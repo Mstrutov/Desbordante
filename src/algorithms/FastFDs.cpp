@@ -16,9 +16,9 @@ using std::vector, std::set;
 
 FastFDs::FastFDs(std::filesystem::path const& path,
                  char separator, bool hasHeader,
-                 ushort parallelism) :
+                 unsigned int max_lhs, ushort parallelism) :
     FDAlgorithm(path, separator, hasHeader,
-                { "Agree sets generation", "Finding minimal covers" }) {
+                { "Agree sets generation", "Finding minimal covers" }), max_lhs_(max_lhs) {
     if (parallelism == 0) {
         threads_num_ = std::thread::hardware_concurrency();
         if (threads_num_ == 0) {
@@ -125,6 +125,9 @@ bool FastFDs::columnContainsOnlyEqualValues(Column const& column) const {
 void FastFDs::findCovers(Column const& attribute, vector<DiffSet> const& diff_sets_mod,
                          vector<DiffSet> const& cur_diff_sets, Vertical const& path,
                          set<Column, OrderingComparator> const& ordering) {
+    if (path.getArity() > max_lhs_) {
+        return;
+    }
 
     if (ordering.size() == 0 && !cur_diff_sets.empty()) {
         return; // no FDs here
