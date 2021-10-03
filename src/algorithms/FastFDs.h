@@ -12,7 +12,7 @@ class FastFDs : public FDAlgorithm {
 public:
     explicit FastFDs(std::filesystem::path const& path,
                      char separator = ',', bool hasHeader = true,
-                     ushort parallelism = 0);
+                     unsigned int max_lhs = -1, ushort parallelism = 0);
     unsigned long long execute() override;
 private:
     using OrderingComparator = std::function<bool (Column const&, Column const&)>;
@@ -64,6 +64,7 @@ private:
     RelationalSchema const* schema_;
     std::vector<DiffSet> diff_sets_;
     ushort threads_num_;
+    unsigned int const max_lhs_;
     boost::mutex register_mutex_;
     double percent_per_col_;
 };
