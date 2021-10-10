@@ -81,6 +81,8 @@ https://github.com/cupertank implemented essential data structures presented in 
 
 # Developers
 
+Alexandr Smirnov    &mdash; DFD implementation
+
 Ilya Shchuckin      &mdash; FD_Mine implementation
 
 Michael Polyntsov   &mdash; FastFDs implementation
