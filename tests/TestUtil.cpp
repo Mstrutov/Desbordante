@@ -242,10 +242,12 @@ TEST(AgreeSetFactoryTest, UsingHandlePartition) {
     testAgreeSetFactory(c);
 }
 
+#if 0
 TEST(AgreeSetFactoryTest, MCGenParallel) {
     AgreeSetFactory::Configuration c(AgreeSetsGenMethod::kUsingVectorOfIDSets,
                                      MCGenMethod::kParallel,
                                      std::thread::hardware_concurrency());
     testAgreeSetFactory(c);
 }
+#endif
 

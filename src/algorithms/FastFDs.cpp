@@ -287,7 +287,7 @@ void FastFDs::genDiffSets() {
     AgreeSetFactory::Configuration c;
     c.threads_num = threads_num_;
     if (threads_num_ > 1) {
-        // TODO: Need to fix data races first
+        // Not implemented properly, check the description of AgreeSetFactory::genMCParallel()
         //c.mc_gen_method = MCGenMethod::kParallel;
     }
     AgreeSetFactory factory(relation_.get(), c, this);
