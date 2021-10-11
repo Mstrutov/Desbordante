@@ -375,8 +375,14 @@ AgreeSetFactory::SetOfVectors AgreeSetFactory::genMCUsingHandlePartition() const
     return max_representation;
 }
 
-// TODO: Fix helgrind data race errors
+/* This code has false positive helgrind data race error in the unique_future-packaged_task
+ * interaction. Also it is slow due to the way it enforces thread safety on index and
+ * max_representation access (shared_mutex.lock/unlock). Need to fix it first with
+ * concurrency hash map, check out libcds.
+ */
 AgreeSetFactory::SetOfVectors AgreeSetFactory::genMCParallel() const {
+    throw std::runtime_error("MCParallel max representation method is not implemented yet.");
+#if 0
     if (config_.threads_num == 1) {
         LOG(WARNING) << "Using parallel max representation generation"
                         " method with 1 thread specified";
@@ -397,7 +403,7 @@ AgreeSetFactory::SetOfVectors AgreeSetFactory::genMCParallel() const {
     boost::asio::thread_pool pool(config_.threads_num);
     boost::shared_mutex mutex;
     auto handle_partition = [this, &index, &max_representation, &mutex]
-                (vector<int>&& cur_eqv_class, size_t const eqv_class_index) {
+                            (vector<int>&& cur_eqv_class, size_t const eqv_class_index) {
         boost::shared_lock read_lock(mutex);
         bool is_subset = isSubset(cur_eqv_class, index);
         if (!is_subset) {
@@ -413,7 +419,7 @@ AgreeSetFactory::SetOfVectors AgreeSetFactory::genMCParallel() const {
     };
 
     using Task = boost::packaged_task<void>;
-    std::vector<boost::unique_future<void>> futures;
+    std::vector<boost::unique_future<Task::result_type>> futures;
     size_t eqv_class_index = 0;
     size_t cur_size = 0;
     for (auto it = sorted_eqv_classes.begin();
@@ -421,13 +427,12 @@ AgreeSetFactory::SetOfVectors AgreeSetFactory::genMCParallel() const {
          ++eqv_class_index) {
         if (cur_size != it->size()) {
             cur_size = it->size();
-            boost::when_all(futures.begin(), futures.end());
+            boost::wait_for_all(futures.begin(), futures.end());
             futures.clear();
         }
 
-        //Task t(std::bind(task, std::ref(eqv_class), eqv_class_index));
         Task t([eqv_class = std::move(sorted_eqv_classes.extract(it++).value()),
-                eqv_class_index, handle_partition] () mutable
+                eqv_class_index, &handle_partition] () mutable
                 { handle_partition(std::move(eqv_class), eqv_class_index); }
         );
         futures.push_back(t.get_future());
@@ -437,6 +442,7 @@ AgreeSetFactory::SetOfVectors AgreeSetFactory::genMCParallel() const {
     pool.join();
 
     return max_representation;
+#endif
 }
 
 bool AgreeSetFactory::isSubset(vector<int> const& eqv_class,
