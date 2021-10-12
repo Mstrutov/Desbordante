@@ -97,7 +97,7 @@ int main(int argc, char const *argv[]) {
     } else if (alg == "fdmine"){
         algorithmInstance = std::make_unique<Fd_mine>(path);
     } else if (alg == "fastfds") {
-        algorithmInstance = std::make_unique<FastFDs>(path, separator, hasHeader, parallelism);
+        algorithmInstance = std::make_unique<FastFDs>(path, separator, hasHeader, maxLhs, parallelism);
     }
     try {
         unsigned long long elapsedTime = algorithmInstance->execute();
