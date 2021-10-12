@@ -16,6 +16,7 @@
 
 #include "IdentifierSet.h"
 #include "logging/easylogging++.h"
+#include "ParallelFor.h"
 
 using std::set, std::vector, std::unordered_set;
 
@@ -143,16 +144,76 @@ AgreeSetFactory::SetOfAgreeSets AgreeSetFactory::genASUsingMapOfIDSets() const {
                                        FDAlgorithm::kTotalProgressPercent :
                                        FDAlgorithm::kTotalProgressPercent /
                                        max_representation.size();
-    for (auto const &cluster : max_representation) {
-        auto back_it = std::prev(cluster.end());
-        for (auto p = cluster.begin(); p != back_it; ++p) {
-            for (auto q = std::next(p); q != cluster.end(); ++q) {
-                IdentifierSet const& id_set1 = identifier_sets.at(*p);
-                IdentifierSet const& id_set2 = identifier_sets.at(*q);
-                agree_sets.insert(id_set1.intersect(id_set2));
+
+    if (config_.threads_num > 1) {
+        /* Not as fast and simple as it can be, need to use concurrent unordered_set.
+         * Without concurrent data structure need to create separate unordered_set<AgreeSet>
+         * for each thread, and as a consequence it is necessary to ensure the thread safety
+         * of threads_agree_sets initialization or to manually parallelize for loop over the
+         * max_representation. Leads to the bulky code with synchronization primitives or to
+         * the copying of util::parallel_foreach code.
+         */
+        std::map<std::thread::id, std::unordered_set<AgreeSet>> threads_agree_sets;
+        std::condition_variable map_init_cv;
+        bool map_initialized = false;
+        std::mutex map_init_mutex;
+        /* Need to know the exact number of threads used by util::parallel_foreach to identify
+         * when threads_agree_sets is initialized (when its size equals to the number
+         * of used threads).
+         * NOTE: if parallel_foreach fails to create exactly actual_threads_num threads when
+         *       threads_agree_sets.size() always will be not equal to actual_threads_num leading
+         *       to the infinite wait on cv.
+         */
+        ushort const actual_threads_num = std::min(max_representation.size(),
+                                                   (size_t)config_.threads_num);
+        auto task = [&identifier_sets, &agree_sets, percent_per_cluster, actual_threads_num,
+                     &map_init_mutex, this, &threads_agree_sets, &map_init_cv, &map_initialized]
+                    (SetOfVectors::value_type const& cluster) {
+            std::thread::id const thread_id = std::this_thread::get_id();
+
+            if (!map_initialized) {
+                std::unique_lock lock(map_init_mutex);
+                threads_agree_sets.insert({ thread_id, std::unordered_set<AgreeSet>() });
+                if (threads_agree_sets.size() != actual_threads_num) {
+                    map_init_cv.wait(lock, [&map_initialized]() { return map_initialized; });
+                } else {
+                    map_initialized = true;
+                    map_init_cv.notify_all();
+                }
             }
+
+            auto back_it = std::prev(cluster.end());
+            for (auto p = cluster.begin(); p != back_it; ++p) {
+                for (auto q = std::next(p); q != cluster.end(); ++q) {
+                    IdentifierSet const& id_set1 = identifier_sets.at(*p);
+                    IdentifierSet const& id_set2 = identifier_sets.at(*q);
+                    threads_agree_sets[thread_id].insert(
+                        id_set1.intersect(id_set2)
+                    );
+                }
+            }
+            addProgress(percent_per_cluster);
+        };
+
+        util::parallel_foreach(max_representation.begin(), max_representation.end(),
+                               config_.threads_num, task);
+
+        for (auto &[thread_id, thread_as] : threads_agree_sets) {
+            agree_sets.insert(std::make_move_iterator(thread_as.begin()),
+                              std::make_move_iterator(thread_as.end()));
         }
-        addProgress(percent_per_cluster);
+    } else {
+        for (auto const &cluster : max_representation) {
+            auto back_it = std::prev(cluster.end());
+            for (auto p = cluster.begin(); p != back_it; ++p) {
+                for (auto q = std::next(p); q != cluster.end(); ++q) {
+                    IdentifierSet const& id_set1 = identifier_sets.at(*p);
+                    IdentifierSet const& id_set2 = identifier_sets.at(*q);
+                    agree_sets.insert(id_set1.intersect(id_set2));
+                }
+            }
+            addProgress(percent_per_cluster);
+        }
     }
 
     return agree_sets;

@@ -16,11 +16,12 @@ namespace util {
  */
 template<typename It, typename UnaryFunction>
 inline void parallel_foreach(It begin, It end, unsigned const threads_num_max,
-                             UnaryFunction f) noexcept {
+                             UnaryFunction f) {
     assert(number_of_threads != 0);
     auto const length = std::distance(begin, end);
-    if (length == 0)
+    if (length == 0) {
         return;
+    }
     unsigned const threads_num_actual =
         static_cast<unsigned>(std::min(length, static_cast<decltype(length)>(threads_num_max)));
     auto items_per_thread = std::distance(begin, end) / threads_num_actual;
@@ -41,7 +42,8 @@ inline void parallel_foreach(It begin, It end, unsigned const threads_num_max,
             threads.emplace_back(task, prev, p);
         } catch (std::system_error const& e) {
             /* Could not create a new thread */
-            LOG(WARNING) << e.what();
+            LOG(WARNING) << "Created " << threads.size() << " threads in parallel_foreach. "
+                         << "Could not create new thread: " << e.what();
             /* Fall through to the serial case for the remaining elements */
             p = prev;
             break;
