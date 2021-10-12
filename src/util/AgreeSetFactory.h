@@ -111,7 +111,7 @@ enum class MCGenMethod {
 class AgreeSetFactory {
 public:
     struct Configuration {
-        AgreeSetsGenMethod as_gen_method = AgreeSetsGenMethod::kUsingVectorOfIDSets;
+        AgreeSetsGenMethod as_gen_method = AgreeSetsGenMethod::kUsingMapOfIDSets;
         MCGenMethod mc_gen_method = MCGenMethod::kUsingCalculateSupersets;
         ushort threads_num = 1;
 
