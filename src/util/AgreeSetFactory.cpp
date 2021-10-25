@@ -182,8 +182,8 @@ AgreeSetFactory::SetOfAgreeSets AgreeSetFactory::genASUsingMapOfIDSets() const {
                 }
             }
 
-            auto back_it = std::prev(cluster.end());
-            for (auto p = cluster.begin(); p != back_it; ++p) {
+            auto back_it = std::prev(cluster.cend());
+            for (auto p = cluster.cbegin(); p != back_it; ++p) {
                 for (auto q = std::next(p); q != cluster.end(); ++q) {
                     IdentifierSet const& id_set1 = identifier_sets.at(*p);
                     IdentifierSet const& id_set2 = identifier_sets.at(*q);
@@ -198,7 +198,7 @@ AgreeSetFactory::SetOfAgreeSets AgreeSetFactory::genASUsingMapOfIDSets() const {
         util::parallel_foreach(max_representation.begin(), max_representation.end(),
                                config_.threads_num, task);
 
-        for (auto &[thread_id, thread_as] : threads_agree_sets) {
+        for (auto& [thread_id, thread_as] : threads_agree_sets) {
             agree_sets.insert(std::make_move_iterator(thread_as.begin()),
                               std::make_move_iterator(thread_as.end()));
         }

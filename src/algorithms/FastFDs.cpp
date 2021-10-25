@@ -306,7 +306,7 @@ void FastFDs::genDiffSets() {
     diff_sets_.reserve(agree_sets.size());
     if (threads_num_ > 1) {
         std::mutex m;
-        auto task = [&m, this](AgreeSet const& as) {
+        auto const task = [&m, this](AgreeSet const& as) {
             DiffSet diff_set = as.invert();
             std::lock_guard lock(m);
             diff_sets_.push_back(std::move(diff_set));
