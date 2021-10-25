@@ -17,25 +17,25 @@ namespace util {
 template<typename It, typename UnaryFunction>
 inline void parallel_foreach(It begin, It end, unsigned const threads_num_max,
                              UnaryFunction f) {
-    assert(number_of_threads != 0);
+    assert(threads_num_max != 0);
     auto const length = std::distance(begin, end);
     if (length == 0) {
         return;
     }
-    unsigned const threads_num_actual =
+    auto const threads_num_actual =
         static_cast<unsigned>(std::min(length, static_cast<decltype(length)>(threads_num_max)));
-    auto items_per_thread = std::distance(begin, end) / threads_num_actual;
+    auto const items_per_thread = std::distance(begin, end) / threads_num_actual;
     std::vector<std::thread> threads;
     threads.reserve(threads_num_actual);
 
-    auto task = [&f](It first, It last) {
+    auto const task = [&f](It first, It last) {
         for (; first != last; ++first) {
             f(*first);
         }
     };
 
     It p = begin;
-    for (unsigned i = 0; i < threads_num_actual- 1; ++i) {
+    for (unsigned i = 0; i < threads_num_actual - 1; ++i) {
         It prev = p;
         std::advance(p, items_per_thread);
         try {
