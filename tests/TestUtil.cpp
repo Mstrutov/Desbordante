@@ -14,8 +14,6 @@ using std::deque, std::vector, std::cout, std::endl, std::unique_ptr;
 
 namespace fs = std::filesystem;
 
-std::string get_selfpath();
-
 TEST(pliChecker, first){
     deque<vector<int>> ans = {
             {0, 2, 8, 11},

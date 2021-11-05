@@ -22,7 +22,7 @@ private:
     virtual void registerFD(Vertical lhs, Column rhs) override;
 public:
     explicit Pyro(std::filesystem::path const& path, char separator = ',', bool hasHeader = true,
-                  int seed = 0, double maxError = 0.01, unsigned int maxLHS = -1, int parallelism = 0);
+                  int seed = 0, double maxError = 0, unsigned int maxLHS = -1, int parallelism = 0);
 
     unsigned long long execute() override;
 };

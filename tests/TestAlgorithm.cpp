@@ -7,14 +7,14 @@
 #include "gtest/gtest.h"
 
 #include "Datasets.h"
-#include "Pyro.h"
-#include "algorithms/TaneX.h"
-#include "RelationalSchema.h"
 #include "DFD.h"
-
+#include "FastFDs.h"
+#include "Pyro.h"
+#include "RelationalSchema.h"
+#include "TaneX.h"
+#include "TestingUtils.h"
 
 using ::testing::ContainerEq, ::testing::Eq;
-
 using std::string, std::vector;
 
 namespace fs = std::filesystem;
@@ -28,15 +28,6 @@ namespace fs = std::filesystem;
  * 1. include the header
  * 2. in createAlgorithmInstance replace "Tane" with <your algorithm class name>
  * */
-
-
-std::unique_ptr<FDAlgorithm> createAlgorithmInstance(
-        fs::path const& path, char separator = ',', bool hasHeader = true) {
-    return std::make_unique<Tane>(path, separator, hasHeader);
-}
-
-class AlgorithmTest : public LightDatasets, public HeavyDatasets, public ::testing::Test {
-};
 
 std::vector<unsigned int> bitsetToIndexVector(boost::dynamic_bitset<> const& bitset) {
     std::vector<unsigned int> res;
@@ -64,31 +55,33 @@ testing::AssertionResult checkFDListEquality(
     return actual.empty() ? testing::AssertionSuccess() : testing::AssertionFailure() << "some FDs remain undiscovered";
 }
 
-TEST(AlgorithmSyntheticTest, ThrowsOnEmpty) {
-    auto path = fs::current_path() / "inputData" / "TestEmpty.csv";
-    auto algorithm = createAlgorithmInstance(path, ',', true);
+TYPED_TEST_SUITE_P(AlgorithmTest);
+
+TYPED_TEST_P(AlgorithmTest, ThrowsOnEmpty) {
+    auto const path = fs::current_path() / "inputData" / "TestEmpty.csv";
+    auto algorithm = TestFixture::createAlgorithmInstance(path, ',', true);
     ASSERT_THROW(algorithm->execute(), std::runtime_error);
 }
 
-TEST(AlgorithmSyntheticTest, ReturnsEmptyOnSingleNonKey) {
-    auto path = fs::current_path() / "inputData" / "TestSingleColumn.csv";
-    auto algorithm = createAlgorithmInstance(path, ',', true);
+TYPED_TEST_P(AlgorithmTest, ReturnsEmptyOnSingleNonKey) {
+    auto const path = fs::current_path() / "inputData" / "TestSingleColumn.csv";
+    auto algorithm = TestFixture::createAlgorithmInstance(path, ',', true);
     algorithm->execute();
     ASSERT_TRUE(algorithm->fdList().empty());
 }
 
-TEST(AlgorithmSyntheticTest, WorksOnLongDataset) {
-    auto path = fs::current_path() / "inputData" / "TestLong.csv";
+TYPED_TEST_P(AlgorithmTest, WorksOnLongDataset) {
+    auto const path = fs::current_path() / "inputData" / "TestLong.csv";
 
     std::set<std::pair<std::vector<unsigned int>, unsigned int>> trueFDCollection {{{2}, 1}};
 
-    auto algorithm = createAlgorithmInstance(path, ',', true);
+    auto algorithm = TestFixture::createAlgorithmInstance(path, ',', true);
     algorithm->execute();
     ASSERT_TRUE(checkFDListEquality(trueFDCollection, algorithm->fdList()));
 }
 
-TEST(AlgorithmSyntheticTest, WorksOnWideDataset) {
-    auto path = fs::current_path() / "inputData" / "TestWide.csv";
+TYPED_TEST_P(AlgorithmTest, WorksOnWideDataset) {
+    auto const path = fs::current_path() / "inputData" / "TestWide.csv";
 
     std::set<std::pair<std::vector<unsigned int>, unsigned int>> trueFDCollection {
         {{0}, 2},
@@ -101,20 +94,20 @@ TEST(AlgorithmSyntheticTest, WorksOnWideDataset) {
         {{}, 3}
     };
 
-    auto algorithm = createAlgorithmInstance(path, ',', true);
+    auto algorithm = TestFixture::createAlgorithmInstance(path, ',', true);
     algorithm->execute();
     ASSERT_TRUE(checkFDListEquality(trueFDCollection, algorithm->fdList()));
 }
 
-
-TEST_F(AlgorithmTest, ReturnsSameFDCollectionHash) {
-    auto path = fs::current_path() /"inputData";
+TYPED_TEST_P(AlgorithmTest, LightDatasetsConsistentHash) {
+    auto const path = fs::current_path() /"inputData";
 
     try {
         for (auto const& dataset : LightDatasets::datasets) {
-            auto pyro = Pyro(path / dataset.name, dataset.separator, dataset.header_presence, 0, 0, -1);
-            pyro.execute();
-            EXPECT_EQ(pyro.FDAlgorithm::fletcher16(), dataset.hash)
+            auto algorithm = TestFixture::createAlgorithmInstance(path / dataset.name, dataset.separator, dataset.header_presence);
+            algorithm->execute();
+            std::cout << dataset.name << std::endl;
+            EXPECT_EQ(algorithm->fletcher16(), dataset.hash)
                                 << "FD collection hash changed for " << dataset.name;
         }
     }
@@ -125,22 +118,16 @@ TEST_F(AlgorithmTest, ReturnsSameFDCollectionHash) {
     SUCCEED();
 }
 
-TEST_F(AlgorithmTest, ReturnsSameAsPyro) {
-    auto path = fs::current_path() /"inputData";
+TYPED_TEST_P(AlgorithmTest, HeavyDatasetsConsistentHash) {
+    auto const path = fs::current_path() /"inputData";
 
     try {
         for (auto const& dataset : HeavyDatasets::datasets) {
-            auto algorithm = createAlgorithmInstance(
+            auto algorithm = TestFixture::createAlgorithmInstance(
                     path / dataset.name, dataset.separator,
                     dataset.header_presence);
             algorithm->execute();
-            std::string algorithmResults = algorithm->getJsonFDs();
-            auto pyro = Pyro(path / dataset.name, dataset.separator,
-                             dataset.header_presence, 0, 0, -1);
-            pyro.execute();
-            std::string resultsPyro = pyro.FDAlgorithm::getJsonFDs();
-            // std::cout << "HASH for " << LightDatasets::dataset(i) << ": " << pyro.FDAlgorithm::fletcher16();
-            EXPECT_EQ(resultsPyro, algorithmResults)
+            EXPECT_EQ(algorithm->fletcher16(), dataset.hash)
                 << "The new algorithm and Pyro yield different results at " << dataset.name;
         }
     }
@@ -150,3 +137,17 @@ TEST_F(AlgorithmTest, ReturnsSameAsPyro) {
     }
     SUCCEED();
 }
+
+REGISTER_TYPED_TEST_SUITE_P(
+        AlgorithmTest,
+        ThrowsOnEmpty,
+        ReturnsEmptyOnSingleNonKey,
+        WorksOnLongDataset,
+        WorksOnWideDataset,
+        LightDatasetsConsistentHash,
+        HeavyDatasetsConsistentHash
+        );
+
+using Algorithms = ::testing::Types<Tane, Pyro, FastFDs, DFD>;
+INSTANTIATE_TYPED_TEST_SUITE_P(, AlgorithmTest, Algorithms);
+

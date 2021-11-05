@@ -1,3 +1,5 @@
+#pragma once
+
 #include <vector>
 #include <string>
 
@@ -20,8 +22,8 @@ protected:
 class LightDatasets : public DatasetCollection {
 protected:
     std::vector<Dataset> datasets = {
-            {"CIPublicHighway50k.csv", 43667, ',', true},
-            {"neighbors100k.csv", 62210, ',', true},
+            {"CIPublicHighway10k.csv", 21537, ',', true},
+            {"neighbors10k.csv", 62210, ',', true},
             {"WDC_astronomical.csv", 49417, ',', true},
             {"WDC_age.csv", 44913, ',', true},
             {"WDC_appearances.csv", 34497, ',', true},
