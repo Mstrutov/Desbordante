@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(fdtester)
+project(Desbordante)
 
 # By default select Debug build
 if(NOT CMAKE_BUILD_TYPE)
