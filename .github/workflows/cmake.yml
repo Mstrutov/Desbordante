@@ -9,7 +9,7 @@ on:
 env:
   BUILD_TYPE: Release
 jobs:
-  build:
+  run_tests: 
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v2
