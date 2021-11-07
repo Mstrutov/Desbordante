@@ -10,8 +10,9 @@
 #include "ColumnData.h"
 #include "ColumnLayoutRelationData.h"
 #include "RelationalSchema.h"
-#include "CMAXSet.h"
 #include "MAXSet.h"
+
+using CMAXSet = MAXSet;
 
 class CMAXGen{
 private:
