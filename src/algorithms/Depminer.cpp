@@ -15,6 +15,8 @@
 
 using boost::dynamic_bitset, std::make_shared, std::shared_ptr, std::cout, std::endl, std::setw, std::vector, std::list, std::dynamic_pointer_cast;
 
+bool checkJoin(Vertical const& _p, Vertical const& _q);
+// Костыль
 std::set<Vertical> unorderedToOrdered(std::unordered_set<Vertical> uset){
     std::set<Vertical> result;
     for(auto el : uset){
@@ -35,52 +37,61 @@ unsigned long long Depminer::execute(){
          << relation->getMaximumNip() << "." << endl;
 
     auto startTime = std::chrono::system_clock::now();
-    //Agree sets
 
+    //Vecrtical test
+    for(int i = 0; i < 20; i++){
+        for(int j = 0; j < 20; j++){
+            Vertical vert1(schema, boost::dynamic_bitset<>(7, i));
+            Vertical vert2(schema, boost::dynamic_bitset<>(7, j));
+            std::cerr << vert1.getColumnIndices() << "\t" << vert2.getColumnIndices() << endl;
+            for(int k = 0; k < 7; k++){
+                std::cerr << vert1.getColumnIndices()[k];
+            }
+            std::cerr << "\t";
+            for(int k = 0; k < 7; k++){
+                std::cerr << vert2.getColumnIndices()[k];
+            }
+            std::cerr << endl;
+            std::cerr << checkJoin(vert1, vert2) << endl;
+            std::cerr << vert2.contains(vert1) << endl;
+        }
+    }
+    
+    //Agree sets (Написано Михаилом)
     AgreeSetFactory agreeSetFactory = AgreeSetFactory(relation.get());
     std::set<Vertical> agreeSets = unorderedToOrdered(agreeSetFactory.genAgreeSets());
 
-    for(auto ag : agreeSets){
-        std::cerr << ag.toString() << "\n";
-    }
-
     //maximal sets
-    CMAXGen cmaxSet = CMAXGen(schema);
-    cmaxSet.execute(agreeSets);
+    CMAXGen cmaxSets = CMAXGen(schema);
+    cmaxSets.execute(agreeSets);
 
-    for(auto set : cmaxSet.getCmaxSets()){
-        std::cerr << set.getColumn().toString();
-        for(auto comb : set.getCombinations()){
-            std::cerr << "\t\t" << comb.toString() << "\n";
-        }
-        std::cerr << "\n";
-    }
-
-    std::cerr << "-----------MAXSETS::::::" << std::endl;
-
-    for(auto set : cmaxSet.getMaxSets()){
-        std::cerr << set.getColumn().toString();
-        for(auto comb : set.getCombinations()){
-            std::cerr << "\t\t" << comb.toString() << "\n";
-        }
-        std::cerr << "\n";
-    }
+    // for(auto set : cmaxSets.getCmaxSets()){
+    //     std::cerr << set.getColumn().toString();
+    //     for(auto comb : set.getCombinations()){
+    //         std::cerr << "\t\t" << comb.toString() << "\n";
+    //     }
+    //     std::cerr << "\n";
+    // }
     
     //LHS
 
-    for(auto& attribute : schema->getColumns()){
+    auto lhsTime = std::chrono::system_clock::now();
+
+    for(auto& column : schema->getColumns()){
         std::set<Vertical> li;
-        CMAXSet correct = genFirstLi(cmaxSet.getCmaxSets(), *attribute, li);
-        auto pli = relation->getColumnData(attribute->getIndex()).getPositionListIndex();
+        CMAXSet correct = genFirstLi(cmaxSets.getCmaxSets(), *column, li);
+        auto pli = relation->getColumnData(column->getIndex()).getPositionListIndex();
         bool column_contains_only_equal_values =
             pli->getNumNonSingletonCluster() == 1 && pli->getSize() == relation->getNumRows();
         if (column_contains_only_equal_values) {
-            std::cout << "Registered FD: " << schema->emptyVertical->toString()
-                      << "->" << attribute->toString() << '\n';
-            registerFD(Vertical(), *attribute);
+            // std::cout << "Registered FD: " << schema->emptyVertical->toString()
+            //           << "->" << column->toString() << '\n';
+            registerFD(Vertical(), *column);
             continue;
         }
         while(!li.empty()){
+            // Создаю копию сета li
+            // так как дальше вызываю erase()
             std::set<Vertical> liCopy = li;
             for(Vertical l : li){
                 bool isFD = true;
@@ -91,8 +102,8 @@ unsigned long long Depminer::execute(){
                     }
                 }
                 if(isFD){
-                    if(!l.contains(*attribute)){
-                        this->registerFD(l, *attribute);
+                    if(!l.contains(*column)){
+                        this->registerFD(l, *column);
                     }
                     liCopy.erase(l);
                 }
@@ -103,12 +114,15 @@ unsigned long long Depminer::execute(){
             li = genNextLi(liCopy);
         }
     }
+    std::chrono::milliseconds lhs_elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - lhsTime);
+    cout << "LHS TIME: " << lhs_elapsed_milliseconds.count() << endl;
 
     cout << "TOTAL FD COUNT: " << this->fdCollection_.size() << "\n";
 
-    for(auto const& fd : this->fdCollection_){
-        std::cout << "Registered FD: " << fd.getLhs().toString() << "->" << fd.getRhs().toString() << "\n";
-    }
+    // for(auto const& fd : this->fdCollection_){
+    //     std::cout << "Registered FD: " << fd.getLhs().toString() << "->" << fd.getRhs().toString() << "\n";
+    // }
+
     std::chrono::milliseconds elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
     return elapsed_milliseconds.count();
 }
@@ -131,14 +145,13 @@ CMAXSet Depminer::genFirstLi(std::set<CMAXSet> cmaxSets, Column attribute, std::
     return correctSet;
 }
 
-bool checkJoin(Vertical const& _p, Vertical const& _q);
-
 //Apriori-gen function
 std::set<Vertical> Depminer::genNextLi(std::set<Vertical> const& li){
     std::set<Vertical> ck;
     for(Vertical p : li){
         for(Vertical q : li){
             if(!checkJoin(p, q)){
+            // if(p.contains(q)){
                 continue;
             }
             Vertical candidate(p);
