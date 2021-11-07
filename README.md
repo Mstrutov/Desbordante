@@ -6,7 +6,7 @@ https://github.com/cupertank implemented essential data structures presented in 
   ### Dependencies
   Prior to cloning the repository and attempting to build the project, ensure that you have the following software:
 
-  - GNU g++ compiler, version 8+
+  - GNU g++ compiler, version 10+
   - CMake, version 3.10+
   - Boost library, version 1.72.0+
 
