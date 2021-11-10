@@ -16,14 +16,6 @@
 using boost::dynamic_bitset, std::make_shared, std::shared_ptr, std::cout, std::endl, std::setw, std::vector, std::list, std::dynamic_pointer_cast;
 
 bool checkJoin(Vertical const& _p, Vertical const& _q);
-// Костыль
-std::set<Vertical> unorderedToOrdered(std::unordered_set<Vertical> uset){
-    std::set<Vertical> result;
-    for(auto el : uset){
-        result.insert(el);
-    }
-    return result;
-}
 
 unsigned long long Depminer::execute(){
 
@@ -40,7 +32,7 @@ unsigned long long Depminer::execute(){
     
     //Agree sets (Написано Михаилом)
     AgreeSetFactory agreeSetFactory = AgreeSetFactory(relation.get());
-    std::set<Vertical> agreeSets = unorderedToOrdered(agreeSetFactory.genAgreeSets());
+    std::unordered_set<Vertical> agreeSets = agreeSetFactory.genAgreeSets();
 
     //maximal sets
     CMAXGen cmaxSets = CMAXGen(schema);
@@ -50,20 +42,18 @@ unsigned long long Depminer::execute(){
 
     auto lhsTime = std::chrono::system_clock::now();
 
-    for(auto& column : schema->getColumns()){
-        std::set<Vertical> li;
+    for(const auto& column : schema->getColumns()){
+        std::unordered_set<Vertical> li;
         CMAXSet correct = genFirstLevel(cmaxSets.getCmaxSets(), *column, li);
         auto pli = relation->getColumnData(column->getIndex()).getPositionListIndex();
         bool column_contains_only_equal_values =
             pli->getNumNonSingletonCluster() == 1 && pli->getSize() == relation->getNumRows();
         if (column_contains_only_equal_values) {
-            // std::cout << "Registered FD: " << schema->emptyVertical->toString()
-            //           << "->" << column->toString() << '\n';
             registerFD(Vertical(), *column);
             continue;
         }
         while(!li.empty()){
-            std::set<Vertical> liCopy = li;
+            std::unordered_set<Vertical> liCopy = li;
             for(Vertical l : li){
                 bool isFD = true;
                 for(auto combination : correct.getCombinations()){
@@ -94,7 +84,7 @@ unsigned long long Depminer::execute(){
     return elapsed_milliseconds.count();
 }
 
-CMAXSet Depminer::genFirstLevel(std::set<CMAXSet> cmaxSets, Column attribute, std::set<Vertical> & li){
+CMAXSet Depminer::genFirstLevel(std::set<CMAXSet> cmaxSets, Column attribute, std::unordered_set<Vertical> & li){
     CMAXSet correctSet(attribute);
     for(CMAXSet set : cmaxSets){
         if(!(set.getColumn() == attribute)){
@@ -113,8 +103,8 @@ CMAXSet Depminer::genFirstLevel(std::set<CMAXSet> cmaxSets, Column attribute, st
 }
 
 //Apriori-gen function
-std::set<Vertical> Depminer::genNextLevel(std::set<Vertical> const& li){
-    std::set<Vertical> ck;
+std::unordered_set<Vertical> Depminer::genNextLevel(std::unordered_set<Vertical> const& li){
+    std::unordered_set<Vertical> ck;
     for(Vertical p : li){
         for(Vertical q : li){
             if(!checkJoin(p, q)){
@@ -125,7 +115,7 @@ std::set<Vertical> Depminer::genNextLevel(std::set<Vertical> const& li){
             ck.insert(candidate);
         }
     }
-    std::set<Vertical> result;
+    std::unordered_set<Vertical> result;
     for(Vertical candidate : ck){
         bool prune = false;
         for(auto column : candidate.getColumns()){

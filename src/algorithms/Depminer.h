@@ -6,8 +6,8 @@
 
 class Depminer : public FDAlgorithm {
 private:
-    CMAXSet genFirstLevel(std::set<CMAXSet> cmaxSets, Column attribute, std::set<Vertical>& li);
-    std::set<Vertical> genNextLevel(std::set<Vertical> const& li);
+    CMAXSet genFirstLevel(std::set<CMAXSet> cmaxSets, Column attribute, std::unordered_set<Vertical>& li);
+    std::unordered_set<Vertical> genNextLevel(std::unordered_set<Vertical> const& li);
 public:
     
     explicit Depminer(std::filesystem::path const& path, char separator = ',', bool hasHeader = true) 
