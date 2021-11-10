@@ -12,19 +12,23 @@
 
 using std::cerr;
 
-void CMAXGen::execute(std::set<Vertical> agreeSets){
+void CMAXGen::execute(std::unordered_set<Vertical> agreeSets){
     auto startTime = std::chrono::system_clock::now();
+
     this->MaxSetsGenerate(agreeSets);
+    
     std::chrono::milliseconds elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
     std::cout << "TIME TO GENERATE MAXSETS: " << elapsed_milliseconds.count() << std::endl;
     auto newStartTime = std::chrono::system_clock::now();
+
     this->CMaxSetsGenerate();
+
     elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - newStartTime);
     std::cout << "TIME TO GENERATE CMAXSETS: " << elapsed_milliseconds.count() << std::endl;
     std::cout << "TOTAL CMAX SETS: " << this->cmaxSets.size() << "\n";
 }
 
-void CMAXGen::MaxSetsGenerate(std::set<Vertical> agreeSets){
+void CMAXGen::MaxSetsGenerate(std::unordered_set<Vertical> agreeSets){
     for(auto& column : this->schema->getColumns()){
         MAXSet result(*column);
         for(Vertical ag : agreeSets){
@@ -34,8 +38,8 @@ void CMAXGen::MaxSetsGenerate(std::set<Vertical> agreeSets){
             result.addCombination(ag);
         }
 
-        std::set<Vertical> superSets;
-        std::set<Vertical> setsDelete;
+        std::unordered_set<Vertical> superSets;
+        std::unordered_set<Vertical> setsDelete;
         bool toAdd = true;
 
         for(Vertical set : result.getCombinations()){

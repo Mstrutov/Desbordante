@@ -19,13 +19,13 @@ private:
     std::set<CMAXSet> cmaxSets;
     std::set<MAXSet> maxSets;
     const RelationalSchema* schema;
-    void MaxSetsGenerate(std::set<Vertical> agreeSets);
+    void MaxSetsGenerate(std::unordered_set<Vertical> agreeSets);
     void CMaxSetsGenerate();
 public:
     CMAXGen(const RelationalSchema* schema) : schema(schema){};
     CMAXGen() = default;
     ~CMAXGen() = default;
-    void execute(std::set<Vertical> agreeSets);
+    void execute(std::unordered_set<Vertical> agreeSets);
     std::set<CMAXSet> getCmaxSets(){
         return this->cmaxSets;
     }
