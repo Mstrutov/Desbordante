@@ -8,11 +8,13 @@ class Depminer : public FDAlgorithm {
 private:
     CMAXSet genFirstLevel(std::set<CMAXSet> cmaxSets, Column attribute, std::unordered_set<Vertical>& li);
     std::unordered_set<Vertical> genNextLevel(std::unordered_set<Vertical> const& li);
+    bool checkJoin(Vertical const& _p, Vertical const& _q);
 public:
     
     explicit Depminer(std::filesystem::path const& path, char separator = ',', bool hasHeader = true) 
         : FDAlgorithm(path, separator, hasHeader) {}
 
     unsigned long long execute() override;
-
+    std::unique_ptr<ColumnLayoutRelationData> relation;
+    const RelationalSchema* schema;
 };

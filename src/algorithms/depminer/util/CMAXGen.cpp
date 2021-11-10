@@ -12,32 +12,20 @@
 
 using std::cerr;
 
-void CMAXGen::execute(std::unordered_set<Vertical> agreeSets){
+void CMAXGen::execute(std::unordered_set<Vertical>& agreeSets){
     auto startTime = std::chrono::system_clock::now();
 
-    this->MaxSetsGenerate(agreeSets);
-    
-    std::chrono::milliseconds elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
-    std::cout << "TIME TO GENERATE MAXSETS: " << elapsed_milliseconds.count() << std::endl;
-    auto newStartTime = std::chrono::system_clock::now();
-
-    this->CMaxSetsGenerate();
-
-    elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - newStartTime);
-    std::cout << "TIME TO GENERATE CMAXSETS: " << elapsed_milliseconds.count() << std::endl;
-    std::cout << "TOTAL CMAX SETS: " << this->cmaxSets.size() << "\n";
-}
-
-void CMAXGen::MaxSetsGenerate(std::unordered_set<Vertical> agreeSets){
     for(auto& column : this->schema->getColumns()){
         MAXSet result(*column);
+
+        // finding all sets, which doesn't contain column
         for(Vertical ag : agreeSets){
-            if(ag.contains(*column)){
-                continue;
+            if(!ag.contains(*column)){
+                result.addCombination(ag);
             }
-            result.addCombination(ag);
         }
 
+        // finding max sets
         std::unordered_set<Vertical> superSets;
         std::unordered_set<Vertical> setsDelete;
         bool toAdd = true;
@@ -61,18 +49,18 @@ void CMAXGen::MaxSetsGenerate(std::unordered_set<Vertical> agreeSets){
             }
             setsDelete.clear();
         }
-        result.makeNewCombinations(superSets);
-        this->maxSets.insert(result);
-    }
-}
-
-void CMAXGen::CMaxSetsGenerate(){
-    for(MAXSet maxSet : this->maxSets){
-        CMAXSet result = CMAXSet(maxSet.getColumn());
-        for(auto combination : maxSet.getCombinations()){
-            result.addCombination(combination.invert());
+        
+        // Inverting MaxSet
+        std::unordered_set<Vertical> resultSuperSets;
+        for(Vertical const & combination : superSets){
+            resultSuperSets.insert(combination.invert());
         }
+        result.makeNewCombinations(resultSuperSets);
         this->cmaxSets.insert(result);
     }
+
+    auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
+    std::cout << "TIME TO GENERATE CMAXSETS: " << elapsed_milliseconds.count() << std::endl;
+    std::cout << "TOTAL CMAX SETS: " << this->cmaxSets.size() << "\n";
 }
 

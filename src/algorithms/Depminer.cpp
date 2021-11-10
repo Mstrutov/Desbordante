@@ -15,18 +15,13 @@
 
 using boost::dynamic_bitset, std::make_shared, std::shared_ptr, std::cout, std::endl, std::setw, std::vector, std::list, std::dynamic_pointer_cast;
 
-bool checkJoin(Vertical const& _p, Vertical const& _q);
-
 unsigned long long Depminer::execute(){
 
-    std::unique_ptr<ColumnLayoutRelationData> relation = ColumnLayoutRelationData::createFrom(inputGenerator_, true);
-    const RelationalSchema* schema = relation->getSchema();
+    relation = ColumnLayoutRelationData::createFrom(inputGenerator_, true);
+    schema = relation->getSchema();
     if (relation->getColumnData().empty()) {
         throw std::runtime_error("Got an empty .csv file: FD mining is meaningless.");
     }
-    cout << schema->getName() << " has " << relation->getNumColumns() << " columns, "
-         << relation->getNumRows() << " rows, and a maximum NIP of " << setw(2)
-         << relation->getMaximumNip() << "." << endl;
 
     auto startTime = std::chrono::system_clock::now();
     
@@ -133,17 +128,17 @@ std::unordered_set<Vertical> Depminer::genNextLevel(std::unordered_set<Vertical>
     return result;
 }
 
-bool checkJoin(Vertical const& _p, Vertical const& _q){
+bool Depminer::checkJoin(Vertical const& _p, Vertical const& _q){
     dynamic_bitset<> p = _p.getColumnIndices();
     dynamic_bitset<> q = _q.getColumnIndices();
 
-    int pPrev = -1, qPrev = -1;
+    int pLast = -1, qLast = -1;
 
-    for(int i = p.size(); i >= 0; i--){
-        pPrev = std::max(pPrev, p[i] ? i : -1);
-        qPrev = std::max(qPrev, q[i] ? i : -1);
+    for(int i = 0; i < p.size(); i++){
+        pLast = p[i] ? i : pLast;
+        qLast = q[i] ? i : qLast;
     }
-    if(pPrev >= qPrev) return false;
+    if(pLast >= qLast) return false;
     dynamic_bitset<> intersection = p;
     intersection.intersects(q);
     return p.count() == intersection.count()
