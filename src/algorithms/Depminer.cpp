@@ -37,25 +37,6 @@ unsigned long long Depminer::execute(){
          << relation->getMaximumNip() << "." << endl;
 
     auto startTime = std::chrono::system_clock::now();
-
-    //Vecrtical test
-    for(int i = 0; i < 20; i++){
-        for(int j = 0; j < 20; j++){
-            Vertical vert1(schema, boost::dynamic_bitset<>(7, i));
-            Vertical vert2(schema, boost::dynamic_bitset<>(7, j));
-            std::cerr << vert1.getColumnIndices() << "\t" << vert2.getColumnIndices() << endl;
-            for(int k = 0; k < 7; k++){
-                std::cerr << vert1.getColumnIndices()[k];
-            }
-            std::cerr << "\t";
-            for(int k = 0; k < 7; k++){
-                std::cerr << vert2.getColumnIndices()[k];
-            }
-            std::cerr << endl;
-            std::cerr << checkJoin(vert1, vert2) << endl;
-            std::cerr << vert2.contains(vert1) << endl;
-        }
-    }
     
     //Agree sets (Написано Михаилом)
     AgreeSetFactory agreeSetFactory = AgreeSetFactory(relation.get());
@@ -64,14 +45,6 @@ unsigned long long Depminer::execute(){
     //maximal sets
     CMAXGen cmaxSets = CMAXGen(schema);
     cmaxSets.execute(agreeSets);
-
-    // for(auto set : cmaxSets.getCmaxSets()){
-    //     std::cerr << set.getColumn().toString();
-    //     for(auto comb : set.getCombinations()){
-    //         std::cerr << "\t\t" << comb.toString() << "\n";
-    //     }
-    //     std::cerr << "\n";
-    // }
     
     //LHS
 
@@ -79,7 +52,7 @@ unsigned long long Depminer::execute(){
 
     for(auto& column : schema->getColumns()){
         std::set<Vertical> li;
-        CMAXSet correct = genFirstLi(cmaxSets.getCmaxSets(), *column, li);
+        CMAXSet correct = genFirstLevel(cmaxSets.getCmaxSets(), *column, li);
         auto pli = relation->getColumnData(column->getIndex()).getPositionListIndex();
         bool column_contains_only_equal_values =
             pli->getNumNonSingletonCluster() == 1 && pli->getSize() == relation->getNumRows();
@@ -90,8 +63,6 @@ unsigned long long Depminer::execute(){
             continue;
         }
         while(!li.empty()){
-            // Создаю копию сета li
-            // так как дальше вызываю erase()
             std::set<Vertical> liCopy = li;
             for(Vertical l : li){
                 bool isFD = true;
@@ -111,7 +82,7 @@ unsigned long long Depminer::execute(){
                     break;
                 }
             }
-            li = genNextLi(liCopy);
+            li = genNextLevel(liCopy);
         }
     }
     std::chrono::milliseconds lhs_elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - lhsTime);
@@ -119,15 +90,11 @@ unsigned long long Depminer::execute(){
 
     cout << "TOTAL FD COUNT: " << this->fdCollection_.size() << "\n";
 
-    // for(auto const& fd : this->fdCollection_){
-    //     std::cout << "Registered FD: " << fd.getLhs().toString() << "->" << fd.getRhs().toString() << "\n";
-    // }
-
     std::chrono::milliseconds elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
     return elapsed_milliseconds.count();
 }
 
-CMAXSet Depminer::genFirstLi(std::set<CMAXSet> cmaxSets, Column attribute, std::set<Vertical> & li){
+CMAXSet Depminer::genFirstLevel(std::set<CMAXSet> cmaxSets, Column attribute, std::set<Vertical> & li){
     CMAXSet correctSet(attribute);
     for(CMAXSet set : cmaxSets){
         if(!(set.getColumn() == attribute)){
@@ -146,12 +113,11 @@ CMAXSet Depminer::genFirstLi(std::set<CMAXSet> cmaxSets, Column attribute, std::
 }
 
 //Apriori-gen function
-std::set<Vertical> Depminer::genNextLi(std::set<Vertical> const& li){
+std::set<Vertical> Depminer::genNextLevel(std::set<Vertical> const& li){
     std::set<Vertical> ck;
     for(Vertical p : li){
         for(Vertical q : li){
             if(!checkJoin(p, q)){
-            // if(p.contains(q)){
                 continue;
             }
             Vertical candidate(p);
@@ -188,9 +154,10 @@ bool checkJoin(Vertical const& _p, Vertical const& _q){
         qPrev = std::max(qPrev, q[i] ? i : -1);
     }
     if(pPrev >= qPrev) return false;
-    for(int i = 0; i < pPrev; i++){
-        if(p[i] != q[i]) return false;
-    }
+    dynamic_bitset<> intersection = p;
+    intersection.intersects(q);
+    return p.count() == intersection.count()
+            && q.count() == intersection.count();
     
     return true;
 }
