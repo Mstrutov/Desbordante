@@ -32,21 +32,34 @@ unsigned long long Depminer::execute(){
     //maximal sets
     CMAXGen cmaxSets = CMAXGen(schema);
     cmaxSets.execute(agreeSets);
+    std::vector<CMAXSet> cmaxVec = cmaxSets.getCmaxSets();
     
     //LHS
-
     auto lhsTime = std::chrono::system_clock::now();
 
-    for(const auto& column : schema->getColumns()){
+    for(const std::unique_ptr<Column>& column : schema->getColumns()){
+        lhsForColumn(column, cmaxVec);
+    }
+
+    std::chrono::milliseconds lhs_elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - lhsTime);
+    cout << "LHS TIME: " << lhs_elapsed_milliseconds.count() << endl;
+
+    cout << "TOTAL FD COUNT: " << this->fdCollection_.size() << "\n";
+
+    std::chrono::milliseconds elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
+    return elapsed_milliseconds.count();
+}
+
+void Depminer::lhsForColumn(const std::unique_ptr<Column>& column, std::vector<CMAXSet> const & cmaxSets){
         std::unordered_set<Vertical> li;
-        CMAXSet correct = genFirstLevel(cmaxSets.getCmaxSets(), *column, li);
+        CMAXSet correct = genFirstLevel(cmaxSets, *column, li);
 
         auto pli = relation->getColumnData(column->getIndex()).getPositionListIndex();
         bool column_contains_only_equal_values =
             pli->getNumNonSingletonCluster() == 1 && pli->getSize() == relation->getNumRows();
         if (column_contains_only_equal_values) {
             registerFD(Vertical(), *column);
-            continue;
+            return;
         }
         
         while(!li.empty()){
@@ -71,17 +84,9 @@ unsigned long long Depminer::execute(){
             }
             li = genNextLevel(liCopy);
         }
-    }
-    std::chrono::milliseconds lhs_elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - lhsTime);
-    cout << "LHS TIME: " << lhs_elapsed_milliseconds.count() << endl;
-
-    cout << "TOTAL FD COUNT: " << this->fdCollection_.size() << "\n";
-
-    std::chrono::milliseconds elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
-    return elapsed_milliseconds.count();
 }
 
-CMAXSet Depminer::genFirstLevel(std::vector<CMAXSet> cmaxSets, Column attribute, std::unordered_set<Vertical> & li){
+CMAXSet Depminer::genFirstLevel(std::vector<CMAXSet> const & cmaxSets, Column attribute, std::unordered_set<Vertical> & li){
     CMAXSet correctSet(attribute);
     for(CMAXSet set : cmaxSets){
         if(!(set.getColumn() == attribute)){

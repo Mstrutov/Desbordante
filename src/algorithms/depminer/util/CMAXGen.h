@@ -20,6 +20,7 @@ private:
     const RelationalSchema* schema;
 public:
     CMAXGen(const RelationalSchema* schema) : schema(schema){};
+    CMAXGen() = default;
     ~CMAXGen() = default;
     void execute(std::unordered_set<Vertical>& agreeSets);
     std::vector<CMAXSet> getCmaxSets(){
