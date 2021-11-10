@@ -6,7 +6,8 @@
 
 class Depminer : public FDAlgorithm {
 private:
-    CMAXSet genFirstLevel(std::vector<CMAXSet> cmaxSets, Column attribute, std::unordered_set<Vertical>& li);
+    void lhsForColumn(const std::unique_ptr<Column>& column, std::vector<CMAXSet> const & cmaxSets);
+    CMAXSet genFirstLevel(std::vector<CMAXSet> const & cmaxSets, Column attribute, std::unordered_set<Vertical>& li);
     std::unordered_set<Vertical> genNextLevel(std::unordered_set<Vertical> const& li);
     bool checkJoin(Vertical const& _p, Vertical const& _q);
 public:
