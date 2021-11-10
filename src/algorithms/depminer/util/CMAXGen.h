@@ -16,13 +16,13 @@ using CMAXSet = MAXSet;
 
 class CMAXGen{
 private:
-    std::set<CMAXSet> cmaxSets;
+    std::vector<CMAXSet> cmaxSets;
     const RelationalSchema* schema;
 public:
     CMAXGen(const RelationalSchema* schema) : schema(schema){};
     ~CMAXGen() = default;
     void execute(std::unordered_set<Vertical>& agreeSets);
-    std::set<CMAXSet> getCmaxSets(){
+    std::vector<CMAXSet> getCmaxSets(){
         return this->cmaxSets;
     }
 };

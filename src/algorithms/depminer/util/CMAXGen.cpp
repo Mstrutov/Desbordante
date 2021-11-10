@@ -56,7 +56,7 @@ void CMAXGen::execute(std::unordered_set<Vertical>& agreeSets){
             resultSuperSets.insert(combination.invert());
         }
         result.makeNewCombinations(resultSuperSets);
-        this->cmaxSets.insert(result);
+        this->cmaxSets.push_back(result);
     }
 
     auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
