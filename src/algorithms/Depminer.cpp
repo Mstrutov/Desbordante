@@ -24,25 +24,27 @@ unsigned long long Depminer::execute(){
 
     auto startTime = std::chrono::system_clock::now();
     
-    progressStep = 100.0 / schema->getNumColumns();
+    progressStep = kTotalProgressPercent / schema->getNumColumns();
 
     //Agree sets (Написано Михаилом)
-    AgreeSetFactory agreeSetFactory = AgreeSetFactory(relation.get());
+    AgreeSetFactory agreeSetFactory = AgreeSetFactory(relation.get(), AgreeSetFactory::Configuration(), this);
     std::unordered_set<Vertical> agreeSets = agreeSetFactory.genAgreeSets();
+    toNextProgressPhase();
 
     //maximal sets
     std::vector<CMAXSet> cmaxSets = generateCMAXSets(agreeSets);
+    toNextProgressPhase();
     
     //LHS
     auto lhsTime = std::chrono::system_clock::now();
     // 1
     for(const std::unique_ptr<Column>& column : schema->getColumns()){
         lhsForColumn(column, cmaxSets);
+        addProgress(progressStep);
     }
 
     std::chrono::milliseconds lhs_elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - lhsTime);
-    cout << "LHS TIME: " << lhs_elapsed_milliseconds.count() << endl;
-    cout << "TOTAL FD COUNT: " << this->fdCollection_.size() << "\n";
+    cout << "> FD COUNT: " << this->fdCollection_.size() << "\n";
     std::chrono::milliseconds elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
     return elapsed_milliseconds.count();
 }
@@ -94,11 +96,11 @@ std::vector<CMAXSet> Depminer::generateCMAXSets(std::unordered_set<Vertical>& ag
         }
         result.makeNewCombinations(resultSuperSets);
         cmaxSets.push_back(result);
+        addProgress(progressStep);
     }
 
     auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
-    std::cout << "TIME TO GENERATE CMAXSETS: " << elapsed_milliseconds.count() << std::endl;
-    std::cout << "TOTAL CMAX SETS: " << cmaxSets.size() << "\n";
+    std::cout << "> CMAX SETS COUNT: " << cmaxSets.size() << "\n";
 
     return std::move(cmaxSets);
 }
