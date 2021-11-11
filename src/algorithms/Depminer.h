@@ -2,7 +2,7 @@
 
 #include "CSVParser.h"
 #include "FDAlgorithm.h"
-#include "depminer/util/CMAXGen.h"
+#include "depminer/util/MAXSet.h"
 
 class Depminer : public FDAlgorithm {
 private:
@@ -10,6 +10,7 @@ private:
     CMAXSet genFirstLevel(std::vector<CMAXSet> const & cmaxSets, Column attribute, std::unordered_set<Vertical>& li);
     std::unordered_set<Vertical> genNextLevel(std::unordered_set<Vertical> const& li);
     bool checkJoin(Vertical const& _p, Vertical const& _q);
+    std::vector<CMAXSet> generateCMAXSets(std::unordered_set<Vertical>& agreeSets);
 public:
     
     explicit Depminer(std::filesystem::path const& path, char separator = ',', bool hasHeader = true) 

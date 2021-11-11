@@ -7,8 +7,6 @@
 #include <memory>
 #include <unordered_set>
 
-#include <boost/functional/hash.hpp>
-
 #include "ColumnCombination.h"
 #include "ColumnData.h"
 #include "ColumnLayoutRelationData.h"
@@ -21,10 +19,6 @@ private:
     std::unordered_set<Vertical> columnCombinations;
 public:
     MAXSet(Column column) : column(column) {};
-    MAXSet() = default;
-    bool operator<(MAXSet const& rhs) const{
-        return this->getColumn() < rhs.getColumn();
-    }
     void makeNewCombinations(std::unordered_set<Vertical> comb){
         this->columnCombinations = comb;
     }
@@ -32,3 +26,5 @@ public:
     std::unordered_set<Vertical> getCombinations(){ return columnCombinations; }
     Column getColumn() const{ return column; }
 };
+
+using CMAXSet = MAXSet;
