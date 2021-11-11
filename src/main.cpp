@@ -24,6 +24,7 @@ INITIALIZE_EASYLOGGINGPP
 bool checkOptions(std::string const& alg, double error) {
     if (alg != "pyro" && alg != "tane" && alg != "fastfds" && alg != "fdmine" && alg != "dfd" && alg != "depminer") {
         std::cout << "ERROR: no matching algorithm. Available algorithms are:\n\tpyro\n\ttane.\n" << std::endl;
+        return false;
     }
     if (error > 1 || error < 0) {
         std::cout << "ERROR: error should be between 0 and 1.\n" << std::endl;
