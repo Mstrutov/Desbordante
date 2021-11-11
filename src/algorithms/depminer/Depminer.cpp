@@ -26,7 +26,7 @@ unsigned long long Depminer::execute(){
     
     progressStep = kTotalProgressPercent / schema->getNumColumns();
 
-    //Agree sets (Написано Михаилом)
+    //Agree sets
     AgreeSetFactory agreeSetFactory = AgreeSetFactory(relation.get(), AgreeSetFactory::Configuration(), this);
     std::unordered_set<Vertical> agreeSets = agreeSetFactory.genAgreeSets();
     toNextProgressPhase();

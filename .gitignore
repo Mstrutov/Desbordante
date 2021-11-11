@@ -8,5 +8,3 @@ Datasets/
 lib/
 .csv
 .idea/
-.vscode/settings.json
-datasets/breast_cancer.csv
