@@ -10,7 +10,6 @@
 #include "ColumnData.h"
 #include "ColumnLayoutRelationData.h"
 #include "RelationalSchema.h"
-#include "algorithms/depminer/util/CMAXGen.h"
 #include "AgreeSetFactory.h"
 
 using boost::dynamic_bitset, std::make_shared, std::shared_ptr, std::cout, std::endl, std::setw, std::vector, std::list, std::dynamic_pointer_cast;
@@ -25,25 +24,25 @@ unsigned long long Depminer::execute(){
 
     auto startTime = std::chrono::system_clock::now();
     
+    progressStep = 100.0 / schema->getNumColumns();
+
     //Agree sets (Написано Михаилом)
     AgreeSetFactory agreeSetFactory = AgreeSetFactory(relation.get());
     std::unordered_set<Vertical> agreeSets = agreeSetFactory.genAgreeSets();
 
     //maximal sets
-    std::vector<CMAXSet> cmaxVec = generateCMAXSets(agreeSets);
+    std::vector<CMAXSet> cmaxSets = generateCMAXSets(agreeSets);
     
     //LHS
     auto lhsTime = std::chrono::system_clock::now();
-
+    // 1
     for(const std::unique_ptr<Column>& column : schema->getColumns()){
-        lhsForColumn(column, cmaxVec);
+        lhsForColumn(column, cmaxSets);
     }
 
     std::chrono::milliseconds lhs_elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - lhsTime);
     cout << "LHS TIME: " << lhs_elapsed_milliseconds.count() << endl;
-
     cout << "TOTAL FD COUNT: " << this->fdCollection_.size() << "\n";
-
     std::chrono::milliseconds elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
     return elapsed_milliseconds.count();
 }
@@ -104,9 +103,9 @@ std::vector<CMAXSet> Depminer::generateCMAXSets(std::unordered_set<Vertical>& ag
     return std::move(cmaxSets);
 }
 
-
 void Depminer::lhsForColumn(const std::unique_ptr<Column>& column, std::vector<CMAXSet> const & cmaxSets){
         std::unordered_set<Vertical> li;
+        // 3
         CMAXSet correct = genFirstLevel(cmaxSets, *column, li);
 
         auto pli = relation->getColumnData(column->getIndex()).getPositionListIndex();
@@ -117,8 +116,10 @@ void Depminer::lhsForColumn(const std::unique_ptr<Column>& column, std::vector<C
             return;
         }
         
+        //4
         while(!li.empty()){
             std::unordered_set<Vertical> liCopy = li;
+            //5
             for(Vertical l : li){
                 bool isFD = true;
                 for(auto combination : correct.getCombinations()){
@@ -127,6 +128,7 @@ void Depminer::lhsForColumn(const std::unique_ptr<Column>& column, std::vector<C
                         break;
                     }
                 }
+                //6
                 if(isFD){
                     if(!l.contains(*column)){
                         this->registerFD(l, *column);
@@ -137,6 +139,7 @@ void Depminer::lhsForColumn(const std::unique_ptr<Column>& column, std::vector<C
                     break;
                 }
             }
+            //7
             li = genNextLevel(liCopy);
         }
 }
