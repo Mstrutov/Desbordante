@@ -15,7 +15,7 @@
 #include "algorithms/DFD/DFD.h"
 #include "algorithms/Fd_mine.h"
 #include "algorithms/FastFDs.h"
-#include "algorithms/Depminer.h"
+#include "algorithms/depminer/Depminer.h"
 
 namespace po = boost::program_options;
 

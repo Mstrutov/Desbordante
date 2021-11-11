@@ -2,7 +2,7 @@
 
 #include "CSVParser.h"
 #include "FDAlgorithm.h"
-#include "depminer/util/MAXSet.h"
+#include "depminer/MAXSet.h"
 
 class Depminer : public FDAlgorithm {
 private:

@@ -31,6 +31,7 @@ message(${Boost_INCLUDE_DIRS})
 include_directories(
     "src/algorithms"
     "src/algorithms/DFD"
+    "src/algorithms/depminer"
     "src/model"
     "src/util"
     "src/parser"
@@ -40,8 +41,6 @@ include_directories(
     "src/caching"
     "src/logging"
     "src"
-    "src/algorithms/depminer"
-    "src/algorithms/depminer/util"
     )
 
 # adding submodules
