@@ -13,6 +13,7 @@
 #include "RelationalSchema.h"
 #include "TaneX.h"
 #include "TestingUtils.h"
+#include "Depminer.h"
 
 using ::testing::ContainerEq, ::testing::Eq;
 using std::string, std::vector;
@@ -148,6 +149,6 @@ REGISTER_TYPED_TEST_SUITE_P(
         HeavyDatasetsConsistentHash
         );
 
-using Algorithms = ::testing::Types<Tane, Pyro, FastFDs, DFD>;
+using Algorithms = ::testing::Types<Tane, Pyro, FastFDs, DFD, Depminer>;
 INSTANTIATE_TYPED_TEST_SUITE_P(, AlgorithmTest, Algorithms);
 
