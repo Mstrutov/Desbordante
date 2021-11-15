@@ -13,7 +13,7 @@
 #include "AgreeSetFactory.h"
 #include "logging/easylogging++.h"
 
-using boost::dynamic_bitset, std::make_shared, std::shared_ptr, std::endl, std::setw, std::vector, std::list, std::dynamic_pointer_cast;
+using boost::dynamic_bitset, std::make_shared, std::shared_ptr, std::setw, std::vector, std::list, std::dynamic_pointer_cast;
 
 unsigned long long Depminer::execute(){
 
@@ -46,7 +46,8 @@ unsigned long long Depminer::execute(){
 
     const auto lhs_elapsed_milliseconds 
         = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - lhsTime);
-    std::cout << "> FD COUNT: " << this->fdCollection_.size() << "\n";
+    LOG(INFO) << "> LHS FIND TIME: " << lhs_elapsed_milliseconds.count();
+    LOG(INFO) << "> FD COUNT: " << this->fdCollection_.size();
     const auto elapsed_milliseconds 
         = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
     return elapsed_milliseconds.count();
@@ -104,7 +105,8 @@ std::vector<CMAXSet> Depminer::generateCMAXSets(std::unordered_set<Vertical> con
 
     const auto elapsed_milliseconds 
         = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
-    std::cout << "> CMAX SETS COUNT: " << cmaxSets.size() << "\n";
+    LOG(INFO) << "> CMAX GENERATION TIME: " << elapsed_milliseconds.count();
+    LOG(INFO) << "> CMAX SETS COUNT: " << cmaxSets.size();
 
     return std::move(cmaxSets);
 }
