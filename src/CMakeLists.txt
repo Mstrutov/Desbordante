@@ -6,7 +6,7 @@ add_library(${BINARY}_lib STATIC ${lib_sources})
 
 option(SAFE_VERTICAL_HASHING
         "Enable safe vertical hashing. This feature allows to process\
-         wide (>16 columns) datasets, possibly lowering the performance."
+         wide (>32 columns) datasets, possibly lowering the performance."
         OFF)
 if (SAFE_VERTICAL_HASHING)
     target_compile_definitions(${BINARY}_lib PUBLIC SAFE_VERTICAL_HASHING)

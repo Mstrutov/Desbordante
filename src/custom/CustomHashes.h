@@ -10,29 +10,29 @@ private:
         kTrimAndConvertToUlong
     };
 
-    static constexpr BitsetHashingMethod defaultHashingMethod =
+    static constexpr BitsetHashingMethod kDefaultHashingMethod =
 #ifdef SAFE_VERTICAL_HASHING
         BitsetHashingMethod::kTrimAndConvertToUlong;
 #else
         BitsetHashingMethod::kTryConvertToUlong;
 #endif
 
-    template <auto bitsetHashingMethod = defaultHashingMethod>
-    static size_t bitset_hash(boost::dynamic_bitset<> const& bitset);
+    template <auto bitsetHashingMethod = kDefaultHashingMethod>
+    static size_t BitsetHash(boost::dynamic_bitset<> const& bitset);
 
     friend std::hash<Vertical>;
     friend std::hash<Column>;
 };
 
 template <>
-inline size_t CustomHashing::bitset_hash<CustomHashing::BitsetHashingMethod::kTryConvertToUlong>
+inline size_t CustomHashing::BitsetHash<CustomHashing::BitsetHashingMethod::kTryConvertToUlong>
         (boost::dynamic_bitset<> const& bitset) {
 
     return bitset.to_ulong();
 }
 
 template <>
-inline size_t CustomHashing::bitset_hash<CustomHashing::BitsetHashingMethod::kTrimAndConvertToUlong>
+inline size_t CustomHashing::BitsetHash<CustomHashing::BitsetHashingMethod::kTrimAndConvertToUlong>
         (boost::dynamic_bitset<> const& bitset) {
 
     boost::dynamic_bitset<> copyBitset = bitset;
@@ -44,16 +44,14 @@ namespace std {
     template<>
     struct hash<Vertical> {
         size_t operator()(Vertical const& k) const {
-            return CustomHashing::bitset_hash(k.getColumnIndicesRef());
+            return CustomHashing::BitsetHash(k.getColumnIndicesRef());
         }
     };
 
     template<>
     struct hash<Column> {
         size_t operator()(Column const& k) const {
-            boost::dynamic_bitset<> columnIndex(k.getSchema()->getNumColumns());
-            columnIndex.set(k.getIndex());
-            return CustomHashing::bitset_hash(columnIndex);
+            return k.getIndex();
         }
     };
 
