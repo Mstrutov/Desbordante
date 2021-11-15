@@ -11,7 +11,7 @@ private:
     std::unordered_set<Vertical> columnCombinations;
 public:
     CMAXSet(Column const& column) : column(column) {};
-    void makeNewCombinations(std::unordered_set<Vertical> comb) {
+    void makeNewCombinations(std::unordered_set<Vertical> const& comb) {
         this->columnCombinations = comb;
     }
     void addCombination(Vertical const& combination) { columnCombinations.insert(combination); }

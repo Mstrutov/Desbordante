@@ -159,10 +159,10 @@ CMAXSet Depminer::genFirstLevel(std::vector<CMAXSet> const& cmaxSets, Column att
             continue;
         }
         correctSet = set;
-        for (Vertical combination : correctSet.getCombinations()) {
-            for (const Column* column : combination.getColumns()) {
-                if (level.count(Vertical(*column)) == 0)
-                    level.insert(Vertical(*column));
+        for (auto const& combination : correctSet.getCombinations()) {
+            for (auto const& column : combination.getColumns()) {
+                if (level.count(static_cast<Vertical>(*column)) == 0)
+                    level.insert(static_cast<Vertical>(*column));
             }
         }
         break;
