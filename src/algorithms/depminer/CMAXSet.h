@@ -11,10 +11,10 @@ private:
     std::unordered_set<Vertical> columnCombinations;
 public:
     CMAXSet(Column const& column) : column(column) {};
-    void makeNewCombinations(std::unordered_set<Vertical> comb){
+    void makeNewCombinations(std::unordered_set<Vertical> comb) {
         this->columnCombinations = comb;
     }
-    void addCombination(Vertical const& combination){ columnCombinations.insert(combination); }
+    void addCombination(Vertical const& combination) { columnCombinations.insert(combination); }
     std::unordered_set<Vertical> const& getCombinations() const { return columnCombinations; }
     Column const& getColumn() const { return column; }
 };
