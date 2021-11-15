@@ -101,7 +101,7 @@ int main(int argc, char const *argv[]) {
         algorithmInstance = std::make_unique<DFD>(path, separator, hasHeader);
     } else if (alg == "fastfds") {
         algorithmInstance = std::make_unique<FastFDs>(path, separator, hasHeader, maxLhs, parallelism);
-    } else if (alg == "depminer"){
+    } else if (alg == "depminer") {
         algorithmInstance = std::make_unique<Depminer>(path, separator, hasHeader);
     }
     try {
