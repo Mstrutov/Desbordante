@@ -1,51 +1,47 @@
 #include "LatticeObservations.h"
 
-NodeCategory LatticeObservations::updateDependencyCategory(Vertical const& vertical) {
-    //бежим по множеству подмножеств и смотрим. если получили все независимости, то это мин зависимость
-
+NodeCategory LatticeObservations::updateDependencyCategory(Vertical const& node) {
     NodeCategory newCategory;
-    if (vertical.getArity() <= 1) {
+    if (node.getArity() <= 1) {
         newCategory = NodeCategory::minimalDependency;
-        (*this)[vertical] = newCategory;
+        (*this)[node] = newCategory;
         return newCategory;
     }
 
-    auto columnIndices = vertical.getColumnIndicesRef(); //копируем индексы
+    auto columnIndices = node.getColumnIndicesRef(); //copy indices
     bool hasUncheckedSubset = false;
 
     for (size_t index = columnIndices.find_first();
          index < columnIndices.size();
          index = columnIndices.find_next(index)
     ) {
-        columnIndices[index] = false; //убираем одну из колонок
-        auto const subsetVerticalIter = this->find(Vertical(vertical.getSchema(), columnIndices));
+        columnIndices[index] = false; //remove one column
+        auto const subsetNodeIter = this->find(Vertical(node.getSchema(), columnIndices));
 
-        //если какое-то подмножество не посещено либо оно не является антизависимостью, то не подходит
-
-        if (subsetVerticalIter == this->end()) {
-            //если нашли нерассмотренное подмножество
+        if (subsetNodeIter == this->end()) {
+            //if we found unchecked subset of this node
             hasUncheckedSubset = true;
         } else {
-            NodeCategory const &subsetVerticalCategory = subsetVerticalIter->second;
+            NodeCategory const &subsetVerticalCategory = subsetNodeIter->second;
             if (subsetVerticalCategory == NodeCategory::minimalDependency ||
                 subsetVerticalCategory == NodeCategory::dependency ||
                 subsetVerticalCategory == NodeCategory::candidateMinimalDependency
             ) {
                 newCategory = NodeCategory::dependency;
-                (*this)[vertical] = newCategory;
+                (*this)[node] = newCategory;
                 return newCategory;
             }
         }
-        //если все нормально
-        columnIndices[index] = true; //возвращаем как было
+
+        columnIndices[index] = true; //restore removed column
     }
     newCategory = hasUncheckedSubset ? NodeCategory::candidateMinimalDependency : NodeCategory::minimalDependency;
-    (*this)[vertical] = newCategory;
+    (*this)[node] = newCategory;
     return newCategory;
 }
 
-NodeCategory LatticeObservations::updateNonDependencyCategory(Vertical const& vertical, int rhsIndex) {
-    auto columnIndices = vertical.getColumnIndicesRef();
+NodeCategory LatticeObservations::updateNonDependencyCategory(Vertical const& node, unsigned int rhsIndex) {
+    auto columnIndices = node.getColumnIndicesRef();
     columnIndices[rhsIndex] = true;
     columnIndices.flip();
 
@@ -56,25 +52,25 @@ NodeCategory LatticeObservations::updateNonDependencyCategory(Vertical const& ve
          index < columnIndices.size();
          index = columnIndices.find_next(index)
     ) {
-        auto const supersetVerticalIter = this->find(vertical.Union(*vertical.getSchema()->getColumn(index)));
+        auto const supersetNodeIter = this->find(node.Union(*node.getSchema()->getColumn(index)));
 
-        if (supersetVerticalIter == this->end()) {
-            //если нашли нерассмотренное надмножество
+        if (supersetNodeIter == this->end()) {
+            //if we found unchecked superset of this node
             hasUncheckedSuperset = true;
         } else {
-            NodeCategory const &supersetVerticalCategory = supersetVerticalIter->second;
+            NodeCategory const &supersetVerticalCategory = supersetNodeIter->second;
             if (supersetVerticalCategory == NodeCategory::maximalNonDependency ||
                 supersetVerticalCategory == NodeCategory::nonDependency ||
                 supersetVerticalCategory == NodeCategory::candidateMaximalNonDependency
             ) {
                 newCategory = NodeCategory::nonDependency;
-                (*this)[vertical] = newCategory;
+                (*this)[node] = newCategory;
                 return newCategory;
             }
         }
     }
     newCategory = hasUncheckedSuperset ? NodeCategory::candidateMaximalNonDependency : NodeCategory::maximalNonDependency;
-    (*this)[vertical] = newCategory;
+    (*this)[node] = newCategory;
     return newCategory;
 }
 
@@ -106,7 +102,7 @@ LatticeObservations::getUncheckedSubsets(Vertical const& node, ColumnOrder const
 }
 
 std::unordered_set<Vertical>
-LatticeObservations::getUncheckedSupersets(Vertical const& node, size_t rhsIndex, ColumnOrder const& columnOrder) const {
+LatticeObservations::getUncheckedSupersets(Vertical const& node, unsigned int rhsIndex, ColumnOrder const& columnOrder) const {
     auto flippedIndices = node.getColumnIndices().flip();
     std::unordered_set<Vertical> uncheckedSupersets;
 
