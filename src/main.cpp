@@ -93,7 +93,7 @@ int main(int argc, char const *argv[]) {
     } else if (alg == "tane"){
         algorithmInstance = std::make_unique<Tane>(path, separator, hasHeader, error, maxLhs);
     } else if (alg == "dfd") {
-        algorithmInstance = std::make_unique<DFD>(path, separator, hasHeader);
+        algorithmInstance = std::make_unique<DFD>(path, separator, hasHeader, parallelism);
     } else if (alg == "fdmine"){
         algorithmInstance = std::make_unique<Fd_mine>(path);
     } else if (alg == "fastfds") {

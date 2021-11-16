@@ -9,12 +9,12 @@
 
 class LatticeObservations : public std::unordered_map<Vertical, NodeCategory> {
 public:
-    bool isCandidate(Vertical const& vertical) const;
-    bool isVisited(Vertical const& vertical) const { return this->find(vertical) != this->end(); }
+    bool isCandidate(Vertical const& node) const;
+    bool isVisited(Vertical const& node) const { return this->find(node) != this->end(); }
 
-    NodeCategory updateDependencyCategory(Vertical const& vertical);
-    NodeCategory updateNonDependencyCategory(Vertical const& vertical, int rhsIndex);
+    NodeCategory updateDependencyCategory(Vertical const& node);
+    NodeCategory updateNonDependencyCategory(Vertical const& node, unsigned int rhsIndex);
 
     std::unordered_set<Vertical> getUncheckedSubsets(const Vertical &node, ColumnOrder const&) const;
-    std::unordered_set<Vertical> getUncheckedSupersets(const Vertical &node, size_t rhsIndex, ColumnOrder const&) const;
+    std::unordered_set<Vertical> getUncheckedSupersets(const Vertical &node, unsigned int rhsIndex, ColumnOrder const&) const;
 };

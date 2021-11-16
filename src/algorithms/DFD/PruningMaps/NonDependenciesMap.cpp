@@ -36,7 +36,7 @@ void NonDependenciesMap::addNewNonDependency(Vertical const& nodeToAdd) {
             bool hasSupersetEntry = false;
 
             for (auto iter = nonDepsForKey.begin(); iter != nonDepsForKey.end(); ) {
-                //если совпадают, то contains = true
+                //if verticals are the same, then contains == true
                 Vertical const& nonDep = *iter;
                 if (nonDep.contains(nodeToAdd)) {
                     hasSupersetEntry = true;

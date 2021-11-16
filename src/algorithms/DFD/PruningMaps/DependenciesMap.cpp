@@ -22,7 +22,7 @@ void DependenciesMap::addNewDependency(Vertical const& nodeToAdd) {
             bool hasSubsetEntry = false;
 
             for (auto iter = depsForKey.begin(); iter != depsForKey.end(); ) {
-                //если совпадают, то contains = true
+                //if verticals are the same, then contains == true
                 Vertical const& dep = *iter;
                 if (nodeToAdd.contains(dep)) {
                     hasSubsetEntry = true;
