@@ -18,7 +18,7 @@ using std::vector, std::set;
 FastFDs::FastFDs(std::filesystem::path const& path,
                  char separator, bool hasHeader,
                  unsigned int max_lhs, ushort parallelism) :
-    FDAlgorithm(path, separator, hasHeader,
+    FDAlgorithm(path, separator, hasHeader, true,
                 { "Agree sets generation", "Finding minimal covers" }), max_lhs_(max_lhs) {
     if (parallelism == 0) {
         threads_num_ = std::thread::hardware_concurrency();
@@ -31,14 +31,9 @@ FastFDs::FastFDs(std::filesystem::path const& path,
     }
 }
 
-unsigned long long FastFDs::execute() {
-    relation_ = ColumnLayoutRelationData::createFrom(inputGenerator_, true);
+unsigned long long FastFDs::executeInternal() {
     schema_ = relation_->getSchema();
     percent_per_col_ = kTotalProgressPercent / schema_->getNumColumns();
-
-    if (schema_->getNumColumns() == 0) {
-        throw std::runtime_error("Got an empty .csv file: FD mining is meaningless.");
-    }
 
     auto start_time = std::chrono::system_clock::now();
 

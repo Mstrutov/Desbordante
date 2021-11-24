@@ -7,18 +7,17 @@
 #include "PositionListIndex.h"
 #include "LatticeTraversal/LatticeTraversal.h"
 
-unsigned long long DFD::execute() {
-    RelationalSchema const* const schema = relation->getSchema();
-
-    if (relation->getColumnData().empty()) {
-        throw std::runtime_error("Got an empty .csv file: FD mining is meaningless.");
-    }
+unsigned long long DFD::executeInternal() {
+    partitionStorage = std::make_unique<PartitionStorage>(relation_.get(),
+                                                          CachingMethod::ALLCACHING,
+                                                          CacheEvictionMethod::MEDAINUSAGE);
+    RelationalSchema const* const schema = relation_->getSchema();
 
     auto startTime = std::chrono::system_clock::now();
 
     //search for unique columns
     for (auto const& column : schema->getColumns()) {
-        ColumnData& columnData = relation->getColumnData(column->getIndex());
+        ColumnData& columnData = relation_->getColumnData(column->getIndex());
         PositionListIndex const* const columnPLI = columnData.getPositionListIndex();
 
         if (columnPLI->getNumNonSingletonCluster() == 0) {
@@ -33,20 +32,20 @@ unsigned long long DFD::execute() {
 
     for (auto & rhs : schema->getColumns()) {
         boost::asio::post(searchSpacePool, [this, &rhs, schema, &progressStep]() {
-            ColumnData const& rhsData = relation->getColumnData(rhs->getIndex());
+            ColumnData const& rhsData = relation_->getColumnData(rhs->getIndex());
             PositionListIndex const *const rhsPLI = rhsData.getPositionListIndex();
 
             /* if all the rows have the same value, then we register FD with empty LHS
              * if we have minimal FD like []->RHS, it is impossible to find smaller FD with this RHS,
              * so we register it and move to the next RHS
              * */
-            if (rhsPLI->getNepAsLong() == relation->getNumTuplePairs()) {
+            if (rhsPLI->getNepAsLong() == relation_->getNumTuplePairs()) {
                 registerFD(*(schema->emptyVertical), *rhs);
                 addProgress(progressStep);
                 return;
             }
 
-            auto searchSpace = LatticeTraversal(rhs.get(), relation.get(), uniqueColumns, partitionStorage.get());
+            auto searchSpace = LatticeTraversal(rhs.get(), relation_.get(), uniqueColumns, partitionStorage.get());
             auto const minimalDeps = searchSpace.findLHSs();
 
             for (auto const& minimalDependencyLHS: minimalDeps) {
@@ -72,8 +71,5 @@ unsigned long long DFD::execute() {
 
 DFD::DFD(const std::filesystem::path &path, char separator, bool hasHeader, unsigned int parallelism)
         : FDAlgorithm(path, separator, hasHeader),
-          numberOfThreads(parallelism <= 0 ? std::thread::hardware_concurrency() : parallelism) {
-    relation = ColumnLayoutRelationData::createFrom(inputGenerator_, true);
-    partitionStorage = std::make_unique<PartitionStorage>(relation.get(), CachingMethod::ALLCACHING, CacheEvictionMethod::MEDAINUSAGE);
-}
+          numberOfThreads(parallelism <= 0 ? std::thread::hardware_concurrency() : parallelism) {}
 

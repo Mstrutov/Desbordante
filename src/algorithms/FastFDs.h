@@ -13,10 +13,11 @@ public:
     explicit FastFDs(std::filesystem::path const& path,
                      char separator = ',', bool hasHeader = true,
                      unsigned int max_lhs = -1, ushort parallelism = 0);
-    unsigned long long execute() override;
 private:
     using OrderingComparator = std::function<bool (Column const&, Column const&)>;
     using DiffSet = Vertical;
+
+    unsigned long long executeInternal() override;
 
     // Computes all difference sets of `relation_` by complementing agree sets
     void genDiffSets();
@@ -59,7 +60,6 @@ private:
                       Column const& l_col, Column const& r_col) const;
     bool columnContainsOnlyEqualValues(Column const& column) const;
 
-    std::unique_ptr<ColumnLayoutRelationData> relation_;
     RelationalSchema const* schema_;
     std::vector<DiffSet> diff_sets_;
     ushort threads_num_;

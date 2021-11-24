@@ -8,6 +8,8 @@
 #include "RelationData.h"
 
 class Tane : public FDAlgorithm {
+private:
+    unsigned long long executeInternal() override;
 public:
 
     constexpr static char INPUT_FILE_CONFIG_KEY[] = "inputFile";
@@ -25,7 +27,6 @@ public:
             std::filesystem::path const& path, char separator = ',', bool hasHeader = true,
             double maxError = 0, unsigned int maxArity = -1)
             : FDAlgorithm(path, separator, hasHeader), maxFdError(maxError), maxUccError(maxError), maxArity(maxArity) {}
-    unsigned long long execute() override;
 
     static double calculateZeroAryFdError(ColumnData const* rhs, ColumnLayoutRelationData const* relationData);
     static double calculateFdError(PositionListIndex const* lhsPli, PositionListIndex const* jointPli,
