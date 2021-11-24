@@ -136,12 +136,3 @@ Pyro::Pyro(std::filesystem::path const &path, char separator, bool hasHeader, in
     configuration_.parallelism = parallelism <= 0 ? std::thread::hardware_concurrency() : parallelism;
 }
 
-void Pyro::registerFD(FD fdToRegister) {
-    std::scoped_lock lock(fdCollectionMutex_);
-    FDAlgorithm::registerFD(fdToRegister);
-}
-
-void Pyro::registerFD(Vertical lhs, Column rhs) {
-    std::scoped_lock lock(fdCollectionMutex_);
-    FDAlgorithm::registerFD(std::move(lhs), std::move(rhs));
-}
