@@ -13,11 +13,7 @@ private:
     std::unique_ptr<ColumnLayoutRelationData> relation;
     std::vector<Vertical> uniqueColumns;
 
-    std::mutex mutable registerFdMutex;
     unsigned int numberOfThreads;
-
-    void registerFD(Vertical vertical, Column rhs) override;
-
 public:
     explicit DFD(std::filesystem::path const& path, char separator = ',', bool hasHeader = true, unsigned int parallelism = 0);
 

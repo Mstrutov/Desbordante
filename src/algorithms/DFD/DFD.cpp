@@ -77,7 +77,3 @@ DFD::DFD(const std::filesystem::path &path, char separator, bool hasHeader, unsi
     partitionStorage = std::make_unique<PartitionStorage>(relation.get(), CachingMethod::ALLCACHING, CacheEvictionMethod::MEDAINUSAGE);
 }
 
-void DFD::registerFD(Vertical vertical, Column rhs) {
-    std::scoped_lock lock(registerFdMutex);
-    FDAlgorithm::registerFD(vertical, rhs);
-};

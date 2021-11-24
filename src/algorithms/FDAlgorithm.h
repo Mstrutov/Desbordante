@@ -17,6 +17,8 @@ class FDAlgorithm {
 private:
     friend AgreeSetFactory;
 
+    std::mutex mutable register_mutex_;
+
     std::mutex mutable progress_mutex_;
     double cur_phase_progress_ = 0;
     uint8_t cur_phase_id = 0;
@@ -52,9 +54,11 @@ public:
      * если нужно какое-то кастомное поведение
      * */
     virtual void registerFD(Vertical lhs, Column rhs) {
+        std::scoped_lock lock(progress_mutex_);
         fdCollection_.emplace_back(std::move(lhs), std::move(rhs));
     }
     virtual void registerFD(FD fdToRegister) {
+        std::scoped_lock lock(progress_mutex_);
         fdCollection_.push_back(std::move(fdToRegister));
     }
 

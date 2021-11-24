@@ -31,17 +31,6 @@ FastFDs::FastFDs(std::filesystem::path const& path,
     }
 }
 
-
-// Should be FDAlgorithm method I think
-void FastFDs::registerFD(Vertical lhs, Column rhs) {
-    if (threads_num_ > 1) {
-        boost::lock_guard<boost::mutex> lock(register_mutex_);
-        FDAlgorithm::registerFD(std::move(lhs), std::move(rhs));
-    } else {
-        FDAlgorithm::registerFD(std::move(lhs), std::move(rhs));
-    }
-}
-
 unsigned long long FastFDs::execute() {
     relation_ = ColumnLayoutRelationData::createFrom(inputGenerator_, true);
     schema_ = relation_->getSchema();
