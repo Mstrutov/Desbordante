@@ -54,16 +54,16 @@ void Tane::registerUCC(Vertical const& key, double error, RelationalSchema const
 
 
 
-unsigned long long Tane::execute() {
-    std::unique_ptr<ColumnLayoutRelationData> relation = ColumnLayoutRelationData::createFrom(inputGenerator_, true);
-    RelationalSchema const* schema = relation->getSchema();
-    std::cout << schema->getName() << " has " << relation->getNumColumns() << " columns, "
-         << relation->getNumRows() << " rows, and a maximum NIP of " << std::setw(2)
-         << relation->getMaximumNip() << "." << std::endl;
+unsigned long long Tane::executeInternal() {
+    RelationalSchema const* schema = relation_->getSchema();
+
+    std::cout << schema->getName() << " has " << relation_->getNumColumns() << " columns, "
+         << relation_->getNumRows() << " rows, and a maximum NIP of " << std::setw(2)
+         << relation_->getMaximumNip() << "." << std::endl;
 
     for (auto& column : schema->getColumns()) {
-        double avgPartners = relation->getColumnData(column->getIndex()).
-                getPositionListIndex()->getNepAsLong() * 2.0 / relation->getNumRows();
+        double avgPartners = relation_->getColumnData(column->getIndex()).
+                getPositionListIndex()->getNepAsLong() * 2.0 / relation_->getNumRows();
         std::cout << "* " << column->toString() << ": every tuple has " << std::setw(2)
              << avgPartners << " partners on average." << std::endl;
     }
@@ -84,7 +84,7 @@ unsigned long long Tane::execute() {
     std::unique_ptr<LatticeLevel> level1 = std::make_unique<LatticeLevel>(1);
     for (auto& column : schema->getColumns()) {
         //for each attribute set vertex
-        ColumnData const& columnData = relation->getColumnData(column->getIndex());
+        ColumnData const& columnData = relation_->getColumnData(column->getIndex());
         auto vertex = std::make_unique<LatticeVertex>(static_cast<Vertical>(*column));
 
         vertex->addRhsCandidates(schema->getColumns());
@@ -93,7 +93,7 @@ unsigned long long Tane::execute() {
         vertex->setPositionListIndex(columnData.getPositionListIndex());
 
         //check FDs: 0->A
-        double fdError = calculateZeroAryFdError(&columnData, relation.get());
+        double fdError = calculateZeroAryFdError(&columnData, relation_.get());
         if (fdError <= maxFdError) {  //TODO: max_error
             zeroaryFdRhs.set(column->getIndex());
             registerFD(*schema->emptyVertical, column.get(), fdError, schema);
@@ -112,8 +112,8 @@ unsigned long long Tane::execute() {
         vertex->getRhsCandidates() &= ~zeroaryFdRhs;  //~ returns flipped copy <- removed already discovered zeroary FDs
 
         // вот тут костыль, чтобы вытянуть индекс колонки из вершины, в которой только один индекс
-        ColumnData const& columnData = relation->getColumnData(column.getColumnIndices().find_first());
-        double uccError = calculateUccError(columnData.getPositionListIndex(), relation.get());
+        ColumnData const& columnData = relation_->getColumnData(column.getColumnIndices().find_first());
+        double uccError = calculateUccError(columnData.getPositionListIndex(), relation_.get());
         if (uccError <= maxUccError) {
             registerUCC(column, uccError, schema);
             vertex->setKeyCandidate(false);
@@ -183,7 +183,7 @@ unsigned long long Tane::execute() {
                 double error = calculateFdError(
                         xVertex->getPositionListIndex(),
                         xaVertex->getPositionListIndex(),
-                        relation.get());
+                        relation_.get());
                 if (error <= maxFdError) {
                     Column const* rhs = schema->getColumns()[aIndex].get();
 
@@ -204,7 +204,7 @@ unsigned long long Tane::execute() {
             Vertical columns = vertex->getVertical();            //Originally it's a ColumnCombination
 
             if (vertex->getIsKeyCandidate()) {
-                double uccError = calculateUccError(vertex->getPositionListIndex(), relation.get());
+                double uccError = calculateUccError(vertex->getPositionListIndex(), relation_.get());
                 if (uccError <= maxUccError) {       //If a key candidate is an approx UCC
                     //TODO: do smth with UCC
 

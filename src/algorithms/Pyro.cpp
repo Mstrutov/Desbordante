@@ -8,19 +8,15 @@
 
 std::mutex searchSpacesMutex;
 
-unsigned long long Pyro::execute() {
+unsigned long long Pyro::executeInternal() {
     using std::cout;
     auto startTime = std::chrono::system_clock::now();
 
-    auto relation = ColumnLayoutRelationData::createFrom(inputGenerator_, configuration_.isNullEqualNull);
-    auto schema = relation->getSchema();
-    if (relation->getColumnData().empty()) {
-        throw std::runtime_error("Got an empty .csv file: FD mining is meaningless.");
-    }
+    auto schema = relation_->getSchema();
 
     auto profilingContext = std::make_unique<ProfilingContext>(
             configuration_,
-            relation.get(),
+            relation_.get(),
             uccConsumer_,
             fdConsumer_,
             cachingMethod_,

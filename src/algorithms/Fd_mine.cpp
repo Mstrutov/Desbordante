@@ -4,10 +4,9 @@
 #include <queue>
 #include <vector>
 
-unsigned long long Fd_mine::execute() {
+unsigned long long Fd_mine::executeInternal() {
     // 1
-    relation = ColumnLayoutRelationData::createFrom(inputGenerator_, true);
-    schema = relation->getSchema();
+    schema = relation_->getSchema();
     auto startTime = std::chrono::system_clock::now();
 
     relationIndices = dynamic_bitset<>(schema->getNumColumns());
@@ -54,8 +53,8 @@ void Fd_mine::computeNonTrivialClosure(dynamic_bitset<> const& candidateX) {
             candidateY[columnIndex] = 1;
 
             if (candidateX.count() == 1) {
-                auto candidateXPli = relation->getColumnData(candidateX.find_first()).getPositionListIndex();
-                auto candidateYPli = relation->getColumnData(columnIndex).getPositionListIndex();
+                auto candidateXPli = relation_->getColumnData(candidateX.find_first()).getPositionListIndex();
+                auto candidateYPli = relation_->getColumnData(columnIndex).getPositionListIndex();
 
                 plis[candidateXY] = candidateXPli->intersect(candidateYPli);
 
@@ -67,7 +66,7 @@ void Fd_mine::computeNonTrivialClosure(dynamic_bitset<> const& candidateX) {
             }
 
             if (!plis.count(candidateXY)) {
-                auto candidateYPli = relation->getColumnData(candidateY.find_first()).getPositionListIndex();
+                auto candidateYPli = relation_->getColumnData(candidateY.find_first()).getPositionListIndex();
                 plis[candidateXY] = plis[candidateX]->intersect(candidateYPli);
             }
 
@@ -157,8 +156,8 @@ void Fd_mine::generateNextLevelCandidates() {
 
                 if (!(candidateJ).is_subset_of(fdSet[candidateI]) && !(candidateI).is_subset_of(fdSet[candidateJ])) {
                     if (candidateI.count() == 1) {
-                        auto candidateIPli = relation->getColumnData(candidateI.find_first()).getPositionListIndex();
-                        auto candidateJPli = relation->getColumnData(candidateJ.find_first()).getPositionListIndex();
+                        auto candidateIPli = relation_->getColumnData(candidateI.find_first()).getPositionListIndex();
+                        auto candidateJPli = relation_->getColumnData(candidateJ.find_first()).getPositionListIndex();
                         plis[candidateIJ] = candidateIPli->intersect(candidateJPli);
                     } else {
                         plis[candidateIJ] = plis[candidateI]->intersect(plis[candidateJ].get());

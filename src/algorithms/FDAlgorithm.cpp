@@ -1,5 +1,15 @@
 #include "FDAlgorithm.h"
 
+unsigned long long FDAlgorithm::execute() {
+    relation_ = ColumnLayoutRelationData::createFrom(inputGenerator_, is_null_equal_null_);
+
+    if (relation_->getColumnData().empty()) {
+        throw std::runtime_error("Got an empty .csv file: FD mining is meaningless.");
+    }
+
+    return executeInternal();
+}
+
 std::string FDAlgorithm::getJsonFDs() {
     std::string result = "{\"fds\": [";
     std::list<std::string> discoveredFDStrings;

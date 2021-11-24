@@ -12,7 +12,6 @@
 
 class Fd_mine : public FDAlgorithm {
    private:
-    std::shared_ptr<ColumnLayoutRelationData> relation;
     const RelationalSchema* schema;
 
     std::set<dynamic_bitset<>> candidateSet;
@@ -32,8 +31,8 @@ class Fd_mine : public FDAlgorithm {
     void reconstruct();
     void display();
 
+    unsigned long long executeInternal() override;
    public:
     Fd_mine(std::filesystem::path const& path, char separator = ',', bool hasHeader = true) : FDAlgorithm(path, separator, hasHeader){};
     ~Fd_mine() override {}
-    unsigned long long execute() override;
 };

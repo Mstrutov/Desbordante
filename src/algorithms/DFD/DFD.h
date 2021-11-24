@@ -10,12 +10,13 @@
 class DFD : public FDAlgorithm {
 private:
     std::unique_ptr<PartitionStorage> partitionStorage;
-    std::unique_ptr<ColumnLayoutRelationData> relation;
     std::vector<Vertical> uniqueColumns;
 
     unsigned int numberOfThreads;
-public:
-    explicit DFD(std::filesystem::path const& path, char separator = ',', bool hasHeader = true, unsigned int parallelism = 0);
 
-    unsigned long long execute() override;
+    unsigned long long executeInternal() override;
+public:
+    explicit DFD(std::filesystem::path const& path,
+                 char separator = ',', bool hasHeader = true,
+                 unsigned int parallelism = 0);
 };
