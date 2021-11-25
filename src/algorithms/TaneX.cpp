@@ -40,7 +40,7 @@ void Tane::registerFD(Vertical const& lhs, Column const* rhs, double error,
         std::cout << schema->getColumn(i)->getName() << " ";
     }
     std::cout << "-> " << rhs->getName() << " - error equals " << error << std::endl;*/
-    FDAlgorithm::registerFD(lhs, *rhs);
+    PliBasedFDAlgorithm::registerFD(lhs, *rhs);
     countOfFD++;
 }
 

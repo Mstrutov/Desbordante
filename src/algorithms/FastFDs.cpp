@@ -18,7 +18,7 @@ using std::vector, std::set;
 FastFDs::FastFDs(std::filesystem::path const& path,
                  char separator, bool hasHeader,
                  unsigned int max_lhs, ushort parallelism) :
-    FDAlgorithm(path, separator, hasHeader, true,
+    PliBasedFDAlgorithm(path, separator, hasHeader, true,
                 { "Agree sets generation", "Finding minimal covers" }), max_lhs_(max_lhs) {
     if (parallelism == 0) {
         threads_num_ = std::thread::hardware_concurrency();

@@ -3,11 +3,11 @@
 #include <string>
 
 #include "CSVParser.h"
-#include "FDAlgorithm.h"
+#include "PliBasedFDAlgorithm.h"
 #include "PositionListIndex.h"
 #include "RelationData.h"
 
-class Tane : public FDAlgorithm {
+class Tane : public PliBasedFDAlgorithm {
 private:
     unsigned long long executeInternal() override;
 public:
@@ -26,7 +26,7 @@ public:
     explicit Tane(
             std::filesystem::path const& path, char separator = ',', bool hasHeader = true,
             double maxError = 0, unsigned int maxArity = -1)
-            : FDAlgorithm(path, separator, hasHeader), maxFdError(maxError), maxUccError(maxError), maxArity(maxArity) {}
+            : PliBasedFDAlgorithm(path, separator, hasHeader), maxFdError(maxError), maxUccError(maxError), maxArity(maxArity) {}
 
     static double calculateZeroAryFdError(ColumnData const* rhs,
                                           ColumnLayoutRelationData const* relationData);

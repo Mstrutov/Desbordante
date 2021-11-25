@@ -1,12 +1,13 @@
 #pragma once
 #include <list>
 #include <mutex>
-#include "DependencyConsumer.h"
-#include "FDAlgorithm.h"
-#include "SearchSpace.h"
-#include "CSVParser.h"
 
-class Pyro : public DependencyConsumer, public FDAlgorithm {
+#include "CSVParser.h"
+#include "DependencyConsumer.h"
+#include "PliBasedFDAlgorithm.h"
+#include "SearchSpace.h"
+
+class Pyro : public DependencyConsumer, public PliBasedFDAlgorithm {
 private:
     std::list<std::unique_ptr<SearchSpace>> searchSpaces_;
 

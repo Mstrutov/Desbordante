@@ -4,11 +4,11 @@
 
 #include <boost/thread/mutex.hpp>
 
-#include "Vertical.h"
-#include "FDAlgorithm.h"
 #include "ColumnLayoutRelationData.h"
+#include "PliBasedFDAlgorithm.h"
+#include "Vertical.h"
 
-class FastFDs : public FDAlgorithm {
+class FastFDs : public PliBasedFDAlgorithm {
 public:
     explicit FastFDs(std::filesystem::path const& path,
                      char separator = ',', bool hasHeader = true,
