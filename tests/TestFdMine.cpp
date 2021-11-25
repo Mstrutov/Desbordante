@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <map>
 #include <iostream>
+#include <filesystem>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -15,17 +16,15 @@ using ::testing::ContainerEq, ::testing::Eq;
 
 using std::string, std::vector;
 
-
-
-std::unique_ptr<FDAlgorithm> createAlgorithmInstance(
-        fs::path const& path, char separator = ',', bool hasHeader = true) {
+std::unique_ptr<FDAlgorithm> createFD_MineAlgorithmInstance(
+        std::filesystem::path const& path, char separator = ',', bool hasHeader = true) {
     return std::make_unique<Fd_mine>(path, separator, hasHeader);
 }
 
 class AlgorithmTest : public LightDatasets, public HeavyDatasets, public ::testing::Test {
 };
 
-std::vector<unsigned int> bitsetToIndexVector(boost::dynamic_bitset<> const& bitset) {
+std::vector<unsigned int> FD_Mine_bitsetToIndexVector(boost::dynamic_bitset<> const& bitset) {
     std::vector<unsigned int> res;
     for (size_t index = bitset.find_first();
          index != boost::dynamic_bitset<>::npos;
@@ -35,10 +34,10 @@ std::vector<unsigned int> bitsetToIndexVector(boost::dynamic_bitset<> const& bit
     return res;
 }
 
-testing::AssertionResult checkFDListEquality(
+testing::AssertionResult FD_Mine_checkFDListEquality(
         std::set<std::pair<std::vector<unsigned int>, unsigned int>> actual, std::list<FD> const& expected) {
     for (auto& fd : expected) {
-        std::vector<unsigned int> lhsIndices = bitsetToIndexVector(fd.getLhs().getColumnIndices());
+        std::vector<unsigned int> lhsIndices = FD_Mine_bitsetToIndexVector(fd.getLhs().getColumnIndices());
         std::sort(lhsIndices.begin(), lhsIndices.end());
 
         if (auto it = actual.find(std::make_pair(lhsIndices, fd.getRhs().getIndex())); it == actual.end()) {
@@ -51,28 +50,27 @@ testing::AssertionResult checkFDListEquality(
     return actual.empty() ? testing::AssertionSuccess() : testing::AssertionFailure() << "some FDs remain undiscovered";
 }
 
-TEST(AlgorithmSyntheticTest, ReturnsEmptyOnEmpty) {
-    auto path = fs::current_path() / "inputData" / "TestEmpty.csv";
-    auto algorithm = createAlgorithmInstance(path, ',', true);
+TEST(AlgorithmSyntheticTest, FD_Mine_ThrowsOnEmpty) {
+    auto path = std::filesystem::current_path() / "inputData" / "TestEmpty.csv";
+    auto algorithm = createFD_MineAlgorithmInstance(path, ',', true);
+    ASSERT_THROW(algorithm->execute(), std::runtime_error);
+}
+
+TEST(AlgorithmSyntheticTest, FD_Mine_ReturnsEmptyOnSingleNonKey) {
+    auto path = std::filesystem::current_path() / "inputData" / "TestSingleColumn.csv";
+    auto algorithm = createFD_MineAlgorithmInstance(path, ',', true);
     algorithm->execute();
     ASSERT_TRUE(algorithm->fdList().empty());
 }
 
-TEST(AlgorithmSyntheticTest, ReturnsEmptyOnSingleNonKey) {
-    auto path = fs::current_path() / "inputData" / "TestSingleColumn.csv";
-    auto algorithm = createAlgorithmInstance(path, ',', true);
-    algorithm->execute();
-    ASSERT_TRUE(algorithm->fdList().empty());
-}
-
-TEST(AlgorithmSyntheticTest, WorksOnLongDataset) {
-    auto path = fs::current_path() / "inputData" / "TestLong.csv";
+TEST(AlgorithmSyntheticTest, FD_Mine_WorksOnLongDataset) {
+    auto path = std::filesystem::current_path() / "inputData" / "TestLong.csv";
 
     std::set<std::pair<std::vector<unsigned int>, unsigned int>> trueFDCollection {{{2}, 1}};
 
-    auto algorithm = createAlgorithmInstance(path, ',', true);
+    auto algorithm = createFD_MineAlgorithmInstance(path, ',', true);
     algorithm->execute();
-    ASSERT_TRUE(checkFDListEquality(trueFDCollection, algorithm->fdList()));
+    ASSERT_TRUE(FD_Mine_checkFDListEquality(trueFDCollection, algorithm->fdList()));
 }
 
 std::string getJsonFDs(std::list<FD> &fdCollection) {
@@ -116,8 +114,8 @@ void minimizeFDs(std::list<FD> &fdCollection) {
     }
 }
 
-TEST_F(AlgorithmTest, ReturnsSameAsPyro) {
-    auto path = fs::current_path() /"inputData";
+TEST_F(AlgorithmTest, FD_Mine_ReturnsSameAsPyro) {
+    auto path = std::filesystem::current_path() /"inputData";
 
     try {
         for (size_t i = 0; i < LightDatasets::datasetQuantity(); i++) {
