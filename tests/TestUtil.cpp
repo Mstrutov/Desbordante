@@ -10,7 +10,8 @@
 #include "AgreeSetFactory.h"
 
 using ::testing::ContainerEq, ::testing::Eq;
-using std::deque, std::vector, std::cout, std::endl, std::unique_ptr;
+using std::deque, std::vector, std::cout, std::endl, std::unique_ptr, util::AgreeSetFactory,
+      util::MCGenMethod, util::AgreeSetsGenMethod;
 
 namespace fs = std::filesystem;
 
@@ -64,7 +65,7 @@ TEST(pliIntersectChecker, first){
     deque<vector<int>> ans = {
             {2, 5}
     };
-    std::shared_ptr<PositionListIndex> intersection;
+    std::shared_ptr<util::PositionListIndex> intersection;
 
     try {
         auto path = fs::current_path().append("inputData");
@@ -89,7 +90,7 @@ TEST(testingBitsetToLonglong, first){
     size_t encoded_num = 1254;
     boost::dynamic_bitset<> simple_bitset{20, encoded_num};
 
-    auto res_vector = *ListAgreeSetSample::bitSetToLongLongVector(simple_bitset);
+    auto res_vector = *util::ListAgreeSetSample::bitSetToLongLongVector(simple_bitset);
     ASSERT_EQ(res_vector.size(), 1);
     for (auto long_long_repr : res_vector)
         ASSERT_EQ(encoded_num, long_long_repr);
@@ -112,7 +113,7 @@ TEST(IdentifierSetTest, Computation) {
         auto relation = ColumnLayoutRelationData::createFrom(parser, false);
 
         for (unsigned i = 0; i < relation->getNumRows(); ++i) {
-            id_sets.insert(IdentifierSet(relation.get(), i).toString());
+            id_sets.insert(util::IdentifierSet(relation.get(), i).toString());
         }
     }
     catch (std::runtime_error const& e) {
@@ -147,7 +148,7 @@ TEST(IdentifierSetTest, Intersection) {
         auto path = fs::current_path().append("inputData").append("BernoulliRelation.csv");
         CSVParser parser(path);
         auto relation = ColumnLayoutRelationData::createFrom(parser, false);
-        std::vector<IdentifierSet> id_sets;
+        std::vector<util::IdentifierSet> id_sets;
 
         for (unsigned i = 0; i < relation->getNumRows(); ++i) {
             id_sets.emplace_back(relation.get(), i);
@@ -194,7 +195,7 @@ void testAgreeSetFactory(AgreeSetFactory::Configuration c) {
         CSVParser parser(path);
         auto relation = ColumnLayoutRelationData::createFrom(parser, false);
         AgreeSetFactory factory(relation.get(), c);
-        for (AgreeSet const& agree_set : factory.genAgreeSets()) {
+        for (util::AgreeSet const& agree_set : factory.genAgreeSets()) {
             agree_sets_actual.insert(agree_set.toString());
         }
     }

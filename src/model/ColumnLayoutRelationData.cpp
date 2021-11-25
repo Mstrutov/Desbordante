@@ -12,9 +12,8 @@
 
 
 ColumnLayoutRelationData::ColumnLayoutRelationData(std::unique_ptr<RelationalSchema> schema,
-                                                   std::vector<ColumnData> columnData) :
-    RelationData(std::move(schema)),
-    columnData(std::move(columnData)) {}
+                                                   std::vector<ColumnData> columnData)
+        : RelationData(std::move(schema)), columnData(std::move(columnData)) {}
 
 
 ColumnData& ColumnLayoutRelationData::getColumnData(int columnIndex) {
@@ -97,7 +96,7 @@ std::unique_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::createFrom(
     for (int i = 0; i < numColumns; ++i) {
         auto column = Column(schema.get(), fileInput.getColumnName(i), i);
         schema->appendColumn(std::move(column));
-        auto pli = PositionListIndex::createFor(columnVectors[i], schema->isNullEqualNull());
+        auto pli = util::PositionListIndex::createFor(columnVectors[i], schema->isNullEqualNull());
         columnData.emplace_back(schema->getColumn(i), std::move(pli));
     }
 

@@ -7,6 +7,8 @@
 #include <random>
 #include <utility>
 
+namespace util {
+
 using namespace std;
 
 double AgreeSetSample::stdDevSmoothing = 1;
@@ -142,3 +144,6 @@ double AgreeSetSample::probitFunction(double quantile) const {
         return -1.0*probitFunction(1-quantile);
     }
 }
+
+} // namespace util
+

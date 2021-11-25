@@ -12,6 +12,8 @@
 
 class ColumnLayoutRelationData;
 
+namespace util {
+
 class PositionListIndex {
 private:
     std::deque<std::vector<int>> index;
@@ -77,3 +79,6 @@ public:
                                                 ColumnLayoutRelationData & relationData);
     std::string toString() const;
 };
+
+} // namespace util
+

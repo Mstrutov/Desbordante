@@ -8,6 +8,8 @@
 
 #include "easylogging++.h"
 
+namespace util {
+
 template <typename T>
 std::unique_ptr<T> AgreeSetSample::createFor(ColumnLayoutRelationData* relationData, int sampleSize) {
     static_assert(std::is_base_of<AgreeSetSample, T>::value);
@@ -154,3 +156,6 @@ std::unique_ptr<T> AgreeSetSample::createFocusedFor(ColumnLayoutRelationData con
     */
     return std::make_unique<T>(relation, restrictionVertical, sampleSize, restrictionNep, std::move(agreeSetCounters));
 }
+
+} // namespace util
+

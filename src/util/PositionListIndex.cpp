@@ -17,6 +17,7 @@
 #include "PositionListIndex.h"
 #include "Vertical.h"
 
+namespace util {
 
 const int PositionListIndex::singletonValueId = 0;
 unsigned long long PositionListIndex::micros = 0;
@@ -260,3 +261,6 @@ std::string PositionListIndex::toString() const {
     res.push_back(']');
     return res;
 }
+
+} // namespace util
+

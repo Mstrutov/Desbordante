@@ -9,6 +9,8 @@ class ProfilingContext;
 
 #include <mutex>
 
+namespace util {
+
 class PLICache {
 private:
     class PositionListIndexRank {
@@ -59,3 +61,6 @@ public:
     // returns ownership of single column PLIs back to ColumnLayoutRelationData
     virtual ~PLICache();
 };
+
+} // namespace util
+

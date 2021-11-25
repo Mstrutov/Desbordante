@@ -5,7 +5,9 @@
 
 #include "LatticeVertex.h"
 
-class LatticeLevel{
+namespace util {
+
+class LatticeLevel {
 private:
     unsigned int arity;
     std::map<boost::dynamic_bitset<>, std::unique_ptr<LatticeVertex>> vertices;
@@ -22,3 +24,6 @@ public:
     static void generateNextLevel(std::vector<std::unique_ptr<LatticeLevel>>& levels);
     static void clearLevelsBelow(std::vector<std::unique_ptr<LatticeLevel>>& levels, unsigned int arity);
 };
+
+} // namespace util
+

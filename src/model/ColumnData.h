@@ -14,15 +14,21 @@ class ColumnData {
 private:
     Column const* column;
     //std::variant<std::unique_ptr<PositionListIndex>, PositionListIndex*> positionListIndex_;
-    std::shared_ptr<PositionListIndex> positionListIndex_;
+    std::shared_ptr<util::PositionListIndex> positionListIndex_;
 
 public:
-    ColumnData(Column const* column, std::unique_ptr<PositionListIndex> positionListIndex);
+    ColumnData(Column const* column, std::unique_ptr<util::PositionListIndex> positionListIndex);
     // Инвариант: конструктором гарантируется, что в ColumnData.PLI есть закешированная ProbingTable
-    std::vector<int> const& getProbingTable() const { return *positionListIndex_->getCachedProbingTable(); }
+    std::vector<int> const& getProbingTable() const {
+        return *positionListIndex_->getCachedProbingTable();
+    }
     Column const* getColumn() const { return column; }
-    int getProbingTableValue(int tupleIndex) const { return (*positionListIndex_->getCachedProbingTable())[tupleIndex]; }
-    PositionListIndex const* getPositionListIndex() const { return positionListIndex_.get(); }
+    int getProbingTableValue(int tupleIndex) const {
+        return (*positionListIndex_->getCachedProbingTable())[tupleIndex];
+    }
+    util::PositionListIndex const* getPositionListIndex() const {
+        return positionListIndex_.get();
+    }
     // TODO: посмотреть, что будет с производительностью, если добавить указатель на PT прямо сюда
     // по идее, это должно оптимизироваться инлайнингом
 
@@ -30,7 +36,7 @@ public:
     // of ColumnData get invalidated while the PLI is moved out
     // std::unique_ptr<PositionListIndex> moveOutPositionListIndex();
 
-    std::shared_ptr<PositionListIndex> getPLIOwnership() { return positionListIndex_; }
+    std::shared_ptr<util::PositionListIndex> getPLIOwnership() { return positionListIndex_; }
 
     // Moves a PLI under the ownership of ColumnData
     // void moveInPositionListIndex(std::unique_ptr<PositionListIndex> positionListIndex ) { positionListIndex_ = std::move(positionListIndex); }

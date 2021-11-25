@@ -11,6 +11,7 @@
 #include "RelationalSchema.h"
 #include "Vertical.h"
 
+namespace util {
 
 class LatticeVertex{
 private:
@@ -53,3 +54,6 @@ public:
     static bool comparator(LatticeVertex * v1, LatticeVertex * v2) { return *v2 > *v1; }
     friend std::ostream& operator<<(std::ostream& os, LatticeVertex& lv);
 };
+
+} // namespace util
+

@@ -13,6 +13,8 @@
 #include "custom/CustomHashes.h"
 #include "FDAlgorithm.h"
 
+namespace util {
+
 using AgreeSet = Vertical;
 
 enum class AgreeSetsGenMethod {
@@ -190,4 +192,6 @@ private:
     Configuration config_;
     FDAlgorithm* algo_;
 };
+
+} // namespace util
 

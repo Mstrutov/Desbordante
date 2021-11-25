@@ -1,5 +1,7 @@
 #include "IdentifierSet.h"
 
+namespace util {
+
 IdentifierSet::IdentifierSet(ColumnLayoutRelationData const* const relation,
                              int index) : relation_(relation), tuple_index_(index) {
     data_.reserve(relation_->getNumColumns());
@@ -21,3 +23,6 @@ std::string IdentifierSet::toString() const {
     str += "(" + data_.back().attribute->getName() + ", " + std::to_string(data_.back().cluster_index) + ")]";
     return str;
 }
+
+} // namespace util
+

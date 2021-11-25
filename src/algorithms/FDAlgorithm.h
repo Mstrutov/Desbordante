@@ -8,15 +8,16 @@
 #include "FD.h"
 #include "ColumnLayoutRelationData.h"
 
-class AgreeSetFactory;
-
+namespace util {
+    class AgreeSetFactory;
+}
 
 /* It is highly recommended to inherit your Algorithm from this class.
  * Consider TANE as an example of such a FDAlgorithm usage.
  * */
 class FDAlgorithm {
 private:
-    friend AgreeSetFactory;
+    friend util::AgreeSetFactory;
 
     std::mutex mutable register_mutex_;
 

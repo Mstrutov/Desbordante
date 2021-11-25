@@ -9,14 +9,18 @@
 
 using std::shared_ptr;
 
-ProfilingContext::ProfilingContext(
-        Configuration configuration, ColumnLayoutRelationData* relationData,
-        std::function<void(const PartialKey &)> const& uccConsumer,
-        std::function<void(const PartialFD &)> const& fdConsumer,
-        CachingMethod const& cachingMethod, CacheEvictionMethod const& evictionMethod, double cachingMethodValue) :
-    configuration_(std::move(configuration)), relationData_(relationData),
-    random_(configuration_.seed == 0 ? std::mt19937() : std::mt19937(configuration_.seed)),
-    customRandom_(configuration_.seed == 0 ? CustomRandom() : CustomRandom(configuration_.seed)) {
+ProfilingContext::ProfilingContext(Configuration configuration,
+                                   ColumnLayoutRelationData* relationData,
+                                   std::function<void(const PartialKey &)> const& uccConsumer,
+                                   std::function<void(const PartialFD &)> const& fdConsumer,
+                                   CachingMethod const& cachingMethod,
+                                   CacheEvictionMethod const& evictionMethod,
+                                   double cachingMethodValue)
+        : configuration_(std::move(configuration)), relationData_(relationData),
+          random_(configuration_.seed == 0 ? std::mt19937() : std::mt19937(configuration_.seed)),
+          customRandom_(configuration_.seed == 0 ?
+                        CustomRandom() :
+                        CustomRandom(configuration_.seed)) {
     uccConsumer_ = uccConsumer;
     fdConsumer_ = fdConsumer;
     // TODO: тут проявляется косяк, что unique_ptr<PLI> приходится отбирать у CLRD.
@@ -25,17 +29,19 @@ ProfilingContext::ProfilingContext(
     //       надо переделывать
     if (configuration_.sampleSize > 0) {
         auto schema = relationData_->getSchema();
-        agreeSetSamples_ = std::make_unique<BlockingVerticalMap<AgreeSetSample>>(schema);
+        agreeSetSamples_ = std::make_unique<util::BlockingVerticalMap<util::AgreeSetSample>>(schema);
         // TODO: сделать, чтобы при одном потоке agreeSetSamples_ = std::make_unique<VerticalMap<AgreeSetSample>>(schema);
         for (auto& column : schema->getColumns()) {
-            createColumnFocusedSample(static_cast<Vertical>(*column),
-                                      relationData->getColumnData(column->getIndex()).getPositionListIndex(), 1);
+            createColumnFocusedSample(
+                static_cast<Vertical>(*column),
+                relationData->getColumnData(column->getIndex()).getPositionListIndex(),
+                1);
         }
     } else {
         agreeSetSamples_ = nullptr;
     }
     double maxEntropy = getMaximumEntropy(relationData_);
-    pliCache_ = std::make_unique<PLICache>(
+    pliCache_ = std::make_unique<util::PLICache>(
             relationData_,
             cachingMethod,
             evictionMethod,
@@ -138,12 +144,12 @@ double ProfilingContext::setMaximumEntropy(ColumnLayoutRelationData const* relat
     }
 }
 
-AgreeSetSample const* ProfilingContext::createFocusedSample(Vertical const& focus, double boostFactor) {
+util::AgreeSetSample const* ProfilingContext::createFocusedSample(Vertical const& focus, double boostFactor) {
     auto pli = pliCache_->getOrCreateFor(focus, this);
-    auto pliPointer = std::holds_alternative<PositionListIndex*>(pli)
-                      ? std::get<PositionListIndex*>(pli)
-                      : std::get<std::unique_ptr<PositionListIndex>>(pli).get();
-    std::unique_ptr<ListAgreeSetSample> sample = ListAgreeSetSample::createFocusedFor(
+    auto pliPointer = std::holds_alternative<util::PositionListIndex*>(pli)
+                      ? std::get<util::PositionListIndex*>(pli)
+                      : std::get<std::unique_ptr<util::PositionListIndex>>(pli).get();
+    std::unique_ptr<util::ListAgreeSetSample> sample = util::ListAgreeSetSample::createFocusedFor(
             relationData_,
             focus,
             pliPointer,
@@ -156,9 +162,9 @@ AgreeSetSample const* ProfilingContext::createFocusedSample(Vertical const& focu
     return sample_ptr;
 }
 
-AgreeSetSample const* ProfilingContext::createColumnFocusedSample(
-        const Vertical &focus, PositionListIndex const* restrictionPLI, double boostFactor) {
-    std::unique_ptr<ListAgreeSetSample> sample = ListAgreeSetSample::createFocusedFor(
+util::AgreeSetSample const* ProfilingContext::createColumnFocusedSample(
+        const Vertical &focus, util::PositionListIndex const* restrictionPLI, double boostFactor) {
+    std::unique_ptr<util::ListAgreeSetSample> sample = util::ListAgreeSetSample::createFocusedFor(
             relationData_,
             focus,
             restrictionPLI,
@@ -172,8 +178,9 @@ AgreeSetSample const* ProfilingContext::createColumnFocusedSample(
 }
 
 
-shared_ptr<AgreeSetSample const> ProfilingContext::getAgreeSetSample(Vertical const& focus) const {
-    shared_ptr<AgreeSetSample const> sample = nullptr;
+shared_ptr<util::AgreeSetSample const>
+ProfilingContext::getAgreeSetSample(Vertical const& focus) const {
+    shared_ptr<util::AgreeSetSample const> sample = nullptr;
     for (auto& [key, nextSample] : agreeSetSamples_->getSubsetEntries(focus)) {
         if (sample == nullptr || nextSample->getSamplingRatio() > sample->getSamplingRatio()) {
             sample = nextSample;
@@ -182,7 +189,8 @@ shared_ptr<AgreeSetSample const> ProfilingContext::getAgreeSetSample(Vertical co
     return sample;
 }
 
-double ProfilingContext::getMedianValue(std::vector<double> && values, std::string const& measureName){
+double ProfilingContext::getMedianValue(std::vector<double>&& values,
+                                        std::string const& measureName){
     if (values.size() <= 1) {
         LOG(WARNING) << "Got " << measureName << " == 0\n";
         return 0;
