@@ -3,11 +3,11 @@
 #include <random>
 #include <stack>
 
-#include "FDAlgorithm.h"
+#include "PliBasedFDAlgorithm.h"
 #include "Vertical.h"
 #include "DFD/PartitionStorage/PartitionStorage.h"
 
-class DFD : public FDAlgorithm {
+class DFD : public PliBasedFDAlgorithm {
 private:
     std::unique_ptr<PartitionStorage> partitionStorage;
     std::vector<Vertical> uniqueColumns;

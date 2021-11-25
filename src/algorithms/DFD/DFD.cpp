@@ -64,12 +64,12 @@ unsigned long long DFD::executeInternal() {
 
     //std::cout << "====JSON-FD========\r\n" << getJsonFDs() << std::endl;
     std::cout << "> FD COUNT: " << fdCollection_.size() << std::endl;
-    std::cout << "> HASH: " << FDAlgorithm::fletcher16() << std::endl;
+    std::cout << "> HASH: " << PliBasedFDAlgorithm::fletcher16() << std::endl;
 
     return aprioriMillis;
 }
 
 DFD::DFD(const std::filesystem::path &path, char separator, bool hasHeader, unsigned int parallelism)
-        : FDAlgorithm(path, separator, hasHeader),
+        : PliBasedFDAlgorithm(path, separator, hasHeader),
           numberOfThreads(parallelism <= 0 ? std::thread::hardware_concurrency() : parallelism) {}
 
