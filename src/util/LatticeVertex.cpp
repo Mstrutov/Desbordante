@@ -1,5 +1,7 @@
 #include "LatticeVertex.h"
 
+namespace util {
+
 using boost::dynamic_bitset, std::vector, std::shared_ptr, std::make_shared, std::string;
 
 void LatticeVertex::addRhsCandidates(vector<std::unique_ptr<Column>> const& candidates) {
@@ -73,3 +75,6 @@ PositionListIndex const *LatticeVertex::getPositionListIndex() const {
         return std::get<PositionListIndex const *>(positionListIndex_);
     }
 }
+
+} // namespace util
+

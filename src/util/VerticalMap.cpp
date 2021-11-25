@@ -5,6 +5,8 @@
 #include "VerticalInfo.h"
 #include "DependencyCandidate.h"
 
+namespace util {
+
 template <class Value>
 std::shared_ptr<Value> VerticalMap<Value>::SetTrie::associate(
         bitset const& key, size_t nextBit, std::shared_ptr<Value> value) {
@@ -707,3 +709,6 @@ template class BlockingVerticalMap<AgreeSetSample>;
 template class BlockingVerticalMap<DependencyCandidate>;
 template class BlockingVerticalMap<VerticalInfo>;
 template class BlockingVerticalMap<Vertical>;
+
+} // namespace util
+

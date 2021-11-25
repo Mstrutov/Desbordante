@@ -2,6 +2,8 @@
 #include <boost/format.hpp>
 #include <string>
 
+namespace util {
+
 class ConfidenceInterval {
 private:
     double min_;
@@ -27,3 +29,6 @@ public:
 
     friend std::ostream& operator<<(std::ostream&, ConfidenceInterval const&);
 };
+
+} // namespace util
+

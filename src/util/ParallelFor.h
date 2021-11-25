@@ -59,5 +59,5 @@ inline void parallel_foreach(It begin, It end, unsigned const threads_num_max,
     }
 }
 
-}
+} // namespace util
 

@@ -18,7 +18,7 @@ unsigned long long DFD::executeInternal() {
     //search for unique columns
     for (auto const& column : schema->getColumns()) {
         ColumnData& columnData = relation_->getColumnData(column->getIndex());
-        PositionListIndex const* const columnPLI = columnData.getPositionListIndex();
+        util::PositionListIndex const* const columnPLI = columnData.getPositionListIndex();
 
         if (columnPLI->getNumNonSingletonCluster() == 0) {
             Vertical const lhs = Vertical(*column);
@@ -33,7 +33,7 @@ unsigned long long DFD::executeInternal() {
     for (auto & rhs : schema->getColumns()) {
         boost::asio::post(searchSpacePool, [this, &rhs, schema, &progressStep]() {
             ColumnData const& rhsData = relation_->getColumnData(rhs->getIndex());
-            PositionListIndex const *const rhsPLI = rhsData.getPositionListIndex();
+            util::PositionListIndex const *const rhsPLI = rhsData.getPositionListIndex();
 
             /* if all the rows have the same value, then we register FD with empty LHS
              * if we have minimal FD like []->RHS, it is impossible to find smaller FD with this RHS,

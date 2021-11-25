@@ -1,6 +1,8 @@
 #include "ListAgreeSetSample.h"
 #include "logging/easylogging++.h"
 
+namespace util {
+
 std::unique_ptr<ListAgreeSetSample> ListAgreeSetSample::createFocusedFor(
         ColumnLayoutRelationData const* relation, Vertical const& restrictionVertical,
         PositionListIndex const* restrictionPLi, unsigned int sampleSize, CustomRandom& random) {
@@ -128,3 +130,5 @@ std::unique_ptr<std::vector<unsigned long long>> ListAgreeSetSample::getNumAgree
     return std::make_unique<std::vector<unsigned long long>> (
             std::vector<unsigned long long> {countAgreements, count});
 }
+
+} // namespace util

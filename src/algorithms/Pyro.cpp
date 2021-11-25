@@ -82,7 +82,7 @@ unsigned long long Pyro::executeInternal() {
             polledSpace->ensureInitialized();
             polledSpace->discover();
             addProgress(progressStep);
-            
+
             millis += std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - threadStartTime).count();
         }
         //cout << "Thread" << id << " stopped working, ELAPSED TIME: " << millis << "ms.\n";
@@ -107,7 +107,8 @@ unsigned long long Pyro::executeInternal() {
     std::cout << "Error calculation count: " << totalErrorCalcCount << std::endl;
     std::cout << "Total ascension time: " << totalAscension << "ms" << std::endl;
     std::cout << "Total trickle time: " << totalTrickle << "ms" << std::endl;
-    std::cout << "Total intersection time: " << PositionListIndex::micros / 1000 << "ms" << std::endl;
+    std::cout << "Total intersection time: "
+              << util::PositionListIndex::micros / 1000 << "ms" << std::endl;
     /*std::cout << "====RESULTS-FD====\r\n" << fdsToString();
     std::cout << "====RESULTS-UCC====\r\n" << uccsToString();
     std::cout << "====JSON-FD========\r\n" << FDAlgorithm::getJsonFDs() << std::endl;*/

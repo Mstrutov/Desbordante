@@ -13,21 +13,27 @@
 #include "LatticeLevel.h"
 #include "LatticeVertex.h"
 
-double Tane::calculateZeroAryFdError(ColumnData const* rhs, ColumnLayoutRelationData const* relationData) {
-    return 1 - rhs->getPositionListIndex()->getNepAsLong() / static_cast<double>(relationData->getNumTuplePairs());
+double Tane::calculateZeroAryFdError(ColumnData const* rhs,
+                                     ColumnLayoutRelationData const* relationData) {
+    return 1 - rhs->getPositionListIndex()->getNepAsLong() /
+           static_cast<double>(relationData->getNumTuplePairs());
 }
 
-double Tane::calculateFdError(PositionListIndex const* lhsPli, PositionListIndex const* jointPli,
+double Tane::calculateFdError(util::PositionListIndex const* lhsPli,
+                              util::PositionListIndex const* jointPli,
                               ColumnLayoutRelationData const* relationData) {
-    return (double) (lhsPli->getNepAsLong() - jointPli->getNepAsLong()) / static_cast<double>(relationData->getNumTuplePairs());
+    return (double) (lhsPli->getNepAsLong() - jointPli->getNepAsLong()) /
+           static_cast<double>(relationData->getNumTuplePairs());
 }
 
 
-double Tane::calculateUccError(PositionListIndex const* pli, ColumnLayoutRelationData const* relationData) {
+double Tane::calculateUccError(util::PositionListIndex const* pli,
+                               ColumnLayoutRelationData const* relationData) {
     return pli->getNepAsLong() / static_cast<double>(relationData->getNumTuplePairs());
 }
 
-void Tane::registerFD(Vertical const& lhs, Column const* rhs, double error, RelationalSchema const* schema) {
+void Tane::registerFD(Vertical const& lhs, Column const* rhs, double error,
+                      RelationalSchema const* schema) {
     dynamic_bitset<> lhs_bitset = lhs.getColumnIndices();
     /*std::cout << "Discovered FD: ";
     for (size_t i = lhs_bitset.find_first(); i != dynamic_bitset<>::npos; i = lhs_bitset.find_next(i)) {
@@ -71,21 +77,21 @@ unsigned long long Tane::executeInternal() {
     double progressStep = 100.0 / (schema->getNumColumns() + 1);
 
     //Initialize level 0
-    std::vector<std::unique_ptr<LatticeLevel>> levels;
-    std::unique_ptr<LatticeLevel> level0 = std::make_unique<LatticeLevel>(0);
+    std::vector<std::unique_ptr<util::LatticeLevel>> levels;
+    auto level0 = std::make_unique<util::LatticeLevel>(0);
     // TODO: через указатели кажется надо переделать
-    level0->add(std::make_unique<LatticeVertex>(*(schema->emptyVertical)));
-    LatticeVertex const* emptyVertex = level0->getVertices().begin()->second.get();
+    level0->add(std::make_unique<util::LatticeVertex>(*(schema->emptyVertical)));
+    util::LatticeVertex const* emptyVertex = level0->getVertices().begin()->second.get();
     levels.push_back(std::move(level0));
     addProgress(progressStep);
 
     //Initialize level1
     dynamic_bitset<> zeroaryFdRhs(schema->getNumColumns());
-    std::unique_ptr<LatticeLevel> level1 = std::make_unique<LatticeLevel>(1);
+    auto level1 = std::make_unique<util::LatticeLevel>(1);
     for (auto& column : schema->getColumns()) {
         //for each attribute set vertex
         ColumnData const& columnData = relation_->getColumnData(column->getIndex());
-        auto vertex = std::make_unique<LatticeVertex>(static_cast<Vertical>(*column));
+        auto vertex = std::make_unique<util::LatticeVertex>(static_cast<Vertical>(*column));
 
         vertex->addRhsCandidates(schema->getColumns());
         vertex->getParents().push_back(emptyVertex);
@@ -138,13 +144,14 @@ unsigned long long Tane::executeInternal() {
 
     for (unsigned int arity = 2; arity <= maxArity; arity++) {
         //auto startTime = std::chrono::system_clock::now();
-        LatticeLevel::clearLevelsBelow(levels, arity - 1);
-        LatticeLevel::generateNextLevel(levels);
+        util::LatticeLevel::clearLevelsBelow(levels, arity - 1);
+        util::LatticeLevel::generateNextLevel(levels);
         //std::chrono::duration<double> elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
         //aprioriMillis += elapsed_milliseconds.count();
 
-        LatticeLevel* level = levels[arity].get();
-        std::cout << "Checking " << level->getVertices().size() << " " << arity << "-ary lattice vertices." << std::endl;
+        util::LatticeLevel* level = levels[arity].get();
+        std::cout << "Checking " << level->getVertices().size() << " "
+                  << arity << "-ary lattice vertices." << std::endl;
         if (level->getVertices().empty()) {
             break;
         }
@@ -199,7 +206,7 @@ unsigned long long Tane::executeInternal() {
 
         //Prune
         //cout << "Pruning level: " << level->getArity() << ". " << level->getVertices().size() << " vertices" << endl;
-        std::list<LatticeVertex *> keyVertices;
+        std::list<util::LatticeVertex *> keyVertices;
         for (auto& [map_key, vertex] : level->getVertices()) {
             Vertical columns = vertex->getVertical();            //Originally it's a ColumnCombination
 
@@ -252,14 +259,15 @@ unsigned long long Tane::executeInternal() {
         //TODO: printProfilingData
         addProgress(progressStep);
     }
-    
+
     setProgress(100);
     std::chrono::milliseconds elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
     aprioriMillis += elapsed_milliseconds.count();
 
     std::cout << "Time: " << aprioriMillis << " milliseconds" << std::endl;
-    std::cout << "Intersection time: " << PositionListIndex::micros / 1000 << "ms" << std::endl;
-    std::cout << "Total intersections: " << PositionListIndex::intersectionCount << std::endl;
+    std::cout << "Intersection time: " << util::PositionListIndex::micros / 1000
+              << "ms" << std::endl;
+    std::cout << "Total intersections: " << util::PositionListIndex::intersectionCount << std::endl;
     std::cout << "Total FD count: " << countOfFD << std::endl;
     std::cout << "Total UCC count: " << countOfUCC << std::endl;
     // std::cout << "===== FD JSON ========" << getJsonFDs() << std::endl;

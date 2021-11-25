@@ -1,9 +1,10 @@
 #include <unordered_map>
+
 #include "KeyG1Strategy.h"
 #include "SearchSpace.h"
 #include "PLICache.h"
 
-double KeyG1Strategy::calculateKeyError(PositionListIndex* pli) const {
+double KeyG1Strategy::calculateKeyError(util::PositionListIndex* pli) const {
     return calculateKeyError(pli->getNepAsLong());
 }
 
@@ -28,39 +29,39 @@ void KeyG1Strategy::ensureInitialized(SearchSpace* searchSpace) const {
 
 double KeyG1Strategy::calculateError(Vertical const& keyCandidate) const {
     auto pli = context_->getPLICache()->getOrCreateFor(keyCandidate, context_);
-    auto pliPointer = std::holds_alternative<PositionListIndex*>(pli)
-                      ? std::get<PositionListIndex*>(pli)
-                      : std::get<std::unique_ptr<PositionListIndex>>(pli).get();
+    auto pliPointer = std::holds_alternative<util::PositionListIndex*>(pli)
+                      ? std::get<util::PositionListIndex*>(pli)
+                      : std::get<std::unique_ptr<util::PositionListIndex>>(pli).get();
     double error = calculateKeyError(pliPointer);
     calcCount_++;
     return error;
 }
 
-ConfidenceInterval KeyG1Strategy::calculateKeyError(ConfidenceInterval const& estimatedQualityPairs) const {
-    return ConfidenceInterval(calculateKeyError(estimatedQualityPairs.getMin()),
-            calculateKeyError(estimatedQualityPairs.getMean()),
-            calculateKeyError(estimatedQualityPairs.getMax()));
+util::ConfidenceInterval KeyG1Strategy::calculateKeyError(util::ConfidenceInterval const& estimatedQualityPairs) const {
+    return util::ConfidenceInterval(calculateKeyError(estimatedQualityPairs.getMin()),
+                                    calculateKeyError(estimatedQualityPairs.getMean()),
+                                    calculateKeyError(estimatedQualityPairs.getMax()));
 }
 
 DependencyCandidate KeyG1Strategy::createDependencyCandidate(Vertical const& vertical) const {
     if (vertical.getArity() == 1) {
         auto pli = context_->getPLICache()->getOrCreateFor(vertical, context_);
-        auto pliPointer = std::holds_alternative<PositionListIndex*>(pli)
-                          ? std::get<PositionListIndex*>(pli)
-                          : std::get<std::unique_ptr<PositionListIndex>>(pli).get();
+        auto pliPointer = std::holds_alternative<util::PositionListIndex*>(pli)
+                          ? std::get<util::PositionListIndex*>(pli)
+                          : std::get<std::unique_ptr<util::PositionListIndex>>(pli).get();
         double keyError = calculateKeyError(pliPointer->getNepAsLong());
-        return DependencyCandidate(vertical, ConfidenceInterval(keyError), true);
+        return DependencyCandidate(vertical, util::ConfidenceInterval(keyError), true);
     }
 
     if (context_->isAgreeSetSamplesEmpty()) {
-        return DependencyCandidate(vertical, ConfidenceInterval(0, .5, 1), false);
+        return DependencyCandidate(vertical, util::ConfidenceInterval(0, .5, 1), false);
     }
 
     auto agreeSetSample = context_->getAgreeSetSample(vertical);
-    ConfidenceInterval estimatedEqualityPairs = agreeSetSample
+    util::ConfidenceInterval estimatedEqualityPairs = agreeSetSample
             ->estimateAgreements(vertical, context_->getConfiguration().estimateConfidence)
             .multiply(context_->getColumnLayoutRelationData()->getNumTuplePairs());
-    ConfidenceInterval keyError = calculateKeyError(estimatedEqualityPairs);
+    util::ConfidenceInterval keyError = calculateKeyError(estimatedEqualityPairs);
     return DependencyCandidate(vertical, keyError, false);
 }
 

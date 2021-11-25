@@ -5,6 +5,8 @@
 #include "ColumnCombination.h"
 #include "LatticeLevel.h"
 
+namespace util {
+
 using std::move, std::min, std::shared_ptr, std::vector, std::cout, std::endl, std::sort, std::make_shared;
 
 void LatticeLevel::add(std::unique_ptr<LatticeVertex> vertex) {
@@ -116,3 +118,6 @@ void LatticeLevel::clearLevelsBelow(std::vector<std::unique_ptr<LatticeLevel>>& 
         }
     }
 }
+
+} // namespace util
+

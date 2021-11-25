@@ -4,9 +4,9 @@
 
 class KeyG1Strategy : public DependencyStrategy {
 private:
-    double calculateKeyError(PositionListIndex* pli) const;
+    double calculateKeyError(util::PositionListIndex* pli) const;
     double calculateKeyError(double numViolatingTuplePairs) const;
-    ConfidenceInterval calculateKeyError(ConfidenceInterval const& numViolations) const;
+    util::ConfidenceInterval calculateKeyError(util::ConfidenceInterval const& numViolations) const;
 public:
     KeyG1Strategy(double maxError, double deviation) : DependencyStrategy(maxError, deviation) {}
 
@@ -16,12 +16,16 @@ public:
     std::string format(Vertical const& vertical) const override {
         return (boost::format("key(%s)") % std::string(vertical)).str(); }
     explicit operator std::string() const override {
-        return (boost::format("key[g1\u2264(%.3f..%.3f)]") % minNonDependencyError_ % maxDependencyError_).str(); }
-    void registerDependency(Vertical const& vertical, double error, DependencyConsumer const& discoveryUnit) const override;
+        return (boost::format("key[g1\u2264(%.3f..%.3f)]") %
+                minNonDependencyError_ % maxDependencyError_).str();
+    }
+    void registerDependency(Vertical const& vertical, double error,
+                            DependencyConsumer const& discoveryUnit) const override;
     bool isIrrelevantColumn(unsigned int columnIndex) const override { return false; }
     unsigned int getNumIrrelevantColumns() const override { return 1; }
     Vertical getIrrelevantColumns() const override {
-        return *context_->getColumnLayoutRelationData()->getSchema()->emptyVertical; }
+        return *context_->getColumnLayoutRelationData()->getSchema()->emptyVertical;
+    }
 
     std::unique_ptr<DependencyStrategy> createClone() override;
 };

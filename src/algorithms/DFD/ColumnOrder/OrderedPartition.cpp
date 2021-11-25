@@ -1,6 +1,7 @@
 #include "OrderedPartition.h"
 
-OrderedPartition::OrderedPartition(const PositionListIndex *const partition, unsigned int numberOfRows, unsigned int columnIndex)
+OrderedPartition::OrderedPartition(util::PositionListIndex const *const partition,
+                                   unsigned int numberOfRows, unsigned int columnIndex)
         : columnIndex(columnIndex) {
     this->distinctiveness = (double)(numberOfRows - partition->getNumNonSingletonCluster()) / numberOfRows;
 }

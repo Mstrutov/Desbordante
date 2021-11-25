@@ -28,14 +28,18 @@ public:
             double maxError = 0, unsigned int maxArity = -1)
             : FDAlgorithm(path, separator, hasHeader), maxFdError(maxError), maxUccError(maxError), maxArity(maxArity) {}
 
-    static double calculateZeroAryFdError(ColumnData const* rhs, ColumnLayoutRelationData const* relationData);
-    static double calculateFdError(PositionListIndex const* lhsPli, PositionListIndex const* jointPli,
+    static double calculateZeroAryFdError(ColumnData const* rhs,
+                                          ColumnLayoutRelationData const* relationData);
+    static double calculateFdError(util::PositionListIndex const* lhsPli,
+                                   util::PositionListIndex const* jointPli,
                                    ColumnLayoutRelationData const* relationData);
-    static double calculateUccError(PositionListIndex const* pli, ColumnLayoutRelationData const* relationData);
+    static double calculateUccError(util::PositionListIndex const* pli,
+                                    ColumnLayoutRelationData const* relationData);
 
     //static double round(double error) { return ((int)(error * 32768) + 1)/ 32768.0; }
 
-    void registerFD(Vertical const& lhs, Column const* rhs, double error, RelationalSchema const* schema);
+    void registerFD(Vertical const& lhs, Column const* rhs,
+                    double error, RelationalSchema const* schema);
     // void registerFD(Vertical const* lhs, Column const* rhs, double error, RelationalSchema const* schema);
     void registerUCC(Vertical const& key, double error, RelationalSchema const* schema);
 

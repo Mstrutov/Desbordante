@@ -17,6 +17,7 @@
 #include "PositionListIndex.h"
 #include "Vertical.h"
 
+namespace util {
 
 const int PositionListIndex::singletonValueId = 0;
 unsigned long long PositionListIndex::micros = 0;
@@ -276,3 +277,6 @@ unsigned int PositionListIndex::getNumCluster(){
     clusterNum = index.size() + originalRelationSize - sum;
     return clusterNum;
 }
+
+} // namespace util
+

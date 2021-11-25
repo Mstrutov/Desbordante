@@ -20,7 +20,7 @@ class Fd_mine : public FDAlgorithm {
     boost::unordered_map<dynamic_bitset<>, dynamic_bitset<>> final_fdSet;
     std::set<dynamic_bitset<>> keySet;
     boost::unordered_map<dynamic_bitset<>, dynamic_bitset<>> closure;
-    boost::unordered_map<dynamic_bitset<>, std::shared_ptr<PositionListIndex const>> plis;
+    boost::unordered_map<dynamic_bitset<>, std::shared_ptr<util::PositionListIndex const>> plis;
     dynamic_bitset<> relationIndices;
 
     void computeNonTrivialClosure(dynamic_bitset<> const& xi);

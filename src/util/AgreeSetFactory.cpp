@@ -18,6 +18,8 @@
 #include "logging/easylogging++.h"
 #include "ParallelFor.h"
 
+namespace util {
+
 using std::set, std::vector, std::unordered_set;
 
 AgreeSetFactory::SetOfAgreeSets AgreeSetFactory::genAgreeSets() const {
@@ -604,4 +606,6 @@ void AgreeSetFactory::calculateSupersets(SetOfVectors& max_representation,
         max_representation.erase(it);
     }
 }
+
+} // namespace util
 

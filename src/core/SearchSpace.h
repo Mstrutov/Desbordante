@@ -12,16 +12,19 @@
 #include "DependencyCandidate.h"
 #include "Vertical.h"
 #include "RelationalSchema.h"
+
 class SearchSpace : public std::enable_shared_from_this<SearchSpace> {
 private:
+    using DependencyCandidateComp = std::function<bool (DependencyCandidate const&,
+                                                        DependencyCandidate const&)>;
     ProfilingContext* context_;
     std::unique_ptr<DependencyStrategy> strategy_;
-    std::unique_ptr<VerticalMap<VerticalInfo>> localVisitees_ = nullptr;
-    std::unique_ptr<VerticalMap<VerticalInfo>> globalVisitees_;
-    std::set<DependencyCandidate, std::function<bool (DependencyCandidate const&, DependencyCandidate const&)>> launchPads_;
-    std::unique_ptr<VerticalMap<DependencyCandidate>> launchPadIndex_;
+    std::unique_ptr<util::VerticalMap<VerticalInfo>> localVisitees_ = nullptr;
+    std::unique_ptr<util::VerticalMap<VerticalInfo>> globalVisitees_;
+    std::set<DependencyCandidate, DependencyCandidateComp> launchPads_;
+    std::unique_ptr<util::VerticalMap<DependencyCandidate>> launchPadIndex_;
     std::list<DependencyCandidate> deferredLaunchPads_;
-    std::unique_ptr<VerticalMap<Vertical>> scope_;
+    std::unique_ptr<util::VerticalMap<Vertical>> scope_;
     double sampleBoost_;
     int recursionDepth_;
     bool isAscendRandomly_ = false;
@@ -39,23 +42,33 @@ private:
     void trickleDown(Vertical const& mainPeak, double mainPeakError);
     std::optional<Vertical> trickleDownFrom(
             DependencyCandidate minDepCandidate, DependencyStrategy* strategy,
-            VerticalMap<VerticalInfo>* allegedMinDeps, std::unordered_set<Vertical> & allegedNonDeps,
-            VerticalMap<VerticalInfo>* globalVisitees, double boostFactor);
+            util::VerticalMap<VerticalInfo>* allegedMinDeps,
+            std::unordered_set<Vertical> & allegedNonDeps,
+            util::VerticalMap<VerticalInfo>* globalVisitees, double boostFactor);
 
     // CAREFUL: resets globalVisitees_, therefore SearchSpace could become invalidated
-    std::unique_ptr<VerticalMap<VerticalInfo>> moveOutGlobalVisitees() { return std::move(globalVisitees_); }
+    std::unique_ptr<util::VerticalMap<VerticalInfo>> moveOutGlobalVisitees() {
+        return std::move(globalVisitees_);
+    }
     // CAREFUL: resets localVisitees_, therefore SearchSpace could become invalidated
-    std::unique_ptr<VerticalMap<VerticalInfo>> moveOutLocalVisitees() { return std::move(localVisitees_); }
-    void moveInLocalVisitees(std::unique_ptr<VerticalMap<VerticalInfo>> localVisitees) {
-        localVisitees_ = std::move(localVisitees); }
+    std::unique_ptr<util::VerticalMap<VerticalInfo>> moveOutLocalVisitees() {
+        return std::move(localVisitees_);
+    }
+    void moveInLocalVisitees(std::unique_ptr<util::VerticalMap<VerticalInfo>> localVisitees) {
+        localVisitees_ = std::move(localVisitees);
+    }
 
 
-    static void requireMinimalDependency(DependencyStrategy* strategy, Vertical const& minDependency);
-    static std::vector<Vertical> getSubsetDeps(Vertical const& vertical, VerticalMap<VerticalInfo>* verticalInfos);
-    static bool isImpliedByMinDep(Vertical const& vertical, VerticalMap<VerticalInfo>* verticalInfos);
-    static bool isKnownNonDependency(Vertical const& vertical, VerticalMap<VerticalInfo>* verticalInfos);
+    static void requireMinimalDependency(DependencyStrategy* strategy,
+                                         Vertical const& minDependency);
+    static std::vector<Vertical> getSubsetDeps(Vertical const& vertical,
+                                               util::VerticalMap<VerticalInfo>* verticalInfos);
+    static bool isImpliedByMinDep(Vertical const& vertical,
+                                  util::VerticalMap<VerticalInfo>* verticalInfos);
+    static bool isKnownNonDependency(Vertical const& vertical,
+                                     util::VerticalMap<VerticalInfo>* verticalInfos);
     static std::string formatArityHistogram() = delete;
-    static std::string formatArityHistogram(VerticalMap<int*>) = delete;
+    static std::string formatArityHistogram(util::VerticalMap<int*>) = delete;
 
 public:
     unsigned long long nanosSmartConstructing = 0;
@@ -69,20 +82,24 @@ public:
     bool isInitialized_ = false;
     int id_;
 
-    SearchSpace(int id, std::unique_ptr<DependencyStrategy> strategy, std::unique_ptr<VerticalMap<Vertical>> scope,
-            std::unique_ptr<VerticalMap<VerticalInfo>> globalVisitees, RelationalSchema const* schema,
-            std::function<bool (DependencyCandidate const&, DependencyCandidate const&)> const& dependencyCandidateComparator,
-            int recursionDepth, double sampleBoost) :
-                strategy_(std::move(strategy)), globalVisitees_(std::move(globalVisitees)),
-                launchPads_(dependencyCandidateComparator),
-                launchPadIndex_(std::make_unique<VerticalMap<DependencyCandidate>>(schema)),
-                scope_(std::move(scope)), sampleBoost_(sampleBoost), recursionDepth_(recursionDepth), id_(id) {}
+    SearchSpace(int id, std::unique_ptr<DependencyStrategy> strategy,
+                std::unique_ptr<util::VerticalMap<Vertical>> scope,
+                std::unique_ptr<util::VerticalMap<VerticalInfo>> globalVisitees,
+                RelationalSchema const* schema,
+                DependencyCandidateComp const& dependencyCandidateComparator,
+                int recursionDepth, double sampleBoost)
+        : strategy_(std::move(strategy)), globalVisitees_(std::move(globalVisitees)),
+          launchPads_(dependencyCandidateComparator),
+          launchPadIndex_(std::make_unique<util::VerticalMap<DependencyCandidate>>(schema)),
+          scope_(std::move(scope)), sampleBoost_(sampleBoost), recursionDepth_(recursionDepth),
+          id_(id) {}
 
-    SearchSpace(int id, std::unique_ptr<DependencyStrategy> strategy, RelationalSchema const* schema,
-            std::function<bool (DependencyCandidate const&, DependencyCandidate const&)> const& dependencyCandidateComparator):
-            SearchSpace(id, std::move(strategy), nullptr,
-                        std::make_unique<VerticalMap<VerticalInfo>>(schema),
-                        schema, dependencyCandidateComparator, 0, 1) {}
+    SearchSpace(int id, std::unique_ptr<DependencyStrategy> strategy,
+                RelationalSchema const* schema,
+                DependencyCandidateComp const& dependencyCandidateComparator)
+        : SearchSpace(id, std::move(strategy), nullptr,
+                      std::make_unique<util::VerticalMap<VerticalInfo>>(schema),
+                      schema, dependencyCandidateComparator, 0, 1) {}
 
     void ensureInitialized();
     void discover();

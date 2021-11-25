@@ -13,7 +13,8 @@ public:
     OrderedPartition& operator=(OrderedPartition const& other) = delete;
     OrderedPartition& operator=(OrderedPartition && other) = delete;
 
-    OrderedPartition(PositionListIndex const* const, unsigned int numberOfRows, unsigned int columnIndex);
+    OrderedPartition(util::PositionListIndex const* const,
+                     unsigned int numberOfRows, unsigned int columnIndex);
 
     bool operator<(OrderedPartition const& other) const;
     unsigned int getColumnIndex() const { return this->columnIndex; }

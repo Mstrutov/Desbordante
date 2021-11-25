@@ -5,6 +5,8 @@
 #include <vector>
 #include "AgreeSetSample.h"
 
+namespace util {
+
 //TODO: Java long ~ C++ long long => consider replacing ints with longlongs
 class ListAgreeSetSample : public AgreeSetSample {
 private:
@@ -36,3 +38,6 @@ public:
     std::unique_ptr<std::vector<unsigned long long>> getNumAgreeSupersetsExt(
             Vertical const& agreement, Vertical const& disagreement) const override;
 };
+
+} // namespace util
+

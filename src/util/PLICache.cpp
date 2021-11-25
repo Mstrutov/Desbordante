@@ -5,6 +5,7 @@
 #include "PLICache.h"
 #include "VerticalMap.h"
 
+namespace util {
 
 PositionListIndex* PLICache::get(Vertical const &vertical) {
     return index_->get(vertical).get();
@@ -184,4 +185,6 @@ std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> PLICache::c
             throw std::runtime_error("Only NOCACHING and ALLCACHING strategies are currently available");
     }
 }
+
+} // namespace util
 

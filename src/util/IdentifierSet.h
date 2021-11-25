@@ -7,6 +7,8 @@
 #include "Vertical.h"
 #include "ColumnLayoutRelationData.h"
 
+namespace util {
+
 /* Class which represents the relationship between a tuple and
  * all partitions containing it. Given the tuple t, IdentifierSet
  * stores vector of <attribute, cluster_index> pairs, where `cluster_index`
@@ -60,3 +62,6 @@ inline Vertical IdentifierSet::intersect(IdentifierSet const& other) const  {
 
     return relation_->getSchema()->getVertical(intersection);
 }
+
+} // namespace util
+

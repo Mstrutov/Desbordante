@@ -6,6 +6,7 @@ class ProfilingContext;
 #include "CachingMethod.h"
 #include "ProfilingContext.h"
 #include "ColumnLayoutRelationData.h"
+#include "util/VerticalMap.h"
 
 #include <mutex>
 
@@ -14,14 +15,16 @@ private:
     class PositionListIndexRank {
     public:
         Vertical const* vertical_;
-        std::shared_ptr<PositionListIndex> pli_;
+        std::shared_ptr<util::PositionListIndex> pli_;
         int addedArity_;
 
-        PositionListIndexRank(Vertical const* vertical, std::shared_ptr<PositionListIndex> pli, int initialArity):
+        PositionListIndexRank(Vertical const* vertical,
+                              std::shared_ptr<util::PositionListIndex> pli,
+                              int initialArity):
                 vertical_(vertical), pli_(pli), addedArity_(initialArity) {}
     };
     ColumnLayoutRelationData* relationData_;
-    std::unique_ptr<VerticalMap<PositionListIndex>> index_;
+    std::unique_ptr<util::VerticalMap<util::PositionListIndex>> index_;
 
     int savedIntersections_ = 0;
 
@@ -33,14 +36,15 @@ private:
 
     double medianInvertedEntropy_;
 
-    std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> cachingProcess(Vertical const& vertical,
-                                                                                        std::unique_ptr<PositionListIndex> pli);
+    std::variant<util::PositionListIndex*, std::unique_ptr<util::PositionListIndex>>
+    cachingProcess(Vertical const& vertical, std::unique_ptr<util::PositionListIndex> pli);
 public:
-    PartitionStorage(ColumnLayoutRelationData* relationData, CachingMethod cachingMethod, CacheEvictionMethod evictionMethod);
+    PartitionStorage(ColumnLayoutRelationData* relationData,
+                     CachingMethod cachingMethod, CacheEvictionMethod evictionMethod);
 
-    PositionListIndex* get(Vertical const& vertical);
-    std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> getOrCreateFor(
-            Vertical const& vertical);
+    util::PositionListIndex* get(Vertical const& vertical);
+    std::variant<util::PositionListIndex*, std::unique_ptr<util::PositionListIndex>>
+    getOrCreateFor(Vertical const& vertical);
 
     size_t size() const;
 

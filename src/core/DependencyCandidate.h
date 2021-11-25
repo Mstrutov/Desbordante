@@ -9,10 +9,10 @@ private:
     bool isExact_;
 
 public:
-    ConfidenceInterval error_;
+    util::ConfidenceInterval error_;
     Vertical vertical_;
 
-    DependencyCandidate(Vertical vertical, ConfidenceInterval error, bool isExact) :
+    DependencyCandidate(Vertical vertical, util::ConfidenceInterval error, bool isExact) :
             isExact_(isExact), error_(error), vertical_(std::move(vertical)) {}
     bool operator<(DependencyCandidate const& other) const;
     
@@ -28,8 +28,10 @@ public:
     //static bool maxErrorComparator(DependencyCandidate const &, DependencyCandidate const &);
     static bool fullArityErrorComparator(DependencyCandidate const &, DependencyCandidate const &);
     static bool fullErrorArityComparator(DependencyCandidate const &, DependencyCandidate const &);
-    explicit operator std::string() const
-        { return "Candidate " + static_cast<std::string>(vertical_) + static_cast<std::string>(error_); }
+    explicit operator std::string() const {
+        return "Candidate " + static_cast<std::string>(vertical_) +
+               static_cast<std::string>(error_);
+    }
 
     friend std::ostream& operator<< (std::ostream&, DependencyCandidate const&);
 };

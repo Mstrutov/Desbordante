@@ -12,6 +12,7 @@
 #include "custom/CustomRandom.h"
 #include "Vertical.h"
 
+namespace util {
 
 //abstract base class for Agree Set Sample implementations (trie <- not used, list)
 class AgreeSetSample {
@@ -32,7 +33,7 @@ public:
     virtual ~AgreeSetSample() = default;
 
 protected:
-    ColumnLayoutRelationData const* relationData;
+    ::ColumnLayoutRelationData const* relationData;
     Vertical focus;
     unsigned int sampleSize;
     unsigned long long populationSize;
@@ -60,5 +61,8 @@ private:
     double probitFunction(double quantile) const;
 };
 
+} // namespace util
+
 //include template implementation
 #include "AgreeSetSample_impl.h"
+

@@ -12,6 +12,8 @@
 #include "custom/CustomHashes.h"
 #include "ProfilingContext.h"
 
+namespace util {
+
 //difficulties with const methods
 
 //Value: PLI, AgreeSetSample, VerticalInfo, DependencyCandidate, Vertical <- all of these are shared_ptrs?
@@ -187,4 +189,6 @@ public:
 
     virtual ~BlockingVerticalMap() = default;
 };
+
+} // namespace util
 
