@@ -33,7 +33,8 @@ class Fd_mine : public PliBasedFDAlgorithm {
     void display();
 
     unsigned long long executeInternal() override;
-   public:
-    Fd_mine(std::filesystem::path const& path, char separator = ',', bool hasHeader = true) : PliBasedFDAlgorithm(path, separator, hasHeader){};
+public:
+    Fd_mine(std::filesystem::path const& path, char separator = ',', bool hasHeader = true)
+            : PliBasedFDAlgorithm(path, separator, hasHeader) {}
     ~Fd_mine() override {}
 };
