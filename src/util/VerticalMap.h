@@ -125,7 +125,8 @@ public:
      * !!! Untested yet - use carefully
      * */
     virtual void shrink(double factor, std::function<bool(Entry, Entry)> const& compare,
-                        std::function<bool (Entry)> const& canRemove, ProfilingContext::ObjectToCache cacheObject);
+                        std::function<bool (Entry)> const& canRemove,
+                        ProfilingContext::ObjectToCache cacheObject);
     virtual void shrink(std::unordered_map<Vertical, unsigned int>& usageCounter, std::function<bool (Entry)> const& canRemove);
 
     virtual long long getShrinkInvocations() { return shrinkInvocations_; }

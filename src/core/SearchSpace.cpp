@@ -247,7 +247,7 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad) {
     if (!error) {
         LOG(TRACE) << boost::format{"  Hit ceiling at %1%."} % traversalCandidate.vertical_.toString();
         error = strategy_->calculateError(traversalCandidate.vertical_);
-        double errorDiff = *error - traversalCandidate.error_.getMean();
+        [[maybe_unused]] double errorDiff = *error - traversalCandidate.error_.getMean();
         LOG(TRACE) << boost::format{"  Checking candidate... actual error: %1%"} % *error;
     }
     ascending += std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - now).count();
@@ -281,8 +281,8 @@ bool SearchSpace::ascend(DependencyCandidate const &launchPad) {
     return false;
 }
 
-void SearchSpace::checkEstimate(DependencyStrategy* strategy,
-                                DependencyCandidate const &traversalCandidate) {
+void SearchSpace::checkEstimate([[maybe_unused]] DependencyStrategy* strategy,
+                                [[maybe_unused]] DependencyCandidate const& traversalCandidate) {
     std::cout << "Stepped into method 'checkEstimate' - not implemented yet being a debug method\n";
 }
 
@@ -573,7 +573,7 @@ std::optional<Vertical> SearchSpace::trickleDownFrom(
     double candidateError = minDepCandidate.isExact()
         ? minDepCandidate.error_.get()
         : strategy->calculateError(minDepCandidate.vertical_);
-    double errorDiff = candidateError - minDepCandidate.error_.getMean();
+    [[maybe_unused]] double errorDiff = candidateError - minDepCandidate.error_.getMean();
     if (candidateError <= strategy->maxDependencyError_) {
         LOG(TRACE) << boost::format{"* Found %1%-ary minimum dependency candidate: %2%"}
             % minDepCandidate.vertical_.getArity() % minDepCandidate;
@@ -635,14 +635,17 @@ bool SearchSpace::isImpliedByMinDep(Vertical const& vertical,
                                     util::VerticalMap<VerticalInfo>* verticalInfos) {
     // TODO: function<bool(Vertical, ...)> --> function<bool(Vertical&, ...)>
     return verticalInfos->getAnySubsetEntry(
-            vertical,[](auto vertical, auto info) -> bool { return info->isDependency_ && info->isExtremal_; }
-            ).second != nullptr;
+            vertical, []([[maybe_unused]] auto vertical, auto info) {
+                return info->isDependency_ && info->isExtremal_;
+            }).second != nullptr;
 }
 
 bool SearchSpace::isKnownNonDependency(Vertical const& vertical,
                                        util::VerticalMap<VerticalInfo>* verticalInfos) {
     return verticalInfos->getAnySupersetEntry(
-            vertical, [](auto vertical, auto info) -> bool { return !info->isDependency_; }).second != nullptr;
+            vertical, []([[maybe_unused]] auto vertical, auto info) {
+                return !info->isDependency_;
+            }).second != nullptr;
 }
 
 void SearchSpace::printStats() const {
