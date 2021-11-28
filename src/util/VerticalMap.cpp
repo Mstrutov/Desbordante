@@ -219,7 +219,7 @@ std::vector<Vertical> VerticalMap<Value>::getSubsetKeys(Vertical const& vertical
             vertical.getColumnIndices(),
             0,
             subsetKey,
-            [&subsetKeys, this](auto& indices, auto value)
+            [&subsetKeys, this](auto& indices, [[maybe_unused]] auto value)
                 {
                     subsetKeys.push_back(relation_->getVertical(indices));
                     return true;
@@ -383,10 +383,9 @@ template<class Value>
 std::unordered_set<Vertical> VerticalMap<Value>::keySet() {
     std::unordered_set<Vertical> keySet;
     bitset subsetKey(relation_->getNumColumns());
-    setTrie_.traverseEntries(
-            subsetKey,
-            [&keySet, this](auto& k, auto v) { keySet.insert(relation_->getVertical(k)); }
-            );
+    setTrie_.traverseEntries(subsetKey, [&keySet, this](auto& k, [[maybe_unused]] auto v) {
+        keySet.insert(relation_->getVertical(k));
+    });
     return keySet;
 }
 
@@ -396,7 +395,7 @@ std::vector<std::shared_ptr<Value const>> VerticalMap<Value>::values() {
     bitset subsetKey(relation_->getNumColumns());
     setTrie_.traverseEntries(
             subsetKey,
-            [&values](auto& k, auto v) -> void { values.push_back(v); }
+            [&values]([[maybe_unused]] auto& k, auto v) -> void { values.push_back(v); }
     );
     return values;
 }
@@ -435,7 +434,8 @@ std::shared_ptr<Value> VerticalMap<Value>::remove(const VerticalMap::bitset &key
 //comparator is of Compare type - check ascending/descending issues
 template<class Value>
 void VerticalMap<Value>::shrink(double factor, std::function<bool(Entry, Entry)> const &compare,
-                                std::function<bool(Entry)> const &canRemove, ProfilingContext::ObjectToCache cacheObject) {
+                                std::function<bool(Entry)> const &canRemove,
+                                [[maybe_unused]] ProfilingContext::ObjectToCache cacheObject) {
     //some logging
 
     std::priority_queue<Entry, std::vector<Entry>, std::function<bool(Entry, Entry)>> keyQueue(
