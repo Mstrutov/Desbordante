@@ -21,9 +21,9 @@ std::vector<int> ColumnOrder::getOrderHighDistinctCount(const Vertical &columns)
     std::vector<int> orderForColumns(columns.getArity());
 
     int currentOrderIndex = 0;
-    for (int i = 0; i < this->order.size(); ++i) {
-        if (columns.getColumnIndices()[order[i]]) {
-            orderForColumns[currentOrderIndex++] = this->order[i];
+    for (int i : order) {
+        if (columns.getColumnIndices()[i]) {
+            orderForColumns[currentOrderIndex++] = i;
         }
     }
 
@@ -33,6 +33,7 @@ std::vector<int> ColumnOrder::getOrderHighDistinctCount(const Vertical &columns)
 std::vector<int> ColumnOrder::getOrderLowDistinctCount(const Vertical &columns) const {
     std::vector<int> orderForColumns(columns.getArity());
 
+    assert(!order.empty());
     int currentOrderIndex = 0;
     for (int i = this->order.size() - 1; i >= 0; --i) {
         if (columns.getColumnIndices()[order[i]]) {
