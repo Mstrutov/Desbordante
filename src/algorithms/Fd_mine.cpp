@@ -45,7 +45,7 @@ void Fd_mine::computeNonTrivialClosure(dynamic_bitset<> const& candidateX) {
     if (!closure.count(candidateX)) {
         closure[candidateX] = dynamic_bitset<>(candidateX.size());
     }
-    for (int columnIndex = 0; columnIndex < schema->getNumColumns(); columnIndex++) {
+    for (size_t columnIndex = 0; columnIndex < schema->getNumColumns(); columnIndex++) {
         if ((relationIndices - candidateX - closure[candidateX])[columnIndex]) {
             dynamic_bitset<> candidateXY = candidateX;
             dynamic_bitset<> candidateY(schema->getNumColumns());
@@ -137,9 +137,10 @@ void Fd_mine::generateNextLevelCandidates() {
 
             // apriori-gen
             bool similar = true;
-            int setBits = 0;
+            size_t setBits = 0;
 
-            for (int k = 0; setBits < candidateI.count() - 1; k++) {
+            assert(candidateI.count() != 0);
+            for (size_t k = 0; setBits < candidateI.count() - 1; k++) {
                 if (candidateI[k] == candidateJ[k]) {
                     if (candidateI[k]) {
                         setBits++;
@@ -201,7 +202,7 @@ void Fd_mine::reconstruct() {
         while (!queue.empty()) {
             dynamic_bitset<> currentLhs = queue.front();
             queue.pop();
-            int Rhs_count = Rhs.count();
+            size_t Rhs_count = Rhs.count();
             for (const auto &[eq, eqset] : eqSet) {
                 if (!rhsWillNotChange && eq.is_subset_of(Rhs)) {
                     for (const auto &eqRhs : eqset) {
