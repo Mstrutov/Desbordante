@@ -243,10 +243,14 @@ void Fd_mine::display() {
 
     for (auto const& [lhs, rhs] : final_fdSet) {
         for (size_t j = 0; j < rhs.size(); j++) {
-            if (!rhs[j] || rhs[j] && lhs[j]) continue;
+            if (!rhs[j] || (rhs[j] && lhs[j])) {
+                continue;
+            }
             std::cout << "Discovered FD: ";
             for (size_t i = 0; i < lhs.size(); i++) {
-                if (lhs[i]) std::cout << schema->getColumn(i)->getName() << " ";
+                if (lhs[i]) {
+                    std::cout << schema->getColumn(i)->getName() << " ";
+                }
             }
             std::cout << "-> " << schema->getColumn(j)->getName() << "\n";
             registerFD(Vertical(schema, lhs), *schema->getColumn(j));
@@ -255,3 +259,4 @@ void Fd_mine::display() {
     }
     std::cout << "TOTAL FDs " << fd_counter << "\n";
 }
+
