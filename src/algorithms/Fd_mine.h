@@ -1,3 +1,4 @@
+#pragma once
 
 #include <boost/unordered_map.hpp>
 #include <filesystem>
@@ -6,11 +7,11 @@
 #include "CSVParser.h"
 #include "ColumnCombination.h"
 #include "ColumnLayoutRelationData.h"
-#include "FDAlgorithm.h"
+#include "PliBasedFDAlgorithm.h"
 #include "PositionListIndex.h"
 #include "Vertical.h"
 
-class Fd_mine : public FDAlgorithm {
+class Fd_mine : public PliBasedFDAlgorithm {
    private:
     const RelationalSchema* schema;
 
@@ -32,7 +33,8 @@ class Fd_mine : public FDAlgorithm {
     void display();
 
     unsigned long long executeInternal() override;
-   public:
-    Fd_mine(std::filesystem::path const& path, char separator = ',', bool hasHeader = true) : FDAlgorithm(path, separator, hasHeader){};
+public:
+    Fd_mine(std::filesystem::path const& path, char separator = ',', bool hasHeader = true)
+            : PliBasedFDAlgorithm(path, separator, hasHeader) {}
     ~Fd_mine() override {}
 };
