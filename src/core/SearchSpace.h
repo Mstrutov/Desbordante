@@ -38,7 +38,8 @@ private:
     void returnLaunchPad(DependencyCandidate const& launchPad, bool isDefer);
 
     bool ascend(DependencyCandidate const& launchPad);
-    void checkEstimate(DependencyStrategy* strategy, DependencyCandidate const& traversalCandidate);
+    void checkEstimate(DependencyStrategy* strategy,
+                       DependencyCandidate const& traversalCandidate);
     void trickleDown(Vertical const& mainPeak, double mainPeakError);
     std::optional<Vertical> trickleDownFrom(
             DependencyCandidate minDepCandidate, DependencyStrategy* strategy,
