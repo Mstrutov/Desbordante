@@ -32,8 +32,9 @@ double Tane::calculateUccError(util::PositionListIndex const* pli,
     return pli->getNepAsLong() / static_cast<double>(relationData->getNumTuplePairs());
 }
 
-void Tane::registerFD(Vertical const& lhs, Column const* rhs, double error,
-                      RelationalSchema const* schema) {
+void Tane::registerFD(Vertical const& lhs, Column const* rhs,
+                      [[maybe_unused]] double error,
+                      [[maybe_unused]] RelationalSchema const* schema) {
     dynamic_bitset<> lhs_bitset = lhs.getColumnIndices();
     /*std::cout << "Discovered FD: ";
     for (size_t i = lhs_bitset.find_first(); i != dynamic_bitset<>::npos; i = lhs_bitset.find_next(i)) {
@@ -48,7 +49,9 @@ void Tane::registerFD(Vertical const& lhs, Column const* rhs, double error,
     registerFD(*lhs, rhs, error, schema);
 }*/
 
-void Tane::registerUCC(Vertical const& key, double error, RelationalSchema const* schema)  {
+void Tane::registerUCC([[maybe_unused]] Vertical const& key,
+                       [[maybe_unused]] double error,
+                       [[maybe_unused]] RelationalSchema const* schema)  {
     /*dynamic_bitset<> key_bitset = key.getColumnIndices();
     std::cout << "Discovered UCC: ";
     for (int i = key_bitset.find_first(); i != -1; i = key_bitset.find_next(i)) {

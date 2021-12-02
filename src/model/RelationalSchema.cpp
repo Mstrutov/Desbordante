@@ -50,7 +50,7 @@ void RelationalSchema::appendColumn(Column column) {
     columns.push_back(std::make_unique<Column>(std::move(column)));
 }
 
-int RelationalSchema::getNumColumns() const {
+size_t RelationalSchema::getNumColumns() const {
     return columns.size();
 }
 

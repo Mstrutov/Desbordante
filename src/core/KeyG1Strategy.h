@@ -21,7 +21,9 @@ public:
     }
     void registerDependency(Vertical const& vertical, double error,
                             DependencyConsumer const& discoveryUnit) const override;
-    bool isIrrelevantColumn(unsigned int columnIndex) const override { return false; }
+    bool isIrrelevantColumn([[maybe_unused]] unsigned int columnIndex) const override {
+        return false;
+    }
     unsigned int getNumIrrelevantColumns() const override { return 1; }
     Vertical getIrrelevantColumns() const override {
         return *context_->getColumnLayoutRelationData()->getSchema()->emptyVertical;

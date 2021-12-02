@@ -35,7 +35,7 @@ public:
     std::vector<std::unique_ptr<Column>> const& getColumns() const { return columns; };
     Column const* getColumn(const std::string &colName) const;
     Column const* getColumn(int index) const;
-    int getNumColumns() const;
+    size_t getNumColumns() const;
     Vertical getVertical(boost::dynamic_bitset<> indices) const;
     bool isNullEqualNull() const;
 

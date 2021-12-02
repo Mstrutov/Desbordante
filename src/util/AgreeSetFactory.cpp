@@ -329,7 +329,6 @@ AgreeSetFactory::SetOfVectors AgreeSetFactory::genMCUsingCalculateSupersets() co
     max_representation.insert(not_empty_pli->getPositionListIndex()->getIndex().begin(),
                               not_empty_pli->getPositionListIndex()->getIndex().end());
 
-    auto const dist = std::distance(not_empty_pli, columns_data.end());
     for (auto p = std::next(not_empty_pli); p != columns_data.end(); ++p) {
         PositionListIndex const* pli = p->getPositionListIndex();
         if (pli->getSize() != 0) {
