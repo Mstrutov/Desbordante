@@ -113,14 +113,14 @@ unsigned long long Pyro::executeInternal() {
     std::cout << "====RESULTS-UCC====\r\n" << uccsToString();
     std::cout << "====JSON-FD========\r\n" << FDAlgorithm::getJsonFDs() << std::endl;*/
 
-    std::cout << "HASH: " << FDAlgorithm::fletcher16() << std::endl;
+    std::cout << "HASH: " << PliBasedFDAlgorithm::fletcher16() << std::endl;
     return elapsed_milliseconds.count();
 }
 
 
 Pyro::Pyro(std::filesystem::path const &path, char separator, bool hasHeader, int seed, double maxError,
            unsigned int maxLHS, int parallelism) :
-        FDAlgorithm(path, separator, hasHeader),
+        PliBasedFDAlgorithm(path, separator, hasHeader),
         cachingMethod_(CachingMethod::COIN),
         evictionMethod_(CacheEvictionMethod::DEFAULT) {
     uccConsumer_ = [this](auto const& key) { this->discoveredUCCs_.push_back(key); };

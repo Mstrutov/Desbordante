@@ -6,7 +6,6 @@
 
 #include "CSVParser.h"
 #include "FD.h"
-#include "ColumnLayoutRelationData.h"
 
 namespace util {
     class AgreeSetFactory;
@@ -25,11 +24,12 @@ private:
     double cur_phase_progress_ = 0;
     uint8_t cur_phase_id = 0;
 
+protected:
+
     /* создаётся в конструкторе, дальше предполагается передать его один раз в
      * ColumnLayoutRelationData в execute(), и больше не трогать
      * */
     CSVParser inputGenerator_;
-protected:
     /* содержит множество найденных функциональных зависимостей. Это поле будет использоваться при тестировании,
      * поэтому важно положить сюда все намайненные ФЗ
      * */
@@ -40,13 +40,13 @@ protected:
      */
     std::vector<std::string_view> const phase_names_;
 
-    std::unique_ptr<ColumnLayoutRelationData> relation_;
     bool const is_null_equal_null_;
 
     void addProgress(double const val) noexcept;
     void setProgress(double const val) noexcept;
     void toNextProgressPhase() noexcept;
 
+    virtual void initialize() = 0;
     // Main logic of the algorithm
     virtual unsigned long long executeInternal() = 0;
 public:
@@ -91,12 +91,6 @@ public:
     unsigned int fletcher16();
 
     unsigned long long execute();
-
-    ColumnLayoutRelationData const& getRelation() const noexcept {
-        // getRealtion should be called after input file is parsed i.e. after algorithm execution
-        assert(relation_ != nullptr);
-        return *relation_;
-    }
 
     virtual ~FDAlgorithm() = default;
 };

@@ -2,7 +2,6 @@
 
 #include <stack>
 
-#include "FDAlgorithm.h"
 #include "Vertical.h"
 #include "DFD/ColumnOrder/ColumnOrder.h"
 #include "DFD/LatticeObservations/LatticeObservations.h"
