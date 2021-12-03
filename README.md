@@ -14,7 +14,7 @@ https://github.com/cupertank implemented essential data structures presented in 
   Firstly, navigate to a desired directory.
   Then, clone the repository, cd into the project directory and launch the build script:
   ```
-  git clone https://github.com/Mstrutov/Desbordante/    
+  git clone https://github.com/Mstrutov/Desbordante/
   cd Desbordante
   ./build.sh
   ```
@@ -23,17 +23,17 @@ https://github.com/cupertank implemented essential data structures presented in 
   ```bash
   ├───inputData
   │   └───some-sample-csv's.csv
-  ├───fdtester_test
-  ├───fdtester_run
+  ├───Desbordante_test
+  ├───Desbordante_run
   ```
-  The `inputData` directory contains several .csv files that may be used by `fdtester_test`. Run `fdtester_test` to perform unit testing:
+  The `inputData` directory contains several .csv files that may be used by `Desbordante_test`. Run `Desbordante_test` to perform unit testing:
   ```
   cd build/target
-  ./fdtester_test
+  ./Desbordante_test
   ```
   The tool itself is launched via the following line:
   ```
-  ./fdtester_run --algo=tane --data=<dataset_name>.csv
+  ./Desbordante_run --algo=tane --data=<dataset_name>.csv
   ```
 
   The `<dataset_name>.csv`, which is a user-provided dataset, should be placed in the `/path/to/Desbordante/build/target` directory.
@@ -46,13 +46,13 @@ https://github.com/cupertank implemented essential data structures presented in 
   - Microsoft Visual Studio 2019
   - CMake, version 3.10+
   - Boost library, version 1.65.1+ \
-    The recommended way to install Boost is by using [chocolatey](https://chocolatey.org/)  
+    The recommended way to install Boost is by using [chocolatey](https://chocolatey.org/)
 
   ### Building the project
   Firstly, launch the command prompt and navigate to a desired directory.
   Then, clone the repository, cd into the project directory and launch the build script:
   ```
-  git clone https://github.com/Mstrutov/Desbordante/    
+  git clone https://github.com/Mstrutov/Desbordante/
   cd Desbordante
   build.bat
   ```
@@ -64,17 +64,17 @@ https://github.com/cupertank implemented essential data structures presented in 
   ```bash
   ├───inputData
   │   └───some-sample-csv's.csv
-  ├───fdtester_test.exe
-  ├───fdtester_run.exe
+  ├───Desbordante_test.exe
+  ├───Desbordante_run.exe
   ```
-  The `inputData` directory contains several .csv files that may be used by `fdtester_test`. Run `fdtester_test` to perform unit testing:
+  The `inputData` directory contains several .csv files that may be used by `Desbordante_test`. Run `Desbordante_test` to perform unit testing:
   ```
   cd build\target
-  fdtester_test.exe
+  Desbordante_test.exe
   ```
   The tool itself is launched via the following line:
   ```
-  fdtester_run.exe --algo=tane --data=<dataset_name>.csv
+  Desbordante_run.exe --algo=tane --data=<dataset_name>.csv
   ```
 
   The `<dataset_name>.csv`, which is a user-provided dataset, should be placed in the `\path\to\Desbordante\build\target` directory.
