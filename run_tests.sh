@@ -18,7 +18,7 @@ do
 	for k in $(seq 1 1)
 	do
 		touch $experiment_name/$j/results_${datasets[i]}.txt
-		./fdtester_run --algo='pyro' --data="${datasets[i]}".csv --sep="${separators[i]}" --hasHeader="${header_presence[i]}" --seed=$j | grep 'TIME' >> $experiment_name/$j/results_${datasets[i]}.txt
+		./Desbordante_run --algo='pyro' --data="${datasets[i]}".csv --sep="${separators[i]}" --hasHeader="${header_presence[i]}" --seed=$j | grep 'TIME' >> $experiment_name/$j/results_${datasets[i]}.txt
 	done
 done
 done
