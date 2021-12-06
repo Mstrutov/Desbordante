@@ -15,29 +15,24 @@
 
 using boost::dynamic_bitset, std::make_shared, std::shared_ptr, std::setw, std::vector, std::list, std::dynamic_pointer_cast;
 
-unsigned long long Depminer::execute() {
+unsigned long long Depminer::executeInternal() {
 
-    relation = ColumnLayoutRelationData::createFrom(inputGenerator_, true);
-    schema = relation->getSchema();
-    if (relation->getColumnData().empty()) {
-        throw std::runtime_error("Got an empty .csv file: FD mining is meaningless.");
-    }
-
-    auto startTime = std::chrono::system_clock::now();
+    const auto startTime = std::chrono::system_clock::now();
+    schema = relation_->getSchema();
     
     progressStep = kTotalProgressPercent / schema->getNumColumns();
 
     //Agree sets
-    AgreeSetFactory agreeSetFactory = AgreeSetFactory(relation.get(), AgreeSetFactory::Configuration(), this);
+    const util::AgreeSetFactory agreeSetFactory =util:: AgreeSetFactory(relation_.get(), util::AgreeSetFactory::Configuration(), this);
     const auto agreeSets = agreeSetFactory.genAgreeSets();
     toNextProgressPhase();
 
     //maximal sets
-    std::vector<CMAXSet> cmaxSets = generateCMAXSets(agreeSets);
+    const std::vector<CMAXSet> cmaxSets = generateCMAXSets(agreeSets);
     toNextProgressPhase();
     
     //LHS
-    auto lhsTime = std::chrono::system_clock::now();
+    const auto lhsTime = std::chrono::system_clock::now();
     // 1
     for (auto const& column : schema->getColumns()) {
         lhsForColumn(column, cmaxSets);
@@ -54,7 +49,7 @@ unsigned long long Depminer::execute() {
 }
 
 std::vector<CMAXSet> Depminer::generateCMAXSets(std::unordered_set<Vertical> const& agreeSets) {
-    auto startTime = std::chrono::system_clock::now();
+    const auto startTime = std::chrono::system_clock::now();
 
     std::vector<CMAXSet> cmaxSets;
 
@@ -82,7 +77,7 @@ std::vector<CMAXSet> Depminer::generateCMAXSets(std::unordered_set<Vertical> con
                     toAdd = !superSet.contains(set);
                 }
             }
-            for (auto toDelete : setsDelete) {
+            for (auto const& toDelete : setsDelete) {
                 superSets.erase(toDelete);
             }
             if (toAdd) {
@@ -108,7 +103,7 @@ std::vector<CMAXSet> Depminer::generateCMAXSets(std::unordered_set<Vertical> con
     LOG(INFO) << "> CMAX GENERATION TIME: " << elapsed_milliseconds.count();
     LOG(INFO) << "> CMAX SETS COUNT: " << cmaxSets.size();
 
-    return std::move(cmaxSets);
+    return cmaxSets;
 }
 
 void Depminer::lhsForColumn(std::unique_ptr<Column> const& column, std::vector<CMAXSet> const& cmaxSets) {
@@ -116,9 +111,9 @@ void Depminer::lhsForColumn(std::unique_ptr<Column> const& column, std::vector<C
         // 3
         CMAXSet correct = genFirstLevel(cmaxSets, *column, level);
 
-        auto pli = relation->getColumnData(column->getIndex()).getPositionListIndex();
+        const auto pli = relation_->getColumnData(column->getIndex()).getPositionListIndex();
         bool column_contains_only_equal_values =
-            pli->getNumNonSingletonCluster() == 1 && pli->getSize() == relation->getNumRows();
+            pli->getNumNonSingletonCluster() == 1 && pli->getSize() == relation_->getNumRows();
         if (column_contains_only_equal_values) {
             registerFD(Vertical(), *column);
             return;
@@ -130,7 +125,7 @@ void Depminer::lhsForColumn(std::unique_ptr<Column> const& column, std::vector<C
             //5
             for (auto const& l : level) {
                 bool isFD = true;
-                for (auto combination : correct.getCombinations()) {
+                for (auto const& combination : correct.getCombinations()) {
                     if (!l.intersects(combination)) {
                         isFD = false;
                         break;
@@ -152,7 +147,7 @@ void Depminer::lhsForColumn(std::unique_ptr<Column> const& column, std::vector<C
         }
 }
 
-CMAXSet Depminer::genFirstLevel(std::vector<CMAXSet> const& cmaxSets, Column attribute, std::unordered_set<Vertical>& level) const {
+CMAXSet Depminer::genFirstLevel(std::vector<CMAXSet> const& cmaxSets, Column const& attribute, std::unordered_set<Vertical>& level) {
     CMAXSet correctSet(attribute);
     for (auto const& set : cmaxSets) {
         if (!(set.getColumn() == attribute)) {
@@ -161,8 +156,8 @@ CMAXSet Depminer::genFirstLevel(std::vector<CMAXSet> const& cmaxSets, Column att
         correctSet = set;
         for (auto const& combination : correctSet.getCombinations()) {
             for (auto const& column : combination.getColumns()) {
-                if (level.count(static_cast<Vertical>(*column)) == 0)
-                    level.insert(static_cast<Vertical>(*column));
+                if (level.count(Vertical(*column)) == 0)
+                    level.insert(Vertical(*column));
             }
         }
         break;
@@ -171,7 +166,7 @@ CMAXSet Depminer::genFirstLevel(std::vector<CMAXSet> const& cmaxSets, Column att
 }
 
 //Apriori-gen function
-std::unordered_set<Vertical> Depminer::genNextLevel(std::unordered_set<Vertical> const& prevLevel) const {
+std::unordered_set<Vertical> Depminer::genNextLevel(std::unordered_set<Vertical> const& prevLevel) {
     std::unordered_set<Vertical> candidates;
     for (auto const& p : prevLevel) {
         for (auto const& q : prevLevel) {
