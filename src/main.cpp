@@ -13,6 +13,7 @@
 #include "algorithms/Pyro.h"
 #include "algorithms/TaneX.h"
 #include "algorithms/DFD/DFD.h"
+#include "algorithms/FDep/FDep.h"
 #include "algorithms/Fd_mine.h"
 #include "algorithms/FastFDs.h"
 #include "algorithms/depminer/Depminer.h"
@@ -22,7 +23,8 @@ namespace po = boost::program_options;
 INITIALIZE_EASYLOGGINGPP
 
 bool checkOptions(std::string const& alg, double error) {
-    if (alg != "pyro" && alg != "tane" && alg != "fastfds" && alg != "fdmine" && alg != "dfd" && alg != "depminer") {
+    if (alg != "pyro" && alg != "tane" && alg != "fastfds" && alg != "fdmine" && alg != "dfd" && alg != "depminer"
+        && alg != "fdep") {
         std::cout << "ERROR: no matching algorithm. Available algorithms are:\n\tpyro\n\ttane.\n" << std::endl;
         return false;
     }
@@ -45,7 +47,7 @@ int main(int argc, char const *argv[]) {
     po::options_description desc("Allowed options");
     desc.add_options()
             ("help", "print help")
-            ("algo", po::value<std::string>(&alg), "algorithm [pyro|tane|fastfds|fdmine|dfd]")
+            ("algo", po::value<std::string>(&alg), "algorithm [pyro|tane|fastfds|fdmine|dfd|fdep]")
             ("data", po::value<std::string>(&dataset), "path to CSV file, relative to ./inputData")
             ("sep", po::value<char>(&separator), "CSV separator")
             ("hasHeader", po::value<bool>(&hasHeader), "CSV header presence flag [true|false]. Default true")
@@ -101,6 +103,8 @@ int main(int argc, char const *argv[]) {
         algorithmInstance = std::make_unique<FastFDs>(path, separator, hasHeader, maxLhs, parallelism);
     } else if (alg == "depminer") {
         algorithmInstance = std::make_unique<Depminer>(path, separator, hasHeader);
+    } else if (alg == "fdep") {
+        algorithmInstance = std::make_unique<FDep>(path, separator, hasHeader);
     }
     try {
         unsigned long long elapsedTime = algorithmInstance->execute();
