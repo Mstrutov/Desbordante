@@ -81,6 +81,10 @@ https://github.com/cupertank implemented essential data structures presented in 
 
 # Developers
 
+Arthur Saliou       &mdash; Fdep implementation
+
+Eduard Gaisin       &mdash; Dep-Miner implementation
+
 Alexandr Smirnov    &mdash; DFD implementation
 
 Ilya Shchuckin      &mdash; FD_Mine implementation
