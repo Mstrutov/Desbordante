@@ -98,7 +98,7 @@ int main(int argc, char const *argv[]) {
     } else if (alg == "dfd") {
         algorithmInstance = std::make_unique<DFD>(path, separator, hasHeader, parallelism);
     } else if (alg == "fdmine"){
-        algorithmInstance = std::make_unique<Fd_mine>(path);
+        algorithmInstance = std::make_unique<Fd_mine>(path, separator, hasHeader);
     } else if (alg == "fastfds") {
         algorithmInstance = std::make_unique<FastFDs>(path, separator, hasHeader, maxLhs, parallelism);
     } else if (alg == "depminer") {
