@@ -106,6 +106,9 @@ void FDep::specializePositiveCover(std::bitset<FDTreeElement::kMaxAttrNum> const
 
 void FDep::loadData(){
     this->numberAttributes_ = inputGenerator_.getNumberOfColumns();
+    if (this->numberAttributes_ == 0){
+        throw std::runtime_error("Unable to work on empty dataset. Check data file");
+    }
     this->columnNames_.resize(this->numberAttributes_);
 
     this->schema_ = std::make_unique<RelationalSchema>(inputGenerator_.getRelationName(), true);
