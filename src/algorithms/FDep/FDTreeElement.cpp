@@ -241,10 +241,10 @@ void FDTreeElement::filterSpecializationsHelper(FDTreeElement& filteredTree, std
          if (this->isFd_[attr - 1]){
              boost::dynamic_bitset<> lhs_bitset(this->maxAttributeNumber_);
              for (size_t i = activePath._Find_first(); i != kMaxAttrNum; i = activePath._Find_next(i)){
-                 lhs_bitset.set(i);
+                 lhs_bitset.set(i - 1);
              }
              Vertical lhs(&scheme, lhs_bitset);
-             Column rhs(&scheme, scheme.getColumn(attr - 1)->getName(), attr);
+             Column rhs(&scheme, scheme.getColumn(attr - 1)->getName(), attr - 1);
              fdCollection.emplace_back(FD{lhs, rhs});
          }
      }

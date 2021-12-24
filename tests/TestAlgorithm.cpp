@@ -152,4 +152,3 @@ REGISTER_TYPED_TEST_SUITE_P(
 
 using Algorithms = ::testing::Types<Tane, Pyro, FastFDs, DFD, Depminer, FDep>;
 INSTANTIATE_TYPED_TEST_SUITE_P(, AlgorithmTest, Algorithms);
-
