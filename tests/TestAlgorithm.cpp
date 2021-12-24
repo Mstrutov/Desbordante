@@ -9,6 +9,7 @@
 #include "Datasets.h"
 #include "DFD.h"
 #include "FastFDs.h"
+#include "FDep/FDep.h"
 #include "Pyro.h"
 #include "RelationalSchema.h"
 #include "TaneX.h"
@@ -149,6 +150,6 @@ REGISTER_TYPED_TEST_SUITE_P(
         HeavyDatasetsConsistentHash
         );
 
-using Algorithms = ::testing::Types<Tane, Pyro, FastFDs, DFD, Depminer>;
+using Algorithms = ::testing::Types<Tane, Pyro, FastFDs, DFD, Depminer, FDep>;
 INSTANTIATE_TYPED_TEST_SUITE_P(, AlgorithmTest, Algorithms);
 
