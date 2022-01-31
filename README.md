@@ -7,7 +7,7 @@ https://github.com/cupertank implemented essential data structures presented in 
   Prior to cloning the repository and attempting to build the project, ensure that you have the following software:
 
   - GNU g++ compiler, version 10+
-  - CMake, version 3.10+
+  - CMake, version 3.13+
   - Boost library, version 1.72.0+
 
   ### Building the project
@@ -44,7 +44,7 @@ https://github.com/cupertank implemented essential data structures presented in 
   Prior to cloning the repository and attempting to build the project, ensure that you have the following software:
 
   - Microsoft Visual Studio 2019
-  - CMake, version 3.10+
+  - CMake, version 3.13+
   - Boost library, version 1.65.1+ \
     The recommended way to install Boost is by using [chocolatey](https://chocolatey.org/)
 
