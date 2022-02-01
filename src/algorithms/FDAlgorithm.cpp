@@ -73,3 +73,40 @@ void FDAlgorithm::toNextProgressPhase() noexcept {
     cur_phase_progress_ = 0;
 }
 
+/* Attribute A contains only unique values (i.e. A is the key) iff [A]->[B]
+ * holds for every attribute B. So to determine if A is a key, we count
+ * number of fds with lhs==[A] and if it equals the total number of attributes
+ * minus one (the attribute A itself) then A is the key.
+ */
+std::vector<Column const*> FDAlgorithm::getKeys() const {
+    std::vector<Column const*> keys;
+    std::map<Column const*, size_t> fds_count_per_col;
+    unsigned int cols_of_equal_values = 0;
+    size_t const number_of_cols = inputGenerator_.getNumberOfColumns();
+
+    for (FD const& fd : fdCollection_) {
+        Vertical const& lhs = fd.getLhs();
+        if (lhs.getArity() != 1) {
+            if (lhs.getArity() == 0) {
+                /* We separately count columns consisting of only equal values,
+                 * because they cannot be on the right side of the minimal fd.
+                 * And obviously for every attribute A true: [A]->[B] holds
+                 * if []->[B] holds.
+                 */
+                cols_of_equal_values++;
+            }
+            continue;
+        }
+
+        fds_count_per_col[lhs.getColumns().front()]++;
+    }
+
+    for (auto const&[col, num] : fds_count_per_col) {
+        if (num + 1 + cols_of_equal_values == number_of_cols) {
+            keys.push_back(col);
+        }
+    }
+
+    return keys;
+}
+

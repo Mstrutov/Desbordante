@@ -21,5 +21,7 @@ public:
                                  char separator = ',', bool hasHeader = true,
                                  bool const is_null_equal_null = true,
                                  std::vector<std::string_view> phase_names = { "FD mining" }) :
-                                 FDAlgorithm(path, separator, hasHeader, is_null_equal_null, std::move(phase_names)) {}
+                                 FDAlgorithm(path, separator, hasHeader, is_null_equal_null,
+                                             std::move(phase_names)) {}
+    std::vector<Column const*> getKeys() const override;
 };

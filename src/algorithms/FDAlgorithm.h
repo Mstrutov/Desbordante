@@ -87,6 +87,19 @@ public:
      */
     std::pair<uint8_t, double> getProgress() const noexcept;
 
+    /* Returns a vector of columns containing only unique values (i.e. keys).
+     * Should be called after execute() only.
+     * NOTE: retrieves keys from mined fds, so could be quite slow on wide
+     * tables with many fds.
+     * If your algorithm is inherited from FDAlgorithm but not from
+     * PliBasedFDAlgorithm and generates ColumnLayoutRelationData from the
+     * input table or in some similar way parses table, override this method
+     * and use parsed table representation to retrieve keys (for performance
+     * purposes).
+     * PliBasedFDAlgorithm::getKeys() is already overriding this method.
+     */
+    virtual std::vector<Column const*> getKeys() const;
+
     // считает контрольную сумму Флетчера - нужно для тестирования по хешу
     unsigned int fletcher16();
 
