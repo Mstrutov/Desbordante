@@ -109,4 +109,4 @@ M. Strutovskiy, N. Bobrov, K. Smirnov and G. Chernishev, "Desbordante: a Framewo
 
 # Contacts
 
-[Email me at strutovksy.m.a@gmail.com](mailto:strutovksy.m.a@gmail.com)
+[Email me at strutovsky.m.a@gmail.com](mailto:strutovksy.m.a@gmail.com)
