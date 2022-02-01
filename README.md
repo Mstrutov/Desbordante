@@ -105,4 +105,4 @@ If you use this software for research, please cite the paper (https://fruct.org/
 M. Strutovskiy, N. Bobrov, K. Smirnov and G. Chernishev, "Desbordante: a Framework for Exploring Limits of Dependency Discovery Algorithms," 2021 29th Conference of Open Innovations Association (FRUCT), 2021, pp. 344-354, doi: 10.23919/FRUCT52173.2021.9435469.
 
 # Contacts
-[Email me at strutovsky.m.a@gmail.com](mailto:strutovksy.m.a@gmail.com)
+[Email me at strutovsky.m.a@gmail.com](mailto:strutovsky.m.a@gmail.com)
