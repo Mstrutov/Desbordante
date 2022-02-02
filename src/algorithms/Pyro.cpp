@@ -123,13 +123,19 @@ Pyro::Pyro(std::filesystem::path const &path, char separator, bool hasHeader, in
         PliBasedFDAlgorithm(path, separator, hasHeader),
         cachingMethod_(CachingMethod::COIN),
         evictionMethod_(CacheEvictionMethod::DEFAULT) {
-    uccConsumer_ = [this](auto const& key) { this->discoveredUCCs_.push_back(key); };
+    uccConsumer_ = [this](auto const& key) {
+        this->discoverUCC(key);
+    };
     fdConsumer_ = [this](auto const& fd) {
-        this->discoveredFDs_.push_back(fd); this->fdCollection_.emplace_back(fd.lhs_, fd.rhs_); };
+        this->discoverFD(fd);
+        this->registerFD(fd.lhs_, fd.rhs_);
+    };
     configuration_.seed = seed;
     configuration_.maxUccError = maxError;
     configuration_.maxUccError = maxError;
     configuration_.maxLHS = maxLHS;
-    configuration_.parallelism = parallelism <= 0 ? std::thread::hardware_concurrency() : parallelism;
+    configuration_.parallelism = parallelism <= 0 ?
+                                 std::thread::hardware_concurrency() :
+                                 parallelism;
 }
 

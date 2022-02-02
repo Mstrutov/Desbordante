@@ -4,7 +4,7 @@
 // TODO: extra careful with const& -> shared_ptr conversions via make_shared-smart pointer may delete the object - pass empty deleter [](*) {}
 
 void SearchSpace::discover() {
-    std::cout << "Discovering in: " << static_cast<std::string>(*strategy_) << std::endl;
+    LOG(TRACE) << "Discovering in: " << static_cast<std::string>(*strategy_);
     while (true) {  // на второй итерации дропается
         auto now = std::chrono::system_clock::now();
         std::optional<DependencyCandidate> launchPad = pollLaunchPad();
