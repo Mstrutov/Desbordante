@@ -86,19 +86,17 @@ std::vector<Column const*> FDAlgorithm::getKeys() const {
 
     for (FD const& fd : fdCollection_) {
         Vertical const& lhs = fd.getLhs();
-        if (lhs.getArity() != 1) {
-            if (lhs.getArity() == 0) {
-                /* We separately count columns consisting of only equal values,
-                 * because they cannot be on the right side of the minimal fd.
-                 * And obviously for every attribute A true: [A]->[B] holds
-                 * if []->[B] holds.
-                 */
-                cols_of_equal_values++;
-            }
-            continue;
-        }
 
-        fds_count_per_col[lhs.getColumns().front()]++;
+        if (lhs.getArity() == 0) {
+            /* We separately count columns consisting of only equal values,
+             * because they cannot be on the right side of the minimal fd.
+             * And obviously for every attribute A true: [A]->[B] holds
+             * if []->[B] holds.
+             */
+            cols_of_equal_values++;
+        } else if (lhs.getArity() == 1) {
+            fds_count_per_col[lhs.getColumns().front()]++;
+        }
     }
 
     for (auto const&[col, num] : fds_count_per_col) {
