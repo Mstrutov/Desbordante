@@ -4,6 +4,8 @@
 #include <queue>
 #include <vector>
 
+#include "logging/easylogging++.h"
+
 unsigned long long Fd_mine::ExecuteInternal() {
     // 1
     schema_ = relation_->GetSchema();
@@ -255,17 +257,17 @@ void Fd_mine::Display() {
             if (!rhs[j] || (rhs[j] && lhs[j])) {
                 continue;
             }
-            std::cout << "Discovered FD: ";
+            LOG(DEBUG) << "Discovered FD: ";
             for (size_t i = 0; i < lhs.size(); i++) {
                 if (lhs[i]) {
-                    std::cout << schema_->GetColumn(i)->GetName() << " ";
+                    LOG(DEBUG) << schema_->GetColumn(i)->GetName() << " ";
                 }
             }
-            std::cout << "-> " << schema_->GetColumn(j)->GetName() << "\n";
+            LOG(DEBUG) << "-> " << schema_->GetColumn(j)->GetName();
             RegisterFd(Vertical(schema_, lhs), *schema_->GetColumn(j));
             fd_counter++;
         }
     }
-    std::cout << "TOTAL FDs " << fd_counter << "\n";
+    LOG(DEBUG) << "TOTAL FDs " << fd_counter;
 }
 

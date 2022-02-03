@@ -58,7 +58,7 @@ unsigned long long FastFDs::ExecuteInternal() {
 
     auto task = [this](std::unique_ptr<Column> const& column) {
         if (ColumnContainsOnlyEqualValues(*column)) {
-            LOG(INFO) << "Registered FD: " << schema_->empty_vertical_->ToString()
+            LOG(DEBUG) << "Registered FD: " << schema_->empty_vertical_->ToString()
                       << "->" << column->ToString();
             RegisterFd(Vertical(), *column);
             return;
@@ -120,7 +120,7 @@ void FastFDs::FindCovers(Column const& attribute, vector<DiffSet> const& diff_se
 
     if (cur_diff_sets.empty()) {
         if (CoverMinimal(path, diff_sets_mod)) {
-            LOG(INFO) << "Registered FD: " << path.ToString()
+            LOG(DEBUG) << "Registered FD: " << path.ToString()
                       << "->" << attribute.ToString();
             RegisterFd(path, attribute);
             return;

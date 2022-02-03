@@ -8,7 +8,6 @@
 // For printing Dependencies
 #include <string>
 #include <fstream>
-#include <iostream>
 
 #include "RelationalSchema.h"
 #include "FD.h"

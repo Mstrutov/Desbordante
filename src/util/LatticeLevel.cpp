@@ -1,13 +1,12 @@
 #include <algorithm>
-#include <chrono>
-#include <iostream>
 
 #include "ColumnCombination.h"
 #include "LatticeLevel.h"
+#include "logging/easylogging++.h"
 
 namespace util {
 
-using std::move, std::min, std::shared_ptr, std::vector, std::cout, std::endl, std::sort, std::make_shared;
+using std::move, std::min, std::shared_ptr, std::vector, std::sort, std::make_shared;
 
 void LatticeLevel::Add(std::unique_ptr<LatticeVertex> vertex) {
     vertices_.emplace(vertex->GetVertical().GetColumnIndices(), std::move(vertex));
@@ -25,7 +24,7 @@ LatticeVertex const* LatticeLevel::GetLatticeVertex(const boost::dynamic_bitset<
 void LatticeLevel::GenerateNextLevel(std::vector<std::unique_ptr<LatticeLevel>>& levels) {
     unsigned int arity = levels.size() - 1;
     assert(arity >= 1);
-    std::cout << "-------------Creating level " << arity + 1 << "...-----------------\n";
+    LOG(TRACE) << "-------------Creating level " << arity + 1 << "...-----------------\n";
 
     LatticeLevel* current_level = levels[arity].get();
 

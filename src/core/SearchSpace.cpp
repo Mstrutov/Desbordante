@@ -1,6 +1,9 @@
-#include "logging/easylogging++.h"
 #include "SearchSpace.h"
+
 #include <queue>
+
+#include "logging/easylogging++.h"
+
 // TODO: extra careful with const& -> shared_ptr conversions via make_shared-smart pointer may delete the object - pass empty deleter [](*) {}
 
 void SearchSpace::Discover() {
@@ -297,7 +300,7 @@ bool SearchSpace::Ascend(DependencyCandidate const& launch_pad) {
 
 void SearchSpace::CheckEstimate([[maybe_unused]] DependencyStrategy* strategy,
                                 [[maybe_unused]] DependencyCandidate const& traversal_candidate) {
-    std::cout << "Stepped into method 'checkEstimate' - not implemented yet being a debug method\n";
+    LOG(DEBUG) << "Stepped into method 'checkEstimate' - not implemented yet being a debug method\n";
 }
 
 void SearchSpace::TrickleDown(Vertical const& main_peak, double main_peak_error) {
@@ -681,15 +684,13 @@ bool SearchSpace::IsKnownNonDependency(Vertical const& vertical,
 }
 
 void SearchSpace::PrintStats() const {
-    using std::cout, std::endl;
-    cout << "Trickling down from: " << trickling_down_from_ / 1000000 << endl;
-    cout << "Trickling down: " << trickling_down_ / 1000000 - trickling_down_from_ / 1000000
-         << endl;
-    cout << "Trickling down nested:" << trickling_down_part_ / 1000000 << endl;
-    cout << "Num nested: " << num_nested_ / 1000000 << endl;
-    cout << "Ascending: " << ascending_ / 1000000 << endl;
-    cout << "Polling: " << polling_launch_pads_ / 1000000 << endl;
-    cout << "Returning launch pad: " << returning_launch_pad_ / 1000000 << endl;
+    LOG(INFO) << "Trickling down from: " << trickling_down_from_ / 1000000;
+    LOG(INFO) << "Trickling down: " << trickling_down_ / 1000000 - trickling_down_from_ / 1000000;
+    LOG(INFO) << "Trickling down nested:" << trickling_down_part_ / 1000000;
+    LOG(INFO) << "Num nested: " << num_nested_ / 1000000;
+    LOG(INFO) << "Ascending: " << ascending_ / 100000;
+    LOG(INFO) << "Polling: " << polling_launch_pads_ / 1000000;
+    LOG(INFO) << "Returning launch pad: " << returning_launch_pad_ / 1000000;
 }
 
 void SearchSpace::EnsureInitialized() {

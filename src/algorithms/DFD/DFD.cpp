@@ -6,6 +6,8 @@
 #include "RelationalSchema.h"
 #include "PositionListIndex.h"
 #include "LatticeTraversal/LatticeTraversal.h"
+#include "logging/easylogging++.h"
+
 
 unsigned long long DFD::ExecuteInternal() {
     partition_storage_ = std::make_unique<PartitionStorage>(relation_.get(),
@@ -53,7 +55,7 @@ unsigned long long DFD::ExecuteInternal() {
                 RegisterFd(minimal_dependency_lhs, *rhs);
             }
             AddProgress(progress_step);
-            std::cout << static_cast<int>(GetProgress().second) << "%\n";
+            LOG(INFO) << static_cast<int>(GetProgress().second);
         });
     }
 
@@ -64,9 +66,8 @@ unsigned long long DFD::ExecuteInternal() {
         std::chrono::system_clock::now() - start_time);
     long long apriori_millis = elapsed_milliseconds.count();
 
-    //std::cout << "====JSON-FD========\r\n" << GetJsonFDs() << std::endl;
-    std::cout << "> FD COUNT: " << fd_collection_.size() << std::endl;
-    std::cout << "> HASH: " << PliBasedFDAlgorithm::Fletcher16() << std::endl;
+    LOG(INFO) << "> FD COUNT: " << fd_collection_.size();
+    LOG(INFO) << "> HASH: " << PliBasedFDAlgorithm::Fletcher16();
 
     return apriori_millis;
 }
