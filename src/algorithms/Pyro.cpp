@@ -4,12 +4,12 @@
 
 #include "FdG1Strategy.h"
 #include "KeyG1Strategy.h"
+#include "logging/easylogging++.h"
 #include "Pyro.h"
 
 std::mutex searchSpacesMutex;
 
 unsigned long long Pyro::ExecuteInternal() {
-    using std::cout;
     auto start_time = std::chrono::system_clock::now();
 
     auto schema = relation_->GetSchema();
@@ -105,20 +105,16 @@ unsigned long long Pyro::ExecuteInternal() {
     auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::system_clock::now() - start_time);
 
-    LOG(DEBUG) << boost::format{"FdG1 error calculation: %1% ms"} %
-                      (FdG1Strategy::nanos_ / 1000000);
-    std::cout << "Init time: " << init_time_millis << "ms" << std::endl;
-    std::cout << "Time: " << elapsed_milliseconds.count() << " milliseconds" << std::endl;
-    std::cout << "Error calculation count: " << total_error_calc_count << std::endl;
-    std::cout << "Total ascension time: " << total_ascension << "ms" << std::endl;
-    std::cout << "Total trickle time: " << total_trickle << "ms" << std::endl;
-    std::cout << "Total intersection time: "
-              << util::PositionListIndex::micros_ / 1000 << "ms" << std::endl;
-    /*std::cout << "====RESULTS-FD====\r\n" << FDsToString();
-    std::cout << "====RESULTS-UCC====\r\n" << UCCsToString();
-    std::cout << "====JSON-FD========\r\n" << FDAlgorithm::GetJsonFDs() << std::endl;*/
-
-    std::cout << "HASH: " << PliBasedFDAlgorithm::Fletcher16() << std::endl;
+    LOG(INFO) << boost::format{"FdG1 error calculation: %1% ms"} %
+                     (FdG1Strategy::nanos_ / 1000000);
+    LOG(INFO) << "Init time: " << init_time_millis << "ms";
+    LOG(INFO) << "Time: " << elapsed_milliseconds.count() << " milliseconds";
+    LOG(INFO) << "Error calculation count: " << total_error_calc_count;
+    LOG(INFO) << "Total ascension time: " << total_ascension << "ms";
+    LOG(INFO) << "Total trickle time: " << total_trickle << "ms";
+    LOG(INFO) << "Total intersection time: "
+              << util::PositionListIndex::micros_ / 1000 << "ms";
+    LOG(INFO) << "HASH: " << PliBasedFDAlgorithm::Fletcher16();
     return elapsed_milliseconds.count();
 }
 

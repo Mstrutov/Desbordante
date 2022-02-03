@@ -1,8 +1,6 @@
 #include "Depminer.h"
 
 #include <chrono>
-#include <iostream>
-#include <iomanip>
 #include <list>
 #include <memory>
 
