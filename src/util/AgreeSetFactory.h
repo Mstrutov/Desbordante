@@ -51,10 +51,10 @@ enum class AgreeSetsGenMethod {
                                *  1. Iterates over all table attributes.
                                *  2. Iterates over all pairs of tuples from each cluster
                                *     of current attribute pli.
-                               *  3. Gets agree set for current pair using getAgreeSet.
+                               *  3. Gets agree set for current pair using GetAgreeSet.
                                */
     kUsingMCAndGetAgreeSet  , /*< In `kUsingGetAgreeSet` method, the same pair of tuples
-                               *  can be processed (passed to getAgreeSet) multiple times.
+                               *  can be processed (passed to GetAgreeSet) multiple times.
                                *  This method similar to `kUsingGetAgreeSet`,
                                *  but avoids the above problem.
                                *  It reduces the number of redundant tuple comparisons by
@@ -91,12 +91,12 @@ enum class MCGenMethod {
                                 *  A more detailed description of index is in the implementation.
                                 *  'handlePartition':
                                 *  For current eqv_class checks if it has superset in the index using
-                                *  isSubset(), if not, adds it to the index and to
+                                *  IsSubset(), if not, adds it to the index and to
                                 *  max_representation.
                                 */
     kUsingCalculateSupersets,  /*< Fills max_representation with equivalence classes from first not
                                 *  empty partition. Then iterates over the remaining partitions
-                                *  and edits max_representation on the fly using calculateSupersets:
+                                *  and edits max_representation on the fly using CalculateSupersets:
                                 *  1. Iterates over sets from max_representation.
                                 *  2. If current set is a subset of equivalence class from the
                                 *     current partition, then deletes (after max_representation
@@ -141,48 +141,50 @@ public:
                              FDAlgorithm* algo = nullptr)
         : relation_(rel), config_(c), algo_(algo) {}
 
-    ColumnLayoutRelationData const* getRelation() const { return relation_; }
+    ColumnLayoutRelationData const* GetRelation() const { return relation_; }
     void SetConfiguration(Configuration const& c) { config_ = c; }
 
     // Computes all agree sets of `relation_` using specified method
-    SetOfAgreeSets genAgreeSets() const;
+    SetOfAgreeSets GenAgreeSets() const;
 
-    SetOfVectors genPLIMaxRepresentation() const;
+    SetOfVectors GenPliMaxRepresentation() const;
 
-    AgreeSet getAgreeSet(int const tuple1_index, int const tuple2_index) const;
+    AgreeSet GetAgreeSet(int const tuple1_index, int const tuple2_index) const;
 private:
     /* Implementations of generation agree sets algorithms */
-    SetOfAgreeSets genASUsingVectorOfIDSets() const;
-    SetOfAgreeSets genASUsingMapOfIDSets() const;
-    SetOfAgreeSets genASUsingGetAgreeSets() const;
-    SetOfAgreeSets genASUsingMCAndGetAgreeSets() const;
+    SetOfAgreeSets GenAsUsingVectorOfIdSets() const;
+    SetOfAgreeSets GenAsUsingMapOfIdSets() const;
+    SetOfAgreeSets GenAsUsingGetAgreeSets() const;
+    SetOfAgreeSets GenAsUsingMcAndGetAgreeSets() const;
 
     /* Implementations of generation MC algorithms */
-    SetOfVectors genMCUsingHandleEqvClass() const;
-    SetOfVectors genMCUsingHandlePartition() const;
-    SetOfVectors genMCUsingCalculateSupersets() const;
-    SetOfVectors genMCParallel() const;
+    SetOfVectors GenMcUsingHandleEqvClass() const;
+    SetOfVectors GenMcUsingHandlePartition() const;
+    SetOfVectors GenMcUsingCalculateSupersets() const;
+    SetOfVectors GenMcParallel() const;
 
-    void calculateSupersets(SetOfVectors& max_representation,
+    void CalculateSupersets(std::unordered_set<std::vector<int>, boost::hash<std::vector<int>>> &max_representation,
                             std::deque<std::vector<int>> const& partition) const;
     /* From Metanome: `handleList`.
      * Extremely slow for anything big eqv_class,
      * I think it is not usable at all
      */
-    void handleEqvClass(std::vector<int>& eqv_class,
-                        std::unordered_map<size_t, SetOfVectors>& max_sets,
+    void HandleEqvClass(std::vector<int>& eqv_class,
+                        std::unordered_map<size_t,
+                                           std::unordered_set<std::vector<int>,
+                                                              boost::hash<std::vector<int>>>> &max_sets,
                         bool const first_step) const;
     /* From Metanome.
      * Checks if index 'contains' eqvivalence class which is superset of eqv_class.
      */
-    bool isSubset(std::vector<int> const& eqv_class,
-                  std::unordered_map<int, std::unordered_set<size_t>> const& index) const;
+    bool IsSubset(std::vector<int> const& eqv_class,
+                  const std::unordered_map<int, std::unordered_set<size_t>> &index) const;
     using VectorComp = std::function<bool (std::vector<int> const&, std::vector<int> const&)>;
-    std::set<std::vector<int>, VectorComp> genSortedEqvClasses(VectorComp comp) const;
+    std::set<std::vector<int>, VectorComp> GenSortedEqvClasses(VectorComp comp) const;
 
-    void addProgress(double const val) const noexcept {
+    void AddProgress(double const val) const noexcept {
         if (algo_ != nullptr) {
-            algo_->addProgress(val);
+            algo_->AddProgress(val);
         }
     }
 

@@ -35,23 +35,23 @@ template <>
 inline size_t CustomHashing::BitsetHash<CustomHashing::BitsetHashingMethod::kTrimAndConvertToUlong>
         (boost::dynamic_bitset<> const& bitset) {
 
-    boost::dynamic_bitset<> copyBitset = bitset;
-    copyBitset.resize(std::numeric_limits<unsigned long>::digits);
-    return copyBitset.to_ulong();
+    boost::dynamic_bitset<> copy_bitset = bitset;
+    copy_bitset.resize(std::numeric_limits<unsigned long>::digits);
+    return copy_bitset.to_ulong();
 }
 
 namespace std {
     template<>
     struct hash<Vertical> {
         size_t operator()(Vertical const& k) const {
-            return CustomHashing::BitsetHash(k.getColumnIndicesRef());
+            return CustomHashing::BitsetHash(k.GetColumnIndicesRef());
         }
     };
 
     template<>
     struct hash<Column> {
         size_t operator()(Column const& k) const {
-            return k.getIndex();
+            return k.GetIndex();
         }
     };
 

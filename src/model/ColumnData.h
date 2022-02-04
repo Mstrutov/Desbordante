@@ -12,37 +12,37 @@
 
 class ColumnData {
 private:
-    Column const* column;
-    //std::variant<std::unique_ptr<PositionListIndex>, PositionListIndex*> positionListIndex_;
-    std::shared_ptr<util::PositionListIndex> positionListIndex_;
+    Column const* column_;
+    //std::variant<std::unique_ptr<PositionListIndex>, PositionListIndex*> position_list_index_;
+    std::shared_ptr<util::PositionListIndex> position_list_index_;
 
 public:
-    ColumnData(Column const* column, std::unique_ptr<util::PositionListIndex> positionListIndex);
+    ColumnData(Column const* column, std::unique_ptr<util::PositionListIndex> position_list_index);
     // Инвариант: конструктором гарантируется, что в ColumnData.PLI есть закешированная ProbingTable
-    std::vector<int> const& getProbingTable() const {
-        return *positionListIndex_->getCachedProbingTable();
+    std::vector<int> const& GetProbingTable() const {
+        return *position_list_index_->GetCachedProbingTable();
     }
-    Column const* getColumn() const { return column; }
-    int getProbingTableValue(int tupleIndex) const {
-        return (*positionListIndex_->getCachedProbingTable())[tupleIndex];
+    Column const* GetColumn() const { return column_; }
+    int GetProbingTableValue(int tuple_index) const {
+        return (*position_list_index_->GetCachedProbingTable())[tuple_index];
     }
-    util::PositionListIndex const* getPositionListIndex() const {
-        return positionListIndex_.get();
+    util::PositionListIndex const* GetPositionListIndex() const {
+        return position_list_index_.get();
     }
     // TODO: посмотреть, что будет с производительностью, если добавить указатель на PT прямо сюда
     // по идее, это должно оптимизироваться инлайнингом
 
-    // Transfers positionListIndex_ ownership to the outside world. BE CAREFUL - other methods
+    // Transfers position_list_index_ ownership to the outside world. BE CAREFUL - other methods
     // of ColumnData get invalidated while the PLI is moved out
     // std::unique_ptr<PositionListIndex> moveOutPositionListIndex();
 
-    std::shared_ptr<util::PositionListIndex> getPLIOwnership() { return positionListIndex_; }
+    std::shared_ptr<util::PositionListIndex> GetPliOwnership() { return position_list_index_; }
 
     // Moves a PLI under the ownership of ColumnData
-    // void moveInPositionListIndex(std::unique_ptr<PositionListIndex> positionListIndex ) { positionListIndex_ = std::move(positionListIndex); }
+    // void moveInPositionListIndex(std::unique_ptr<PositionListIndex> positionListIndex ) { position_list_index_ = std::move(positionListIndex); }
 
     //void shuffle();
 
-    std::string toString() { return "Data for " + column->toString(); }
+    std::string ToString() { return "Data for " + column_->ToString(); }
     bool operator==(const ColumnData& rhs);
 };

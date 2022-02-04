@@ -11,6 +11,6 @@ public:
     PruningMap(RelationalSchema const* schema);
     PruningMap() = default;
 
-    void rebalance();
-    void rebalanceGroup(Vertical const& key);
+    void Rebalance();
+    void RebalanceGroup(Vertical const& key);
 };

@@ -6,6 +6,6 @@
 
 class DependencyStorage {
 public:
-    std::list<PartialFD> discoveredFDs_;
-    std::list<PartialKey> discoveredUCCs_;
+    std::list<PartialFD> discovered_fds_;
+    std::list<PartialKey> discovered_uccs_;
 };

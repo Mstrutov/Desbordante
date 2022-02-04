@@ -9,8 +9,8 @@
 template <typename T>
 class AlgorithmTest : public LightDatasets, public HeavyDatasets, public ::testing::Test {
 protected:
-    std::unique_ptr<FDAlgorithm> createAlgorithmInstance(
-            std::filesystem::path const& path, char separator = ',', bool hasHeader = true) {
-        return std::make_unique<T>(path, separator, hasHeader);
+    std::unique_ptr<FDAlgorithm> CreateAlgorithmInstance(
+        std::filesystem::path const& path, char separator = ',', bool has_header = true) {
+        return std::make_unique<T>(path, separator, has_header);
     }
 };

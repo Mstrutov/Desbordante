@@ -11,14 +11,14 @@
 
 INITIALIZE_EASYLOGGINGPP
 
-std::string get_selfpath();
+std::string GetSelfpath();
 
 int main(int argc, char **argv) {
-    el::Configurations defaultConf;
-    defaultConf.setToDefault();
-    defaultConf.set(el::Level::Global,
-                    el::ConfigurationType::Enabled, "false");
-    el::Loggers::reconfigureAllLoggers(defaultConf);
+    el::Configurations default_conf;
+    default_conf.setToDefault();
+    default_conf.set(el::Level::Global,
+                     el::ConfigurationType::Enabled, "false");
+    el::Loggers::reconfigureAllLoggers(default_conf);
 
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
 
 //Overall, just give file path to csv to the main when execute via console or smth.
 //https://stackoverflow.com/a/27460370 - better use this function
-std::string get_selfpath(){
+std::string GetSelfpath(){
     /*std::vector<char> buf(400);
     unsigned int len;
 

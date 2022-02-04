@@ -15,162 +15,162 @@
 
 using boost::dynamic_bitset, std::make_shared, std::shared_ptr, std::setw, std::vector, std::list, std::dynamic_pointer_cast;
 
-unsigned long long Depminer::executeInternal() {
+unsigned long long Depminer::ExecuteInternal() {
 
-    const auto startTime = std::chrono::system_clock::now();
-    schema = relation_->getSchema();
-    
-    progressStep = kTotalProgressPercent / schema->getNumColumns();
+    const auto start_time = std::chrono::system_clock::now();
+    schema_ = relation_->GetSchema();
+
+    progress_step_ = kTotalProgressPercent / schema_->GetNumColumns();
 
     //Agree sets
-    const util::AgreeSetFactory agreeSetFactory =util:: AgreeSetFactory(relation_.get(), util::AgreeSetFactory::Configuration(), this);
-    const auto agreeSets = agreeSetFactory.genAgreeSets();
-    toNextProgressPhase();
+    const util::AgreeSetFactory agree_set_factory =util:: AgreeSetFactory(relation_.get(), util::AgreeSetFactory::Configuration(), this);
+    const auto agree_sets = agree_set_factory.GenAgreeSets();
+    ToNextProgressPhase();
 
     //maximal sets
-    const std::vector<CMAXSet> cmaxSets = generateCMAXSets(agreeSets);
-    toNextProgressPhase();
+    const std::vector<CMAXSet> c_max_cets = GenerateCmaxSets(agree_sets);
+    ToNextProgressPhase();
     
     //LHS
-    const auto lhsTime = std::chrono::system_clock::now();
+    const auto lhs_time = std::chrono::system_clock::now();
     // 1
-    for (auto const& column : schema->getColumns()) {
-        lhsForColumn(column, cmaxSets);
-        addProgress(progressStep);
+    for (auto const& column : schema_->GetColumns()) {
+        LhsForColumn(column, c_max_cets);
+        AddProgress(progress_step_);
     }
 
     const auto lhs_elapsed_milliseconds 
-        = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - lhsTime);
+        = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - lhs_time);
     LOG(INFO) << "> LHS FIND TIME: " << lhs_elapsed_milliseconds.count();
-    LOG(INFO) << "> FD COUNT: " << this->fdCollection_.size();
+    LOG(INFO) << "> FD COUNT: " << this->fd_collection_.size();
     const auto elapsed_milliseconds 
-        = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
+        = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time);
     return elapsed_milliseconds.count();
 }
 
-std::vector<CMAXSet> Depminer::generateCMAXSets(std::unordered_set<Vertical> const& agreeSets) {
-    const auto startTime = std::chrono::system_clock::now();
+std::vector<CMAXSet> Depminer::GenerateCmaxSets(std::unordered_set<Vertical> const& agree_sets) {
+    const auto start_time = std::chrono::system_clock::now();
 
-    std::vector<CMAXSet> cmaxSets;
+    std::vector<CMAXSet> c_max_cets;
 
-    for (auto const& column : this->schema->getColumns()) {
+    for (auto const& column : this->schema_->GetColumns()) {
         CMAXSet result(*column);
 
         // finding all sets, which doesn't contain column
-        for (auto const& ag : agreeSets) {
-            if (!ag.contains(*column)) {
-                result.addCombination(ag);
+        for (auto const& ag : agree_sets) {
+            if (!ag.Contains(*column)) {
+                result.AddCombination(ag);
             }
         }
 
         // finding max sets
-        std::unordered_set<Vertical> superSets;
-        std::unordered_set<Vertical> setsDelete;
-        bool toAdd = true;
+        std::unordered_set<Vertical> super_sets;
+        std::unordered_set<Vertical> sets_delete;
+        bool to_add = true;
 
-        for (auto const& set : result.getCombinations()) {
-            for (auto const& superSet : superSets) {
-                if (set.contains(superSet)) {
-                    setsDelete.insert(superSet);
+        for (auto const& set : result.GetCombinations()) {
+            for (auto const& super_set : super_sets) {
+                if (set.Contains(super_set)) {
+                    sets_delete.insert(super_set);
                 }
-                if (toAdd) {
-                    toAdd = !superSet.contains(set);
+                if (to_add) {
+                    to_add = !super_set.Contains(set);
                 }
             }
-            for (auto const& toDelete : setsDelete) {
-                superSets.erase(toDelete);
+            for (auto const& to_delete : sets_delete) {
+                super_sets.erase(to_delete);
             }
-            if (toAdd) {
-                superSets.insert(set);
+            if (to_add) {
+                super_sets.insert(set);
             } else {
-                toAdd = true;
+                to_add = true;
             }
-            setsDelete.clear();
+            sets_delete.clear();
         }
         
         // Inverting MaxSet
-        std::unordered_set<Vertical> resultSuperSets;
-        for (auto const& combination : superSets) {
-            resultSuperSets.insert(combination.invert());
+        std::unordered_set<Vertical> result_super_sets;
+        for (auto const& combination : super_sets) {
+            result_super_sets.insert(combination.Invert());
         }
-        result.makeNewCombinations(std::move(resultSuperSets));
-        cmaxSets.push_back(result);
-        addProgress(progressStep);
+      result.MakeNewCombinations(std::move(result_super_sets));
+        c_max_cets.push_back(result);
+        AddProgress(progress_step_);
     }
 
     const auto elapsed_milliseconds 
-        = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
+        = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time);
     LOG(INFO) << "> CMAX GENERATION TIME: " << elapsed_milliseconds.count();
-    LOG(INFO) << "> CMAX SETS COUNT: " << cmaxSets.size();
+    LOG(INFO) << "> CMAX SETS COUNT: " << c_max_cets.size();
 
-    return cmaxSets;
+    return c_max_cets;
 }
 
-void Depminer::lhsForColumn(std::unique_ptr<Column> const& column, std::vector<CMAXSet> const& cmaxSets) {
+void Depminer::LhsForColumn(std::unique_ptr<Column> const& column, std::vector<CMAXSet> const& c_max_cets) {
         std::unordered_set<Vertical> level;
         // 3
-        CMAXSet correct = genFirstLevel(cmaxSets, *column, level);
+        CMAXSet correct = GenFirstLevel(c_max_cets, *column, level);
 
-        const auto pli = relation_->getColumnData(column->getIndex()).getPositionListIndex();
+        const auto pli = relation_->GetColumnData(column->GetIndex()).GetPositionListIndex();
         bool column_contains_only_equal_values =
-            pli->getNumNonSingletonCluster() == 1 && pli->getSize() == relation_->getNumRows();
+            pli->GetNumNonSingletonCluster() == 1 && pli->GetSize() == relation_->GetNumRows();
         if (column_contains_only_equal_values) {
-            registerFD(Vertical(), *column);
+            RegisterFd(Vertical(), *column);
             return;
         }
         
         //4
         while (!level.empty()) {
-            std::unordered_set<Vertical> levelCopy = level;
+            std::unordered_set<Vertical> level_copy = level;
             //5
             for (auto const& l : level) {
-                bool isFD = true;
-                for (auto const& combination : correct.getCombinations()) {
-                    if (!l.intersects(combination)) {
-                        isFD = false;
+                bool is_fd = true;
+                for (auto const& combination : correct.GetCombinations()) {
+                    if (!l.Intersects(combination)) {
+                        is_fd = false;
                         break;
                     }
                 }
                 //6
-                if (isFD) {
-                    if (!l.contains(*column)) {
-                        this->registerFD(l, *column);
+                if (is_fd) {
+                    if (!l.Contains(*column)) {
+                        this->RegisterFd(l, *column);
                     }
-                    levelCopy.erase(l);
+                    level_copy.erase(l);
                 }
-                if (levelCopy.empty()) {
+                if (level_copy.empty()) {
                     break;
                 }
             }
             //7
-            level = genNextLevel(levelCopy);
+            level = GenNextLevel(level_copy);
         }
 }
 
-CMAXSet Depminer::genFirstLevel(std::vector<CMAXSet> const& cmaxSets, Column const& attribute, std::unordered_set<Vertical>& level) {
-    CMAXSet correctSet(attribute);
-    for (auto const& set : cmaxSets) {
-        if (!(set.getColumn() == attribute)) {
+CMAXSet Depminer::GenFirstLevel(std::vector<CMAXSet> const& c_max_cets, Column const& attribute, std::unordered_set<Vertical>& level) {
+    CMAXSet correct_set(attribute);
+    for (auto const& set : c_max_cets) {
+        if (!(set.GetColumn() == attribute)) {
             continue;
         }
-        correctSet = set;
-        for (auto const& combination : correctSet.getCombinations()) {
-            for (auto const& column : combination.getColumns()) {
+        correct_set = set;
+        for (auto const& combination : correct_set.GetCombinations()) {
+            for (auto const& column : combination.GetColumns()) {
                 if (level.count(Vertical(*column)) == 0)
                     level.insert(Vertical(*column));
             }
         }
         break;
     }
-    return correctSet;
+    return correct_set;
 }
 
 //Apriori-gen function
-std::unordered_set<Vertical> Depminer::genNextLevel(std::unordered_set<Vertical> const& prevLevel) {
+std::unordered_set<Vertical> Depminer::GenNextLevel(std::unordered_set<Vertical> const& prev_level) {
     std::unordered_set<Vertical> candidates;
-    for (auto const& p : prevLevel) {
-        for (auto const& q : prevLevel) {
-            if (!checkJoin(p, q)) {
+    for (auto const& p : prev_level) {
+        for (auto const& q : prev_level) {
+            if (!CheckJoin(p, q)) {
                 continue;
             }
             Vertical candidate(p);
@@ -181,13 +181,13 @@ std::unordered_set<Vertical> Depminer::genNextLevel(std::unordered_set<Vertical>
     std::unordered_set<Vertical> result;
     for (Vertical candidate : candidates) {
         bool prune = false;
-        for (auto const& column : candidate.getColumns()) {
-            candidate = candidate.invert(Vertical(*column));
-            if (prevLevel.count(candidate) == 0) {
+        for (auto const& column : candidate.GetColumns()) {
+            candidate = candidate.Invert(Vertical(*column));
+            if (prev_level.count(candidate) == 0) {
                 prune = true;
                 break;
             }
-            candidate = candidate.invert(Vertical(*column));
+            candidate = candidate.Invert(Vertical(*column));
         }
         if (!prune) {
             result.insert(candidate);
@@ -196,17 +196,17 @@ std::unordered_set<Vertical> Depminer::genNextLevel(std::unordered_set<Vertical>
     return result;
 }
 
-bool Depminer::checkJoin(Vertical const& _p, Vertical const& _q) {
-    dynamic_bitset<> p = _p.getColumnIndices();
-    dynamic_bitset<> q = _q.getColumnIndices();
+bool Depminer::CheckJoin(Vertical const& _p, Vertical const& _q) {
+    dynamic_bitset<> p = _p.GetColumnIndices();
+    dynamic_bitset<> q = _q.GetColumnIndices();
 
-    size_t pLast = -1, qLast = -1;
+    size_t p_last = -1, q_last = -1;
 
     for (size_t i = 0; i < p.size(); i++) {
-        pLast = p[i] ? i : pLast;
-        qLast = q[i] ? i : qLast;
+        p_last = p[i] ? i : p_last;
+        q_last = q[i] ? i : q_last;
     }
-    if (pLast >= qLast) return false;
+    if (p_last >= q_last) return false;
     dynamic_bitset<> intersection = p;
     intersection.intersects(q);
     return p.count() == intersection.count()

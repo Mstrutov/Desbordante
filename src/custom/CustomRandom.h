@@ -5,14 +5,14 @@
 // ~ Java.Random
 class CustomRandom {
 private:
-    long long seed = 12345;
-    long long addend = 0xBLL;
-    long long multiplier = 0x5DEECE66DLL;
-    long long mask = (1LL << 48) - 1;
+    long long seed_ = 12345;
+    long long addend_ = 0xBLL;
+    long long multiplier_ = 0x5DEECE66DLL;
+    long long mask_ = (1LL << 48) - 1;
 
-    const double DOUBLE_UNIT = 1.0 / (1LL << 53);
+    const double kDoubleUnit = 1.0 / (1LL << 53);
 
-    long long abs(long long number) {
+    long long Abs(long long number) {
         if (number < 0) {
             return -number;
         } else {
@@ -20,54 +20,54 @@ private:
         }
     }
 public:
-    explicit CustomRandom(long long seed = 12345) : seed(initialScramble(seed)) {
+    explicit CustomRandom(long long seed = 12345) : seed_(InitialScramble(seed)) {
         //std::cout << "Initializing with seed = " << seed << '\n';
     }
 
-    static long long initialScramble(long long seed) { return (seed ^ 25214903917LL) & 281474976710655LL; }
+    static long long InitialScramble(long long seed) { return (seed ^ 25214903917LL) & 281474976710655LL; }
 
-    long long next(int bits) {
-        seed = (seed * multiplier + addend) & mask;
-        return (int)(static_cast<unsigned long long>(seed) >> (48 - bits));
+    long long Next(int bits) {
+        seed_ = (seed_ * multiplier_ + addend_) & mask_;
+        return (int)(static_cast<unsigned long long>(seed_) >> (48 - bits));
     }
 
-    long long nextLL() {
-        long long res = ((long long)(next(32)) << 32) + next(32);
+    long long NextLL() {
+        long long res = ((long long)(Next(32)) << 32) + Next(32);
         return res; 
     }
 
-    long long nextULL() {
-        return abs(nextLL());
+    long long NextULL() {
+        return Abs(NextLL());
     }
 
-    int nextInt() {
-        int res = next(32);
-        // std::cout << "nextInt generated " <<  res << '\n';
+    int NextInt() {
+        int res = Next(32);
+        // std::cout << "NextInt generated " <<  res << '\n';
         return res;
     }
 
-    int nextInt(int upperBound) {
-        if (upperBound <= 0) {
+    int NextInt(int upper_bound) {
+        if (upper_bound <= 0) {
             throw std::invalid_argument("UpperBound must be >= 0");
         }
 
-        int res = next(31);
-        int m = upperBound - 1;
-        if ((upperBound & m) == 0)
-            res = (int) ((upperBound * (long long)res) >> 31);
+        int res = Next(31);
+        int m = upper_bound - 1;
+        if ((upper_bound & m) == 0)
+            res = (int) ((upper_bound * (long long)res) >> 31);
         else {
             for (int u = res;
-                 u - (res = u % upperBound) + m < 0;
-                 u = next(31))
+                 u - (res = u % upper_bound) + m < 0;
+                 u = Next(31))
                 ;
         }
-        // std::cout << "bounded nextInt generated " <<  res << '\n';
+        // std::cout << "bounded NextInt generated " <<  res << '\n';
         return res;
     }
 
-    double nextDouble() { 
-        double res = (((long long)(next(26)) << 27) + next(27)) * DOUBLE_UNIT;
-        // std::cout << "nextDouble generated " << res << '\n';
+    double NextDouble() {
+        double res = (((long long)(Next(26)) << 27) + Next(27)) * kDoubleUnit;
+        // std::cout << "NextDouble generated " << res << '\n';
         return res; 
     }
 };

@@ -26,10 +26,10 @@ public:
     IdentifierSet(IdentifierSet&&) = default;
     IdentifierSet(ColumnLayoutRelationData const* relation, int index);
 
-    std::string toString() const;
+    std::string ToString() const;
 
     // Returns an intersection (agree_set(tuple, other.tuple)) of two IndetifierSets
-    Vertical intersect(IdentifierSet const& other) const;
+    Vertical Intersect(IdentifierSet const& other) const;
 private:
     struct IdentifierSetValue {
         Column const* attribute;
@@ -41,26 +41,26 @@ private:
     int const tuple_index_;
 };
 
-inline Vertical IdentifierSet::intersect(IdentifierSet const& other) const  {
-    boost::dynamic_bitset<> intersection(relation_->getNumColumns());
+inline Vertical IdentifierSet::Intersect(IdentifierSet const& other) const  {
+    boost::dynamic_bitset<> intersection(relation_->GetNumColumns());
     auto p = data_.begin();
     auto q = other.data_.begin();
 
     while (p != data_.end() && q != other.data_.end()) {
-        if (p->attribute->getIndex() < q->attribute->getIndex()) {
+        if (p->attribute->GetIndex() < q->attribute->GetIndex()) {
             ++p;
         } else {
-            if (q->attribute->getIndex() == p->attribute->getIndex() &&
+            if (q->attribute->GetIndex() == p->attribute->GetIndex() &&
                 p->cluster_index != 0 &&
                 p->cluster_index == q->cluster_index) {
-                intersection.set(p->attribute->getIndex());
+                intersection.set(p->attribute->GetIndex());
                 ++p;
             }
             ++q;
         }
     }
 
-    return relation_->getSchema()->getVertical(intersection);
+    return relation_->GetSchema()->GetVertical(intersection);
 }
 
 } // namespace util

@@ -7,69 +7,69 @@
 #include "PositionListIndex.h"
 #include "LatticeTraversal/LatticeTraversal.h"
 
-unsigned long long DFD::executeInternal() {
-    partitionStorage = std::make_unique<PartitionStorage>(relation_.get(),
-                                                          CachingMethod::ALLCACHING,
-                                                          CacheEvictionMethod::MEDAINUSAGE);
-    RelationalSchema const* const schema = relation_->getSchema();
+unsigned long long DFD::ExecuteInternal() {
+    partition_storage_ = std::make_unique<PartitionStorage>(relation_.get(),
+                                                            CachingMethod::kAllCaching,
+                                                            CacheEvictionMethod::kMedainUsage);
+    RelationalSchema const* const schema = relation_->GetSchema();
 
-    auto startTime = std::chrono::system_clock::now();
+    auto start_time = std::chrono::system_clock::now();
 
     //search for unique columns
-    for (auto const& column : schema->getColumns()) {
-        ColumnData& columnData = relation_->getColumnData(column->getIndex());
-        util::PositionListIndex const* const columnPLI = columnData.getPositionListIndex();
+    for (auto const& column : schema->GetColumns()) {
+        ColumnData& column_data = relation_->GetColumnData(column->GetIndex());
+        util::PositionListIndex const* const column_pli = column_data.GetPositionListIndex();
 
-        if (columnPLI->getNumNonSingletonCluster() == 0) {
+        if (column_pli->GetNumNonSingletonCluster() == 0) {
             Vertical const lhs = Vertical(*column);
-            uniqueColumns.push_back(lhs);
+            unique_columns_.push_back(lhs);
             //we do not register an FD at once, because we check for FDs with empty LHS later
         }
     }
 
-    double progressStep = 100.0 / schema->getNumColumns();
-    boost::asio::thread_pool searchSpacePool(numberOfThreads);
+    double progress_step = 100.0 / schema->GetNumColumns();
+    boost::asio::thread_pool search_space_pool(number_of_threads_);
 
-    for (auto & rhs : schema->getColumns()) {
-        boost::asio::post(searchSpacePool, [this, &rhs, schema, &progressStep]() {
-            ColumnData const& rhsData = relation_->getColumnData(rhs->getIndex());
-            util::PositionListIndex const *const rhsPLI = rhsData.getPositionListIndex();
+    for (auto & rhs : schema->GetColumns()) {
+        boost::asio::post(search_space_pool, [this, &rhs, schema, &progress_step]() {
+            ColumnData const& rhs_data = relation_->GetColumnData(rhs->GetIndex());
+            util::PositionListIndex const *const rhs_pli = rhs_data.GetPositionListIndex();
 
             /* if all the rows have the same value, then we register FD with empty LHS
              * if we have minimal FD like []->RHS, it is impossible to find smaller FD with this RHS,
              * so we register it and move to the next RHS
              * */
-            if (rhsPLI->getNepAsLong() == relation_->getNumTuplePairs()) {
-                registerFD(*(schema->emptyVertical), *rhs);
-                addProgress(progressStep);
+            if (rhs_pli->GetNepAsLong() == relation_->GetNumTuplePairs()) {
+                RegisterFd(*(schema->empty_vertical_), *rhs);
+                AddProgress(progress_step);
                 return;
             }
 
-            auto searchSpace = LatticeTraversal(rhs.get(), relation_.get(), uniqueColumns, partitionStorage.get());
-            auto const minimalDeps = searchSpace.findLHSs();
+            auto search_space = LatticeTraversal(rhs.get(), relation_.get(), unique_columns_, partition_storage_.get());
+            auto const minimal_deps = search_space.FindLHSs();
 
-            for (auto const& minimalDependencyLHS: minimalDeps) {
-                registerFD(minimalDependencyLHS, *rhs);
+            for (auto const& minimal_dependency_lhs: minimal_deps) {
+                RegisterFd(minimal_dependency_lhs, *rhs);
             }
-            addProgress(progressStep);
-            std::cout << static_cast<int>(getProgress().second) << "%\n";
+            AddProgress(progress_step);
+            std::cout << static_cast<int>(GetProgress().second) << "%\n";
         });
     }
 
-    searchSpacePool.join();
-    setProgress(100);
+    search_space_pool.join();
+    SetProgress(100);
 
-    auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
-    long long aprioriMillis = elapsed_milliseconds.count();
+    auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time);
+    long long apriori_millis = elapsed_milliseconds.count();
 
-    //std::cout << "====JSON-FD========\r\n" << getJsonFDs() << std::endl;
-    std::cout << "> FD COUNT: " << fdCollection_.size() << std::endl;
-    std::cout << "> HASH: " << PliBasedFDAlgorithm::fletcher16() << std::endl;
+    //std::cout << "====JSON-FD========\r\n" << GetJsonFDs() << std::endl;
+    std::cout << "> FD COUNT: " << fd_collection_.size() << std::endl;
+    std::cout << "> HASH: " << PliBasedFDAlgorithm::Fletcher16() << std::endl;
 
-    return aprioriMillis;
+    return apriori_millis;
 }
 
-DFD::DFD(const std::filesystem::path &path, char separator, bool hasHeader, unsigned int parallelism)
-        : PliBasedFDAlgorithm(path, separator, hasHeader),
-          numberOfThreads(parallelism <= 0 ? std::thread::hardware_concurrency() : parallelism) {}
+DFD::DFD(const std::filesystem::path &path, char separator, bool has_header, unsigned int parallelism)
+        : PliBasedFDAlgorithm(path, separator, has_header),
+          number_of_threads_(parallelism <= 0 ? std::thread::hardware_concurrency() : parallelism) {}
 

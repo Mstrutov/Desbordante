@@ -13,12 +13,12 @@ private:
 public:
     FD(Vertical const& lhs, Column const& rhs) : lhs_(lhs), rhs_(rhs) {}
 
-    std::string toJSONString() const {
-        return "{lhs: " + lhs_.toIndicesString() + ", rhs: " + rhs_.toIndicesString() + "}";
+    std::string ToJSONString() const {
+        return "{lhs: " + lhs_.ToIndicesString() + ", rhs: " + rhs_.ToIndicesString() + "}";
     }
 
-    Vertical const& getLhs() const { return lhs_; }
-    Column const& getRhs() const { return rhs_; }
+    Vertical const& GetLhs() const { return lhs_; }
+    Column const& GetRhs() const { return rhs_; }
 
-    // unsigned int fletcher16() const;
+    // unsigned int Fletcher16() const;
 };

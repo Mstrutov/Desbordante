@@ -16,15 +16,15 @@ using ::testing::ContainerEq, ::testing::Eq;
 
 using std::string, std::vector;
 
-std::unique_ptr<FDAlgorithm> createFD_MineAlgorithmInstance(
-        std::filesystem::path const& path, char separator = ',', bool hasHeader = true) {
-    return std::make_unique<Fd_mine>(path, separator, hasHeader);
+std::unique_ptr<FDAlgorithm> CreateFD_MineAlgorithmInstance(
+    std::filesystem::path const& path, char separator = ',', bool has_header = true) {
+    return std::make_unique<Fd_mine>(path, separator, has_header);
 }
 
 class AlgorithmTest : public LightDatasets, public HeavyDatasets, public ::testing::Test {
 };
 
-std::vector<unsigned int> FD_Mine_bitsetToIndexVector(boost::dynamic_bitset<> const& bitset) {
+std::vector<unsigned int> FD_MineBitsetToIndexVector(boost::dynamic_bitset<> const& bitset) {
     std::vector<unsigned int> res;
     for (size_t index = bitset.find_first();
          index != boost::dynamic_bitset<>::npos;
@@ -34,15 +34,15 @@ std::vector<unsigned int> FD_Mine_bitsetToIndexVector(boost::dynamic_bitset<> co
     return res;
 }
 
-testing::AssertionResult FD_Mine_checkFDListEquality(
+testing::AssertionResult FD_Mine_CheckFDListEquality(
         std::set<std::pair<std::vector<unsigned int>, unsigned int>> actual, std::list<FD> const& expected) {
     for (auto& fd : expected) {
-        std::vector<unsigned int> lhsIndices = FD_Mine_bitsetToIndexVector(fd.getLhs().getColumnIndices());
-        std::sort(lhsIndices.begin(), lhsIndices.end());
+        std::vector<unsigned int> lhs_indices = FD_MineBitsetToIndexVector(fd.GetLhs().GetColumnIndices());
+        std::sort(lhs_indices.begin(), lhs_indices.end());
 
-        if (auto it = actual.find(std::make_pair(lhsIndices, fd.getRhs().getIndex())); it == actual.end()) {
+        if (auto it = actual.find(std::make_pair(lhs_indices, fd.GetRhs().GetIndex())); it == actual.end()) {
             return testing::AssertionFailure() << "discovered a false FD: "
-                << fd.getLhs().toIndicesString() << "->" << fd.getRhs().toIndicesString();
+                                               << fd.GetLhs().ToIndicesString() << "->" << fd.GetRhs().ToIndicesString();
         } else {
             actual.erase(it);
         }
@@ -52,35 +52,35 @@ testing::AssertionResult FD_Mine_checkFDListEquality(
 
 TEST(AlgorithmSyntheticTest, FD_Mine_ThrowsOnEmpty) {
     auto path = std::filesystem::current_path() / "inputData" / "TestEmpty.csv";
-    auto algorithm = createFD_MineAlgorithmInstance(path, ',', true);
-    ASSERT_THROW(algorithm->execute(), std::runtime_error);
+    auto algorithm = CreateFD_MineAlgorithmInstance(path, ',', true);
+    ASSERT_THROW(algorithm->Execute(), std::runtime_error);
 }
 
 TEST(AlgorithmSyntheticTest, FD_Mine_ReturnsEmptyOnSingleNonKey) {
     auto path = std::filesystem::current_path() / "inputData" / "TestSingleColumn.csv";
-    auto algorithm = createFD_MineAlgorithmInstance(path, ',', true);
-    algorithm->execute();
-    ASSERT_TRUE(algorithm->fdList().empty());
+    auto algorithm = CreateFD_MineAlgorithmInstance(path, ',', true);
+    algorithm->Execute();
+    ASSERT_TRUE(algorithm->FdList().empty());
 }
 
 TEST(AlgorithmSyntheticTest, FD_Mine_WorksOnLongDataset) {
     auto path = std::filesystem::current_path() / "inputData" / "TestLong.csv";
 
-    std::set<std::pair<std::vector<unsigned int>, unsigned int>> trueFDCollection {{{2}, 1}};
+    std::set<std::pair<std::vector<unsigned int>, unsigned int>> true_fd_collection {{{2}, 1}};
 
-    auto algorithm = createFD_MineAlgorithmInstance(path, ',', true);
-    algorithm->execute();
-    ASSERT_TRUE(FD_Mine_checkFDListEquality(trueFDCollection, algorithm->fdList()));
+    auto algorithm = CreateFD_MineAlgorithmInstance(path, ',', true);
+    algorithm->Execute();
+    ASSERT_TRUE(FD_Mine_CheckFDListEquality(true_fd_collection, algorithm->FdList()));
 }
 
-std::string getJsonFDs(std::list<FD> &fdCollection) {
+std::string GetJsonFDs(std::list<FD> &fd_collection) {
     std::string result = "{\"fds\": [";
-    std::list<std::string> discoveredFDStrings;
-    for (auto& fd : fdCollection) {
-        discoveredFDStrings.push_back(fd.toJSONString());
+    std::list<std::string> discovered_fd_strings;
+    for (auto& fd : fd_collection) {
+        discovered_fd_strings.push_back(fd.ToJSONString());
     }
-    discoveredFDStrings.sort();
-    for (auto const& fd : discoveredFDStrings) {
+    discovered_fd_strings.sort();
+    for (auto const& fd : discovered_fd_strings) {
         result += fd + ",";
     }
     if (result.back() == ',') {
@@ -91,20 +91,20 @@ std::string getJsonFDs(std::list<FD> &fdCollection) {
     return result;
 }
 
-void minimizeFDs(std::list<FD> &fdCollection) {
-    std::list<FD>::iterator it1 = fdCollection.begin();
-    while (it1 != fdCollection.end()){
-        std::list<FD>::iterator it2 = fdCollection.begin();
-        while (it2 != fdCollection.end()){
+void MinimizeFDs(std::list<FD> &fd_collection) {
+    std::list<FD>::iterator it1 = fd_collection.begin();
+    while (it1 != fd_collection.end()){
+        std::list<FD>::iterator it2 = fd_collection.begin();
+        while (it2 != fd_collection.end()){
             if (it1 == it2) {
                 it2++;
                 continue;
             }
-            if (it1->getRhs().getIndex() == it2->getRhs().getIndex()) {
-                auto lhs1 = it1->getLhs();
-                auto lhs2 = it2->getLhs();
-                if (lhs2.contains(lhs1)) {
-                    it2 = fdCollection.erase(it2);
+            if (it1->GetRhs().GetIndex() == it2->GetRhs().GetIndex()) {
+                auto lhs1 = it1->GetLhs();
+                auto lhs2 = it2->GetLhs();
+                if (lhs2.Contains(lhs1)) {
+                    it2 = fd_collection.erase(it2);
                     continue;
                 }
             }
@@ -118,28 +118,28 @@ TEST_F(AlgorithmTest, FD_Mine_ReturnsSameAsPyro) {
     auto path = std::filesystem::current_path() /"inputData";
 
     try {
-        for (size_t i = 0; i < LightDatasets::datasetQuantity(); i++) {
-            std::cout << LightDatasets::dataset(i) << std::endl;
+        for (size_t i = 0; i < LightDatasets::DatasetQuantity(); i++) {
+            std::cout << LightDatasets::DatasetName(i) << std::endl;
             // TODO: change this hotfix
-            if (LightDatasets::dataset(i) == "breast_cancer.csv") {
+            if (LightDatasets::DatasetName(i) == "breast_cancer.csv") {
                 continue;
             }
-            auto algorithm = createFD_MineAlgorithmInstance(
-                    path / LightDatasets::dataset(i),LightDatasets::separator(i),
-                    LightDatasets::hasHeader(i));
+            auto algorithm = CreateFD_MineAlgorithmInstance(
+                path / LightDatasets::DatasetName(i), LightDatasets::Separator(i),
+                LightDatasets::HasHeader(i));
               
-            auto pyro = Pyro(path / LightDatasets::dataset(i), LightDatasets::separator(i),
-                             LightDatasets::hasHeader(i), 0, 0, -1);
+            auto pyro = Pyro(path / LightDatasets::DatasetName(i), LightDatasets::Separator(i),
+                             LightDatasets::HasHeader(i), 0, 0, -1);
+
+            algorithm->Execute();
+            std::list<FD> fds = algorithm->FdList();
+            pyro.Execute();
             
-            algorithm->execute();
-            std::list<FD> fds = algorithm->fdList();
-            pyro.execute();
-            
-            for (auto &fd : pyro.fdList()) {
-                if (fd.getLhs().getArity() == 0) {
+            for (auto &fd : pyro.FdList()) {
+                if (fd.GetLhs().GetArity() == 0) {
                     std::list<FD>::iterator it = fds.begin();
                     while (it != fds.end()){
-                        if (it->getRhs().getIndex() == fd.getRhs().getIndex()) {
+                        if (it->GetRhs().GetIndex() == fd.GetRhs().GetIndex()) {
                             it = fds.erase(it);
                             continue;
                         }
@@ -148,14 +148,14 @@ TEST_F(AlgorithmTest, FD_Mine_ReturnsSameAsPyro) {
                     fds.push_back(fd);
                 }
             }
-            
-            minimizeFDs(fds);
-            // std::string algorithmResults = algorithm->getJsonFDs();
-            std::string algorithmResults = getJsonFDs(fds);
-            std::string resultsPyro = pyro.FDAlgorithm::getJsonFDs();
 
-            EXPECT_EQ(resultsPyro, algorithmResults)
-                << "The new algorithm and Pyro yield different results at " << LightDatasets::dataset(i);
+            MinimizeFDs(fds);
+            // std::string algorithm_results = algorithm->GetJsonFDs();
+            std::string algorithm_results = GetJsonFDs(fds);
+            std::string results_pyro = pyro.FDAlgorithm::GetJsonFDs();
+
+            EXPECT_EQ(results_pyro, algorithm_results)
+                << "The new algorithm and Pyro yield different results at " << LightDatasets::DatasetName(i);
         }
     }
     catch (std::runtime_error& e) {

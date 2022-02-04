@@ -11,25 +11,25 @@ class Column {
 friend RelationalSchema;
 
 private:
-    std::string name;
-    unsigned int index;
-    RelationalSchema const* schema;
+    std::string name_;
+    unsigned int index_;
+    RelationalSchema const* schema_;
 
 public:
     Column(RelationalSchema const* schema, std::string name, int index) :
-            name(std::move(name)),
-            index(index),
-            schema(schema) {}
+        name_(std::move(name)),
+        index_(index),
+        schema_(schema) {}
 
-    unsigned int getIndex() const { return index; }
+    unsigned int GetIndex() const { return index_; }
 
-    std::string getName() const { return name; }
-    RelationalSchema const* getSchema() const { return schema; }
+    std::string GetName() const { return name_; }
+    RelationalSchema const* GetSchema() const { return schema_; }
 
-    std::string toIndicesString() const { return std::to_string(index);}
-    std::string toString() const { return "[" + name + "]";}
+    std::string ToIndicesString() const { return std::to_string(index_);}
+    std::string ToString() const { return "[" + name_ + "]";}
 
-    explicit operator std::string() const { return toString(); }
+    explicit operator std::string() const { return ToString(); }
 
     explicit operator Vertical() const;
 

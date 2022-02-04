@@ -7,36 +7,36 @@ class FdG1Strategy : public DependencyStrategy {
 private:
     Column const* rhs_;
 
-    double calculateG1(util::PositionListIndex* lhsPLI) const;
-    double calculateG1(double numViolatingTuplePairs) const;
-    util::ConfidenceInterval calculateG1(util::ConfidenceInterval const& numViolations) const;
+    double CalculateG1(util::PositionListIndex* lhs_pli) const;
+    double CalculateG1(double num_violating_tuple_pairs) const;
+    util::ConfidenceInterval CalculateG1(util::ConfidenceInterval const& num_violations) const;
 public:
     static unsigned long long nanos_;
 
-    FdG1Strategy(Column const* rhs, double maxError, double deviation)
-        : DependencyStrategy(maxError, deviation), rhs_(rhs) {}
+    FdG1Strategy(Column const* rhs, double max_error, double deviation)
+        : DependencyStrategy(max_error, deviation), rhs_(rhs) {}
 
-    void ensureInitialized(SearchSpace* searchSpace) const override;
-    double calculateError(Vertical const& lhs) const override;
-    DependencyCandidate createDependencyCandidate(Vertical const& vertical) const override;
-    std::string format(Vertical const& vertical) const override {
+    void EnsureInitialized(SearchSpace* search_space) const override;
+    double CalculateError(Vertical const& lhs) const override;
+    DependencyCandidate CreateDependencyCandidate(Vertical const& vertical) const override;
+    std::string Format(Vertical const& vertical) const override {
         return (boost::format("%s\u2192%s") % std::string(vertical) % std::string(*rhs_)).str();
     }
     explicit operator std::string() const override {
         return (boost::format("FD[RHS=%s, g1\u2264(%.3f..%.3f)]") %
-                rhs_->getName() % minNonDependencyError_ % maxDependencyError_).str();
+            rhs_->GetName() % min_non_dependency_error_ % max_dependency_error_).str();
     }
 
     // TODO: can it be const though? Dependency registers --> some state somewhere changes.
-    // Non-const discoveryUnit?
-    void registerDependency(Vertical const& vertical, double error,
-                            DependencyConsumer const& discoveryUnit) const override;
-    bool isIrrelevantColumn(unsigned int columnIndex) const override {
-        return rhs_->getIndex() == columnIndex;
+    // Non-const discovery_unit?
+    void RegisterDependency(Vertical const& vertical, double error,
+                            DependencyConsumer const& discovery_unit) const override;
+    bool IsIrrelevantColumn(unsigned int column_index) const override {
+        return rhs_->GetIndex() == column_index;
     }
-    unsigned int getNumIrrelevantColumns() const override { return 1; }
+    unsigned int GetNumIrrelevantColumns() const override { return 1; }
 
-    std::unique_ptr<DependencyStrategy> createClone() override;
+    std::unique_ptr<DependencyStrategy> CreateClone() override;
 
-    Vertical getIrrelevantColumns() const override { return static_cast<Vertical>(*rhs_); }
+    Vertical GetIrrelevantColumns() const override { return static_cast<Vertical>(*rhs_); }
 };

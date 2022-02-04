@@ -18,47 +18,47 @@ namespace util {
 class AgreeSetSample {
 public:
 
-    virtual unsigned long long getNumAgreeSupersets(Vertical const& agreement) const = 0;
-    virtual unsigned long long getNumAgreeSupersets(Vertical const& agreement, Vertical const& disagreement) const = 0;
-    virtual std::unique_ptr<std::vector<unsigned long long>> getNumAgreeSupersetsExt(
+    virtual unsigned long long GetNumAgreeSupersets(Vertical const& agreement) const = 0;
+    virtual unsigned long long GetNumAgreeSupersets(Vertical const& agreement, Vertical const& disagreement) const = 0;
+    virtual std::unique_ptr<std::vector<unsigned long long>> GetNumAgreeSupersetsExt(
             Vertical const& agreement, Vertical const& disagreement) const;
 
-    double estimateAgreements(Vertical const& agreement) const;
-    ConfidenceInterval estimateAgreements(Vertical const& agreement, double confidence) const;
-    ConfidenceInterval estimateMixed(Vertical const& agreement, Vertical const& disagreement, double confidence) const;
+    double EstimateAgreements(Vertical const& agreement) const;
+    ConfidenceInterval EstimateAgreements(Vertical const& agreement, double confidence) const;
+    ConfidenceInterval EstimateMixed(Vertical const& agreement, Vertical const& disagreement, double confidence) const;
 
-    double getSamplingRatio() const { return sampleSize / static_cast<double>(populationSize); }
-    bool isExact() const { return populationSize == sampleSize; }
+    double GetSamplingRatio() const { return sample_size_ / static_cast<double>(population_size_); }
+    bool IsExact() const { return population_size_ == sample_size_; }
 
     virtual ~AgreeSetSample() = default;
 
 protected:
-    ::ColumnLayoutRelationData const* relationData;
-    Vertical focus;
-    unsigned int sampleSize;
-    unsigned long long populationSize;
-    AgreeSetSample(ColumnLayoutRelationData const* relationData, Vertical  focus, unsigned int sampleSize, unsigned long long populationSize);
+    ::ColumnLayoutRelationData const* relation_data_;
+    Vertical focus_;
+    unsigned int sample_size_;
+    unsigned long long population_size_;
+    AgreeSetSample(ColumnLayoutRelationData const* relation_data, Vertical  focus, unsigned int sample_size, unsigned long long population_size);
 
     template<typename T>
-    static std::unique_ptr<T> createFor(ColumnLayoutRelationData* relationData, int sampleSize);
+    static std::unique_ptr<T> CreateFor(ColumnLayoutRelationData* relation_data, int sample_size);
 
     template<typename T>
-    static std::unique_ptr<T> createFocusedFor(ColumnLayoutRelationData const* relation,
-                                          Vertical const& restrictionVertical,
-                                          PositionListIndex const* restrictionPli,
-                                          unsigned int sampleSize, CustomRandom& random);
+    static std::unique_ptr<T> CreateFocusedFor(ColumnLayoutRelationData const* relation,
+                                               Vertical const& restriction_vertical,
+                                               PositionListIndex const* restriction_pli,
+                                               unsigned int sample_size, CustomRandom& random);
 private:
-    static double stdDevSmoothing;
+    static double std_dev_smoothing_;
 
-    double ratioToRelationRatio(double ratio) const {
-        return ratio * populationSize / relationData->getNumTuplePairs(); }
-    double observationsToRelationRatio(double numObservations) const {
-        return ratioToRelationRatio(numObservations / sampleSize); }
-    static double calculateNonNegativeFraction(double a, double b);
+    double RatioToRelationRatio(double ratio) const {
+        return ratio * population_size_ / relation_data_->GetNumTuplePairs(); }
+    double ObservationsToRelationRatio(double num_observations) const {
+        return RatioToRelationRatio(num_observations / sample_size_); }
+    static double CalculateNonNegativeFraction(double a, double b);
 
-    ConfidenceInterval estimateGivenNumHits(unsigned long long numHits, double confidence) const;
+    ConfidenceInterval EstimateGivenNumHits(unsigned long long num_hits, double confidence) const;
     // Inverse cumulative distribution function (aka the probit function)
-    double probitFunction(double quantile) const;
+    double ProbitFunction(double quantile) const;
 };
 
 } // namespace util

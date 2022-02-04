@@ -1,12 +1,12 @@
 #pragma once
 
 enum class NodeCategory {
-    dependency,
-    minimalDependency,
-    candidateMinimalDependency,
-    nonDependency,
-    maximalNonDependency,
-    candidateMaximalNonDependency
+    kDependency,
+    kMinimalDependency,
+    kCandidateMinimalDependency,
+    kNonDependency,
+    kMaximalNonDependency,
+    kCandidateMaximalNonDependency
 };
 
 

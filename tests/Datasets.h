@@ -12,16 +12,16 @@ struct Dataset {
 
 class DatasetCollection {
 protected:
-    virtual size_t datasetQuantity() = 0;
-    virtual std::string dataset(size_t i) = 0;
-    virtual char separator(size_t i) = 0;
-    virtual bool hasHeader(size_t i) = 0;
-    virtual unsigned int hash(size_t i) = 0;
+    virtual size_t DatasetQuantity() = 0;
+    virtual std::string DatasetName(size_t i) = 0;
+    virtual char Separator(size_t i) = 0;
+    virtual bool HasHeader(size_t i) = 0;
+    virtual unsigned int Hash(size_t i) = 0;
 };
 
 class LightDatasets : public DatasetCollection {
 protected:
-    std::vector<Dataset> datasets = {
+    std::vector<Dataset> datasets_ = {
             {"CIPublicHighway10k.csv", 21537, ',', true},
             {"neighbors10k.csv", 62210, ',', true},
             {"WDC_astronomical.csv", 49417, ',', true},
@@ -37,16 +37,16 @@ protected:
 
     // DEPRECATED -- just use
     // for (auto dataset : LightDatasets::datasets) { ... }
-    size_t datasetQuantity() override { return datasets.size(); }
-    std::string dataset(size_t i) override { return datasets[i].name; }
-    char separator(size_t i) override { return datasets[i].separator; }
-    bool hasHeader(size_t i) override { return datasets[i].header_presence; }
-    unsigned int hash(size_t i) override { return datasets[i].hash; }
+    size_t DatasetQuantity() override { return datasets_.size(); }
+    std::string DatasetName(size_t i) override { return datasets_[i].name; }
+    char Separator(size_t i) override { return datasets_[i].separator; }
+    bool HasHeader(size_t i) override { return datasets_[i].header_presence; }
+    unsigned int Hash(size_t i) override { return datasets_[i].hash; }
 };
 
 class HeavyDatasets : public DatasetCollection {
 protected:
-    std::vector<Dataset> datasets = {
+    std::vector<Dataset> datasets_ = {
             {"adult.csv", 20873, ';', false},
             {"CIPublicHighway.csv", 32696, ',', true},
             {"EpicMeds.csv", 19617, '|', true},
@@ -57,9 +57,9 @@ protected:
 
     // DEPRECATED -- just use
     // for (auto dataset : HeavyDatasets::datasets) { ... }
-    size_t datasetQuantity() override { return datasets.size(); }
-    std::string dataset(size_t i) override { return datasets[i].name; }
-    char separator(size_t i) override { return datasets[i].separator; }
-    bool hasHeader(size_t i) override { return datasets[i].header_presence; }
-    unsigned int hash(size_t i) override { return datasets[i].hash; }
+    size_t DatasetQuantity() override { return datasets_.size(); }
+    std::string DatasetName(size_t i) override { return datasets_[i].name; }
+    char Separator(size_t i) override { return datasets_[i].separator; }
+    bool HasHeader(size_t i) override { return datasets_[i].header_presence; }
+    unsigned int Hash(size_t i) override { return datasets_[i].hash; }
 };

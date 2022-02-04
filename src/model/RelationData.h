@@ -13,26 +13,26 @@
 
 class RelationData {
 public:
-    static constexpr int nullValueId = -1;
+    static constexpr int kNullValueId = -1;
 
-    virtual unsigned int getNumRows() const = 0;
-    virtual std::vector<ColumnData>& getColumnData() = 0;
-    virtual std::vector<ColumnData> const& getColumnData() const = 0;
-    virtual ColumnData& getColumnData(int columnIndex) = 0;
-    virtual ColumnData const& getColumnData(int columnIndex) const = 0;
-    virtual std::vector<int> getTuple(int tupleIndex) const = 0;
+    virtual unsigned int GetNumRows() const = 0;
+    virtual std::vector<ColumnData>& GetColumnData() = 0;
+    virtual std::vector<ColumnData> const& GetColumnData() const = 0;
+    virtual ColumnData& GetColumnData(int column_index) = 0;
+    virtual ColumnData const& GetColumnData(int column_index) const = 0;
+    virtual std::vector<int> GetTuple(int tuple_index) const = 0;
 
     virtual ~RelationData();
 
     //virtual void shuffleColumns()=0;
 
-    unsigned int getNumColumns() const { return schema->getNumColumns(); }
-    double getMaximumNip() const { return getNumRows() * (getNumRows() - 1) / 2.0; }
-    unsigned long long getNumTuplePairs() const { return (unsigned long long) getNumRows() * (getNumRows() - 1) / 2; }
-    RelationalSchema const* getSchema() const { return schema.get(); }
+    unsigned int GetNumColumns() const { return schema_->GetNumColumns(); }
+    double GetMaximumNip() const { return GetNumRows() * (GetNumRows() - 1) / 2.0; }
+    unsigned long long GetNumTuplePairs() const { return (unsigned long long) GetNumRows() * (GetNumRows() - 1) / 2; }
+    RelationalSchema const* GetSchema() const { return schema_.get(); }
 
 protected:
-    std::unique_ptr<RelationalSchema> schema;
+    std::unique_ptr<RelationalSchema> schema_;
 
-    explicit RelationData(std::unique_ptr<RelationalSchema> schema) : schema(std::move(schema)) {}
+    explicit RelationData(std::unique_ptr<RelationalSchema> schema) : schema_(std::move(schema)) {}
 };

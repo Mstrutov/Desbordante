@@ -11,37 +11,37 @@
 
 class LatticeTraversal {
 private:
-    Column const* const rhs;
+    Column const* const rhs_;
 
-    std::unordered_set<Vertical> minimalDeps;
-    std::unordered_set<Vertical> maximalNonDeps;
-    DependenciesMap dependenciesMap;
-    NonDependenciesMap nonDependenciesMap;
-    LatticeObservations observations;
-    std::stack<Vertical> trace;
-    ColumnOrder const columnOrder;
+    std::unordered_set<Vertical> minimal_deps_;
+    std::unordered_set<Vertical> maximal_non_deps_;
+    DependenciesMap dependencies_map_;
+    NonDependenciesMap non_dependencies_map_;
+    LatticeObservations observations_;
+    std::stack<Vertical> trace_;
+    ColumnOrder const column_order_;
 
-    std::vector<Vertical> const& uniqueColumns;
-    ColumnLayoutRelationData const* const relation;
-    PartitionStorage * const partitionStorage;
+    std::vector<Vertical> const& unique_columns_;
+    ColumnLayoutRelationData const* const relation_;
+    PartitionStorage * const partition_storage_;
 
-    std::random_device rd;
-    std::mt19937 gen;
+    std::random_device rd_;
+    std::mt19937 gen_;
 
-    bool inferCategory(Vertical const& node, unsigned int rhsIndex);
-    Vertical pickNextNode(Vertical const &node, unsigned int rhsIndex);
-    std::stack<Vertical> generateNextSeeds(Column const* const currentRHS);
+    bool InferCategory(Vertical const& node, unsigned int rhs_index);
+    Vertical PickNextNode(Vertical const &node, unsigned int rhs_index);
+    std::stack<Vertical> GenerateNextSeeds(Column const* const current_rhs);
 
-    std::list<Vertical> minimize(std::unordered_set<Vertical> const&) const;
-    Vertical const& takeRandom(std::unordered_set<Vertical> &nodeSet);
-    static void substractSets(std::unordered_set<Vertical> & set,
-                              std::unordered_set<Vertical> const& setToSubstract);
+    std::list<Vertical> Minimize(std::unordered_set<Vertical> const&node_list) const;
+    Vertical const& TakeRandom(std::unordered_set<Vertical> &node_set);
+    static void SubstractSets(std::unordered_set<Vertical> & set,
+                              std::unordered_set<Vertical> const& set_to_substract);
 
 public:
     LatticeTraversal(Column const* const rhs,
                      ColumnLayoutRelationData const* const relation,
-                     std::vector<Vertical> const& uniqueVerticals,
-                     PartitionStorage * const partitionStorage);
+                     std::vector<Vertical> const& unique_verticals,
+                     PartitionStorage * const partition_storage);
 
-    std::unordered_set<Vertical> findLHSs();
+    std::unordered_set<Vertical> FindLHSs();
 };

@@ -19,97 +19,97 @@ private:
                                                         DependencyCandidate const&)>;
     ProfilingContext* context_;
     std::unique_ptr<DependencyStrategy> strategy_;
-    std::unique_ptr<util::VerticalMap<VerticalInfo>> localVisitees_ = nullptr;
-    std::unique_ptr<util::VerticalMap<VerticalInfo>> globalVisitees_;
-    std::set<DependencyCandidate, DependencyCandidateComp> launchPads_;
-    std::unique_ptr<util::VerticalMap<DependencyCandidate>> launchPadIndex_;
-    std::list<DependencyCandidate> deferredLaunchPads_;
+    std::unique_ptr<util::VerticalMap<VerticalInfo>> local_visitees_ = nullptr;
+    std::unique_ptr<util::VerticalMap<VerticalInfo>> global_visitees_;
+    std::set<DependencyCandidate, DependencyCandidateComp> launch_pads_;
+    std::unique_ptr<util::VerticalMap<DependencyCandidate>> launch_pad_index_;
+    std::list<DependencyCandidate> deferred_launch_pads_;
     std::unique_ptr<util::VerticalMap<Vertical>> scope_;
-    double sampleBoost_;
-    int recursionDepth_;
-    bool isAscendRandomly_ = false;
+    double sample_boost_;
+    int recursion_depth_;
+    bool is_ascend_randomly_ = false;
 
-    int numNested = 0;
+    int num_nested_ = 0;
 
 
-    // void discover(std::unique_ptr<VerticalMap<VerticalInfo>> localVisitees);
-    std::optional<DependencyCandidate> pollLaunchPad();
-    void escapeLaunchPad(Vertical const& launchPad, std::vector<Vertical> pruningSupersets);
-    void returnLaunchPad(DependencyCandidate const& launchPad, bool isDefer);
+    // void Discover(std::unique_ptr<VerticalMap<VerticalInfo>> localVisitees);
+    std::optional<DependencyCandidate> PollLaunchPad();
+    void EscapeLaunchPad(Vertical const& hitting_set_candidate, std::vector<Vertical> pruning_supersets);
+    void ReturnLaunchPad(DependencyCandidate const& launch_pad, bool is_defer);
 
-    bool ascend(DependencyCandidate const& launchPad);
-    void checkEstimate(DependencyStrategy* strategy,
-                       DependencyCandidate const& traversalCandidate);
-    void trickleDown(Vertical const& mainPeak, double mainPeakError);
-    std::optional<Vertical> trickleDownFrom(
-            DependencyCandidate minDepCandidate, DependencyStrategy* strategy,
-            util::VerticalMap<VerticalInfo>* allegedMinDeps,
-            std::unordered_set<Vertical> & allegedNonDeps,
-            util::VerticalMap<VerticalInfo>* globalVisitees, double boostFactor);
+    bool Ascend(DependencyCandidate const& launch_pad);
+    void CheckEstimate(DependencyStrategy* strategy,
+                       DependencyCandidate const& traversal_candidate);
+    void TrickleDown(Vertical const& main_peak, double main_peak_error);
+    std::optional<Vertical> TrickleDownFrom(
+        DependencyCandidate min_dep_candidate, DependencyStrategy* strategy,
+        util::VerticalMap<VerticalInfo>* alleged_min_deps,
+        std::unordered_set<Vertical> & alleged_non_deps,
+        util::VerticalMap<VerticalInfo>* global_visitees, double boost_factor);
 
     // CAREFUL: resets globalVisitees_, therefore SearchSpace could become invalidated
-    std::unique_ptr<util::VerticalMap<VerticalInfo>> moveOutGlobalVisitees() {
-        return std::move(globalVisitees_);
+    std::unique_ptr<util::VerticalMap<VerticalInfo>> MoveOutGlobalVisitees() {
+        return std::move(global_visitees_);
     }
     // CAREFUL: resets localVisitees_, therefore SearchSpace could become invalidated
-    std::unique_ptr<util::VerticalMap<VerticalInfo>> moveOutLocalVisitees() {
-        return std::move(localVisitees_);
+    std::unique_ptr<util::VerticalMap<VerticalInfo>> MoveOutLocalVisitees() {
+        return std::move(local_visitees_);
     }
-    void moveInLocalVisitees(std::unique_ptr<util::VerticalMap<VerticalInfo>> localVisitees) {
-        localVisitees_ = std::move(localVisitees);
+    void MoveInLocalVisitees(std::unique_ptr<util::VerticalMap<VerticalInfo>> local_visitees) {
+        local_visitees_ = std::move(local_visitees);
     }
 
 
-    static void requireMinimalDependency(DependencyStrategy* strategy,
-                                         Vertical const& minDependency);
-    static std::vector<Vertical> getSubsetDeps(Vertical const& vertical,
-                                               util::VerticalMap<VerticalInfo>* verticalInfos);
-    static bool isImpliedByMinDep(Vertical const& vertical,
-                                  util::VerticalMap<VerticalInfo>* verticalInfos);
-    static bool isKnownNonDependency(Vertical const& vertical,
-                                     util::VerticalMap<VerticalInfo>* verticalInfos);
-    static std::string formatArityHistogram() = delete;
-    static std::string formatArityHistogram(util::VerticalMap<int*>) = delete;
+    static void RequireMinimalDependency(DependencyStrategy* strategy,
+                                         Vertical const& min_dependency);
+    static std::vector<Vertical> GetSubsetDeps(Vertical const& vertical,
+                                               util::VerticalMap<VerticalInfo>* vertical_infos);
+    static bool IsImpliedByMinDep(Vertical const& vertical,
+                                  util::VerticalMap<VerticalInfo>* vertical_infos);
+    static bool IsKnownNonDependency(Vertical const& vertical,
+                                     util::VerticalMap<VerticalInfo>* vertical_infos);
+    static std::string FormatArityHistogram() = delete;
+    static std::string FormatArityHistogram(util::VerticalMap<int*>) = delete;
 
 public:
-    unsigned long long nanosSmartConstructing = 0;
-    unsigned long long pollingLaunchPads = 0;
-    unsigned long long ascending = 0;
-    unsigned long long tricklingDown = 0;
-    unsigned long long tricklingDownPart = 0;
-    unsigned long long tricklingDownFrom = 0;
-    unsigned long long returningLaunchPad = 0;
+    unsigned long long nanos_smart_constructing_ = 0;
+    unsigned long long polling_launch_pads_ = 0;
+    unsigned long long ascending_ = 0;
+    unsigned long long trickling_down_ = 0;
+    unsigned long long trickling_down_part_ = 0;
+    unsigned long long trickling_down_from_ = 0;
+    unsigned long long returning_launch_pad_ = 0;
 
-    bool isInitialized_ = false;
+    bool is_initialized_ = false;
     int id_;
 
     SearchSpace(int id, std::unique_ptr<DependencyStrategy> strategy,
                 std::unique_ptr<util::VerticalMap<Vertical>> scope,
-                std::unique_ptr<util::VerticalMap<VerticalInfo>> globalVisitees,
+                std::unique_ptr<util::VerticalMap<VerticalInfo>> global_visitees,
                 RelationalSchema const* schema,
-                DependencyCandidateComp const& dependencyCandidateComparator,
-                int recursionDepth, double sampleBoost)
-        : strategy_(std::move(strategy)), globalVisitees_(std::move(globalVisitees)),
-          launchPads_(dependencyCandidateComparator),
-          launchPadIndex_(std::make_unique<util::VerticalMap<DependencyCandidate>>(schema)),
-          scope_(std::move(scope)), sampleBoost_(sampleBoost), recursionDepth_(recursionDepth),
+                DependencyCandidateComp const& dependency_candidate_comparator,
+                int recursion_depth, double sample_boost)
+        : strategy_(std::move(strategy)), global_visitees_(std::move(global_visitees)),
+          launch_pads_(dependency_candidate_comparator),
+          launch_pad_index_(std::make_unique<util::VerticalMap<DependencyCandidate>>(schema)),
+          scope_(std::move(scope)), sample_boost_(sample_boost), recursion_depth_(recursion_depth),
           id_(id) {}
 
     SearchSpace(int id, std::unique_ptr<DependencyStrategy> strategy,
                 RelationalSchema const* schema,
-                DependencyCandidateComp const& dependencyCandidateComparator)
+                DependencyCandidateComp const& dependency_candidate_comparator)
         : SearchSpace(id, std::move(strategy), nullptr,
                       std::make_unique<util::VerticalMap<VerticalInfo>>(schema),
-                      schema, dependencyCandidateComparator, 0, 1) {}
+                      schema, dependency_candidate_comparator, 0, 1) {}
 
-    void ensureInitialized();
-    void discover();
-    void addLaunchPad(DependencyCandidate const& launchPad);
-    void setContext(ProfilingContext* context)  {
+    void EnsureInitialized();
+    void Discover();
+    void AddLaunchPad(DependencyCandidate const& launch_pad);
+    void SetContext(ProfilingContext* context)  {
         context_ = context;
         strategy_->context_ = context;
     }
-    ProfilingContext* getContext() { return context_; }
-    unsigned int getErrorCalcCount() { return strategy_->calcCount_; }
-    void printStats() const;
+    ProfilingContext* GetContext() { return context_; }
+    unsigned int GetErrorCalcCount() { return strategy_->calc_count_; }
+    void PrintStats() const;
 };

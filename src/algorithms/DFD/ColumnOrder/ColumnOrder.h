@@ -5,11 +5,11 @@
 
 class ColumnOrder {
 private:
-    std::vector<int> order;
+    std::vector<int> order_;
 public:
-    explicit ColumnOrder(ColumnLayoutRelationData const* const relationData);
+    explicit ColumnOrder(ColumnLayoutRelationData const* const relation_data);
     ColumnOrder() = default;
 
-    std::vector<int> getOrderHighDistinctCount(Vertical const& columns) const;
-    std::vector<int> getOrderLowDistinctCount(Vertical const& columns) const;
+    std::vector<int> GetOrderHighDistinctCount(Vertical const& columns) const;
+    std::vector<int> GetOrderLowDistinctCount(Vertical const& columns) const;
 };

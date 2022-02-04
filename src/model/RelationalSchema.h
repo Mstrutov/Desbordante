@@ -22,28 +22,28 @@ class Vertical;
 
 class RelationalSchema {
 private:
-    std::vector<std::unique_ptr<Column>> columns;
-    std::string name;
-    bool isNullEqNull;
+    std::vector<std::unique_ptr<Column>> columns_;
+    std::string name_;
+    bool is_null_eq_null_;
 
 public:
-    std::unique_ptr<Vertical> emptyVertical;
+    std::unique_ptr<Vertical> empty_vertical_;
 
-    RelationalSchema(std::string name, bool isNullEqNull);
-    void init();
-    std::string getName() const { return name; }
-    std::vector<std::unique_ptr<Column>> const& getColumns() const { return columns; };
-    Column const* getColumn(const std::string &colName) const;
-    Column const* getColumn(int index) const;
-    size_t getNumColumns() const;
-    Vertical getVertical(boost::dynamic_bitset<> indices) const;
-    bool isNullEqualNull() const;
+    RelationalSchema(std::string name, bool is_null_eq_null);
+    void Init();
+    std::string GetName() const { return name_; }
+    std::vector<std::unique_ptr<Column>> const& GetColumns() const { return columns_; };
+    Column const* GetColumn(const std::string &col_name) const;
+    Column const* GetColumn(int index) const;
+    size_t GetNumColumns() const;
+    Vertical GetVertical(boost::dynamic_bitset<> indices) const;
+    bool IsNullEqualNull() const;
 
-    void appendColumn(const std::string& colName);
-    void appendColumn(Column column);
+    void AppendColumn(const std::string& col_name);
+    void AppendColumn(Column column);
 
-    std::unordered_set<Vertical> calculateHittingSet(std::vector<Vertical> verticals,
-            boost::optional<std::function<bool (Vertical const&)>> pruningFunction) const;
+    std::unordered_set<Vertical> CalculateHittingSet(std::vector<Vertical> verticals,
+                                                     boost::optional<std::function<bool (Vertical const&)>> pruning_function) const;
 
     ~RelationalSchema();
 };

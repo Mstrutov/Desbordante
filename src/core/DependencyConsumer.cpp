@@ -1,44 +1,44 @@
 
 #include "DependencyConsumer.h"
 
-PartialFD DependencyConsumer::registerFd(Vertical const& lhs, Column const& rhs,
+PartialFD DependencyConsumer::RegisterFd(Vertical const& lhs, Column const& rhs,
                                          double error, double score) const {
-    PartialFD partialFd(lhs, rhs, error, score);
-    fdConsumer_(partialFd);
-    return partialFd;
+    PartialFD partial_fd(lhs, rhs, error, score);
+    fd_consumer_(partial_fd);
+    return partial_fd;
 }
 
-PartialKey DependencyConsumer::registerUcc(Vertical const& keyVertical,
+PartialKey DependencyConsumer::RegisterUcc(Vertical const& key_vertical,
                                            double error, double score) const {
-    PartialKey partialKey(keyVertical, error, score);
-    uccConsumer_(partialKey);
-    return partialKey;
+    PartialKey partial_key(key_vertical, error, score);
+    ucc_consumer_(partial_key);
+    return partial_key;
 }
 
-std::string DependencyConsumer::fdsToString() const {
+std::string DependencyConsumer::FDsToString() const {
     std::string result;
-    for (auto const& fd : discoveredFDs_) {
-        result += fd.toString() + "\n\r";
+    for (auto const& fd : discovered_fds_) {
+        result += fd.ToString() + "\n\r";
     }
     return result;
 }
 
-std::string DependencyConsumer::uccsToString() const {
+std::string DependencyConsumer::UCCsToString() const {
     std::string result;
-    for (auto const& ucc : discoveredUCCs_) {
-        result += ucc.toString() + "\n\r";
+    for (auto const& ucc : discovered_uccs_) {
+        result += ucc.ToString() + "\n\r";
     }
     return result;
 }
 
-std::string DependencyConsumer::getJsonFDs() {
+std::string DependencyConsumer::GetJsonFDs() {
     std::string result = "{\"fds\": [";
-    std::list<std::string> discoveredFDStrings;
-    for (auto& fd : discoveredFDs_) {
-        discoveredFDStrings.push_back(fd.toIndicesString());
+    std::list<std::string> discovered_fd_strings;
+    for (auto& fd : discovered_fds_) {
+        discovered_fd_strings.push_back(fd.ToIndicesString());
     }
-    discoveredFDStrings.sort();
-    for (auto const& fd : discoveredFDStrings) {
+    discovered_fd_strings.sort();
+    for (auto const& fd : discovered_fd_strings) {
         result += '\"' + fd + "\",";
     }
     if (result.back() == ',') {
@@ -47,12 +47,12 @@ std::string DependencyConsumer::getJsonFDs() {
     result += ']';
 
     result += ", \"uccs\": [";
-    std::list<std::string> discoveredUCCStrings;
-    for (auto& ucc : discoveredUCCs_) {
-        discoveredUCCStrings.push_back(ucc.toIndicesString());
+    std::list<std::string> discovered_ucc_strings;
+    for (auto& ucc : discovered_uccs_) {
+        discovered_ucc_strings.push_back(ucc.ToIndicesString());
     }
-    discoveredUCCStrings.sort();
-    for (auto const& ucc : discoveredUCCStrings) {
+    discovered_ucc_strings.sort();
+    for (auto const& ucc : discovered_ucc_strings) {
         result += '\"' + ucc + "\",";
     }
     if (result.back() == ',') {

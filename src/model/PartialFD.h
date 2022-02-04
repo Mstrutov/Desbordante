@@ -15,12 +15,12 @@ public:
         : error_(error), lhs_(std::move(lhs)), rhs_(std::move(rhs)), score_(score) {}
 
 
-    std::string toIndicesString() const { return lhs_.toIndicesString() + " - " + rhs_.toIndicesString(); }
-    std::string toString() const {
-        return lhs_.toString() + "~>" + rhs_.toString()
+    std::string ToIndicesString() const { return lhs_.ToIndicesString() + " - " + rhs_.ToIndicesString(); }
+    std::string ToString() const {
+        return lhs_.ToString() + "~>" + rhs_.ToString()
             + boost::lexical_cast<std::string>(error_)
             + boost::lexical_cast<std::string>(score_); }
 
-    double getError() const { return error_; }
-    int getArity() const { return lhs_.getColumns().size(); }
+    double GetError() const { return error_; }
+    int GetArity() const { return lhs_.GetColumns().size(); }
 };

@@ -13,268 +13,268 @@
 #include "LatticeLevel.h"
 #include "LatticeVertex.h"
 
-double Tane::calculateZeroAryFdError(ColumnData const* rhs,
-                                     ColumnLayoutRelationData const* relationData) {
-    return 1 - rhs->getPositionListIndex()->getNepAsLong() /
-           static_cast<double>(relationData->getNumTuplePairs());
+double Tane::CalculateZeroAryFdError(ColumnData const* rhs,
+                                     ColumnLayoutRelationData const* relation_data) {
+    return 1 - rhs->GetPositionListIndex()->GetNepAsLong() /
+           static_cast<double>(relation_data->GetNumTuplePairs());
 }
 
-double Tane::calculateFdError(util::PositionListIndex const* lhsPli,
-                              util::PositionListIndex const* jointPli,
-                              ColumnLayoutRelationData const* relationData) {
-    return (double) (lhsPli->getNepAsLong() - jointPli->getNepAsLong()) /
-           static_cast<double>(relationData->getNumTuplePairs());
+double Tane::CalculateFdError(util::PositionListIndex const* lhs_pli,
+                              util::PositionListIndex const* joint_pli,
+                              ColumnLayoutRelationData const* relation_data) {
+    return (double) (lhs_pli->GetNepAsLong() - joint_pli->GetNepAsLong()) /
+           static_cast<double>(relation_data->GetNumTuplePairs());
 }
 
 
-double Tane::calculateUccError(util::PositionListIndex const* pli,
-                               ColumnLayoutRelationData const* relationData) {
-    return pli->getNepAsLong() / static_cast<double>(relationData->getNumTuplePairs());
+double Tane::CalculateUccError(util::PositionListIndex const* pli,
+                               ColumnLayoutRelationData const* relation_data) {
+    return pli->GetNepAsLong() / static_cast<double>(relation_data->GetNumTuplePairs());
 }
 
-void Tane::registerFD(Vertical const& lhs, Column const* rhs,
+void Tane::RegisterFd(Vertical const& lhs, Column const* rhs,
                       [[maybe_unused]] double error,
                       [[maybe_unused]] RelationalSchema const* schema) {
-    dynamic_bitset<> lhs_bitset = lhs.getColumnIndices();
+    dynamic_bitset<> lhs_bitset = lhs.GetColumnIndices();
     /*std::cout << "Discovered FD: ";
     for (size_t i = lhs_bitset.find_first(); i != dynamic_bitset<>::npos; i = lhs_bitset.find_next(i)) {
-        std::cout << schema->getColumn(i)->getName() << " ";
+        std::cout << schema->GetColumn(i)->GetName() << " ";
     }
-    std::cout << "-> " << rhs->getName() << " - error equals " << error << std::endl;*/
-    PliBasedFDAlgorithm::registerFD(lhs, *rhs);
-    countOfFD++;
+    std::cout << "-> " << rhs->GetName() << " - error equals " << error << std::endl;*/
+    PliBasedFDAlgorithm::RegisterFd(lhs, *rhs);
+    count_of_fd_++;
 }
 
-/*void Tane::registerFD(Vertical const* lhs, Column const* rhs, double error, RelationalSchema const* schema) {
-    registerFD(*lhs, rhs, error, schema);
+/*void Tane::RegisterFd(Vertical const* lhs, Column const* rhs, double error, RelationalSchema const* schema) {
+    RegisterFd(*lhs, rhs, error, schema);
 }*/
 
-void Tane::registerUCC([[maybe_unused]] Vertical const& key,
+void Tane::RegisterUcc([[maybe_unused]] Vertical const& key,
                        [[maybe_unused]] double error,
                        [[maybe_unused]] RelationalSchema const* schema)  {
-    /*dynamic_bitset<> key_bitset = key.getColumnIndices();
+    /*dynamic_bitset<> key_bitset = key.GetColumnIndices();
     std::cout << "Discovered UCC: ";
     for (int i = key_bitset.find_first(); i != -1; i = key_bitset.find_next(i)) {
-        std::cout << schema->getColumn(i)->getName() << " ";
+        std::cout << schema->GetColumn(i)->GetName() << " ";
     }
     std::cout << "- error equals " << error << std::endl;*/
-    countOfUCC++;
+    count_of_ucc_++;
 }
 
 
 
-unsigned long long Tane::executeInternal() {
-    RelationalSchema const* schema = relation_->getSchema();
+unsigned long long Tane::ExecuteInternal() {
+    RelationalSchema const* schema = relation_->GetSchema();
 
-    std::cout << schema->getName() << " has " << relation_->getNumColumns() << " columns, "
-         << relation_->getNumRows() << " rows, and a maximum NIP of " << std::setw(2)
-         << relation_->getMaximumNip() << "." << std::endl;
+    std::cout << schema->GetName() << " has " << relation_->GetNumColumns() << " columns, "
+              << relation_->GetNumRows() << " rows, and a maximum NIP of " << std::setw(2)
+              << relation_->GetMaximumNip() << "." << std::endl;
 
-    for (auto& column : schema->getColumns()) {
-        double avgPartners = relation_->getColumnData(column->getIndex()).
-                getPositionListIndex()->getNepAsLong() * 2.0 / relation_->getNumRows();
-        std::cout << "* " << column->toString() << ": every tuple has " << std::setw(2)
-             << avgPartners << " partners on average." << std::endl;
+    for (auto& column : schema->GetColumns()) {
+        double avg_partners = relation_->GetColumnData(column->GetIndex()).
+            GetPositionListIndex()->GetNepAsLong() * 2.0 / relation_->GetNumRows();
+        std::cout << "* " << column->ToString() << ": every tuple has " << std::setw(2)
+                  << avg_partners << " partners on average." << std::endl;
     }
-    auto startTime = std::chrono::system_clock::now();
-    double progressStep = 100.0 / (schema->getNumColumns() + 1);
+    auto start_time = std::chrono::system_clock::now();
+    double progress_step = 100.0 / (schema->GetNumColumns() + 1);
 
     //Initialize level 0
     std::vector<std::unique_ptr<util::LatticeLevel>> levels;
     auto level0 = std::make_unique<util::LatticeLevel>(0);
     // TODO: через указатели кажется надо переделать
-    level0->add(std::make_unique<util::LatticeVertex>(*(schema->emptyVertical)));
-    util::LatticeVertex const* emptyVertex = level0->getVertices().begin()->second.get();
+    level0->Add(std::make_unique<util::LatticeVertex>(*(schema->empty_vertical_)));
+    util::LatticeVertex const* empty_vertex = level0->GetVertices().begin()->second.get();
     levels.push_back(std::move(level0));
-    addProgress(progressStep);
+    AddProgress(progress_step);
 
     //Initialize level1
-    dynamic_bitset<> zeroaryFdRhs(schema->getNumColumns());
+    dynamic_bitset<> zeroary_fd_rhs(schema->GetNumColumns());
     auto level1 = std::make_unique<util::LatticeLevel>(1);
-    for (auto& column : schema->getColumns()) {
+    for (auto& column : schema->GetColumns()) {
         //for each attribute set vertex
-        ColumnData const& columnData = relation_->getColumnData(column->getIndex());
+        ColumnData const& column_data = relation_->GetColumnData(column->GetIndex());
         auto vertex = std::make_unique<util::LatticeVertex>(static_cast<Vertical>(*column));
 
-        vertex->addRhsCandidates(schema->getColumns());
-        vertex->getParents().push_back(emptyVertex);
-        vertex->setKeyCandidate(true);
-        vertex->setPositionListIndex(columnData.getPositionListIndex());
+        vertex->AddRhsCandidates(schema->GetColumns());
+        vertex->GetParents().push_back(empty_vertex);
+        vertex->SetKeyCandidate(true);
+        vertex->SetPositionListIndex(column_data.GetPositionListIndex());
 
         //check FDs: 0->A
-        double fdError = calculateZeroAryFdError(&columnData, relation_.get());
-        if (fdError <= maxFdError) {  //TODO: max_error
-            zeroaryFdRhs.set(column->getIndex());
-            registerFD(*schema->emptyVertical, column.get(), fdError, schema);
+        double fd_error = CalculateZeroAryFdError(&column_data, relation_.get());
+        if (fd_error <= max_fd_error_) {  //TODO: max_error
+            zeroary_fd_rhs.set(column->GetIndex());
+            RegisterFd(*schema->empty_vertical_, column.get(), fd_error, schema);
 
-            vertex->getRhsCandidates().set(column->getIndex(), false);
-            if (fdError == 0) {
-                vertex->getRhsCandidates().reset();
+            vertex->GetRhsCandidates().set(column->GetIndex(), false);
+            if (fd_error == 0) {
+                vertex->GetRhsCandidates().reset();
             }
         }
 
-        level1->add(std::move(vertex));
+        level1->Add(std::move(vertex));
     }
 
-    for (auto& [key_map, vertex] : level1->getVertices()) {
-        Vertical column = vertex->getVertical();
-        vertex->getRhsCandidates() &= ~zeroaryFdRhs;  //~ returns flipped copy <- removed already discovered zeroary FDs
+    for (auto& [key_map, vertex] : level1->GetVertices()) {
+        Vertical column = vertex->GetVertical();
+        vertex->GetRhsCandidates() &= ~zeroary_fd_rhs;  //~ returns flipped copy <- removed already discovered zeroary FDs
 
         // вот тут костыль, чтобы вытянуть индекс колонки из вершины, в которой только один индекс
-        ColumnData const& columnData = relation_->getColumnData(column.getColumnIndices().find_first());
-        double uccError = calculateUccError(columnData.getPositionListIndex(), relation_.get());
-        if (uccError <= maxUccError) {
-            registerUCC(column, uccError, schema);
-            vertex->setKeyCandidate(false);
-            if (uccError == 0) {
-                for (unsigned long rhsIndex = vertex->getRhsCandidates().find_first();
-                     rhsIndex < vertex->getRhsCandidates().size();
-                     rhsIndex = vertex->getRhsCandidates().find_next(rhsIndex)){
-                    if (rhsIndex != column.getColumnIndices().find_first()){
-                        registerFD(column, schema->getColumn(rhsIndex), 0, schema);
+        ColumnData const& column_data = relation_->GetColumnData(column.GetColumnIndices().find_first());
+        double ucc_error = CalculateUccError(column_data.GetPositionListIndex(), relation_.get());
+        if (ucc_error <= max_ucc_error_) {
+            RegisterUcc(column, ucc_error, schema);
+            vertex->SetKeyCandidate(false);
+            if (ucc_error == 0) {
+                for (unsigned long rhs_index = vertex->GetRhsCandidates().find_first();
+                     rhs_index < vertex->GetRhsCandidates().size();
+                     rhs_index = vertex->GetRhsCandidates().find_next(rhs_index)){
+                    if (rhs_index != column.GetColumnIndices().find_first()){
+                        RegisterFd(column, schema->GetColumn(rhs_index), 0, schema);
                     }
                 }
-                vertex->getRhsCandidates() &= column.getColumnIndices();
+                vertex->GetRhsCandidates() &= column.GetColumnIndices();
                 //set vertex invalid if we seek for exact dependencies
-                if (maxFdError == 0 && maxUccError == 0) {
-                    vertex->setInvalid(true);
+                if (max_fd_error_ == 0 && max_ucc_error_ == 0) {
+                    vertex->SetInvalid(true);
                 }
             }
         }
     }
     levels.push_back(std::move(level1));
-    addProgress(progressStep);
+    AddProgress(progress_step);
 
-    for (unsigned int arity = 2; arity <= maxArity; arity++) {
-        //auto startTime = std::chrono::system_clock::now();
-        util::LatticeLevel::clearLevelsBelow(levels, arity - 1);
-        util::LatticeLevel::generateNextLevel(levels);
-        //std::chrono::duration<double> elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
-        //aprioriMillis += elapsed_milliseconds.count();
+    for (unsigned int arity = 2; arity <= max_arity_; arity++) {
+        //auto start_time = std::chrono::system_clock::now();
+        util::LatticeLevel::ClearLevelsBelow(levels, arity - 1);
+        util::LatticeLevel::GenerateNextLevel(levels);
+        //std::chrono::duration<double> elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time);
+        //apriori_millis_ += elapsed_milliseconds.count();
 
         util::LatticeLevel* level = levels[arity].get();
-        std::cout << "Checking " << level->getVertices().size() << " "
+        std::cout << "Checking " << level->GetVertices().size() << " "
                   << arity << "-ary lattice vertices." << std::endl;
-        if (level->getVertices().empty()) {
+        if (level->GetVertices().empty()) {
             break;
         }
 
-        for (auto& [key_map, xaVertex] : level->getVertices()) {
-            if (xaVertex->getIsInvalid()){
+        for (auto& [key_map, xa_vertex] : level->GetVertices()) {
+            if (xa_vertex->GetIsInvalid()){
                 continue;
             }
 
-            Vertical xa = xaVertex->getVertical();
+            Vertical xa = xa_vertex->GetVertical();
             //Calculate XA PLI
-            if (xaVertex->getPositionListIndex() == nullptr) {
-                auto parentPLI1 = xaVertex->getParents()[0]->getPositionListIndex();
-                auto parentPLI2 = xaVertex->getParents()[1]->getPositionListIndex();
-                xaVertex->acquirePositionListIndex(parentPLI1->intersect(parentPLI2));
+            if (xa_vertex->GetPositionListIndex() == nullptr) {
+                auto parent_pli_1 = xa_vertex->GetParents()[0]->GetPositionListIndex();
+                auto parent_pli_2 = xa_vertex->GetParents()[1]->GetPositionListIndex();
+                xa_vertex->AcquirePositionListIndex(parent_pli_1->Intersect(parent_pli_2));
             }
 
-            dynamic_bitset<> xaIndices = xa.getColumnIndices();
-            dynamic_bitset<> aCandidates = xaVertex->getRhsCandidates();
+            dynamic_bitset<> xa_indices = xa.GetColumnIndices();
+            dynamic_bitset<> a_candidates = xa_vertex->GetRhsCandidates();
 
-            for (const auto& xVertex : xaVertex->getParents()) {
-                Vertical const& lhs = xVertex->getVertical();
+            for (const auto& x_vertex : xa_vertex->GetParents()) {
+                Vertical const& lhs = x_vertex->GetVertical();
 
                 // Find index of A in XA. If a is not a candidate, continue. TODO: possible to do it easier??
-                //like "aIndex = xaIndices - xIndices;"
-                int aIndex = xaIndices.find_first();
-                dynamic_bitset<> xIndices = lhs.getColumnIndices();
-                while (aIndex >= 0 && xIndices[aIndex]) {
-                    aIndex = xaIndices.find_next(aIndex);
+                //like "a_index = xa_indices - x_indices;"
+                int a_index = xa_indices.find_first();
+                dynamic_bitset<> x_indices = lhs.GetColumnIndices();
+                while (a_index >= 0 && x_indices[a_index]) {
+                    a_index = xa_indices.find_next(a_index);
                 }
-                if (!aCandidates[aIndex]) {
+                if (!a_candidates[a_index]) {
                     continue;
                 }
 
                 // Check X -> A
-                double error = calculateFdError(
-                        xVertex->getPositionListIndex(),
-                        xaVertex->getPositionListIndex(),
-                        relation_.get());
-                if (error <= maxFdError) {
-                    Column const* rhs = schema->getColumns()[aIndex].get();
+                double error = CalculateFdError(
+                    x_vertex->GetPositionListIndex(),
+                    xa_vertex->GetPositionListIndex(),
+                    relation_.get());
+                if (error <= max_fd_error_) {
+                    Column const* rhs = schema->GetColumns()[a_index].get();
 
                     //TODO: register FD to a file or something
-                    registerFD(lhs, rhs, error, schema);
-                    xaVertex->getRhsCandidates().set(rhs->getIndex(), false);
+                    RegisterFd(lhs, rhs, error, schema);
+                    xa_vertex->GetRhsCandidates().set(rhs->GetIndex(), false);
                     if (error == 0) {
-                        xaVertex->getRhsCandidates() &= lhs.getColumnIndices();
+                        xa_vertex->GetRhsCandidates() &= lhs.GetColumnIndices();
                     }
                 }
             }
         }
 
         //Prune
-        //cout << "Pruning level: " << level->getArity() << ". " << level->getVertices().size() << " vertices" << endl;
-        std::list<util::LatticeVertex *> keyVertices;
-        for (auto& [map_key, vertex] : level->getVertices()) {
-            Vertical columns = vertex->getVertical();            //Originally it's a ColumnCombination
+        //cout << "Pruning level: " << level->GetArity() << ". " << level->GetVertices().size() << " vertices_" << endl;
+        std::list<util::LatticeVertex *> key_vertices;
+        for (auto& [map_key, vertex] : level->GetVertices()) {
+            Vertical columns = vertex->GetVertical();            //Originally it's a ColumnCombination
 
-            if (vertex->getIsKeyCandidate()) {
-                double uccError = calculateUccError(vertex->getPositionListIndex(), relation_.get());
-                if (uccError <= maxUccError) {       //If a key candidate is an approx UCC
+            if (vertex->GetIsKeyCandidate()) {
+                double ucc_error = CalculateUccError(vertex->GetPositionListIndex(), relation_.get());
+                if (ucc_error <= max_ucc_error_) {       //If a key candidate is an approx UCC
                     //TODO: do smth with UCC
 
-                    registerUCC(columns, uccError, schema);
-                    vertex->setKeyCandidate(false);
-                    if (uccError == 0) {
-                        for (size_t rhsIndex = vertex->getRhsCandidates().find_first();
-                             rhsIndex != boost::dynamic_bitset<>::npos;
-                             rhsIndex = vertex->getRhsCandidates().find_next(rhsIndex)) {
-                            Vertical rhs = static_cast<Vertical>(*schema->getColumn((int)rhsIndex));
-                            if (!columns.contains(rhs)) {
-                                bool isRhsCandidate = true;
-                                for (const auto& column : columns.getColumns()) {
-                                    Vertical sibling = columns.without(static_cast<Vertical>(*column)).Union(rhs);
-                                    auto siblingVertex = level->getLatticeVertex(sibling.getColumnIndices());
-                                    if (siblingVertex == nullptr ||
-                                         !siblingVertex->getConstRhsCandidates()[rhs.getColumnIndices().find_first()]) {
-                                        isRhsCandidate = false;
+                    RegisterUcc(columns, ucc_error, schema);
+                    vertex->SetKeyCandidate(false);
+                    if (ucc_error == 0) {
+                        for (size_t rhs_index = vertex->GetRhsCandidates().find_first();
+                             rhs_index != boost::dynamic_bitset<>::npos;
+                             rhs_index = vertex->GetRhsCandidates().find_next(rhs_index)) {
+                            Vertical rhs = static_cast<Vertical>(*schema->GetColumn((int)rhs_index));
+                            if (!columns.Contains(rhs)) {
+                                bool is_rhs_candidate = true;
+                                for (const auto& column : columns.GetColumns()) {
+                                    Vertical sibling = columns.Without(static_cast<Vertical>(*column)).Union(rhs);
+                                    auto sibling_vertex = level->GetLatticeVertex(sibling.GetColumnIndices());
+                                    if (sibling_vertex == nullptr ||
+                                         !sibling_vertex->GetConstRhsCandidates()[rhs.GetColumnIndices().find_first()]) {
+                                        is_rhs_candidate = false;
                                         break;
                                     }
                                     // for each outer rhs: if there is a sibling s.t. it doesn't have this rhs, there is no FD: vertex->rhs
                                 }
                                 //Found fd: vertex->rhs => register it
-                                if (isRhsCandidate){
-                                    registerFD(columns, schema->getColumn(rhsIndex), 0, schema);
+                                if (is_rhs_candidate){
+                                    RegisterFd(columns, schema->GetColumn(rhs_index), 0, schema);
                                 }
                             }
                         }
-                        keyVertices.push_back(vertex.get());
+                        key_vertices.push_back(vertex.get());
                         //cout << "--------------------------" << endl << "KeyVert: " << *vertex;
                     }
                 }
             }
-            //if we seek for exact FDs then setInvalid
-            if (maxFdError == 0 && maxUccError == 0){
-                for (auto keyVertex : keyVertices){
-                    keyVertex->getRhsCandidates() &= keyVertex->getVertical().getColumnIndices();
-                    keyVertex->setInvalid(true);
+            //if we seek for exact FDs then SetInvalid
+            if (max_fd_error_ == 0 && max_ucc_error_ == 0){
+                for (auto key_vertex : key_vertices){
+                    key_vertex->GetRhsCandidates() &= key_vertex->GetVertical().GetColumnIndices();
+                    key_vertex->SetInvalid(true);
                 }
             }
 
         }
 
-        //cout << "Pruned level: " << level->getArity() << ". " << level->getVertices().size() << " vertices" << endl;
+        //cout << "Pruned level: " << level->GetArity() << ". " << level->GetVertices().size() << " vertices_" << endl;
         //TODO: printProfilingData
-        addProgress(progressStep);
+        AddProgress(progress_step);
     }
 
-    setProgress(100);
-    std::chrono::milliseconds elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime);
-    aprioriMillis += elapsed_milliseconds.count();
+    SetProgress(100);
+    std::chrono::milliseconds elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time);
+    apriori_millis_ += elapsed_milliseconds.count();
 
-    std::cout << "Time: " << aprioriMillis << " milliseconds" << std::endl;
-    std::cout << "Intersection time: " << util::PositionListIndex::micros / 1000
+    std::cout << "Time: " << apriori_millis_ << " milliseconds" << std::endl;
+    std::cout << "Intersection time: " << util::PositionListIndex::micros_ / 1000
               << "ms" << std::endl;
-    std::cout << "Total intersections: " << util::PositionListIndex::intersectionCount << std::endl;
-    std::cout << "Total FD count: " << countOfFD << std::endl;
-    std::cout << "Total UCC count: " << countOfUCC << std::endl;
-    // std::cout << "===== FD JSON ========" << getJsonFDs() << std::endl;
-    std::cout << "HASH: " << fletcher16() << std::endl;
+    std::cout << "Total intersections: " << util::PositionListIndex::intersection_count_ << std::endl;
+    std::cout << "Total FD count: " << count_of_fd_ << std::endl;
+    std::cout << "Total UCC count: " << count_of_ucc_ << std::endl;
+    // std::cout << "===== FD JSON ========" << GetJsonFDs() << std::endl;
+    std::cout << "HASH: " << Fletcher16() << std::endl;
 
-    return aprioriMillis;
+    return apriori_millis_;
 }
