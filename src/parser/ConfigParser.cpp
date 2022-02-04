@@ -14,14 +14,14 @@ using json = nlohmann::json;
 ConfigParser::ConfigParser(fs::path path) {
     ifstream stream(path);
     json json = json::parse(string(istreambuf_iterator<char>(stream), istreambuf_iterator<char>()));
-    inputPath = json["inputPath"];
-    outputPath = json["outputPath"];
+    input_path_ = json["input_path"];
+    output_path_ = json["output_path"];
 }
 
-string ConfigParser::getOutputPath() {
-    return outputPath;
+string ConfigParser::GetOutputPath() {
+    return output_path_;
 }
 
-string ConfigParser::getInputPath() {
-    return inputPath;
+string ConfigParser::GetInputPath() {
+    return input_path_;
 }

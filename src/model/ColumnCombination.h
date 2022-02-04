@@ -16,7 +16,7 @@ using boost::dynamic_bitset, std::string;
 /*class ColumnCombination : public Vertical {
 
 public:
-    ColumnCombination(dynamic_bitset<> columnIndices, shared_ptr<RelationalSchema> schema);
+    ColumnCombination(dynamic_bitset<> column_indices_, shared_ptr<RelationalSchema> schema);
     explicit ColumnCombination(Vertical&& vertical) : Vertical(vertical) {}     //or const&??
-    string toString() override ;
+    string ToString() override ;
 };*/

@@ -1,122 +1,122 @@
 #include "LatticeObservations.h"
 
-NodeCategory LatticeObservations::updateDependencyCategory(Vertical const& node) {
-    NodeCategory newCategory;
-    if (node.getArity() <= 1) {
-        newCategory = NodeCategory::minimalDependency;
-        (*this)[node] = newCategory;
-        return newCategory;
+NodeCategory LatticeObservations::UpdateDependencyCategory(Vertical const& node) {
+    NodeCategory new_category;
+    if (node.GetArity() <= 1) {
+        new_category = NodeCategory::kMinimalDependency;
+        (*this)[node] = new_category;
+        return new_category;
     }
 
-    auto columnIndices = node.getColumnIndicesRef(); //copy indices
-    bool hasUncheckedSubset = false;
+    auto column_indices = node.GetColumnIndicesRef(); //copy indices
+    bool has_unchecked_subset = false;
 
-    for (size_t index = columnIndices.find_first();
-         index < columnIndices.size();
-         index = columnIndices.find_next(index)
+    for (size_t index = column_indices.find_first();
+         index < column_indices.size();
+         index = column_indices.find_next(index)
     ) {
-        columnIndices[index] = false; //remove one column
-        auto const subsetNodeIter = this->find(Vertical(node.getSchema(), columnIndices));
+        column_indices[index] = false; //remove one column
+        auto const subset_node_iter = this->find(Vertical(node.GetSchema(), column_indices));
 
-        if (subsetNodeIter == this->end()) {
+        if (subset_node_iter == this->end()) {
             //if we found unchecked subset of this node
-            hasUncheckedSubset = true;
+            has_unchecked_subset = true;
         } else {
-            NodeCategory const &subsetVerticalCategory = subsetNodeIter->second;
-            if (subsetVerticalCategory == NodeCategory::minimalDependency ||
-                subsetVerticalCategory == NodeCategory::dependency ||
-                subsetVerticalCategory == NodeCategory::candidateMinimalDependency
+            NodeCategory const &subset_vertical_category = subset_node_iter->second;
+            if (subset_vertical_category == NodeCategory::kMinimalDependency ||
+                subset_vertical_category == NodeCategory::kDependency ||
+                subset_vertical_category == NodeCategory::kCandidateMinimalDependency
             ) {
-                newCategory = NodeCategory::dependency;
-                (*this)[node] = newCategory;
-                return newCategory;
+                new_category = NodeCategory::kDependency;
+                (*this)[node] = new_category;
+                return new_category;
             }
         }
 
-        columnIndices[index] = true; //restore removed column
+        column_indices[index] = true; //restore removed column
     }
-    newCategory = hasUncheckedSubset ? NodeCategory::candidateMinimalDependency : NodeCategory::minimalDependency;
-    (*this)[node] = newCategory;
-    return newCategory;
+    new_category = has_unchecked_subset ? NodeCategory::kCandidateMinimalDependency : NodeCategory::kMinimalDependency;
+    (*this)[node] = new_category;
+    return new_category;
 }
 
-NodeCategory LatticeObservations::updateNonDependencyCategory(Vertical const& node, unsigned int rhsIndex) {
-    auto columnIndices = node.getColumnIndicesRef();
-    columnIndices[rhsIndex] = true;
-    columnIndices.flip();
+NodeCategory LatticeObservations::UpdateNonDependencyCategory(Vertical const& node, unsigned int rhs_index) {
+    auto column_indices = node.GetColumnIndicesRef();
+    column_indices[rhs_index] = true;
+    column_indices.flip();
 
-    NodeCategory newCategory;
-    bool hasUncheckedSuperset = false;
+    NodeCategory new_category;
+    bool has_unchecked_superset = false;
 
-    for (size_t index = columnIndices.find_first();
-         index < columnIndices.size();
-         index = columnIndices.find_next(index)
+    for (size_t index = column_indices.find_first();
+         index < column_indices.size();
+         index = column_indices.find_next(index)
     ) {
-        auto const supersetNodeIter = this->find(node.Union(*node.getSchema()->getColumn(index)));
+        auto const superset_node_iter = this->find(node.Union(*node.GetSchema()->GetColumn(index)));
 
-        if (supersetNodeIter == this->end()) {
+        if (superset_node_iter == this->end()) {
             //if we found unchecked superset of this node
-            hasUncheckedSuperset = true;
+            has_unchecked_superset = true;
         } else {
-            NodeCategory const &supersetVerticalCategory = supersetNodeIter->second;
-            if (supersetVerticalCategory == NodeCategory::maximalNonDependency ||
-                supersetVerticalCategory == NodeCategory::nonDependency ||
-                supersetVerticalCategory == NodeCategory::candidateMaximalNonDependency
+            NodeCategory const &superset_vertical_category = superset_node_iter->second;
+            if (superset_vertical_category == NodeCategory::kMaximalNonDependency ||
+                superset_vertical_category == NodeCategory::kNonDependency ||
+                superset_vertical_category == NodeCategory::kCandidateMaximalNonDependency
             ) {
-                newCategory = NodeCategory::nonDependency;
-                (*this)[node] = newCategory;
-                return newCategory;
+                new_category = NodeCategory::kNonDependency;
+                (*this)[node] = new_category;
+                return new_category;
             }
         }
     }
-    newCategory = hasUncheckedSuperset ? NodeCategory::candidateMaximalNonDependency : NodeCategory::maximalNonDependency;
-    (*this)[node] = newCategory;
-    return newCategory;
+    new_category = has_unchecked_superset ? NodeCategory::kCandidateMaximalNonDependency : NodeCategory::kMaximalNonDependency;
+    (*this)[node] = new_category;
+    return new_category;
 }
 
-bool LatticeObservations::isCandidate(Vertical const& node) const {
-    auto nodeIter = this->find(node);
-    if (nodeIter == this->end()) {
+bool LatticeObservations::IsCandidate(Vertical const& node) const {
+    auto node_iter = this->find(node);
+    if (node_iter == this->end()) {
         return false;
     } else {
-        return nodeIter->second == NodeCategory::candidateMaximalNonDependency ||
-               nodeIter->second == NodeCategory::candidateMinimalDependency;
+        return node_iter->second == NodeCategory::kCandidateMaximalNonDependency ||
+               node_iter->second == NodeCategory::kCandidateMinimalDependency;
     }
 }
 
 std::unordered_set<Vertical>
-LatticeObservations::getUncheckedSubsets(Vertical const& node, ColumnOrder const& columnOrder) const {
-    auto indices = node.getColumnIndices();
-    std::unordered_set<Vertical> uncheckedSubsets;
+LatticeObservations::GetUncheckedSubsets(Vertical const& node, ColumnOrder const& column_order) const {
+    auto indices = node.GetColumnIndices();
+    std::unordered_set<Vertical> unchecked_subsets;
 
-    for (int columnIndex : columnOrder.getOrderHighDistinctCount(node)) {
-        indices[columnIndex] = false;
-        Vertical subsetNode = Vertical(node.getSchema(), indices);
-        if (this->find(subsetNode) == this->end()) {
-            uncheckedSubsets.insert(std::move(subsetNode));
+    for (int column_index : column_order.GetOrderHighDistinctCount(node)) {
+        indices[column_index] = false;
+        Vertical subset_node = Vertical(node.GetSchema(), indices);
+        if (this->find(subset_node) == this->end()) {
+            unchecked_subsets.insert(std::move(subset_node));
         }
-        indices[columnIndex] = true;
+        indices[column_index] = true;
     }
 
-    return uncheckedSubsets;
+    return unchecked_subsets;
 }
 
 std::unordered_set<Vertical>
-LatticeObservations::getUncheckedSupersets(Vertical const& node, unsigned int rhsIndex, ColumnOrder const& columnOrder) const {
-    auto flippedIndices = node.getColumnIndices().flip();
-    std::unordered_set<Vertical> uncheckedSupersets;
+LatticeObservations::GetUncheckedSupersets(Vertical const& node, unsigned int rhs_index, ColumnOrder const& column_order) const {
+    auto flipped_indices = node.GetColumnIndices().flip();
+    std::unordered_set<Vertical> unchecked_supersets;
 
-    flippedIndices[rhsIndex] = false;
+    flipped_indices[rhs_index] = false;
 
-    for (int columnIndex : columnOrder.getOrderHighDistinctCount(Vertical(node.getSchema(), flippedIndices))) {
-        auto indices = node.getColumnIndices();
+    for (int column_index : column_order.GetOrderHighDistinctCount(Vertical(node.GetSchema(), flipped_indices))) {
+        auto indices = node.GetColumnIndices();
 
-        indices[columnIndex] = true;
-        Vertical subsetNode = Vertical(node.getSchema(), indices);
-        if (this->find(subsetNode) == this->end()) {
-            uncheckedSupersets.insert(std::move(subsetNode));
+        indices[column_index] = true;
+        Vertical subset_node = Vertical(node.GetSchema(), indices);
+        if (this->find(subset_node) == this->end()) {
+            unchecked_supersets.insert(std::move(subset_node));
         }
     }
 
-    return uncheckedSupersets;
+    return unchecked_supersets;
 }

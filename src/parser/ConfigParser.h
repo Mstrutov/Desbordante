@@ -15,12 +15,12 @@ namespace fs = std::filesystem;
 
 class ConfigParser {
 private:
-    std::string outputPath;
-    std::string inputPath;
+    std::string output_path_;
+    std::string input_path_;
 
 public:
     ConfigParser(fs::path path);
-    std::string getOutputPath();
-    std::string getInputPath();
+    std::string GetOutputPath();
+    std::string GetInputPath();
 
 };

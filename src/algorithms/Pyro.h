@@ -9,16 +9,16 @@
 
 class Pyro : public DependencyConsumer, public PliBasedFDAlgorithm {
 private:
-    std::list<std::unique_ptr<SearchSpace>> searchSpaces_;
+    std::list<std::unique_ptr<SearchSpace>> search_spaces_;
 
-    CachingMethod cachingMethod_;
-    CacheEvictionMethod evictionMethod_;
-    double cachingMethodValue;
+    CachingMethod caching_method_;
+    CacheEvictionMethod eviction_method_;
+    double caching_method_value_;
 
     Configuration configuration_;
 
-    unsigned long long executeInternal() override;
+    unsigned long long ExecuteInternal() override;
 public:
-    explicit Pyro(std::filesystem::path const& path, char separator = ',', bool hasHeader = true,
-                  int seed = 0, double maxError = 0, unsigned int maxLHS = -1, int parallelism = 0);
+    explicit Pyro(std::filesystem::path const& path, char separator = ',', bool has_header = true,
+                  int seed = 0, double max_error = 0, unsigned int max_lhs = -1, int parallelism = 0);
 };

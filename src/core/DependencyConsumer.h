@@ -11,31 +11,31 @@ private:
     std::mutex mutable discover_fd_mutex_;
     std::mutex mutable discover_ucc_mutex_;
 
-    std::list<PartialFD> discoveredFDs_;
-    std::list<PartialKey> discoveredUCCs_;
+    std::list<PartialFD> discovered_fds_;
+    std::list<PartialKey> discovered_uccs_;
 
 protected:
-    std::function<void (PartialFD const&)> fdConsumer_;
-    std::function<void (PartialKey const&)> uccConsumer_;
+    std::function<void (PartialFD const&)> fd_consumer_;
+    std::function<void (PartialKey const&)> ucc_consumer_;
 
-    void discoverFD(PartialFD const& fd) {
+    void DiscoverFd(PartialFD const& fd) {
         std::scoped_lock lock(discover_fd_mutex_);
-        discoveredFDs_.push_back(fd);
+        discovered_fds_.push_back(fd);
     }
 
-    void discoverUCC(PartialKey const& key) {
+    void DiscoverUcc(PartialKey const& key) {
         std::scoped_lock lock(discover_ucc_mutex_);
-        discoveredUCCs_.push_back(key);
+        discovered_uccs_.push_back(key);
     }
 
 public:
-    PartialFD registerFd(Vertical const& lhs, Column const& rhs, double error,
-                         double score) const;
-    PartialKey registerUcc(Vertical const& keyVertical, double error,
+    PartialFD RegisterFd(Vertical const& lhs, Column const& rhs,
+                                  double error, double score) const;
+    PartialKey RegisterUcc(Vertical const& key_vertical, double error,
                            double score) const;
 
-    std::string fdsToString() const;
-    std::string uccsToString() const;
+    std::string FDsToString() const;
+    std::string UCCsToString() const;
 
-    virtual std::string getJsonFDs();
+    virtual std::string GetJsonFDs();
 };

@@ -27,10 +27,10 @@ TEST(pliChecker, first){
     auto path = fs::current_path().append("inputData").append("Test1.csv");
     deque<vector<int>> index;
     try {
-        CSVParser csvParser(path);
-        auto test = ColumnLayoutRelationData::createFrom(csvParser, true);
-        auto columnData = test->getColumnData(0);
-        index = columnData.getPositionListIndex()->getIndex();
+        CSVParser csv_parser(path);
+        auto test = ColumnLayoutRelationData::CreateFrom(csv_parser, true);
+        auto column_data = test->GetColumnData(0);
+        index = column_data.GetPositionListIndex()->GetIndex();
     }
     catch (std::runtime_error& e) {
         cout << "Exception raised in test: " << e.what() << endl;
@@ -49,10 +49,10 @@ TEST(pliChecker, second){
     deque<vector<int>> index;
     try {
         auto path = fs::current_path().append("inputData").append("Test1.csv");
-        CSVParser csvParser(path);
-        auto test = ColumnLayoutRelationData::createFrom(csvParser, false);
-        auto columnData = test->getColumnData(0);
-        index = columnData.getPositionListIndex()->getIndex();
+        CSVParser csv_parser(path);
+        auto test = ColumnLayoutRelationData::CreateFrom(csv_parser, false);
+        auto column_data = test->GetColumnData(0);
+        index = column_data.GetPositionListIndex()->GetIndex();
     }
     catch (std::runtime_error& e) {
         cout << "Exception raised in test: " << e.what() << endl;
@@ -69,28 +69,28 @@ TEST(pliIntersectChecker, first){
 
     try {
         auto path = fs::current_path().append("inputData");
-        CSVParser csvParser1(path / "ProbeTest1.csv");
-        CSVParser csvParser2(path / "ProbeTest2.csv");
+        CSVParser csv_parser_1(path / "ProbeTest1.csv");
+        CSVParser csv_parser_2(path / "ProbeTest2.csv");
 
-        auto test1 = ColumnLayoutRelationData::createFrom(csvParser1, false);
-        auto test2 = ColumnLayoutRelationData::createFrom(csvParser2, false);
-        auto pli1 = test1->getColumnData(0).getPositionListIndex();
-        auto pli2 = test2->getColumnData(0).getPositionListIndex();
+        auto test1 = ColumnLayoutRelationData::CreateFrom(csv_parser_1, false);
+        auto test2 = ColumnLayoutRelationData::CreateFrom(csv_parser_2, false);
+        auto pli1 = test1->GetColumnData(0).GetPositionListIndex();
+        auto pli2 = test2->GetColumnData(0).GetPositionListIndex();
 
-        intersection = pli1->intersect(pli2);
+        intersection = pli1->Intersect(pli2);
     }
     catch (std::runtime_error& e) {
         cout << "Exception raised in test: " << e.what() << endl;
         FAIL();
     }
-    ASSERT_THAT(intersection->getIndex(), ContainerEq(ans));
+    ASSERT_THAT(intersection->GetIndex(), ContainerEq(ans));
 }
 
 TEST(testingBitsetToLonglong, first){
     size_t encoded_num = 1254;
     boost::dynamic_bitset<> simple_bitset{20, encoded_num};
 
-    auto res_vector = *util::ListAgreeSetSample::bitSetToLongLongVector(simple_bitset);
+    auto res_vector = *util::ListAgreeSetSample::BitSetToLongLongVector(simple_bitset);
     ASSERT_EQ(res_vector.size(), 1);
     for (auto long_long_repr : res_vector)
         ASSERT_EQ(encoded_num, long_long_repr);
@@ -110,10 +110,10 @@ TEST(IdentifierSetTest, Computation) {
     try {
         auto path = fs::current_path().append("inputData").append("BernoulliRelation.csv");
         CSVParser parser(path);
-        auto relation = ColumnLayoutRelationData::createFrom(parser, false);
+        auto relation = ColumnLayoutRelationData::CreateFrom(parser, false);
 
-        for (unsigned i = 0; i < relation->getNumRows(); ++i) {
-            id_sets.insert(util::IdentifierSet(relation.get(), i).toString());
+        for (unsigned i = 0; i < relation->GetNumRows(); ++i) {
+            id_sets.insert(util::IdentifierSet(relation.get(), i).ToString());
         }
     }
     catch (std::runtime_error const& e) {
@@ -147,17 +147,17 @@ TEST(IdentifierSetTest, Intersection) {
     try {
         auto path = fs::current_path().append("inputData").append("BernoulliRelation.csv");
         CSVParser parser(path);
-        auto relation = ColumnLayoutRelationData::createFrom(parser, false);
+        auto relation = ColumnLayoutRelationData::CreateFrom(parser, false);
         std::vector<util::IdentifierSet> id_sets;
 
-        for (unsigned i = 0; i < relation->getNumRows(); ++i) {
+        for (unsigned i = 0; i < relation->GetNumRows(); ++i) {
             id_sets.emplace_back(relation.get(), i);
         }
 
         auto back_it = std::prev(id_sets.end());
         for (auto p = id_sets.begin(); p != back_it; ++p) {
             for (auto q = std::next(p); q != id_sets.end(); ++q) {
-                intersection_actual.insert(p->intersect(*q).toString());
+                intersection_actual.insert(p->Intersect(*q).ToString());
             }
         }
     }
@@ -169,7 +169,7 @@ TEST(IdentifierSetTest, Intersection) {
 }
 
 
-void testAgreeSetFactory(AgreeSetFactory::Configuration c) {
+void TestAgreeSetFactory(AgreeSetFactory::Configuration c) {
     std::set<std::string> agree_sets_actual; // id set intersection result
     std::set<std::string> agree_sets_ans = {
         "[A D F]",
@@ -193,10 +193,10 @@ void testAgreeSetFactory(AgreeSetFactory::Configuration c) {
     try {
         auto path = fs::current_path().append("inputData").append("BernoulliRelation.csv");
         CSVParser parser(path);
-        auto relation = ColumnLayoutRelationData::createFrom(parser, false);
+        auto relation = ColumnLayoutRelationData::CreateFrom(parser, false);
         AgreeSetFactory factory(relation.get(), c);
-        for (util::AgreeSet const& agree_set : factory.genAgreeSets()) {
-            agree_sets_actual.insert(agree_set.toString());
+        for (util::AgreeSet const& agree_set : factory.GenAgreeSets()) {
+            agree_sets_actual.insert(agree_set.ToString());
         }
     }
     catch (std::runtime_error const& e) {
@@ -208,37 +208,37 @@ void testAgreeSetFactory(AgreeSetFactory::Configuration c) {
 
 TEST(AgreeSetFactoryTest, UsingVectorOfIDSets) {
     AgreeSetFactory::Configuration c(AgreeSetsGenMethod::kUsingVectorOfIDSets);
-    testAgreeSetFactory(c);
+    TestAgreeSetFactory(c);
 }
 
 TEST(AgreeSetFactoryTest, UsingMapOfIDSets) {
     AgreeSetFactory::Configuration c(AgreeSetsGenMethod::kUsingMapOfIDSets);
-    testAgreeSetFactory(c);
+    TestAgreeSetFactory(c);
 }
 
 TEST(AgreeSetFactoryTest, UsingGetAgreeSet) {
     AgreeSetFactory::Configuration c(AgreeSetsGenMethod::kUsingGetAgreeSet);
-    testAgreeSetFactory(c);
+    TestAgreeSetFactory(c);
 }
 
 TEST(AgreeSetFactoryTest, UsingMCAndGetAgreeSet) {
     AgreeSetFactory::Configuration c(AgreeSetsGenMethod::kUsingMCAndGetAgreeSet);
-    testAgreeSetFactory(c);
+    TestAgreeSetFactory(c);
 }
 
 TEST(AgreeSetFactoryTest, UsingHandleEqvClass) {
     AgreeSetFactory::Configuration c(MCGenMethod::kUsingHandleEqvClass);
-    testAgreeSetFactory(c);
+    TestAgreeSetFactory(c);
 }
 
 TEST(AgreeSetFactoryTest, UsingCalculateSupersets) {
     AgreeSetFactory::Configuration c(MCGenMethod::kUsingCalculateSupersets);
-    testAgreeSetFactory(c);
+    TestAgreeSetFactory(c);
 }
 
 TEST(AgreeSetFactoryTest, UsingHandlePartition) {
     AgreeSetFactory::Configuration c(MCGenMethod::kUsingHandlePartition);
-    testAgreeSetFactory(c);
+    TestAgreeSetFactory(c);
 }
 
 #if 0

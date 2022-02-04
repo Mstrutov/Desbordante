@@ -4,17 +4,17 @@ private:
 
 public:
     double error_;
-    bool isDependency_;
-    mutable bool isExtremal_;
-    VerticalInfo(bool isDependency, bool isExtremal, double error = 0) :
-        error_(error), isDependency_(isDependency), isExtremal_(isExtremal) {}
+    bool is_dependency_;
+    mutable bool is_extremal_;
+    VerticalInfo(bool is_dependency, bool is_extremal, double error = 0) :
+        error_(error), is_dependency_(is_dependency), is_extremal_(is_extremal) {}
 
     VerticalInfo(VerticalInfo const& other) = default;
 
-    static VerticalInfo forMinimalDependency() { return VerticalInfo(true, true); }
-    static VerticalInfo forNonDependency() { return VerticalInfo(false, false); }
-    static VerticalInfo forMaximalNonDependency() { return VerticalInfo(false, true); }
+    static VerticalInfo ForMinimalDependency() { return VerticalInfo(true, true); }
+    static VerticalInfo ForNonDependency() { return VerticalInfo(false, false); }
+    static VerticalInfo ForMaximalNonDependency() { return VerticalInfo(false, true); }
 
-    bool isPruningSupersets() const { return isDependency_ || isExtremal_; }
-    bool isPruningSubsets() const {return !isDependency_ || isExtremal_; }
+    bool IsPruningSupersets() const { return is_dependency_ || is_extremal_; }
+    bool IsPruningSubsets() const {return !is_dependency_ || is_extremal_; }
 };

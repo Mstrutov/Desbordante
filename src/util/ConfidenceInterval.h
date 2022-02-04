@@ -16,15 +16,15 @@ public:
 
     explicit ConfidenceInterval(double value) : ConfidenceInterval(value, value, value) {}
 
-    double getMin() const { return min_; }
-    double getMax() const { return max_; }
-    double getMean() const { return mean_; }
+    double GetMin() const { return min_; }
+    double GetMax() const { return max_; }
+    double GetMean() const { return mean_; }
 
     //TODO: assert min_ == max_
-    double get() const { return mean_; }
+    double Get() const { return mean_; }
 
-    ConfidenceInterval multiply(double scalar) { return ConfidenceInterval(min_ * scalar, mean_ * scalar, max_ * scalar); }
-    bool isPoint() const { return min_ == max_; }
+    ConfidenceInterval Multiply(double scalar) { return ConfidenceInterval(min_ * scalar, mean_ * scalar, max_ * scalar); }
+    bool IsPoint() const { return min_ == max_; }
     explicit operator std::string() const { return (boost::format("error=(%f, %f, %f)") % min_ % mean_ % max_).str(); }
 
     friend std::ostream& operator<<(std::ostream&, ConfidenceInterval const&);

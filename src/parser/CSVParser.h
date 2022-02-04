@@ -13,27 +13,27 @@
 
 class CSVParser {
 private:
-    std::ifstream source;
-    char separator;
-    char escapeSymbol = '\"';
-    bool hasHeader;
-    bool hasNext;
-    std::string nextLine;
-    int numberOfColumns;
-    std::vector<std::string> columnNames;
-    std::string relationName;
-    void getNext();
-    void peekNext();
+    std::ifstream source_;
+    char separator_;
+    char escape_symbol_ = '\"';
+    bool has_header_;
+    bool has_next_;
+    std::string next_line_;
+    int number_of_columns_;
+    std::vector<std::string> column_names_;
+    std::string relation_name_;
+    void GetNext();
+    void PeekNext();
 
     static inline std::string & rtrim(std::string &s);
 public:
     explicit CSVParser(const std::filesystem::path& path);
-    CSVParser(const std::filesystem::path& path, char separator, bool hasHeader);
+    CSVParser(const std::filesystem::path& path, char separator, bool has_header);
     //bool isSameChar(char separator, char escape);
-    std::vector<std::string> parseNext();
-    bool getHasNext() const { return hasNext;}
-    char getSeparator() const { return separator;}
-    int getNumberOfColumns() const { return numberOfColumns; }
-    std::string getColumnName(int index) const { return columnNames[index]; }
-    std::string getRelationName() const { return relationName; }
+    std::vector<std::string> ParseNext();
+    bool GetHasNext() const { return has_next_;}
+    char GetSeparator() const { return separator_;}
+    int GetNumberOfColumns() const { return number_of_columns_; }
+    std::string GetColumnName(int index) const { return column_names_[index]; }
+    std::string GetRelationName() const { return relation_name_; }
 };

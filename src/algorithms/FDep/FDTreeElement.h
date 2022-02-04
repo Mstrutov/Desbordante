@@ -17,58 +17,58 @@ class FDTreeElement{
  public:
     // The maximum number of columns in the dataset. Using in std::bitset template.
     static constexpr int kMaxAttrNum = 256;
-    explicit FDTreeElement(size_t maxAttributeNumber);
+    explicit FDTreeElement(size_t max_attribute_number);
 
     FDTreeElement (const FDTreeElement&) = delete;
     FDTreeElement& operator=(const FDTreeElement&) = delete;
 
-    void addMostGeneralDependencies();
+    void AddMostGeneralDependencies();
 
     // Using in cover-trees as post filtration of functional dependencies with redundant left-hand side.
-    void filterSpecializations();
+    void FilterSpecializations();
 
-    [[nodiscard]] bool checkFd(size_t index) const;
+    [[nodiscard]] bool CheckFd(size_t index) const;
 
-    [[nodiscard]] FDTreeElement* getChild(size_t index) const;
+    [[nodiscard]] FDTreeElement* GetChild(size_t index) const;
 
-    void addFunctionalDependency(const std::bitset<kMaxAttrNum>& lhs, size_t attr_num);
+    void AddFunctionalDependency(const std::bitset<kMaxAttrNum>& lhs, size_t attr_num);
 
     // Searching for generalization of functional dependency in cover-trees.
-    bool getGeneralizationAndDelete(const std::bitset<kMaxAttrNum>& lhs, size_t attr_num,
-                                    size_t currentAttr, std::bitset<kMaxAttrNum>& specLhs);
+    bool GetGeneralizationAndDelete(const std::bitset<kMaxAttrNum>& lhs, size_t attr_num,
+                                    size_t current_attr, std::bitset<kMaxAttrNum>& spec_lhs);
 
-    [[nodiscard]] bool containsGeneralization(const std::bitset<kMaxAttrNum>& lhs, size_t attr_num,
-                                              size_t currentAttr) const;
+    [[nodiscard]] bool ContainsGeneralization(const std::bitset<kMaxAttrNum>& lhs, size_t attr_num,
+                                              size_t current_attr) const;
 
     // Printing found dependencies in output file.
-    void printDep(const std::string& file, std::vector<std::string>& columnNames) const;
+    void PrintDep(const std::string& file, std::vector<std::string>& column_names) const;
 
-    void fillFdCollection(const RelationalSchema & scheme, std::list<FD> & fdCollection) const;
+    void FillFdCollection(const RelationalSchema & scheme, std::list<FD> & fd_collection) const;
  private:
     std::vector<std::unique_ptr<FDTreeElement>> children_;
-    std::bitset<kMaxAttrNum> rhsAttributes_;
-    size_t maxAttributeNumber_;
-    std::bitset<kMaxAttrNum> isFd_;
+    std::bitset<kMaxAttrNum> rhs_attributes_;
+    size_t max_attribute_number_;
+    std::bitset<kMaxAttrNum> is_fd_;
 
-    void addRhsAttribute(size_t index);
+    void AddRhsAttribute(size_t index);
 
-    [[nodiscard]] const std::bitset<kMaxAttrNum>& getRhsAttributes() const;
+    [[nodiscard]] const std::bitset<kMaxAttrNum>& GetRhsAttributes() const;
 
-    void markAsLast(size_t index);
+    void MarkAsLast(size_t index);
 
     // Checking whether node is a leaf or not.
-    [[nodiscard]] bool isFinalNode(size_t attr_num) const;
+    [[nodiscard]] bool IsFinalNode(size_t attr_num) const;
 
     // Searching for specialization of functional dependency in cover-trees.
-    bool getSpecialization (const std::bitset<kMaxAttrNum>& lhs, size_t attr_num,
-                            size_t currentAttr, std::bitset<kMaxAttrNum>& specLhsOut) const;
+    bool GetSpecialization (const std::bitset<kMaxAttrNum>& lhs, size_t attr_num,
+                            size_t current_attr, std::bitset<kMaxAttrNum>& spec_lhs_out) const;
 
-    void filterSpecializationsHelper(FDTreeElement& filteredTree, std::bitset<kMaxAttrNum>& activePath);
+    void FilterSpecializationsHelper(FDTreeElement& filtered_tree, std::bitset<kMaxAttrNum>& active_path);
 
-    // Helper function for printDep.
-    void printDependencies(std::bitset<kMaxAttrNum>& activePath, std::ofstream& file,
-                           std::vector<std::string>& columnNames) const;
+    // Helper function for PrintDep.
+    void PrintDependencies(std::bitset<kMaxAttrNum>& active_path, std::ofstream& file,
+                           std::vector<std::string>& column_names) const;
 
-    void transformTreeFdCollection(std::bitset<kMaxAttrNum>& activePath, std::list<FD> & fdCollection,
+    void TransformTreeFdCollection(std::bitset<kMaxAttrNum>& active_path, std::list<FD> & fd_collection,
                                    const RelationalSchema & scheme) const;
 };

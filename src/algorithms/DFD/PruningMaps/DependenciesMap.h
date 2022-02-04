@@ -8,7 +8,7 @@ public:
     explicit DependenciesMap(RelationalSchema const* schema);
     DependenciesMap() = default;
 
-    std::unordered_set<Vertical> getPrunedSubsets(std::unordered_set<Vertical> const& subsets) const;
-    void addNewDependency(Vertical const& nodeToAdd);
-    bool canBePruned(Vertical const& node) const;
+    std::unordered_set<Vertical> GetPrunedSubsets(std::unordered_set<Vertical> const& subsets) const;
+    void AddNewDependency(Vertical const& node_to_add);
+    bool CanBePruned(Vertical const& node) const;
 };

@@ -15,74 +15,74 @@ inline std::string & CSVParser::rtrim(std::string &s) {
 
 CSVParser::CSVParser(const std::filesystem::path& path): CSVParser(path, ',', true) {}
 
-CSVParser::CSVParser(const std::filesystem::path& path, char separator, bool hasHeader) :
-    source(path),
-    separator(separator),
-    hasHeader(hasHeader),
-    hasNext(true),
-    nextLine(),
-    numberOfColumns(),
-    columnNames(),
-    relationName(path.filename().string()){
+CSVParser::CSVParser(const std::filesystem::path& path, char separator, bool has_header) :
+    source_(path),
+    separator_(separator),
+    has_header_(has_header),
+    has_next_(true),
+    next_line_(),
+    number_of_columns_(),
+    column_names_(),
+    relation_name_(path.filename().string()){
 
     //Wrong path
-    if (!source) {
+    if (!source_) {
         throw std::runtime_error("Error: couldn't find file " + path.string());
     }
     // TODO: Настроить Exception
     if (separator == '\0'){
         assert(0);
     }
-    if (hasHeader) {
-        getNext();
+    if (has_header) {
+        GetNext();
     } else {
-        peekNext();
+        PeekNext();
     }
-    std::vector<std::string> nextParsed = parseNext();
-    numberOfColumns = nextParsed.size();
-    columnNames = std::move(nextParsed);
-    if (!hasHeader) {
-        for (int i = 0; i < numberOfColumns; i++){
-            columnNames[i] = std::to_string(i);
+    std::vector<std::string> next_parsed = ParseNext();
+    number_of_columns_ = next_parsed.size();
+    column_names_ = std::move(next_parsed);
+    if (!has_header) {
+        for (int i = 0; i < number_of_columns_; i++){
+            column_names_[i] = std::to_string(i);
         }
     }
 }
 
-void CSVParser::getNext(){
-    nextLine = "";
-    getline(source, nextLine);
-    rtrim(nextLine);
+void CSVParser::GetNext(){
+    next_line_ = "";
+    getline(source_, next_line_);
+    rtrim(next_line_);
 }
 
-void CSVParser::peekNext() {
-    int len = source.tellg();
-    getNext();
-    source.seekg(len, std::ios_base::beg);
+void CSVParser::PeekNext() {
+    int len = source_.tellg();
+    GetNext();
+    source_.seekg(len, std::ios_base::beg);
 }
 
-std::vector<std::string> CSVParser::parseNext() {
+std::vector<std::string> CSVParser::ParseNext() {
     std::vector<std::string> result = std::vector<std::string>();
 
-    auto nextTokenBegin = nextLine.begin();
-    auto nextTokenEnd = nextLine.begin();
-    bool isEscaped = false;
-    while (nextTokenEnd != nextLine.end()){
-        if (!isEscaped && *nextTokenEnd == separator){
-            result.emplace_back(nextTokenBegin, nextTokenEnd);
-            nextTokenBegin = nextTokenEnd + 1;
-            nextTokenEnd = nextTokenBegin;
+    auto next_token_begin = next_line_.begin();
+    auto next_token_end = next_line_.begin();
+    bool is_escaped = false;
+    while (next_token_end != next_line_.end()){
+        if (!is_escaped && *next_token_end == separator_){
+            result.emplace_back(next_token_begin, next_token_end);
+            next_token_begin = next_token_end + 1;
+            next_token_end = next_token_begin;
         } else {
-            isEscaped ^= (*nextTokenEnd == escapeSymbol);
-            nextTokenEnd++;
+            is_escaped ^= (*next_token_end == escape_symbol_);
+            next_token_end++;
         }
     }
-    if (nextTokenBegin != nextLine.begin() || nextTokenBegin != nextTokenEnd) {
-        result.emplace_back(nextTokenBegin, nextTokenEnd);
+    if (next_token_begin != next_line_.begin() || next_token_begin != next_token_end) {
+        result.emplace_back(next_token_begin, next_token_end);
     }
 
-    hasNext = !source.eof();
-    if(hasNext){
-        getNext();
+    has_next_ = !source_.eof();
+    if(has_next_){
+        GetNext();
     }
 
     return result;

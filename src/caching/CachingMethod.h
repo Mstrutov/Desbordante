@@ -1,13 +1,13 @@
 #pragma once
 
 enum class CachingMethod {
-    COIN,
-    NOCACHING,
-    ALLCACHING,
-    ENTROPY,
-    TRUEUNIQUENESSENTROPY,
-    MEANENTROPYTHRESHOLD,
-    HEURISTICQ2,
-    GINI,
-    INVERTEDENTROPY
+    kCoin,
+    kNoCaching,
+    kAllCaching,
+    kEntropy,
+    kTrueUniquenessEntropy,
+    kMeanEntropyThreshold,
+    kHeuristicQ2,
+    kGini,
+    kInvertedEntropy
 };

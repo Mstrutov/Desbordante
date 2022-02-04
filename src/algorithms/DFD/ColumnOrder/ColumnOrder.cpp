@@ -4,42 +4,43 @@
 #include "ColumnLayoutRelationData.h"
 #include "RelationalSchema.h"
 
-ColumnOrder::ColumnOrder(ColumnLayoutRelationData const* const relationData)
-        : order(relationData->getSchema()->getNumColumns()) {
+ColumnOrder::ColumnOrder(ColumnLayoutRelationData const* const relation_data)
+        : order_(relation_data->GetSchema()->GetNumColumns()) {
     std::set<OrderedPartition> partitions;
-    for (auto const& columnData : relationData->getColumnData()) {
-        partitions.emplace(columnData.getPositionListIndex(), relationData->getNumRows(), columnData.getColumn()->getIndex());
+    for (auto const& column_data : relation_data->GetColumnData()) {
+        partitions.emplace(column_data.GetPositionListIndex(), relation_data->GetNumRows(),
+                           column_data.GetColumn()->GetIndex());
     }
 
-    int orderIndex = 0;
+    int order_index = 0;
     for (auto const& partition : partitions) {
-        order[orderIndex++] = partition.getColumnIndex();
+        order_[order_index++] = partition.GetColumnIndex();
     }
 }
 
-std::vector<int> ColumnOrder::getOrderHighDistinctCount(const Vertical &columns) const {
-    std::vector<int> orderForColumns(columns.getArity());
+std::vector<int> ColumnOrder::GetOrderHighDistinctCount(const Vertical &columns) const {
+    std::vector<int> order_for_columns(columns.GetArity());
 
-    int currentOrderIndex = 0;
-    for (int column_index : order) {
-        if (columns.getColumnIndices()[column_index]) {
-            orderForColumns[currentOrderIndex++] = column_index;
+    int current_order_index = 0;
+    for (int column_index : order_) {
+        if (columns.GetColumnIndices()[column_index]) {
+            order_for_columns[current_order_index++] = column_index;
         }
     }
 
-    return orderForColumns;
+    return order_for_columns;
 }
 
-std::vector<int> ColumnOrder::getOrderLowDistinctCount(const Vertical &columns) const {
-    std::vector<int> orderForColumns(columns.getArity());
+std::vector<int> ColumnOrder::GetOrderLowDistinctCount(const Vertical &columns) const {
+    std::vector<int> order_for_columns(columns.GetArity());
 
-    assert(!order.empty());
-    int currentOrderIndex = 0;
-    for (int i = this->order.size() - 1; i >= 0; --i) {
-        if (columns.getColumnIndices()[order[i]]) {
-            orderForColumns[currentOrderIndex++] = this->order[i];
+    assert(!order_.empty());
+    int current_order_index = 0;
+    for (int i = this->order_.size() - 1; i >= 0; --i) {
+        if (columns.GetColumnIndices()[order_[i]]) {
+            order_for_columns[current_order_index++] = this->order_[i];
         }
     }
 
-    return orderForColumns;
+    return order_for_columns;
 }

@@ -17,46 +17,46 @@ private:
     public:
         Vertical const* vertical_;
         std::shared_ptr<PositionListIndex> pli_;
-        int addedArity_;
+        int added_arity_;
 
-        PositionListIndexRank(Vertical const* vertical, std::shared_ptr<PositionListIndex> pli, int initialArity):
-            vertical_(vertical), pli_(pli), addedArity_(initialArity) {}
+        PositionListIndexRank(Vertical const* vertical, std::shared_ptr<PositionListIndex> pli, int initial_arity):
+            vertical_(vertical), pli_(pli), added_arity_(initial_arity) {}
     };
     //using CacheMap = VerticalMap<PositionListIndex>;
-    ColumnLayoutRelationData* relationData_;
+    ColumnLayoutRelationData* relation_data_;
     std::unique_ptr<VerticalMap<PositionListIndex>> index_;
     //usageCounter - for parallelism
 
-    int savedIntersections_ = 0;
+    int saved_intersections_ = 0;
 
-    mutable std::mutex gettingPLIMutex;
+    mutable std::mutex getting_pli_mutex_;
 
-    CachingMethod cachingMethod_;
-    CacheEvictionMethod evictionMethod_;
-    double cachingMethodValue_;
+    CachingMethod caching_method_;
+    CacheEvictionMethod eviction_method_;
+    double caching_method_value_;
     //long long maximumAvailableMemory_ = 0;
-    double maximumEntropy_;
-    double meanEntropy_;
-    double minEntropy_;
-    double medianEntropy_;
-    double medianGini_;
-    double medianInvertedEntropy_;
+    double maximum_entropy_;
+    double mean_entropy_;
+    double min_entropy_;
+    double median_entropy_;
+    double median_gini_;
+    double median_inverted_entropy_;
 
-    std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> cachingProcess(Vertical const& vertical,
-                        std::unique_ptr<PositionListIndex> pli,
-                        ProfilingContext* profilingContext);
+    std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> CachingProcess(Vertical const& vertical,
+                                                                                        std::unique_ptr<PositionListIndex> pli,
+                                                                                        ProfilingContext* profiling_context);
 public:
-    PLICache(ColumnLayoutRelationData* relationData, CachingMethod cachingMethod, CacheEvictionMethod evictionMethod,
-             double cachingMethodValue, double minEntropy, double meanEntropy, double medianEntropy,
-             double maximumEntropy, double medianGini, double medianInvertedEntropy);
+    PLICache(ColumnLayoutRelationData* relation_data, CachingMethod caching_method, CacheEvictionMethod eviction_method,
+             double caching_method_value, double min_entropy, double mean_entropy, double median_entropy,
+             double maximum_entropy, double median_gini, double median_inverted_entropy);
 
-    PositionListIndex* get(Vertical const& vertical);
-    std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> getOrCreateFor(
-            Vertical const& vertical, ProfilingContext* profilingContext);
+    PositionListIndex* Get(Vertical const& vertical);
+    std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> GetOrCreateFor(
+            Vertical const& vertical, ProfilingContext* profiling_context);
 
-    void setMaximumEntropy(double e) { maximumEntropy_ = e; }
+    void SetMaximumEntropy(double e) { maximum_entropy_ = e; }
 
-    size_t size() const;
+    size_t Size() const;
 
     // returns ownership of single column PLIs back to ColumnLayoutRelationData
     virtual ~PLICache();

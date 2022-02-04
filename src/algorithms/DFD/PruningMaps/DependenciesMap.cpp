@@ -3,51 +3,51 @@
 DependenciesMap::DependenciesMap(RelationalSchema const* schema)
     : PruningMap(schema) {}
 
-std::unordered_set<Vertical> DependenciesMap::getPrunedSubsets(std::unordered_set<Vertical> const& subsets) const {
-    std::unordered_set<Vertical> prunedSubsets;
+std::unordered_set<Vertical> DependenciesMap::GetPrunedSubsets(std::unordered_set<Vertical> const& subsets) const {
+    std::unordered_set<Vertical> pruned_subsets;
     for (auto const& node : subsets) {
-        if (canBePruned(node)) {
-            prunedSubsets.insert(node);
+        if (CanBePruned(node)) {
+            pruned_subsets.insert(node);
         }
     }
-    return prunedSubsets;
+    return pruned_subsets;
 }
 
-void DependenciesMap::addNewDependency(Vertical const& nodeToAdd) {
-    for (auto& mapRow : *this) {
-        Vertical const& key = mapRow.first;
+void DependenciesMap::AddNewDependency(Vertical const& node_to_add) {
+    for (auto& map_row : *this) {
+        Vertical const& key = map_row.first;
 
-        if (nodeToAdd.contains(key)) {
-            auto& depsForKey = mapRow.second;
-            bool hasSubsetEntry = false;
+        if (node_to_add.Contains(key)) {
+            auto& deps_for_key = map_row.second;
+            bool has_subset_entry = false;
 
-            for (auto iter = depsForKey.begin(); iter != depsForKey.end(); ) {
+            for (auto iter = deps_for_key.begin(); iter != deps_for_key.end(); ) {
                 //if verticals are the same, then contains == true
                 Vertical const& dep = *iter;
-                if (nodeToAdd.contains(dep)) {
-                    hasSubsetEntry = true;
+                if (node_to_add.Contains(dep)) {
+                    has_subset_entry = true;
                     break;
-                } else if (dep.contains(nodeToAdd)) {
-                    iter = depsForKey.erase(iter);
+                } else if (dep.Contains(node_to_add)) {
+                    iter = deps_for_key.erase(iter);
                 } else {
                     iter++;
                 }
             }
 
-            if (!hasSubsetEntry) {
-                depsForKey.insert(nodeToAdd);
+            if (!has_subset_entry) {
+                deps_for_key.insert(node_to_add);
             }
         }
     }
-    rebalance();
+    Rebalance();
 }
 
-bool DependenciesMap::canBePruned(Vertical const& node) const {
-    for (auto const& mapRow : *this) {
-        Vertical const& key = mapRow.first;
-        if (node.contains(key)) {
-            for (Vertical const& dependency : mapRow.second) {
-                if (node.contains(dependency)) {
+bool DependenciesMap::CanBePruned(Vertical const& node) const {
+    for (auto const& map_row : *this) {
+        Vertical const& key = map_row.first;
+        if (node.Contains(key)) {
+            for (Vertical const& dependency : map_row.second) {
+                if (node.Contains(dependency)) {
                     return true;
                 }
             }

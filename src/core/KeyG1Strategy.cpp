@@ -4,74 +4,74 @@
 #include "SearchSpace.h"
 #include "PLICache.h"
 
-double KeyG1Strategy::calculateKeyError(util::PositionListIndex* pli) const {
-    return calculateKeyError(pli->getNepAsLong());
+double KeyG1Strategy::CalculateKeyError(util::PositionListIndex* pli) const {
+    return CalculateKeyError(pli->GetNepAsLong());
 }
 
-double KeyG1Strategy::calculateKeyError(double numViolatingTuplePairs) const {
-    unsigned long long numTuplePairs = context_->getColumnLayoutRelationData()->getNumTuplePairs();
-    if (numTuplePairs == 0) return 0;
-    double g1 = numViolatingTuplePairs / numTuplePairs;
-    return round(g1);
+double KeyG1Strategy::CalculateKeyError(double num_violating_tuple_pairs) const {
+    unsigned long long num_tuple_pairs = context_->GetColumnLayoutRelationData()->GetNumTuplePairs();
+    if (num_tuple_pairs == 0) return 0;
+    double g1 = num_violating_tuple_pairs / num_tuple_pairs;
+    return Round(g1);
 }
 
-void KeyG1Strategy::ensureInitialized(SearchSpace* searchSpace) const {
-    if (searchSpace->isInitialized_) return;
+void KeyG1Strategy::EnsureInitialized(SearchSpace* search_space) const {
+    if (search_space->is_initialized_) return;
 
-    for (auto& column : context_->getSchema()->getColumns()) {
-        if (isIrrelevantColumn(column->getIndex())) continue;
+    for (auto& column : context_->GetSchema()->GetColumns()) {
+        if (IsIrrelevantColumn(column->GetIndex())) continue;
 
-        searchSpace->addLaunchPad(createDependencyCandidate(static_cast<Vertical>(*column)));
+        search_space->AddLaunchPad(CreateDependencyCandidate(static_cast<Vertical>(*column)));
     }
 
-    searchSpace->isInitialized_ = true;
+    search_space->is_initialized_ = true;
 }
 
-double KeyG1Strategy::calculateError(Vertical const& keyCandidate) const {
-    auto pli = context_->getPLICache()->getOrCreateFor(keyCandidate, context_);
-    auto pliPointer = std::holds_alternative<util::PositionListIndex*>(pli)
+double KeyG1Strategy::CalculateError(Vertical const& key_candidate) const {
+    auto pli = context_->GetPliCache()->GetOrCreateFor(key_candidate, context_);
+    auto pli_pointer = std::holds_alternative<util::PositionListIndex*>(pli)
                       ? std::get<util::PositionListIndex*>(pli)
                       : std::get<std::unique_ptr<util::PositionListIndex>>(pli).get();
-    double error = calculateKeyError(pliPointer);
-    calcCount_++;
+    double error = CalculateKeyError(pli_pointer);
+    calc_count_++;
     return error;
 }
 
-util::ConfidenceInterval KeyG1Strategy::calculateKeyError(util::ConfidenceInterval const& estimatedQualityPairs) const {
-    return util::ConfidenceInterval(calculateKeyError(estimatedQualityPairs.getMin()),
-                                    calculateKeyError(estimatedQualityPairs.getMean()),
-                                    calculateKeyError(estimatedQualityPairs.getMax()));
+util::ConfidenceInterval KeyG1Strategy::CalculateKeyError(util::ConfidenceInterval const& num_violations) const {
+    return util::ConfidenceInterval(CalculateKeyError(num_violations.GetMin()),
+                                    CalculateKeyError(num_violations.GetMean()),
+                                    CalculateKeyError(num_violations.GetMax()));
 }
 
-DependencyCandidate KeyG1Strategy::createDependencyCandidate(Vertical const& vertical) const {
-    if (vertical.getArity() == 1) {
-        auto pli = context_->getPLICache()->getOrCreateFor(vertical, context_);
-        auto pliPointer = std::holds_alternative<util::PositionListIndex*>(pli)
+DependencyCandidate KeyG1Strategy::CreateDependencyCandidate(Vertical const& vertical) const {
+    if (vertical.GetArity() == 1) {
+        auto pli = context_->GetPliCache()->GetOrCreateFor(vertical, context_);
+        auto pli_pointer = std::holds_alternative<util::PositionListIndex*>(pli)
                           ? std::get<util::PositionListIndex*>(pli)
                           : std::get<std::unique_ptr<util::PositionListIndex>>(pli).get();
-        double keyError = calculateKeyError(pliPointer->getNepAsLong());
-        return DependencyCandidate(vertical, util::ConfidenceInterval(keyError), true);
+        double key_error = CalculateKeyError(pli_pointer->GetNepAsLong());
+        return DependencyCandidate(vertical, util::ConfidenceInterval(key_error), true);
     }
 
-    if (context_->isAgreeSetSamplesEmpty()) {
+    if (context_->IsAgreeSetSamplesEmpty()) {
         return DependencyCandidate(vertical, util::ConfidenceInterval(0, .5, 1), false);
     }
 
-    auto agreeSetSample = context_->getAgreeSetSample(vertical);
-    util::ConfidenceInterval estimatedEqualityPairs = agreeSetSample
-            ->estimateAgreements(vertical, context_->getConfiguration().estimateConfidence)
-            .multiply(context_->getColumnLayoutRelationData()->getNumTuplePairs());
-    util::ConfidenceInterval keyError = calculateKeyError(estimatedEqualityPairs);
-    return DependencyCandidate(vertical, keyError, false);
+    auto agree_set_sample = context_->GetAgreeSetSample(vertical);
+    util::ConfidenceInterval estimated_equality_pairs = agree_set_sample
+        ->EstimateAgreements(vertical, context_->GetConfiguration().estimate_confidence)
+        .Multiply(context_->GetColumnLayoutRelationData()->GetNumTuplePairs());
+    util::ConfidenceInterval key_error = CalculateKeyError(estimated_equality_pairs);
+    return DependencyCandidate(vertical, key_error, false);
 }
 
-void KeyG1Strategy::registerDependency(Vertical const& vertical, double error,
-                                      DependencyConsumer const& discoveryUnit) const {
-    discoveryUnit.registerUcc(vertical, error, 0); // TODO: calculate score?
+void KeyG1Strategy::RegisterDependency(Vertical const& vertical, double error,
+                                       DependencyConsumer const& discovery_unit) const {
+    discovery_unit.RegisterUcc(vertical, error, 0); // TODO: calculate score?
 }
 
-std::unique_ptr<DependencyStrategy> KeyG1Strategy::createClone() {
+std::unique_ptr<DependencyStrategy> KeyG1Strategy::CreateClone() {
     return std::make_unique<KeyG1Strategy>(
-            (maxDependencyError_ + minNonDependencyError_) / 2,
-            (maxDependencyError_ - minNonDependencyError_) / 2);
+            (max_dependency_error_ + min_non_dependency_error_) / 2,
+            (max_dependency_error_ - min_non_dependency_error_) / 2);
 }

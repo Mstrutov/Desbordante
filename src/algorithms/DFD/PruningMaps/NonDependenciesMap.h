@@ -8,7 +8,7 @@ public:
     explicit NonDependenciesMap(RelationalSchema const* schema);
     NonDependenciesMap() = default;
 
-    std::unordered_set<Vertical> getPrunedSupersets(std::unordered_set<Vertical> const& supersets) const;
-    void addNewNonDependency(Vertical const& node);
-    bool canBePruned(Vertical const& node) const;
+    std::unordered_set<Vertical> GetPrunedSupersets(std::unordered_set<Vertical> const& supersets) const;
+    void AddNewNonDependency(Vertical const& node_to_add);
+    bool CanBePruned(Vertical const& node) const;
 };

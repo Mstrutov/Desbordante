@@ -11,39 +11,39 @@
 
 class FDep : public FDAlgorithm {
  public:
-    explicit FDep(std::filesystem::path const& path, char separator = ',', bool hasHeader = true);
+    explicit FDep(std::filesystem::path const& path, char separator = ',', bool has_header = true);
 
     ~FDep() override = default;
 
-    unsigned long long executeInternal() override;
+    unsigned long long ExecuteInternal() override;
  private:
     std::unique_ptr<RelationalSchema> schema_{};
 
-    std::vector <std::string> columnNames_;
-    size_t numberAttributes_{};
+    std::vector <std::string> column_names_;
+    size_t number_attributes_{};
 
-    std::unique_ptr<FDTreeElement> negCoverTree_{};
-    std::unique_ptr<FDTreeElement> posCoverTree_{};
+    std::unique_ptr<FDTreeElement> neg_cover_tree_{};
+    std::unique_ptr<FDTreeElement> pos_cover_tree_{};
     
     std::vector<std::vector<size_t>> tuples_;
 
     // Initializing the most common dependencies.
-    void initialize() override;
+    void Initialize() override;
 
     // Building negative cover via violated dependencies
-    void buildNegativeCover();
+    void BuildNegativeCover();
 
     // Iterating over all pairs t1 and t2 of the relation
     // Adding violated FDs to negative cover tree.
-    void addViolatedFDs(const std::vector<size_t>& t1, const std::vector<size_t>& t2);
+    void AddViolatedFDs(const std::vector<size_t>& t1, const std::vector<size_t>& t2);
 
     // Converting negative cover tree into positive cover tree
-    void calculatePositiveCover(FDTreeElement const& negCoverSubtree, std::bitset<FDTreeElement::kMaxAttrNum>& activePath);
+    void CalculatePositiveCover(FDTreeElement const& neg_cover_subtree, std::bitset<FDTreeElement::kMaxAttrNum>& active_path);
 
     // Specializing general dependencies for not to be followed from violated dependencies of negative cover tree.
-    void specializePositiveCover(const std::bitset<FDTreeElement::kMaxAttrNum>& lhs, const size_t& a);
+    void SpecializePositiveCover(const std::bitset<FDTreeElement::kMaxAttrNum>& lhs, const size_t& a);
 
     // Loading the relation
     // Presented as vector of vectors (tuples of the relation).
-    void loadData();
+    void LoadData();
 };

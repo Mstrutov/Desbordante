@@ -7,17 +7,17 @@
 
 class Depminer : public PliBasedFDAlgorithm {
 private:
-    void lhsForColumn(std::unique_ptr<Column> const& column, std::vector<CMAXSet> const& cmaxSets);
-    static CMAXSet genFirstLevel(std::vector<CMAXSet> const& cmaxSets, Column const& attribute, std::unordered_set<Vertical>& li);
-    static std::unordered_set<Vertical> genNextLevel(std::unordered_set<Vertical> const& li);
-    static bool checkJoin(Vertical const& _p, Vertical const& _q);
-    std::vector<CMAXSet> generateCMAXSets(std::unordered_set<Vertical> const& agreeSets);
-    double progressStep = 0;
+    void LhsForColumn(std::unique_ptr<Column> const& column, std::vector<CMAXSet> const& cmax_sets);
+    static CMAXSet GenFirstLevel(std::vector<CMAXSet> const& cmax_sets, Column const& attribute, std::unordered_set<Vertical>& level);
+    static std::unordered_set<Vertical> GenNextLevel(std::unordered_set<Vertical> const& prev_level);
+    static bool CheckJoin(Vertical const& _p, Vertical const& _q);
+    std::vector<CMAXSet> GenerateCmaxSets(std::unordered_set<Vertical> const& agree_sets);
+    double progress_step_ = 0;
 public:
     
-    explicit Depminer(std::filesystem::path const& path, char separator = ',', bool hasHeader = true) 
-        : PliBasedFDAlgorithm(path, separator, hasHeader, true, {"AgreeSets generation", "Finding CMAXSets", "Finding LHS"}) {}
+    explicit Depminer(std::filesystem::path const& path, char separator = ',', bool has_header = true)
+        : PliBasedFDAlgorithm(path, separator, has_header, true, {"AgreeSets generation", "Finding CMAXSets", "Finding LHS"}) {}
 
-    unsigned long long executeInternal() override;
-    const RelationalSchema* schema = nullptr;
+    unsigned long long ExecuteInternal() override;
+    const RelationalSchema* schema_ = nullptr;
 };

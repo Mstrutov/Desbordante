@@ -16,37 +16,37 @@ private:
     public:
         Vertical const* vertical_;
         std::shared_ptr<util::PositionListIndex> pli_;
-        int addedArity_;
+        int added_arity_;
 
         PositionListIndexRank(Vertical const* vertical,
                               std::shared_ptr<util::PositionListIndex> pli,
-                              int initialArity):
-                vertical_(vertical), pli_(pli), addedArity_(initialArity) {}
+                              int initial_arity):
+            vertical_(vertical), pli_(pli), added_arity_(initial_arity) {}
     };
-    ColumnLayoutRelationData* relationData_;
+    ColumnLayoutRelationData* relation_data_;
     std::unique_ptr<util::VerticalMap<util::PositionListIndex>> index_;
 
-    int savedIntersections_ = 0;
+    int saved_intersections_ = 0;
 
-    mutable std::mutex gettingPLIMutex;
+    mutable std::mutex getting_pli_mutex_;
 
-    CachingMethod cachingMethod_;
-    CacheEvictionMethod evictionMethod_;
-    double cachingMethodValue_;
+    CachingMethod caching_method_;
+    CacheEvictionMethod eviction_method_;
+    double caching_method_value_;
 
-    double medianInvertedEntropy_;
+    double median_inverted_entropy_;
 
     std::variant<util::PositionListIndex*, std::unique_ptr<util::PositionListIndex>>
-    cachingProcess(Vertical const& vertical, std::unique_ptr<util::PositionListIndex> pli);
+    CachingProcess(Vertical const& vertical, std::unique_ptr<util::PositionListIndex> pli);
 public:
-    PartitionStorage(ColumnLayoutRelationData* relationData,
-                     CachingMethod cachingMethod, CacheEvictionMethod evictionMethod);
+    PartitionStorage(ColumnLayoutRelationData* relation_data,
+                     CachingMethod caching_method, CacheEvictionMethod eviction_method);
 
-    util::PositionListIndex* get(Vertical const& vertical);
+    util::PositionListIndex* Get(Vertical const& vertical);
     std::variant<util::PositionListIndex*, std::unique_ptr<util::PositionListIndex>>
-    getOrCreateFor(Vertical const& vertical);
+    GetOrCreateFor(Vertical const& vertical);
 
-    size_t size() const;
+    size_t Size() const;
 
     virtual ~PartitionStorage();
 };

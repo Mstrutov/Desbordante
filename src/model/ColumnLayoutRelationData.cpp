@@ -12,95 +12,95 @@
 
 
 ColumnLayoutRelationData::ColumnLayoutRelationData(std::unique_ptr<RelationalSchema> schema,
-                                                   std::vector<ColumnData> columnData)
-        : RelationData(std::move(schema)), columnData(std::move(columnData)) {}
+                                                   std::vector<ColumnData> column_data)
+        : RelationData(std::move(schema)), column_data_(std::move(column_data)) {}
 
 
-ColumnData& ColumnLayoutRelationData::getColumnData(int columnIndex) {
-    return columnData[columnIndex];
+ColumnData& ColumnLayoutRelationData::GetColumnData(int column_index) {
+    return column_data_[column_index];
 }
 
-//ColumnData const& ColumnLayoutRelationData::getColumnData(int columnIndex) const ;
+//ColumnData const& ColumnLayoutRelationData::GetColumnData(int columnIndex) const ;
 
-//unsigned int ColumnLayoutRelationData::getNumRows() const
+//unsigned int ColumnLayoutRelationData::GetNumRows() const
 
-std::vector<int> ColumnLayoutRelationData::getTuple(int tupleIndex) const {
-    int numColumns = schema->getNumColumns();
-    std::vector<int> tuple = std::vector<int>(numColumns);
-    for (int columnIndex = 0; columnIndex < numColumns; columnIndex++){
-        tuple[columnIndex] = columnData[columnIndex].getProbingTableValue(tupleIndex);
+std::vector<int> ColumnLayoutRelationData::GetTuple(int tuple_index) const {
+    int num_columns = schema_->GetNumColumns();
+    std::vector<int> tuple = std::vector<int>(num_columns);
+    for (int column_index = 0; column_index < num_columns; column_index++){
+        tuple[column_index] = column_data_[column_index].GetProbingTableValue(tuple_index);
     }
     return tuple;
 }
 
 /*void ColumnLayoutRelationData::shuffleColumns() {
-    for (auto &columnDatum : columnData){
+    for (auto &columnDatum : column_data_){
         columnDatum.shuffle();
     }
 }*/
 
-std::unique_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::createFrom(CSVParser &fileInput, bool isNullEqNull) {
-    return createFrom(fileInput, isNullEqNull, -1, -1);
+std::unique_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::CreateFrom(CSVParser &file_input, bool is_null_eq_null) {
+    return CreateFrom(file_input, is_null_eq_null, -1, -1);
 }
 
-std::unique_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::createFrom(
-        CSVParser &fileInput, bool isNullEqNull, int maxCols, long maxRows) {
-    auto schema = std::make_unique<RelationalSchema>(fileInput.getRelationName(), isNullEqNull);
-    std::unordered_map<std::string, int> valueDictionary;
-    int nextValueId = 1;
-    const int nullValueId = -1;
-    int numColumns = fileInput.getNumberOfColumns();
-    if (maxCols > 0) numColumns = std::min(numColumns, maxCols);
-    std::vector<std::vector<int>> columnVectors = std::vector<std::vector<int>>(numColumns);
-    int rowNum = 0;
+std::unique_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::CreateFrom(
+    CSVParser &file_input, bool is_null_eq_null, int max_cols, long max_rows) {
+    auto schema = std::make_unique<RelationalSchema>(file_input.GetRelationName(), is_null_eq_null);
+    std::unordered_map<std::string, int> value_dictionary;
+    int next_value_id = 1;
+    const int null_value_id = -1;
+    int num_columns = file_input.GetNumberOfColumns();
+    if (max_cols > 0) num_columns = std::min(num_columns, max_cols);
+    std::vector<std::vector<int>> column_vectors = std::vector<std::vector<int>>(num_columns);
+    int row_num = 0;
     std::vector<std::string> row;
 
-    while (fileInput.getHasNext()){
-        row = fileInput.parseNext();
+    while (file_input.GetHasNext()){
+        row = file_input.ParseNext();
 
-        if (row.empty() && numColumns == 1) {
+        if (row.empty() && num_columns == 1) {
             row.emplace_back("");
-        } else if ((int)row.size() != numColumns) {
+        } else if ((int)row.size() != num_columns) {
             LOG(WARNING) << "Skipping incomplete rows";
             continue;
         }
 
-        if (maxRows <= 0 || rowNum < maxRows){
+        if (max_rows <= 0 || row_num < max_rows){
             int index = 0;
             for (std::string& field : row){
                 if (field.empty()){
-                    columnVectors[index].push_back(nullValueId);
+                    column_vectors[index].push_back(null_value_id);
                 } else {
-                    auto location = valueDictionary.find(field);
-                    int valueId;
-                    if (location == valueDictionary.end()){
-                        valueDictionary[field] = nextValueId;
-                        valueId = nextValueId;
-                        nextValueId++;
+                    auto location = value_dictionary.find(field);
+                    int value_id;
+                    if (location == value_dictionary.end()){
+                      value_dictionary[field] = next_value_id;
+                      value_id = next_value_id;
+                        next_value_id++;
                     } else {
-                        valueId = location->second;
+                      value_id = location->second;
                     }
-                    columnVectors[index].push_back(valueId);
+                    column_vectors[index].push_back(value_id);
                 }
                 index++;
-                if (index >= numColumns) break;
+                if (index >= num_columns) break;
             }
         } else {
             //TODO: Подумать что тут сделать
             assert(0);
         }
-        rowNum++;
+        row_num++;
     }
 
-    std::vector<ColumnData> columnData;
-    for (int i = 0; i < numColumns; ++i) {
-        auto column = Column(schema.get(), fileInput.getColumnName(i), i);
-        schema->appendColumn(std::move(column));
-        auto pli = util::PositionListIndex::createFor(columnVectors[i], schema->isNullEqualNull());
-        columnData.emplace_back(schema->getColumn(i), std::move(pli));
+    std::vector<ColumnData> column_data;
+    for (int i = 0; i < num_columns; ++i) {
+        auto column = Column(schema.get(), file_input.GetColumnName(i), i);
+        schema->AppendColumn(std::move(column));
+        auto pli = util::PositionListIndex::CreateFor(column_vectors[i], schema->IsNullEqualNull());
+        column_data.emplace_back(schema->GetColumn(i), std::move(pli));
     }
 
-    schema->init();
+    schema->Init();
 
-    return std::make_unique<ColumnLayoutRelationData>(std::move(schema), std::move(columnData));
+    return std::make_unique<ColumnLayoutRelationData>(std::move(schema), std::move(column_data));
 }

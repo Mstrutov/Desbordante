@@ -9,39 +9,38 @@
 
 class Tane : public PliBasedFDAlgorithm {
 private:
-    unsigned long long executeInternal() override;
+    unsigned long long ExecuteInternal() override;
 public:
 
-    constexpr static char INPUT_FILE_CONFIG_KEY[] = "inputFile";
+    constexpr static char kInputFileConfigKey[] = "inputFile";
 
     //TODO: these consts should go in class (or struct) Configuration
-    const double maxFdError = 0.01;
-    const double maxUccError = 0.01;
-    const unsigned int maxArity = -1;
+    const double max_fd_error_ = 0.01;
+    const double max_ucc_error_ = 0.01;
+    const unsigned int max_arity_ = -1;
 
-    int countOfFD = 0;
-    int countOfUCC = 0;
-    long aprioriMillis = 0;
+    int count_of_fd_ = 0;
+    int count_of_ucc_ = 0;
+    long apriori_millis_ = 0;
 
     explicit Tane(std::filesystem::path const& path, char separator = ',',
-                  bool hasHeader = true, double maxError = 0,
-                  unsigned int maxArity = -1)
-        : PliBasedFDAlgorithm(path, separator, hasHeader), maxFdError(maxError),
-          maxUccError(maxError), maxArity(maxArity) {}
+                  bool has_header = true, double max_error = 0,
+                  unsigned int max_arity = -1)
+        : PliBasedFDAlgorithm(path, separator, has_header), max_fd_error_(max_error), max_ucc_error_(max_error), max_arity_(max_arity) {}
 
-    static double calculateZeroAryFdError(ColumnData const* rhs,
-                                          ColumnLayoutRelationData const* relationData);
-    static double calculateFdError(util::PositionListIndex const* lhsPli,
-                                   util::PositionListIndex const* jointPli,
-                                   ColumnLayoutRelationData const* relationData);
-    static double calculateUccError(util::PositionListIndex const* pli,
-                                    ColumnLayoutRelationData const* relationData);
+    static double CalculateZeroAryFdError(ColumnData const* rhs,
+                                          ColumnLayoutRelationData const* relation_data);
+    static double CalculateFdError(util::PositionListIndex const* lhs_pli,
+                                   util::PositionListIndex const* joint_pli,
+                                   ColumnLayoutRelationData const* relation_data);
+    static double CalculateUccError(util::PositionListIndex const* pli,
+                                    ColumnLayoutRelationData const* relation_data);
 
     //static double round(double error) { return ((int)(error * 32768) + 1)/ 32768.0; }
 
-    void registerFD(Vertical const& lhs, Column const* rhs,
+    void RegisterFd(Vertical const& lhs, Column const* rhs,
                     double error, RelationalSchema const* schema);
-    // void registerFD(Vertical const* lhs, Column const* rhs, double error, RelationalSchema const* schema);
-    void registerUCC(Vertical const& key, double error, RelationalSchema const* schema);
+    // void RegisterFd(Vertical const* lhs, Column const* rhs, double error, RelationalSchema const* schema);
+    void RegisterUcc(Vertical const& key, double error, RelationalSchema const* schema);
 
 };

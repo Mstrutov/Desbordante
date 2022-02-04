@@ -4,8 +4,8 @@
 
 class OrderedPartition {
 private:
-    double distinctiveness;
-    unsigned int columnIndex;
+    double distinctiveness_;
+    unsigned int column_index_;
 public:
     OrderedPartition() = delete;
     OrderedPartition(OrderedPartition const& other) = delete;
@@ -14,8 +14,8 @@ public:
     OrderedPartition& operator=(OrderedPartition && other) = delete;
 
     OrderedPartition(util::PositionListIndex const* const,
-                     unsigned int numberOfRows, unsigned int columnIndex);
+                     unsigned int number_of_rows, unsigned int column_index);
 
     bool operator<(OrderedPartition const& other) const;
-    unsigned int getColumnIndex() const { return this->columnIndex; }
+    unsigned int GetColumnIndex() const { return this->column_index_; }
 };

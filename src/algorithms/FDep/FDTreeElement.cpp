@@ -1,259 +1,259 @@
 #include "FDTreeElement.h"
 #include "boost/dynamic_bitset.hpp"
 
-FDTreeElement::FDTreeElement(size_t maxAttributeNumber): maxAttributeNumber_(maxAttributeNumber){
-    children_.resize(maxAttributeNumber);
+FDTreeElement::FDTreeElement(size_t max_attribute_number): max_attribute_number_(max_attribute_number){
+    children_.resize(max_attribute_number);
 }
 
-bool FDTreeElement::checkFd(size_t i) const{
-    return this->isFd_[i];
+bool FDTreeElement::CheckFd(size_t index) const{
+    return this->is_fd_[index];
 }
 
-FDTreeElement* FDTreeElement::getChild(size_t i) const{
-    return this->children_[i].get();
+FDTreeElement* FDTreeElement::GetChild(size_t index) const{
+    return this->children_[index].get();
 }
 
-void FDTreeElement::addRhsAttribute(size_t i){
-    this->rhsAttributes_.set(i);
+void FDTreeElement::AddRhsAttribute(size_t index){
+    this->rhs_attributes_.set(index);
 }
 
-const std::bitset<FDTreeElement::kMaxAttrNum>& FDTreeElement::getRhsAttributes() const{
-    return this->rhsAttributes_;
+const std::bitset<FDTreeElement::kMaxAttrNum>& FDTreeElement::GetRhsAttributes() const{
+    return this->rhs_attributes_;
 }
 
-void FDTreeElement::markAsLast(size_t i){
-    this->isFd_.set(i);
+void FDTreeElement::MarkAsLast(size_t index){
+    this->is_fd_.set(index);
 }
 
-bool FDTreeElement::isFinalNode(size_t attr_num) const{
-    if (!this->rhsAttributes_[attr_num]){
+bool FDTreeElement::IsFinalNode(size_t attr_num) const{
+    if (!this->rhs_attributes_[attr_num]){
         return false;
     }
-    for (size_t attr = 0; attr < this->maxAttributeNumber_; ++attr){
-        if (children_[attr] && children_[attr]->getRhsAttributes()[attr_num]){
+    for (size_t attr = 0; attr < this->max_attribute_number_; ++attr){
+        if (children_[attr] && children_[attr]->GetRhsAttributes()[attr_num]){
             return false;
         }
     }
     return true;
 }
 
-bool FDTreeElement::containsGeneralization
-(const std::bitset<kMaxAttrNum>& lhs, size_t attr_num, size_t currentAttr) const
+bool FDTreeElement::ContainsGeneralization
+(const std::bitset<kMaxAttrNum>& lhs, size_t attr_num, size_t current_attr) const
 {
-    if (this->isFd_[attr_num - 1]){
+    if (this->is_fd_[attr_num - 1]){
         return true;
     }
     
-    size_t nextSetAttr = lhs._Find_next(currentAttr);
-    if (nextSetAttr == kMaxAttrNum){
+    size_t next_set_attr = lhs._Find_next(current_attr);
+    if (next_set_attr == kMaxAttrNum){
         return false;
     }
     bool found = false;
-    if (this->children_[nextSetAttr - 1] && this->children_[nextSetAttr - 1]->getRhsAttributes()[attr_num]){
-        found = this->children_[nextSetAttr - 1]->containsGeneralization(lhs, attr_num, nextSetAttr);
+    if (this->children_[next_set_attr - 1] && this->children_[next_set_attr - 1]->GetRhsAttributes()[attr_num]){
+        found = this->children_[next_set_attr - 1]->ContainsGeneralization(lhs, attr_num, next_set_attr);
     }
 
     if (found){
         return true;
     }
-    return this->containsGeneralization(lhs, attr_num, nextSetAttr);
+    return this->ContainsGeneralization(lhs, attr_num, next_set_attr);
 }
 
-bool FDTreeElement::getGeneralizationAndDelete
-(const std::bitset<kMaxAttrNum>& lhs, size_t attr_num, size_t currentAttr, std::bitset<kMaxAttrNum>& specLhs)
+bool FDTreeElement::GetGeneralizationAndDelete
+(const std::bitset<kMaxAttrNum>& lhs, size_t attr_num, size_t current_attr, std::bitset<kMaxAttrNum>& spec_lhs)
 {
-    if (this->isFd_[attr_num - 1]){
-        this->isFd_.reset(attr_num - 1);
-        this->rhsAttributes_.reset(attr_num);
+    if (this->is_fd_[attr_num - 1]){
+        this->is_fd_.reset(attr_num - 1);
+        this->rhs_attributes_.reset(attr_num);
         return true;
     }
 
-    size_t nextSetAttr = lhs._Find_next(currentAttr);
-    if (nextSetAttr == kMaxAttrNum){
+    size_t next_set_attr = lhs._Find_next(current_attr);
+    if (next_set_attr == kMaxAttrNum){
         return false;
     }
 
     bool found = false;
-    if (this->children_[nextSetAttr - 1] && this->children_[nextSetAttr - 1]->getRhsAttributes()[attr_num]){
-        found = this->children_[nextSetAttr - 1]->getGeneralizationAndDelete(lhs, attr_num, nextSetAttr, specLhs);
+    if (this->children_[next_set_attr - 1] && this->children_[next_set_attr - 1]->GetRhsAttributes()[attr_num]){
+        found = this->children_[next_set_attr - 1]->GetGeneralizationAndDelete(lhs, attr_num, next_set_attr, spec_lhs);
         if (found){
-            if (this->isFinalNode(attr_num)){
-                this->rhsAttributes_.reset(attr_num);
+            if (this->IsFinalNode(attr_num)){
+                this->rhs_attributes_.reset(attr_num);
             }
 
-            specLhs.set(nextSetAttr);
+            spec_lhs.set(next_set_attr);
         }
     }
     if (!found){
-        found = this->getGeneralizationAndDelete(lhs, attr_num, nextSetAttr, specLhs);
+        found = this->GetGeneralizationAndDelete(lhs, attr_num, next_set_attr, spec_lhs);
     }
     return found;
 }
 
 
-bool FDTreeElement::getSpecialization
-(const std::bitset<kMaxAttrNum>& lhs, size_t attr_num, size_t currentAttr, std::bitset<kMaxAttrNum>& specLhsOut) const
+bool FDTreeElement::GetSpecialization
+(const std::bitset<kMaxAttrNum>& lhs, size_t attr_num, size_t current_attr, std::bitset<kMaxAttrNum>& spec_lhs_out) const
 {
-    if (!this->rhsAttributes_[attr_num]){
+    if (!this->rhs_attributes_[attr_num]){
         return false;
     }
 
     bool found = false;
-    size_t attr = (currentAttr > 1 ? currentAttr : 1);
-    size_t nextSetAttr = lhs._Find_next(currentAttr);
+    size_t attr = (current_attr > 1 ? current_attr : 1);
+    size_t next_set_attr = lhs._Find_next(current_attr);
 
-    if (nextSetAttr == kMaxAttrNum){
-        while (!found && attr <= this->maxAttributeNumber_){
-            if (this->children_[attr - 1] && this->children_[attr - 1]->getRhsAttributes()[attr_num]){
-                found = this->children_[attr - 1]->getSpecialization(lhs, attr_num, currentAttr, specLhsOut);
+    if (next_set_attr == kMaxAttrNum){
+        while (!found && attr <= this->max_attribute_number_){
+            if (this->children_[attr - 1] && this->children_[attr - 1]->GetRhsAttributes()[attr_num]){
+                found = this->children_[attr - 1]->GetSpecialization(lhs, attr_num, current_attr, spec_lhs_out);
             }
             ++attr;
         }
         if (found){
-            specLhsOut.set(attr - 1);
+            spec_lhs_out.set(attr - 1);
         }
         return true;
     }
 
-    while (!found && attr < nextSetAttr){
-        if (this->children_[attr - 1] && this->children_[attr - 1]->getRhsAttributes()[attr_num]){
-            found = this->children_[attr - 1]->getSpecialization(lhs, attr_num, currentAttr, specLhsOut);
+    while (!found && attr < next_set_attr){
+        if (this->children_[attr - 1] && this->children_[attr - 1]->GetRhsAttributes()[attr_num]){
+            found = this->children_[attr - 1]->GetSpecialization(lhs, attr_num, current_attr, spec_lhs_out);
         }
         ++attr;
     }
-    if (!found && this->children_[nextSetAttr - 1] && this->children_[nextSetAttr - 1]->getRhsAttributes()[attr_num]){
-        found = this->children_[nextSetAttr - 1]->getSpecialization(lhs, attr_num, nextSetAttr, specLhsOut);
+    if (!found && this->children_[next_set_attr - 1] && this->children_[next_set_attr - 1]->GetRhsAttributes()[attr_num]){
+        found = this->children_[next_set_attr - 1]->GetSpecialization(lhs, attr_num, next_set_attr, spec_lhs_out);
     }
 
-    specLhsOut.set(attr - 1, found);
+    spec_lhs_out.set(attr - 1, found);
 
     return found;
 }
 
-void FDTreeElement::addMostGeneralDependencies(){
-    for (size_t i = 1; i <= this->maxAttributeNumber_; ++i){
-        this->rhsAttributes_.set(i);
+void FDTreeElement::AddMostGeneralDependencies(){
+    for (size_t i = 1; i <= this->max_attribute_number_; ++i){
+        this->rhs_attributes_.set(i);
     }
 
-    for (size_t i = 0; i < this->maxAttributeNumber_; ++i){
-        this->isFd_[i] = true;
+    for (size_t i = 0; i < this->max_attribute_number_; ++i){
+        this->is_fd_[i] = true;
     }
 }
 
-void FDTreeElement::addFunctionalDependency(const std::bitset<kMaxAttrNum>& lhs, size_t attr_num){
-    FDTreeElement* currentNode = this;
-    this->addRhsAttribute(attr_num);
+void FDTreeElement::AddFunctionalDependency(const std::bitset<kMaxAttrNum>& lhs, size_t attr_num){
+    FDTreeElement* current_node = this;
+    this->AddRhsAttribute(attr_num);
 
     for (size_t i = lhs._Find_first(); i != kMaxAttrNum; i = lhs._Find_next(i)){
-        if (currentNode->children_[i - 1] == nullptr){
-            currentNode->children_[i - 1] = std::make_unique<FDTreeElement>(this->maxAttributeNumber_);
+        if (current_node->children_[i - 1] == nullptr){
+            current_node->children_[i - 1] = std::make_unique<FDTreeElement>(this->max_attribute_number_);
         }
 
-        currentNode = currentNode->getChild(i - 1);
-        currentNode->addRhsAttribute(attr_num);
+        current_node = current_node->GetChild(i - 1);
+        current_node->AddRhsAttribute(attr_num);
     }
 
-    currentNode->markAsLast(attr_num - 1);
+    current_node->MarkAsLast(attr_num - 1);
 }
 
-void FDTreeElement::filterSpecializations(){
-    std::bitset<kMaxAttrNum> activePath;
-    auto filteredTree = std::make_unique<FDTreeElement>(this->maxAttributeNumber_);
+void FDTreeElement::FilterSpecializations(){
+    std::bitset<kMaxAttrNum> active_path;
+    auto filtered_tree = std::make_unique<FDTreeElement>(this->max_attribute_number_);
 
-    this->filterSpecializationsHelper(*filteredTree, activePath);
+    this->FilterSpecializationsHelper(*filtered_tree, active_path);
 
-    this->children_ = std::move(filteredTree->children_);
-    this->isFd_ = filteredTree->isFd_;
+    this->children_ = std::move(filtered_tree->children_);
+    this->is_fd_ = filtered_tree->is_fd_;
 }
 
-void FDTreeElement::filterSpecializationsHelper(FDTreeElement& filteredTree, std::bitset<kMaxAttrNum>& activePath){
-    for (size_t attr = 1; attr <= this->maxAttributeNumber_; ++attr){
+void FDTreeElement::FilterSpecializationsHelper(FDTreeElement& filtered_tree, std::bitset<kMaxAttrNum>& active_path){
+    for (size_t attr = 1; attr <= this->max_attribute_number_; ++attr){
         if (this->children_[attr - 1]){
-            activePath.set(attr);
-            this->children_[attr - 1]->filterSpecializationsHelper(filteredTree, activePath);
-            activePath.reset(attr);
+            active_path.set(attr);
+            this->children_[attr - 1]->FilterSpecializationsHelper(filtered_tree, active_path);
+            active_path.reset(attr);
         }
     }
 
-    for (size_t attr = 1; attr <= this->maxAttributeNumber_; ++attr){
-        std::bitset<kMaxAttrNum> specLhsOut; 
-        if (this->isFd_[attr - 1] && !filteredTree.getSpecialization(activePath, attr, 0, specLhsOut)){
-            filteredTree.addFunctionalDependency(activePath, attr);
+    for (size_t attr = 1; attr <= this->max_attribute_number_; ++attr){
+        std::bitset<kMaxAttrNum> spec_lhs_out;
+        if (this->is_fd_[attr - 1] && !filtered_tree.GetSpecialization(active_path, attr, 0, spec_lhs_out)){
+            filtered_tree.AddFunctionalDependency(active_path, attr);
         }
     }
 }
 
- void FDTreeElement::printDep(const std::string& fileName, std::vector<std::string>& columnNames) const{
+ void FDTreeElement::PrintDep(const std::string& file_name, std::vector<std::string>& column_names) const{
      std::ofstream file;
-     file.open(fileName);
-     std::bitset<kMaxAttrNum> activePath;
-     printDependencies(activePath, file, columnNames);
+     file.open(file_name);
+     std::bitset<kMaxAttrNum> active_path;
+     PrintDependencies(active_path, file, column_names);
      file.close();
  }
 
- void FDTreeElement::printDependencies(std::bitset<kMaxAttrNum>& activePath, std::ofstream& file,
- std::vector<std::string>& columnNames) const {
-     std::string columnId;
-     if (std::isdigit(columnNames[0][0])){
-         columnId = "column";
+ void FDTreeElement::PrintDependencies(std::bitset<kMaxAttrNum>& active_path, std::ofstream& file,
+                                       std::vector<std::string>& column_names) const {
+     std::string column_id;
+     if (std::isdigit(column_names[0][0])){
+         column_id = "column";
      }
      std::string out;
-     for (size_t attr = 1; attr <= this->maxAttributeNumber_; ++attr){
-         if (this->isFd_[attr - 1]){
+     for (size_t attr = 1; attr <= this->max_attribute_number_; ++attr){
+         if (this->is_fd_[attr - 1]){
              out = "{";
 
-             for (size_t i = activePath._Find_first(); i != kMaxAttrNum; i = activePath._Find_next(i)){
-                 if (!columnId.empty())
-                     out += columnId + std::to_string(std::stoi(columnNames[i - 1]) + 1) + ",";
+             for (size_t i = active_path._Find_first(); i != kMaxAttrNum; i = active_path._Find_next(i)){
+                 if (!column_id.empty())
+                     out += column_id + std::to_string(std::stoi(column_names[i - 1]) + 1) + ",";
                  else
-                     out += columnNames[i - 1] + ",";
+                     out += column_names[i - 1] + ",";
              }
 
              if (out.size() > 1){
                  out = out.substr(0, out.size() - 1);
              }
-             if (!columnId.empty())
-                 out += "} -> " + columnId + std::to_string(std::stoi(columnNames[attr - 1]) + 1);
+             if (!column_id.empty())
+                 out += "} -> " + column_id + std::to_string(std::stoi(column_names[attr - 1]) + 1);
              else
-                 out += "} -> " + columnId + columnNames[attr - 1];
+                 out += "} -> " + column_id + column_names[attr - 1];
              file << out << std::endl;
          }
      }
 
-     for (size_t attr = 1; attr <= this->maxAttributeNumber_; ++attr){
+     for (size_t attr = 1; attr <= this->max_attribute_number_; ++attr){
          if (this->children_[attr - 1]){
-             activePath.set(attr);
-             this->children_[attr - 1]->printDependencies(activePath, file, columnNames);
-             activePath.reset(attr);
+             active_path.set(attr);
+             this->children_[attr - 1]->PrintDependencies(active_path, file, column_names);
+             active_path.reset(attr);
          }
      }
 
  }
 
- void FDTreeElement::fillFdCollection(const RelationalSchema &scheme, std::list<FD> &fdCollection) const {
-    std::bitset<kMaxAttrNum> activePath;
-    this->transformTreeFdCollection(activePath, fdCollection, scheme);
+ void FDTreeElement::FillFdCollection(const RelationalSchema &scheme, std::list<FD> &fd_collection) const {
+    std::bitset<kMaxAttrNum> active_path;
+     this->TransformTreeFdCollection(active_path, fd_collection, scheme);
 }
 
- void FDTreeElement::transformTreeFdCollection(std::bitset<kMaxAttrNum> &activePath, std::list<FD> &fdCollection,
+ void FDTreeElement::TransformTreeFdCollection(std::bitset<kMaxAttrNum> &active_path, std::list<FD> &fd_collection,
                                                const RelationalSchema &scheme) const {
-     for (size_t attr = 1; attr <= this->maxAttributeNumber_; ++attr){
-         if (this->isFd_[attr - 1]){
-             boost::dynamic_bitset<> lhs_bitset(this->maxAttributeNumber_);
-             for (size_t i = activePath._Find_first(); i != kMaxAttrNum; i = activePath._Find_next(i)){
+     for (size_t attr = 1; attr <= this->max_attribute_number_; ++attr){
+         if (this->is_fd_[attr - 1]){
+             boost::dynamic_bitset<> lhs_bitset(this->max_attribute_number_);
+             for (size_t i = active_path._Find_first(); i != kMaxAttrNum; i = active_path._Find_next(i)){
                  lhs_bitset.set(i - 1);
              }
              Vertical lhs(&scheme, lhs_bitset);
-             Column rhs(&scheme, scheme.getColumn(attr - 1)->getName(), attr - 1);
-             fdCollection.emplace_back(FD{lhs, rhs});
+             Column rhs(&scheme, scheme.GetColumn(attr - 1)->GetName(), attr - 1);
+             fd_collection.emplace_back(FD{lhs, rhs});
          }
      }
 
-     for (size_t attr = 1; attr <= this->maxAttributeNumber_; ++attr){
+     for (size_t attr = 1; attr <= this->max_attribute_number_; ++attr){
          if (this->children_[attr - 1]){
-             activePath.set(attr);
-             this->children_[attr - 1]->transformTreeFdCollection(activePath, fdCollection, scheme);
-             activePath.reset(attr);
+             active_path.set(attr);
+             this->children_[attr - 1]->TransformTreeFdCollection(active_path, fd_collection, scheme);
+             active_path.reset(attr);
          }
      }
 }

@@ -18,15 +18,15 @@ class Vertical {
 private:
     //Vertical(shared_ptr<RelationalSchema>& relSchema, int indices);
 
-    //TODO: unique_ptr<columnIndices> if this is big
-    boost::dynamic_bitset<> columnIndices;
-    RelationalSchema const* schema;
+    //TODO: unique_ptr<column_indices_> if this is big
+    boost::dynamic_bitset<> column_indices_;
+    RelationalSchema const* schema_;
 
 public:
 
-    static std::unique_ptr<Vertical> emptyVertical(RelationalSchema const* relSchema);
+    static std::unique_ptr<Vertical> EmptyVertical(RelationalSchema const* rel_schema);
 
-    Vertical(RelationalSchema const* relSchema, boost::dynamic_bitset<> indices);
+    Vertical(RelationalSchema const* rel_schema, boost::dynamic_bitset<> indices);
     Vertical() = default;
 
     explicit Vertical(Column const& col);
@@ -39,40 +39,40 @@ public:
 
     virtual ~Vertical() = default;
 
-    /* @return Returns true if lhs.columnIndices lexicographically less than
-     * rhs.columnIndices treating bitsets big endian.
+    /* @return Returns true if lhs.column_indices_ lexicographically less than
+     * rhs.column_indices_ treating bitsets big endian.
      * @brief We do not use directly boost::dynamic_bitset<> operator< because
      * it treats bitsets little endian during comparison and this is not
      * suitable for this case, check out operator< for Columns.
      */
     bool operator<(Vertical const& rhs) const;
 
-    bool operator==(Vertical const& other) const { return columnIndices == other.columnIndices; }
-    bool operator!=(Vertical const& other) const { return columnIndices != other.columnIndices; }
+    bool operator==(Vertical const& other) const { return column_indices_ == other.column_indices_; }
+    bool operator!=(Vertical const& other) const { return column_indices_ != other.column_indices_; }
     bool operator>(Vertical const& rhs) const { return !(*this < rhs && *this == rhs); }
 
-    boost::dynamic_bitset<> getColumnIndices() const { return columnIndices; }
-    boost::dynamic_bitset<> const& getColumnIndicesRef() const { return columnIndices; }
-    RelationalSchema const* getSchema() const { return schema; }
+    boost::dynamic_bitset<> GetColumnIndices() const { return column_indices_; }
+    boost::dynamic_bitset<> const& GetColumnIndicesRef() const { return column_indices_; }
+    RelationalSchema const* GetSchema() const { return schema_; }
 
-    bool contains(Vertical const& that) const;
-    bool contains(Column const& that) const;
-    bool intersects(Vertical const& that) const;
+    bool Contains(Vertical const& that) const;
+    bool Contains(Column const& that) const;
+    bool Intersects(Vertical const& that) const;
     Vertical Union(Vertical const& that) const;
     Vertical Union(Column const& that) const;
-    Vertical project(Vertical const& that) const;
-    Vertical without (Vertical const & that) const;
-    Vertical without(Column const& that) const;
-    Vertical invert() const;
-    Vertical invert(Vertical const& scope) const;
+    Vertical Project(Vertical const& that) const;
+    Vertical Without (Vertical const & that) const;
+    Vertical Without(Column const& that) const;
+    Vertical Invert() const;
+    Vertical Invert(Vertical const& scope) const;
 
-    unsigned int getArity() const { return columnIndices.count(); }
-    std::vector<Column const*> getColumns() const;
-    std::vector<Vertical> getParents() const;
+    unsigned int GetArity() const { return column_indices_.count(); }
+    std::vector<Column const*> GetColumns() const;
+    std::vector<Vertical> GetParents() const;
 
-    std::string toString() const;
-    std::string toIndicesString() const;
+    std::string ToString() const;
+    std::string ToIndicesString() const;
 
-    explicit operator std::string() const { return toString(); }
+    explicit operator std::string() const { return ToString(); }
 
 };

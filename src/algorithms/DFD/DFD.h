@@ -9,14 +9,14 @@
 
 class DFD : public PliBasedFDAlgorithm {
 private:
-    std::unique_ptr<PartitionStorage> partitionStorage;
-    std::vector<Vertical> uniqueColumns;
+    std::unique_ptr<PartitionStorage> partition_storage_;
+    std::vector<Vertical> unique_columns_;
 
-    unsigned int numberOfThreads;
+    unsigned int number_of_threads_;
 
-    unsigned long long executeInternal() override;
+    unsigned long long ExecuteInternal() override;
 public:
     explicit DFD(std::filesystem::path const& path,
-                 char separator = ',', bool hasHeader = true,
+                 char separator = ',', bool has_header = true,
                  unsigned int parallelism = 0);
 };

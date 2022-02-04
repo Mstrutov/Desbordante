@@ -6,34 +6,34 @@
 
 LatticeTraversal::LatticeTraversal(const Column *const rhs,
                                    const ColumnLayoutRelationData *const relation,
-                                   const std::vector<Vertical> &uniqueVerticals,
-                                   PartitionStorage *const partitionStorage)
-    : rhs(rhs), dependenciesMap(relation->getSchema()),
-      nonDependenciesMap(relation->getSchema()), columnOrder(relation),
-      uniqueColumns(uniqueVerticals), relation(relation),
-      partitionStorage(partitionStorage), gen(rd())
+                                   const std::vector<Vertical> &unique_verticals,
+                                   PartitionStorage *const partition_storage)
+    : rhs_(rhs), dependencies_map_(relation->GetSchema()),
+      non_dependencies_map_(relation->GetSchema()), column_order_(relation),
+      unique_columns_(unique_verticals), relation_(relation),
+      partition_storage_(partition_storage), gen_(rd_())
     {}
 
-std::unordered_set<Vertical> LatticeTraversal::findLHSs() {
-    RelationalSchema const* const schema = relation->getSchema();
+std::unordered_set<Vertical> LatticeTraversal::FindLHSs() {
+    RelationalSchema const* const schema = relation_->GetSchema();
 
     //processing of found unique columns
-    for (auto const &lhs: uniqueColumns) {
-        if (!lhs.contains(*rhs)) {
-            observations[lhs] = NodeCategory::minimalDependency;
-            dependenciesMap.addNewDependency(lhs);
-            minimalDeps.insert(lhs);
+    for (auto const &lhs: unique_columns_) {
+        if (!lhs.Contains(*rhs_)) {
+            observations_[lhs] = NodeCategory::kMinimalDependency;
+            dependencies_map_.AddNewDependency(lhs);
+            minimal_deps_.insert(lhs);
         }
     }
 
     std::stack<Vertical> seeds;
 
-    /* Temporary fix. I think `getOrderHighDistinctCount` should return vector of
+    /* Temporary fix. I think `GetOrderHighDistinctCount` should return vector of
      * unsigned integers since `order` sould be something non-negative.
      */
-    for (unsigned partitionIndex : columnOrder.getOrderHighDistinctCount(Vertical(*rhs).invert())) {
-        if (partitionIndex != rhs->getIndex()) {
-            seeds.push(Vertical(*schema->getColumn(partitionIndex)));
+    for (unsigned partition_index : column_order_.GetOrderHighDistinctCount(Vertical(*rhs_).Invert())) {
+        if (partition_index != rhs_->GetIndex()) {
+            seeds.push(Vertical(*schema->GetColumn(partition_index)));
         }
     }
 
@@ -44,76 +44,76 @@ std::unordered_set<Vertical> LatticeTraversal::findLHSs() {
                 node = std::move(seeds.top());
                 seeds.pop();
             } else {
-                node = *schema->emptyVertical;
+                node = *schema->empty_vertical_;
             }
 
             do {
-                auto const nodeObservationIter = observations.find(node);
+                auto const node_observation_iter = observations_.find(node);
 
-                if (nodeObservationIter != observations.end()) {
-                    NodeCategory& nodeCategory = nodeObservationIter->second;
+                if (node_observation_iter != observations_.end()) {
+                    NodeCategory& node_category = node_observation_iter->second;
 
-                    if (nodeCategory == NodeCategory::candidateMinimalDependency) {
-                        nodeCategory = observations.updateDependencyCategory(node);
-                        if (nodeCategory == NodeCategory::minimalDependency) {
-                            minimalDeps.insert(node);
+                    if (node_category == NodeCategory::kCandidateMinimalDependency) {
+                        node_category = observations_.UpdateDependencyCategory(node);
+                        if (node_category == NodeCategory::kMinimalDependency) {
+                            minimal_deps_.insert(node);
                         }
-                    } else if (nodeCategory == NodeCategory::candidateMaximalNonDependency) {
-                        nodeCategory = observations.updateNonDependencyCategory(node, rhs->getIndex());
-                        if (nodeCategory == NodeCategory::maximalNonDependency) {
-                            maximalNonDeps.insert(node);
+                    } else if (node_category == NodeCategory::kCandidateMaximalNonDependency) {
+                        node_category = observations_.UpdateNonDependencyCategory(node, rhs_->GetIndex());
+                        if (node_category == NodeCategory::kMaximalNonDependency) {
+                            maximal_non_deps_.insert(node);
                         }
                     }
-                } else if (!inferCategory(node, rhs->getIndex())) {
+                } else if (!InferCategory(node, rhs_->GetIndex())) {
                     //if we were not able to infer category, we calculate the partitions
-                    auto nodePLI = partitionStorage->getOrCreateFor(node);
-                    auto nodePliPointer = std::holds_alternative<util::PositionListIndex*>(nodePLI)
-                                          ? std::get<util::PositionListIndex*>(nodePLI)
-                                          : std::get<std::unique_ptr<util::PositionListIndex>>(nodePLI).get();
-                    auto intersectedPLI = partitionStorage->getOrCreateFor(node.Union(*rhs));
-                    auto intersectedPLIPointer = std::holds_alternative<util::PositionListIndex*>(intersectedPLI)
-                                                 ? std::get<util::PositionListIndex*>(intersectedPLI)
-                                                 : std::get<std::unique_ptr<util::PositionListIndex>>(intersectedPLI).get();
+                    auto node_pli = partition_storage_->GetOrCreateFor(node);
+                    auto node_pli_pointer = std::holds_alternative<util::PositionListIndex*>(node_pli)
+                                          ? std::get<util::PositionListIndex*>(node_pli)
+                                          : std::get<std::unique_ptr<util::PositionListIndex>>(node_pli).get();
+                    auto intersected_pli = partition_storage_->GetOrCreateFor(node.Union(*rhs_));
+                    auto intersected_pli_pointer = std::holds_alternative<util::PositionListIndex*>(intersected_pli)
+                                                 ? std::get<util::PositionListIndex*>(intersected_pli)
+                                                 : std::get<std::unique_ptr<util::PositionListIndex>>(intersected_pli).get();
 
-                    if (nodePliPointer->getNepAsLong() ==
-                        intersectedPLIPointer->getNepAsLong()
+                    if (node_pli_pointer->GetNepAsLong() ==
+                        intersected_pli_pointer->GetNepAsLong()
                     ) {
-                        observations.updateDependencyCategory(node);
-                        if (observations[node] == NodeCategory::minimalDependency) {
-                            minimalDeps.insert(node);
+                        observations_.UpdateDependencyCategory(node);
+                        if (observations_[node] == NodeCategory::kMinimalDependency) {
+                            minimal_deps_.insert(node);
                         }
-                        dependenciesMap.addNewDependency(node);
+                        dependencies_map_.AddNewDependency(node);
                     } else {
-                        observations.updateNonDependencyCategory(node, rhs->getIndex());
-                        if (observations[node] == NodeCategory::maximalNonDependency) {
-                            maximalNonDeps.insert(node);
+                        observations_.UpdateNonDependencyCategory(node, rhs_->GetIndex());
+                        if (observations_[node] == NodeCategory::kMaximalNonDependency) {
+                            maximal_non_deps_.insert(node);
                         }
-                        nonDependenciesMap.addNewNonDependency(node);
+                        non_dependencies_map_.AddNewNonDependency(node);
                     }
                 }
 
-                node = pickNextNode(node, rhs->getIndex());
-            } while (node != *node.getSchema()->emptyVertical);
+                node = PickNextNode(node, rhs_->GetIndex());
+            } while (node != *node.GetSchema()->empty_vertical_);
         }
-        seeds = generateNextSeeds(rhs);
+        seeds = GenerateNextSeeds(rhs_);
     } while (!seeds.empty());
 
-    return minimalDeps;
+    return minimal_deps_;
 }
 
-bool LatticeTraversal::inferCategory(Vertical const& node, unsigned int rhsIndex) {
-    if (nonDependenciesMap.canBePruned(node)) {
-        observations.updateNonDependencyCategory(node, rhsIndex);
-        nonDependenciesMap.addNewNonDependency(node);
-        if (observations[node] == NodeCategory::minimalDependency) {
-            minimalDeps.insert(node);
+bool LatticeTraversal::InferCategory(Vertical const& node, unsigned int rhs_index) {
+    if (non_dependencies_map_.CanBePruned(node)) {
+        observations_.UpdateNonDependencyCategory(node, rhs_index);
+        non_dependencies_map_.AddNewNonDependency(node);
+        if (observations_[node] == NodeCategory::kMinimalDependency) {
+            minimal_deps_.insert(node);
         }
         return true;
-    } else if (dependenciesMap.canBePruned(node)) {
-        observations.updateDependencyCategory(node);
-        dependenciesMap.addNewDependency(node);
-        if (observations[node] == NodeCategory::maximalNonDependency) {
-            maximalNonDeps.insert(node);
+    } else if (dependencies_map_.CanBePruned(node)) {
+        observations_.UpdateDependencyCategory(node);
+        dependencies_map_.AddNewDependency(node);
+        if (observations_[node] == NodeCategory::kMaximalNonDependency) {
+            maximal_non_deps_.insert(node);
         }
         return true;
     }
@@ -121,156 +121,156 @@ bool LatticeTraversal::inferCategory(Vertical const& node, unsigned int rhsIndex
     return false;
 }
 
-Vertical const& LatticeTraversal::takeRandom(std::unordered_set<Vertical> & nodeSet) {
-    std::uniform_int_distribution<> dis(0, std::distance(nodeSet.begin(), nodeSet.end()) - 1);
-    auto iterator = nodeSet.begin();
-    std::advance(iterator, dis(this->gen));
+Vertical const& LatticeTraversal::TakeRandom(std::unordered_set<Vertical> & node_set) {
+    std::uniform_int_distribution<> dis(0, std::distance(node_set.begin(), node_set.end()) - 1);
+    auto iterator = node_set.begin();
+    std::advance(iterator, dis(this->gen_));
     Vertical const& node = *iterator;
     return node;
 }
 
-Vertical LatticeTraversal::pickNextNode(Vertical const &node, unsigned int rhsIndex) {
-    auto nodeIter = observations.find(node);
+Vertical LatticeTraversal::PickNextNode(Vertical const &node, unsigned int rhs_index) {
+    auto node_iter = observations_.find(node);
 
-    if (nodeIter != observations.end()) {
-        if (nodeIter->second == NodeCategory::candidateMinimalDependency) {
-            auto uncheckedSubsets = observations.getUncheckedSubsets(node, columnOrder);
-            auto prunedNonDepSubsets = nonDependenciesMap.getPrunedSupersets(uncheckedSubsets);
-            for (auto const& prunedSubset : prunedNonDepSubsets) {
-                observations[prunedSubset] = NodeCategory::nonDependency;
+    if (node_iter != observations_.end()) {
+        if (node_iter->second == NodeCategory::kCandidateMinimalDependency) {
+            auto unchecked_subsets = observations_.GetUncheckedSubsets(node, column_order_);
+            auto pruned_non_dep_subsets = non_dependencies_map_.GetPrunedSupersets(unchecked_subsets);
+            for (auto const& pruned_subset : pruned_non_dep_subsets) {
+                observations_[pruned_subset] = NodeCategory::kNonDependency;
             }
-            substractSets(uncheckedSubsets, prunedNonDepSubsets);
+            SubstractSets(unchecked_subsets, pruned_non_dep_subsets);
 
-            if (uncheckedSubsets.empty() && prunedNonDepSubsets.empty()) {
-                minimalDeps.insert(node);
-                observations[node] = NodeCategory::minimalDependency;
-            } else if (!uncheckedSubsets.empty()) {
-                auto const& nextNode = takeRandom(uncheckedSubsets);
-                //auto const& nextNode = *uncheckedSubsets.begin();
-                trace.push(node);
-                return nextNode;
+            if (unchecked_subsets.empty() && pruned_non_dep_subsets.empty()) {
+                minimal_deps_.insert(node);
+                observations_[node] = NodeCategory::kMinimalDependency;
+            } else if (!unchecked_subsets.empty()) {
+                auto const& next_node = TakeRandom(unchecked_subsets);
+                //auto const& next_node = *unchecked_subsets.begin();
+                trace_.push(node);
+                return next_node;
             }
-        } else if (nodeIter->second == NodeCategory::candidateMaximalNonDependency) {
-            auto uncheckedSupersets = observations.getUncheckedSupersets(node, rhsIndex, columnOrder);
-            auto prunedNonDepSupersets = nonDependenciesMap.getPrunedSupersets(uncheckedSupersets);
-            auto prunedDepSupersets = dependenciesMap.getPrunedSubsets(uncheckedSupersets);
+        } else if (node_iter->second == NodeCategory::kCandidateMaximalNonDependency) {
+            auto unchecked_supersets = observations_.GetUncheckedSupersets(node, rhs_index, column_order_);
+            auto pruned_non_dep_supersets = non_dependencies_map_.GetPrunedSupersets(unchecked_supersets);
+            auto pruned_dep_supersets = dependencies_map_.GetPrunedSubsets(unchecked_supersets);
 
-            for (auto const& prunedSuperset : prunedNonDepSupersets) {
-                observations[prunedSuperset] = NodeCategory::nonDependency;
+            for (auto const& pruned_superset : pruned_non_dep_supersets) {
+                observations_[pruned_superset] = NodeCategory::kNonDependency;
             }
-            for (auto const& prunedSuperset : prunedDepSupersets) {
-                observations[prunedSuperset] = NodeCategory::dependency;
+            for (auto const& pruned_superset : pruned_dep_supersets) {
+                observations_[pruned_superset] = NodeCategory::kDependency;
             }
 
-            substractSets(uncheckedSupersets, prunedDepSupersets);
-            substractSets(uncheckedSupersets, prunedNonDepSupersets);
+            SubstractSets(unchecked_supersets, pruned_dep_supersets);
+            SubstractSets(unchecked_supersets, pruned_non_dep_supersets);
 
-            if (uncheckedSupersets.empty() && prunedNonDepSupersets.empty()) {
-                maximalNonDeps.insert(node);
-                observations[node] = NodeCategory::maximalNonDependency;
-            } else if (!uncheckedSupersets.empty()) {
-                auto const& nextNode = takeRandom(uncheckedSupersets);
-                //auto const& nextNode = *uncheckedSupersets.begin();
-                trace.push(node);
-                return nextNode;
+            if (unchecked_supersets.empty() && pruned_non_dep_supersets.empty()) {
+                maximal_non_deps_.insert(node);
+                observations_[node] = NodeCategory::kMaximalNonDependency;
+            } else if (!unchecked_supersets.empty()) {
+                auto const& next_node = TakeRandom(unchecked_supersets);
+                //auto const& next_node = *unchecked_supersets.begin();
+                trace_.push(node);
+                return next_node;
             }
         }
     }
 
-    Vertical nextNode = *(node.getSchema()->emptyVertical);
-    if (!trace.empty()) {
-        nextNode = trace.top();
-        trace.pop();
+    Vertical next_node = *(node.GetSchema()->empty_vertical_);
+    if (!trace_.empty()) {
+        next_node = trace_.top();
+        trace_.pop();
     }
-    return nextNode;
+    return next_node;
 }
 
-std::stack<Vertical> LatticeTraversal::generateNextSeeds(Column const* const currentRHS) {
+std::stack<Vertical> LatticeTraversal::GenerateNextSeeds(Column const* const current_rhs) {
     std::unordered_set<Vertical> seeds;
-    std::unordered_set<Vertical> newSeeds;
+    std::unordered_set<Vertical> new_seeds;
 
-    for (auto const& nonDep : maximalNonDeps) {
-        auto complementIndices = nonDep.getColumnIndicesRef();
-        complementIndices[currentRHS->getIndex()] = true;
-        complementIndices.flip();
+    for (auto const& non_dep : maximal_non_deps_) {
+        auto complement_indices = non_dep.GetColumnIndicesRef();
+        complement_indices[current_rhs->GetIndex()] = true;
+        complement_indices.flip();
 
         if (seeds.empty()) {
-            boost::dynamic_bitset<> singleColumnBitset(relation->getNumColumns(), 0);
-            singleColumnBitset.reset();
+            boost::dynamic_bitset<> single_column_bitset(relation_->GetNumColumns(), 0);
+            single_column_bitset.reset();
 
-            for (size_t columnIndex = complementIndices.find_first();
-                 columnIndex < complementIndices.size();
-                 columnIndex = complementIndices.find_next(columnIndex)
+            for (size_t column_index = complement_indices.find_first();
+                 column_index < complement_indices.size();
+                 column_index = complement_indices.find_next(column_index)
             ) {
-                singleColumnBitset[columnIndex] = true;
-                seeds.emplace(relation->getSchema(), singleColumnBitset);
-                singleColumnBitset[columnIndex] = false;
+                single_column_bitset[column_index] = true;
+                seeds.emplace(relation_->GetSchema(), single_column_bitset);
+                single_column_bitset[column_index] = false;
             }
         } else {
             for (auto const& dependency : seeds) {
-                auto newCombination = dependency.getColumnIndicesRef();
+                auto new_combination = dependency.GetColumnIndicesRef();
 
-                for (size_t columnIndex = complementIndices.find_first();
-                     columnIndex < complementIndices.size();
-                     columnIndex = complementIndices.find_next(columnIndex)
+                for (size_t column_index = complement_indices.find_first();
+                     column_index < complement_indices.size();
+                     column_index = complement_indices.find_next(column_index)
                 ) {
-                    newCombination[columnIndex] = true;
-                    newSeeds.emplace(relation->getSchema(), newCombination);
-                    newCombination[columnIndex] = dependency.getColumnIndicesRef()[columnIndex];
+                    new_combination[column_index] = true;
+                    new_seeds.emplace(relation_->GetSchema(), new_combination);
+                    new_combination[column_index] = dependency.GetColumnIndicesRef()[column_index];
                 }
             }
 
-            std::list<Vertical> minimizedNewSeeds = minimize(newSeeds);
+            std::list<Vertical> minimized_new_seeds = Minimize(new_seeds);
             seeds.clear();
-            for (auto & newSeed : minimizedNewSeeds) {
-                seeds.insert(std::move(newSeed));
+            for (auto & new_seed : minimized_new_seeds) {
+                seeds.insert(std::move(new_seed));
             }
-            newSeeds.clear();
+            new_seeds.clear();
         }
     }
 
-    for (auto seedIter = seeds.begin(); seedIter != seeds.end(); ) {
-        if (minimalDeps.find(*seedIter) != minimalDeps.end()) {
-            seedIter = seeds.erase(seedIter);
+    for (auto seed_iter = seeds.begin(); seed_iter != seeds.end(); ) {
+        if (minimal_deps_.find(*seed_iter) != minimal_deps_.end()) {
+            seed_iter = seeds.erase(seed_iter);
         } else {
-            seedIter++;
+            seed_iter++;
         }
     }
 
-    std::stack<Vertical> remainingSeeds;
+    std::stack<Vertical> remaining_seeds;
 
-    for (auto const& newSeed : seeds) {
-        remainingSeeds.push(newSeed);
+    for (auto const& new_seed : seeds) {
+        remaining_seeds.push(new_seed);
     }
 
-    return remainingSeeds;
+    return remaining_seeds;
 }
 
-std::list<Vertical> LatticeTraversal::minimize(std::unordered_set<Vertical> const& nodeList) const {
-    unsigned int maxCardinality = 0;
-    std::unordered_map<unsigned int, std::list<Vertical const*>> seedsBySize(nodeList.size() / relation->getNumColumns());
+std::list<Vertical> LatticeTraversal::Minimize(std::unordered_set<Vertical> const&node_list) const {
+    unsigned int max_cardinality = 0;
+    std::unordered_map<unsigned int, std::list<Vertical const*>> seeds_by_size(node_list.size() / relation_->GetNumColumns());
 
-    for (auto const& seed : nodeList) {
-        unsigned int const cardinalityOfSeed = seed.getArity();
-        maxCardinality = std::max(maxCardinality, cardinalityOfSeed);
-        if (seedsBySize.find(cardinalityOfSeed) == seedsBySize.end()) {
-            seedsBySize[cardinalityOfSeed] = std::list<Vertical const*>();
+    for (auto const& seed : node_list) {
+        unsigned int const cardinality_of_seed = seed.GetArity();
+        max_cardinality = std::max(max_cardinality, cardinality_of_seed);
+        if (seeds_by_size.find(cardinality_of_seed) == seeds_by_size.end()) {
+            seeds_by_size[cardinality_of_seed] = std::list<Vertical const*>();
         }
-        seedsBySize[cardinalityOfSeed].push_back(&seed);
+        seeds_by_size[cardinality_of_seed].push_back(&seed);
     }
 
-    for (unsigned int lowerBound = 1; lowerBound < maxCardinality; ++lowerBound) {
-        if (seedsBySize.find(lowerBound) != seedsBySize.end()) {
-            auto const& lowerBoundSeeds = seedsBySize.find(lowerBound)->second;
-            for (unsigned int upperBound = maxCardinality; upperBound > lowerBound; --upperBound) {
-                if (seedsBySize.find(upperBound) != seedsBySize.end()) {
-                    auto& upperBoundSeeds = seedsBySize.find(upperBound)->second;
-                    for (auto const& lowerSeed : lowerBoundSeeds) {
-                        for (auto upperIt = upperBoundSeeds.begin(); upperIt != upperBoundSeeds.end();) {
-                            if ((*upperIt)->contains(*lowerSeed)) {
-                                upperIt = upperBoundSeeds.erase(upperIt);
+    for (unsigned int lower_bound = 1; lower_bound < max_cardinality; ++lower_bound) {
+        if (seeds_by_size.find(lower_bound) != seeds_by_size.end()) {
+            auto const& lower_bound_seeds = seeds_by_size.find(lower_bound)->second;
+            for (unsigned int upper_bound = max_cardinality; upper_bound > lower_bound; --upper_bound) {
+                if (seeds_by_size.find(upper_bound) != seeds_by_size.end()) {
+                    auto& upper_bound_seeds = seeds_by_size.find(upper_bound)->second;
+                    for (auto const& lower_seed : lower_bound_seeds) {
+                        for (auto upper_it = upper_bound_seeds.begin(); upper_it != upper_bound_seeds.end();) {
+                            if ((*upper_it)->Contains(*lower_seed)) {
+                                upper_it = upper_bound_seeds.erase(upper_it);
                             } else {
-                                ++upperIt;
+                                ++upper_it;
                             }
                         }
                     }
@@ -279,20 +279,20 @@ std::list<Vertical> LatticeTraversal::minimize(std::unordered_set<Vertical> cons
         }
     }
 
-    std::list<Vertical> newSeeds;
-    for (auto & seedList : seedsBySize) {
-        for (auto & seed : seedList.second) {
-            newSeeds.push_back(*seed);
+    std::list<Vertical> new_seeds;
+    for (auto & seed_list : seeds_by_size) {
+        for (auto & seed : seed_list.second) {
+            new_seeds.push_back(*seed);
         }
     }
-    return newSeeds;
+    return new_seeds;
 }
 
-void LatticeTraversal::substractSets(std::unordered_set<Vertical> & set, std::unordered_set<Vertical> const& setToSubstract) {
-    for (const auto & nodeToDelete : setToSubstract) {
-        auto foundElementIter = set.find(nodeToDelete);
-        if (foundElementIter != set.end()) {
-            set.erase(foundElementIter);
+void LatticeTraversal::SubstractSets(std::unordered_set<Vertical> & set, std::unordered_set<Vertical> const& set_to_substract) {
+    for (const auto & node_to_delete : set_to_substract) {
+        auto found_element_iter = set.find(node_to_delete);
+        if (found_element_iter != set.end()) {
+            set.erase(found_element_iter);
         }
     }
 }
