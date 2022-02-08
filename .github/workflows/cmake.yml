@@ -6,11 +6,12 @@ on:
     branches:
       - main
   workflow_dispatch:
-env:
-  BUILD_TYPE: Release
 jobs:
   run_tests: 
     runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        BUILD_TYPE: [ Release, Debug ]
     steps:
     - uses: actions/checkout@v2
     - name: Install build tools
@@ -64,10 +65,10 @@ jobs:
         -DCMAKE_C_COMPILER=gcc-10
         -DCMAKE_CXX_COMPILER=g++-10
         -DBOOST_ROOT=${{github.workspace}}/lib/boost
-        -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+        -DCMAKE_BUILD_TYPE=${{matrix.BUILD_TYPE}}
         -Dgtest_disable_pthreads=OFF
     - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      run: cmake --build ${{github.workspace}}/build --config ${{matrix.BUILD_TYPE}}
     - name: Test
       working-directory: ${{github.workspace}}/build/target
       shell: bash
