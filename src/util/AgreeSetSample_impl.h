@@ -11,27 +11,29 @@
 namespace util {
 
 template <typename T>
-std::unique_ptr<T> AgreeSetSample::CreateFor(ColumnLayoutRelationData* relation_data, int sample_size) {
+std::unique_ptr<T> AgreeSetSample::CreateFor(ColumnLayoutRelationData* relation_data,
+                                             int sample_size) {
     static_assert(std::is_base_of<AgreeSetSample, T>::value);
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> random(0, relation_data->GetNumRows());
 
     std::unordered_map<boost::dynamic_bitset<>, int> agree_set_counters;
-  sample_size = std::min((unsigned long long)sample_size, relation_data->GetNumTuplePairs());
+    sample_size = std::min((unsigned long long)sample_size, relation_data->GetNumTuplePairs());
 
-    for (long i = 0; i < sample_size; i++){
+    for (long i = 0; i < sample_size; i++) {
         int tuple_index_1 = random(gen);
         int tuple_index_2 = random(gen);
-        if (tuple_index_1 == tuple_index_2){
+        if (tuple_index_1 == tuple_index_2) {
             i--;
             continue;
         }
 
         boost::dynamic_bitset<> agree_set(relation_data->GetNumColumns());
-        for (auto & column_data : relation_data->GetColumnData()){
+        for (auto& column_data : relation_data->GetColumnData()) {
             int value1 = column_data.GetProbingTableValue(tuple_index_1);
-            if (value1 != PositionListIndex::singleton_value_id_ && value1 == column_data.GetProbingTableValue(tuple_index_2)){
+            if (value1 != PositionListIndex::singleton_value_id_ &&
+                value1 == column_data.GetProbingTableValue(tuple_index_2)) {
                 agree_set[column_data.GetColumn()->GetIndex()] = true;
             }
         }
@@ -40,14 +42,16 @@ std::unique_ptr<T> AgreeSetSample::CreateFor(ColumnLayoutRelationData* relation_
     }
 
     auto instance = std::make_unique<T>(relation_data, relation_data->GetSchema()->empty_vertical_,
-                                        (int) sample_size, relation_data->GetNumTuplePairs(), agree_set_counters);
+                                        (int)sample_size, relation_data->GetNumTuplePairs(),
+                                        agree_set_counters);
     return instance;
 }
 
-template<typename T>
+template <typename T>
 std::unique_ptr<T> AgreeSetSample::CreateFocusedFor(ColumnLayoutRelationData const* relation,
                                                     Vertical const& restriction_vertical,
-                                                    PositionListIndex const* restriction_pli, unsigned int sample_size,
+                                                    PositionListIndex const* restriction_pli,
+                                                    unsigned int sample_size,
                                                     CustomRandom& random) {
     static_assert(std::is_base_of<AgreeSetSample, T>::value);
     //std::random_device rd;
@@ -60,26 +64,26 @@ std::unique_ptr<T> AgreeSetSample::CreateFocusedFor(ColumnLayoutRelationData con
     std::vector<std::reference_wrapper<const ColumnData>> relevant_column_data;
     for (size_t column_index = free_column_indices.find_first();
          column_index != boost::dynamic_bitset<>::npos;
-         column_index = free_column_indices.find_next(column_index)){
+         column_index = free_column_indices.find_next(column_index)) {
         relevant_column_data.emplace_back(relation->GetColumnData(column_index));
     }
     boost::dynamic_bitset<> agree_set_prototype(restriction_vertical.GetColumnIndices());
     std::unordered_map<boost::dynamic_bitset<>, int> agree_set_counters;
 
     unsigned long long restriction_nep = restriction_pli->GetNepAsLong();
-  sample_size = std::min(static_cast<unsigned long long>(sample_size), restriction_nep);
-    if (sample_size >= restriction_nep){
-        for (auto & cluster : restriction_pli->GetIndex()){
-            for (unsigned int i = 0; i < cluster.size(); i++){
+    sample_size = std::min(static_cast<unsigned long long>(sample_size), restriction_nep);
+    if (sample_size >= restriction_nep) {
+        for (auto& cluster : restriction_pli->GetIndex()) {
+            for (unsigned int i = 0; i < cluster.size(); i++) {
                 int tuple_index_1 = cluster[i];
-                for (unsigned int j = i + 1; j < cluster.size(); j++){
+                for (unsigned int j = i + 1; j < cluster.size(); j++) {
                     int tuple_index_2 = cluster[j];
 
                     boost::dynamic_bitset<> agree_set(agree_set_prototype);
-                    for (auto & column_data : relevant_column_data){
+                    for (auto& column_data : relevant_column_data) {
                         int value1 = column_data.get().GetProbingTableValue(tuple_index_1);
-                        if (value1 != PositionListIndex::singleton_value_id_
-                             && value1 == column_data.get().GetProbingTableValue(tuple_index_2)){
+                        if (value1 != PositionListIndex::singleton_value_id_ &&
+                            value1 == column_data.get().GetProbingTableValue(tuple_index_2)) {
                             agree_set.set(column_data.get().GetColumn()->GetIndex());
                         }
                     }
@@ -93,18 +97,19 @@ std::unique_ptr<T> AgreeSetSample::CreateFocusedFor(ColumnLayoutRelationData con
             }
         }
     } else {
-        std::vector<unsigned long long> cluster_sizes(restriction_pli->GetNumNonSingletonCluster() - 1);
-        for (unsigned int i = 0; i < cluster_sizes.size(); i++){
+        std::vector<unsigned long long> cluster_sizes(restriction_pli->GetNumNonSingletonCluster() -
+                                                      1);
+        for (unsigned int i = 0; i < cluster_sizes.size(); i++) {
             unsigned long long cluster_size = restriction_pli->GetIndex()[i].size();
             unsigned long long num_tuple_pairs = cluster_size * (cluster_size - 1) / 2;
-            if (i > 0){
+            if (i > 0) {
                 cluster_sizes[i] = num_tuple_pairs + cluster_sizes[i - 1];
             } else {
                 cluster_sizes[i] = num_tuple_pairs;
             }
         }
 
-        for (unsigned int i = 0; i < sample_size; i++){
+        for (unsigned int i = 0; i < sample_size; i++) {
             auto cluster_index_iter = std::lower_bound(cluster_sizes.begin(), cluster_sizes.end(),
                                                        random.NextULL() % restriction_nep);
             unsigned int cluster_index = std::distance(cluster_sizes.begin(), cluster_index_iter);
@@ -121,12 +126,11 @@ std::unique_ptr<T> AgreeSetSample::CreateFocusedFor(ColumnLayoutRelationData con
             tuple_index_1 = cluster[tuple_index_1];
             tuple_index_2 = cluster[tuple_index_2];
 
-
             boost::dynamic_bitset<> agree_set(agree_set_prototype);
-            for (auto & column_data : relevant_column_data){
+            for (auto& column_data : relevant_column_data) {
                 int value1 = column_data.get().GetProbingTableValue(tuple_index_1);
-                if (value1 != PositionListIndex::singleton_value_id_
-                     && value1 == column_data.get().GetProbingTableValue(tuple_index_2)){
+                if (value1 != PositionListIndex::singleton_value_id_ &&
+                    value1 == column_data.get().GetProbingTableValue(tuple_index_2)) {
                     agree_set.set(column_data.get().GetColumn()->GetIndex());
                 }
             }
@@ -154,7 +158,8 @@ std::unique_ptr<T> AgreeSetSample::CreateFocusedFor(ColumnLayoutRelationData con
 
     LOG(DEBUG) << boost::format {"Created sample focused on %1%: %2%"} % restriction_vertical->ToString() % agreeSetCountersStr;
     */
-    return std::make_unique<T>(relation, restriction_vertical, sample_size, restriction_nep, std::move(agree_set_counters));
+    return std::make_unique<T>(relation, restriction_vertical, sample_size, restriction_nep,
+                               std::move(agree_set_counters));
 }
 
 } // namespace util

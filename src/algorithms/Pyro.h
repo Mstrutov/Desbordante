@@ -20,5 +20,6 @@ private:
     unsigned long long ExecuteInternal() override;
 public:
     explicit Pyro(std::filesystem::path const& path, char separator = ',', bool has_header = true,
-                  int seed = 0, double max_error = 0, unsigned int max_lhs = -1, int parallelism = 0);
+                  int seed = 0, double max_error = 0, unsigned int max_lhs = -1,
+                  int parallelism = 0);
 };

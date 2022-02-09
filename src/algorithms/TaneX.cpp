@@ -16,16 +16,15 @@
 double Tane::CalculateZeroAryFdError(ColumnData const* rhs,
                                      ColumnLayoutRelationData const* relation_data) {
     return 1 - rhs->GetPositionListIndex()->GetNepAsLong() /
-           static_cast<double>(relation_data->GetNumTuplePairs());
+                   static_cast<double>(relation_data->GetNumTuplePairs());
 }
 
 double Tane::CalculateFdError(util::PositionListIndex const* lhs_pli,
                               util::PositionListIndex const* joint_pli,
                               ColumnLayoutRelationData const* relation_data) {
-    return (double) (lhs_pli->GetNepAsLong() - joint_pli->GetNepAsLong()) /
+    return (double)(lhs_pli->GetNepAsLong() - joint_pli->GetNepAsLong()) /
            static_cast<double>(relation_data->GetNumTuplePairs());
 }
-
 
 double Tane::CalculateUccError(util::PositionListIndex const* pli,
                                ColumnLayoutRelationData const* relation_data) {
@@ -49,9 +48,8 @@ void Tane::RegisterFd(Vertical const& lhs, Column const* rhs,
     RegisterFd(*lhs, rhs, error, schema);
 }*/
 
-void Tane::RegisterUcc([[maybe_unused]] Vertical const& key,
-                       [[maybe_unused]] double error,
-                       [[maybe_unused]] RelationalSchema const* schema)  {
+void Tane::RegisterUcc([[maybe_unused]] Vertical const& key, [[maybe_unused]] double error,
+                       [[maybe_unused]] RelationalSchema const* schema) {
     /*dynamic_bitset<> key_bitset = key.GetColumnIndices();
     std::cout << "Discovered UCC: ";
     for (int i = key_bitset.find_first(); i != -1; i = key_bitset.find_next(i)) {
@@ -60,8 +58,6 @@ void Tane::RegisterUcc([[maybe_unused]] Vertical const& key,
     std::cout << "- error equals " << error << std::endl;*/
     count_of_ucc_++;
 }
-
-
 
 unsigned long long Tane::ExecuteInternal() {
     RelationalSchema const* schema = relation_->GetSchema();
@@ -118,10 +114,12 @@ unsigned long long Tane::ExecuteInternal() {
 
     for (auto& [key_map, vertex] : level1->GetVertices()) {
         Vertical column = vertex->GetVertical();
-        vertex->GetRhsCandidates() &= ~zeroary_fd_rhs;  //~ returns flipped copy <- removed already discovered zeroary FDs
+        vertex->GetRhsCandidates() &=
+            ~zeroary_fd_rhs;  //~ returns flipped copy <- removed already discovered zeroary FDs
 
         // вот тут костыль, чтобы вытянуть индекс колонки из вершины, в которой только один индекс
-        ColumnData const& column_data = relation_->GetColumnData(column.GetColumnIndices().find_first());
+        ColumnData const& column_data =
+            relation_->GetColumnData(column.GetColumnIndices().find_first());
         double ucc_error = CalculateUccError(column_data.GetPositionListIndex(), relation_.get());
         if (ucc_error <= max_ucc_error_) {
             RegisterUcc(column, ucc_error, schema);
@@ -129,8 +127,8 @@ unsigned long long Tane::ExecuteInternal() {
             if (ucc_error == 0) {
                 for (unsigned long rhs_index = vertex->GetRhsCandidates().find_first();
                      rhs_index < vertex->GetRhsCandidates().size();
-                     rhs_index = vertex->GetRhsCandidates().find_next(rhs_index)){
-                    if (rhs_index != column.GetColumnIndices().find_first()){
+                     rhs_index = vertex->GetRhsCandidates().find_next(rhs_index)) {
+                    if (rhs_index != column.GetColumnIndices().find_first()) {
                         RegisterFd(column, schema->GetColumn(rhs_index), 0, schema);
                     }
                 }
@@ -160,7 +158,7 @@ unsigned long long Tane::ExecuteInternal() {
         }
 
         for (auto& [key_map, xa_vertex] : level->GetVertices()) {
-            if (xa_vertex->GetIsInvalid()){
+            if (xa_vertex->GetIsInvalid()) {
                 continue;
             }
 
@@ -209,12 +207,13 @@ unsigned long long Tane::ExecuteInternal() {
 
         //Prune
         //cout << "Pruning level: " << level->GetArity() << ". " << level->GetVertices().size() << " vertices_" << endl;
-        std::list<util::LatticeVertex *> key_vertices;
+        std::list<util::LatticeVertex*> key_vertices;
         for (auto& [map_key, vertex] : level->GetVertices()) {
-            Vertical columns = vertex->GetVertical();            //Originally it's a ColumnCombination
+            Vertical columns = vertex->GetVertical();  // Originally it's a ColumnCombination
 
             if (vertex->GetIsKeyCandidate()) {
-                double ucc_error = CalculateUccError(vertex->GetPositionListIndex(), relation_.get());
+                double ucc_error =
+                    CalculateUccError(vertex->GetPositionListIndex(), relation_.get());
                 if (ucc_error <= max_ucc_error_) {       //If a key candidate is an approx UCC
                     //TODO: do smth with UCC
 
@@ -224,21 +223,25 @@ unsigned long long Tane::ExecuteInternal() {
                         for (size_t rhs_index = vertex->GetRhsCandidates().find_first();
                              rhs_index != boost::dynamic_bitset<>::npos;
                              rhs_index = vertex->GetRhsCandidates().find_next(rhs_index)) {
-                            Vertical rhs = static_cast<Vertical>(*schema->GetColumn((int)rhs_index));
+                            Vertical rhs =
+                                static_cast<Vertical>(*schema->GetColumn((int)rhs_index));
                             if (!columns.Contains(rhs)) {
                                 bool is_rhs_candidate = true;
                                 for (const auto& column : columns.GetColumns()) {
-                                    Vertical sibling = columns.Without(static_cast<Vertical>(*column)).Union(rhs);
-                                    auto sibling_vertex = level->GetLatticeVertex(sibling.GetColumnIndices());
+                                    Vertical sibling =
+                                        columns.Without(static_cast<Vertical>(*column)).Union(rhs);
+                                    auto sibling_vertex =
+                                        level->GetLatticeVertex(sibling.GetColumnIndices());
                                     if (sibling_vertex == nullptr ||
-                                         !sibling_vertex->GetConstRhsCandidates()[rhs.GetColumnIndices().find_first()]) {
+                                        !sibling_vertex->GetConstRhsCandidates()
+                                             [rhs.GetColumnIndices().find_first()]) {
                                         is_rhs_candidate = false;
                                         break;
                                     }
                                     // for each outer rhs: if there is a sibling s.t. it doesn't have this rhs, there is no FD: vertex->rhs
                                 }
                                 //Found fd: vertex->rhs => register it
-                                if (is_rhs_candidate){
+                                if (is_rhs_candidate) {
                                     RegisterFd(columns, schema->GetColumn(rhs_index), 0, schema);
                                 }
                             }
@@ -249,13 +252,12 @@ unsigned long long Tane::ExecuteInternal() {
                 }
             }
             //if we seek for exact FDs then SetInvalid
-            if (max_fd_error_ == 0 && max_ucc_error_ == 0){
-                for (auto key_vertex : key_vertices){
+            if (max_fd_error_ == 0 && max_ucc_error_ == 0) {
+                for (auto key_vertex : key_vertices) {
                     key_vertex->GetRhsCandidates() &= key_vertex->GetVertical().GetColumnIndices();
                     key_vertex->SetInvalid(true);
                 }
             }
-
         }
 
         //cout << "Pruned level: " << level->GetArity() << ". " << level->GetVertices().size() << " vertices_" << endl;
@@ -264,13 +266,16 @@ unsigned long long Tane::ExecuteInternal() {
     }
 
     SetProgress(100);
-    std::chrono::milliseconds elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time);
+    std::chrono::milliseconds elapsed_milliseconds =
+        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() -
+                                                              start_time);
     apriori_millis_ += elapsed_milliseconds.count();
 
     std::cout << "Time: " << apriori_millis_ << " milliseconds" << std::endl;
     std::cout << "Intersection time: " << util::PositionListIndex::micros_ / 1000
               << "ms" << std::endl;
-    std::cout << "Total intersections: " << util::PositionListIndex::intersection_count_ << std::endl;
+    std::cout << "Total intersections: " << util::PositionListIndex::intersection_count_
+              << std::endl;
     std::cout << "Total FD count: " << count_of_fd_ << std::endl;
     std::cout << "Total UCC count: " << count_of_ucc_ << std::endl;
     // std::cout << "===== FD JSON ========" << GetJsonFDs() << std::endl;

@@ -8,7 +8,7 @@
 #include "RelationalSchema.h"
 
 class Column {
-friend RelationalSchema;
+    friend RelationalSchema;
 
 private:
     std::string name_;
@@ -26,8 +26,12 @@ public:
     std::string GetName() const { return name_; }
     RelationalSchema const* GetSchema() const { return schema_; }
 
-    std::string ToIndicesString() const { return std::to_string(index_);}
-    std::string ToString() const { return "[" + name_ + "]";}
+    std::string ToIndicesString() const {
+        return std::to_string(index_);
+    }
+    std::string ToString() const {
+        return "[" + name_ + "]";
+    }
 
     explicit operator std::string() const { return ToString(); }
 

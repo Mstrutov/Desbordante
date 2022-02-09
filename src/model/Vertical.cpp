@@ -7,7 +7,7 @@ Vertical::Vertical(RelationalSchema const* rel_schema, boost::dynamic_bitset<> i
     column_indices_(std::move(indices)),
     schema_(rel_schema) {}
 
-Vertical::Vertical(Column const & col) : schema_(col.GetSchema()){
+Vertical::Vertical(Column const& col) : schema_(col.GetSchema()) {
     column_indices_ = boost::dynamic_bitset<>(schema_->GetNumColumns());
     column_indices_.set(col.GetIndex());
 }
@@ -19,7 +19,6 @@ bool Vertical::Contains(Vertical const& that) const {
     return that.column_indices_.is_subset_of(column_indices_);
 }
 
-
 bool Vertical::Contains(Column const& that) const {
     return column_indices_.test(that.GetIndex());
 }
@@ -29,7 +28,7 @@ bool Vertical::Intersects(Vertical const& that) const {
     return column_indices_.intersects(that_indices);
 }
 
-Vertical Vertical::Union(Vertical const &that) const {
+Vertical Vertical::Union(Vertical const& that) const {
     boost::dynamic_bitset<> retained_column_indices(column_indices_);
     retained_column_indices |= that.column_indices_;
     return schema_->GetVertical(retained_column_indices);
@@ -46,7 +45,6 @@ Vertical Vertical::Project(Vertical const& that) const {
     retained_column_indices &= that.column_indices_;
     return schema_->GetVertical(retained_column_indices);
 }
-
 
 Vertical Vertical::Without(Vertical const& that) const {
     boost::dynamic_bitset<> retained_column_indices(column_indices_);
@@ -74,7 +72,8 @@ Vertical Vertical::Invert(Vertical const& scope) const {
 }
 
 std::unique_ptr<Vertical> Vertical::EmptyVertical(RelationalSchema const* rel_schema) {
-    return std::make_unique<Vertical>(rel_schema, boost::dynamic_bitset<>(rel_schema->GetNumColumns()));
+    return std::make_unique<Vertical>(rel_schema,
+                                      boost::dynamic_bitset<>(rel_schema->GetNumColumns()));
 }
 
 std::vector<Column const*> Vertical::GetColumns() const {

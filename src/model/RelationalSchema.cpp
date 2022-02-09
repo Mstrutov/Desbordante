@@ -22,20 +22,20 @@ void RelationalSchema::Init() {
 Vertical RelationalSchema::GetVertical(boost::dynamic_bitset<> indices) const {
     if (indices.empty()) return *Vertical::EmptyVertical(this);
 
-    if (indices.count() == 1){
+    if (indices.count() == 1) {
         return Vertical(this, std::move(indices));
     }
     return Vertical(this, std::move(indices));
 }
 
-Column const* RelationalSchema::GetColumn(const std::string &col_name) const {
-    auto found_entry_iterator = std::find_if(columns_.begin(), columns_.end(),
-                                             [&col_name](auto& column) { return column->name_ == col_name; });
+Column const* RelationalSchema::GetColumn(const std::string& col_name) const {
+    auto found_entry_iterator =
+        std::find_if(columns_.begin(), columns_.end(),
+                     [&col_name](auto& column) { return column->name_ == col_name; });
     if (found_entry_iterator != columns_.end()) return found_entry_iterator->get();
 
-    throw std::invalid_argument("Couldn't match column name \'"
-        + col_name
-        + "\' to any of the schema's column names");
+    throw std::invalid_argument("Couldn't match column name \'" + col_name +
+                                "\' to any of the schema's column names");
 }
 
 Column const* RelationalSchema::GetColumn(int index) const {
@@ -59,36 +59,41 @@ bool RelationalSchema::IsNullEqualNull() const { return is_null_eq_null_; }
 // TODO: critical part - consider optimization
 // TODO: list -> vector as list doesn't have RAIterators therefore can't be sorted
 std::unordered_set<Vertical> RelationalSchema::CalculateHittingSet(
-        std::vector<Vertical> verticals, boost::optional<std::function<bool (Vertical const&)>> pruning_function) const {
-    std::sort(verticals.begin(), verticals.end(),
-              [](auto& vertical1, auto& vertical2) { return vertical1.GetArity() < vertical2.GetArity(); });
+    std::vector<Vertical> verticals,
+    boost::optional<std::function<bool(Vertical const&)>> pruning_function) const {
+    std::sort(verticals.begin(), verticals.end(), [](auto& vertical1, auto& vertical2) {
+        return vertical1.GetArity() < vertical2.GetArity();
+    });
     util::VerticalMap<Vertical> consolidated_verticals(this);
 
     util::VerticalMap<Vertical> hitting_set(this);
-  hitting_set.Put(*empty_vertical_, Vertical::EmptyVertical(this));
+    hitting_set.Put(*empty_vertical_, Vertical::EmptyVertical(this));
 
     for (auto& vertical : verticals) {
         if (consolidated_verticals.GetAnySubsetEntry(vertical).second != nullptr) {
             continue;
         }
         // TODO: костыль, тк VerticalMap хранит unique_ptr - лишнее копирование
-      consolidated_verticals.Put(vertical, std::make_unique<Vertical>(vertical));
+        consolidated_verticals.Put(vertical, std::make_unique<Vertical>(vertical));
 
         auto invalid_hitting_set_members = hitting_set.GetSubsetKeys(vertical.Invert());
         std::sort(invalid_hitting_set_members.begin(), invalid_hitting_set_members.end(),
-                  [](auto& vertical1, auto& vertical2) { return vertical1.GetArity() < vertical2.GetArity(); });
+                  [](auto& vertical1, auto& vertical2) {
+                      return vertical1.GetArity() < vertical2.GetArity();
+                  });
 
         for (auto& invalid_hitting_set_member : invalid_hitting_set_members) {
-          hitting_set.Remove(invalid_hitting_set_member);
+            hitting_set.Remove(invalid_hitting_set_member);
         }
 
         for (auto& invalid_member : invalid_hitting_set_members) {
             for (size_t corrective_column_index = vertical.GetColumnIndices().find_first();
                  corrective_column_index != boost::dynamic_bitset<>::npos;
-                 corrective_column_index = vertical.GetColumnIndices().find_next(corrective_column_index)) {
-
+                 corrective_column_index =
+                     vertical.GetColumnIndices().find_next(corrective_column_index)) {
                 auto corrective_column = *GetColumn(corrective_column_index);
-                auto corrected_member = invalid_member.Union(static_cast<Vertical>(corrective_column));
+                auto corrected_member =
+                    invalid_member.Union(static_cast<Vertical>(corrective_column));
 
                 if (hitting_set.GetAnySubsetEntry(corrected_member).second == nullptr) {
                     if (pruning_function) {
@@ -97,7 +102,7 @@ std::unordered_set<Vertical> RelationalSchema::CalculateHittingSet(
                             continue;
                         }
                     }
-                  hitting_set.Put(corrected_member, std::make_unique<Vertical>(corrected_member));
+                    hitting_set.Put(corrected_member, std::make_unique<Vertical>(corrected_member));
                 }
             }
         }

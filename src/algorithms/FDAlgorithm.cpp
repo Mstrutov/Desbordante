@@ -48,21 +48,21 @@ unsigned int FDAlgorithm::Fletcher16() {
 }
 
 void FDAlgorithm::AddProgress(double const val) noexcept {
-        assert(val >= 0);
-        std::scoped_lock lock(progress_mutex_);
-        cur_phase_progress_ += val;
-        assert(cur_phase_progress_ < 101);
+    assert(val >= 0);
+    std::scoped_lock lock(progress_mutex_);
+    cur_phase_progress_ += val;
+    assert(cur_phase_progress_ < 101);
 }
 
 void FDAlgorithm::SetProgress(double const val) noexcept {
-        assert(0 <= val && val < 101);
-        std::scoped_lock lock(progress_mutex_);
-        cur_phase_progress_ = val;
+    assert(0 <= val && val < 101);
+    std::scoped_lock lock(progress_mutex_);
+    cur_phase_progress_ = val;
 }
 
 std::pair<uint8_t, double> FDAlgorithm::GetProgress() const noexcept {
-        std::scoped_lock lock(progress_mutex_);
-        return std::make_pair(cur_phase_id_, cur_phase_progress_);
+    std::scoped_lock lock(progress_mutex_);
+    return std::make_pair(cur_phase_id_, cur_phase_progress_);
 }
 
 void FDAlgorithm::ToNextProgressPhase() noexcept {

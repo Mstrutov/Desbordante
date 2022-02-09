@@ -12,7 +12,7 @@
 #include "Vertical.h"
 
 class Fd_mine : public PliBasedFDAlgorithm {
-   private:
+private:
     const RelationalSchema* schema_;
 
     std::set<dynamic_bitset<>> candidate_set_;
@@ -35,6 +35,6 @@ class Fd_mine : public PliBasedFDAlgorithm {
     unsigned long long ExecuteInternal() override;
 public:
     Fd_mine(std::filesystem::path const& path, char separator = ',', bool has_header = true)
-            : PliBasedFDAlgorithm(path, separator, has_header) {}
+        : PliBasedFDAlgorithm(path, separator, has_header) {}
     ~Fd_mine() override {}
 };

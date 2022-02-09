@@ -3,7 +3,8 @@
 #include "DependencyCandidate.h"
 
 // TODO: these methods are used in priority_queues, where operator> is needed. (>) !<=> (>=) due to strict weak ordering
-bool DependencyCandidate::ArityComparator(DependencyCandidate const &dc1, DependencyCandidate const &dc2) {
+bool DependencyCandidate::ArityComparator(DependencyCandidate const& dc1,
+                                          DependencyCandidate const& dc2) {
     if (dc1.vertical_.GetArity() > dc2.vertical_.GetArity())
         return true;
     else if (dc1.vertical_.GetArity() == dc2.vertical_.GetArity())
@@ -11,7 +12,8 @@ bool DependencyCandidate::ArityComparator(DependencyCandidate const &dc1, Depend
     return false;
 }
 
-bool DependencyCandidate::MinErrorComparator(DependencyCandidate const &dc1, DependencyCandidate const &dc2) {
+bool DependencyCandidate::MinErrorComparator(DependencyCandidate const& dc1,
+                                             DependencyCandidate const& dc2) {
     if (dc1.error_.GetMin() > dc2.error_.GetMin())
         return true;
     else if (dc1.error_.GetMin() == dc2.error_.GetMin())
@@ -19,12 +21,14 @@ bool DependencyCandidate::MinErrorComparator(DependencyCandidate const &dc1, Dep
     return false;
 }
 
-bool DependencyCandidate::FullErrorArityComparator(DependencyCandidate const &dc1, DependencyCandidate const &dc2) {
+bool DependencyCandidate::FullErrorArityComparator(DependencyCandidate const& dc1,
+                                                   DependencyCandidate const& dc2) {
     return dc1 < dc2;
 }
 
 //TODO: perhaps in Java code they meant to implement error -> arity -> lexicographical? Check usages
-bool DependencyCandidate::FullArityErrorComparator(DependencyCandidate const &dc1, DependencyCandidate const &dc2) {
+bool DependencyCandidate::FullArityErrorComparator(DependencyCandidate const& dc1,
+                                                   DependencyCandidate const& dc2) {
     if (dc1.error_.GetMean() < dc2.error_.GetMean())
         return true;
     else if (dc1.error_.GetMean() == dc2.error_.GetMean()) {
@@ -44,7 +48,7 @@ bool DependencyCandidate::FullArityErrorComparator(DependencyCandidate const &dc
     return false;
 }
 
-bool DependencyCandidate::operator<(DependencyCandidate const & other) const {
+bool DependencyCandidate::operator<(DependencyCandidate const& other) const {
     if (error_.GetMean() < other.error_.GetMean())
         return true;
     else if (error_.GetMean() == other.error_.GetMean()) {
@@ -64,7 +68,7 @@ bool DependencyCandidate::operator<(DependencyCandidate const & other) const {
     return false;
 }
 
-std::ostream& operator<< (std::ostream& ofs, DependencyCandidate const& dependency_candidate) {
+std::ostream& operator<<(std::ostream& ofs, DependencyCandidate const& dependency_candidate) {
     return ofs << static_cast<std::string>(dependency_candidate);
 }
 

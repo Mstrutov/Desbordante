@@ -8,7 +8,7 @@
 #include "FD.h"
 
 namespace util {
-    class AgreeSetFactory;
+class AgreeSetFactory;
 }
 
 /* It is highly recommended to inherit your Algorithm from this class.
@@ -52,12 +52,12 @@ protected:
 public:
     constexpr static double kTotalProgressPercent = 100.0;
 
-    explicit FDAlgorithm (std::filesystem::path const& path,
-                          char separator = ',', bool has_header = true,
-                          bool const is_null_equal_null = true,
-                          std::vector<std::string_view> phase_names = { "FD mining" })
-            : input_generator_(path, separator, has_header),
-              phase_names_(std::move(phase_names)), is_null_equal_null_(is_null_equal_null) {}
+    explicit FDAlgorithm(std::filesystem::path const& path, char separator = ',',
+                         bool has_header = true, bool const is_null_equal_null = true,
+                         std::vector<std::string_view> phase_names = {"FD mining"})
+        : input_generator_(path, separator, has_header),
+          phase_names_(std::move(phase_names)),
+          is_null_equal_null_(is_null_equal_null) {}
 
     /* эти методы кладут зависимость в хранилище - можно пользоваться ими напрямую или override-нуть,
      * если нужно какое-то кастомное поведение

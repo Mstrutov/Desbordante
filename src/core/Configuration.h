@@ -22,7 +22,6 @@ struct Configuration {
 
     unsigned int max_lhs = -1;
 
-
     //Sampling settings
     unsigned int sample_size = 10000;
     double sample_booster = 10;

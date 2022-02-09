@@ -19,9 +19,11 @@ private:
         std::shared_ptr<PositionListIndex> pli_;
         int added_arity_;
 
-        PositionListIndexRank(Vertical const* vertical, std::shared_ptr<PositionListIndex> pli, int initial_arity):
-            vertical_(vertical), pli_(pli), added_arity_(initial_arity) {}
+        PositionListIndexRank(Vertical const* vertical, std::shared_ptr<PositionListIndex> pli,
+                              int initial_arity)
+            : vertical_(vertical), pli_(pli), added_arity_(initial_arity) {}
     };
+
     //using CacheMap = VerticalMap<PositionListIndex>;
     ColumnLayoutRelationData* relation_data_;
     std::unique_ptr<VerticalMap<PositionListIndex>> index_;
@@ -42,17 +44,19 @@ private:
     double median_gini_;
     double median_inverted_entropy_;
 
-    std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> CachingProcess(Vertical const& vertical,
-                                                                                        std::unique_ptr<PositionListIndex> pli,
-                                                                                        ProfilingContext* profiling_context);
+    std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> CachingProcess(
+        Vertical const& vertical, std::unique_ptr<PositionListIndex> pli,
+        ProfilingContext* profiling_context);
+
 public:
-    PLICache(ColumnLayoutRelationData* relation_data, CachingMethod caching_method, CacheEvictionMethod eviction_method,
-             double caching_method_value, double min_entropy, double mean_entropy, double median_entropy,
-             double maximum_entropy, double median_gini, double median_inverted_entropy);
+    PLICache(ColumnLayoutRelationData* relation_data, CachingMethod caching_method,
+             CacheEvictionMethod eviction_method, double caching_method_value, double min_entropy,
+             double mean_entropy, double median_entropy, double maximum_entropy, double median_gini,
+             double median_inverted_entropy);
 
     PositionListIndex* Get(Vertical const& vertical);
     std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> GetOrCreateFor(
-            Vertical const& vertical, ProfilingContext* profiling_context);
+        Vertical const& vertical, ProfilingContext* profiling_context);
 
     void SetMaximumEntropy(double e) { maximum_entropy_ = e; }
 

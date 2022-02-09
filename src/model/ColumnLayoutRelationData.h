@@ -13,7 +13,6 @@
 #include "RelationalSchema.h"
 #include "RelationData.h"
 
-
 class ColumnLayoutRelationData : public RelationData {
 private:
     std::vector<ColumnData> column_data_;

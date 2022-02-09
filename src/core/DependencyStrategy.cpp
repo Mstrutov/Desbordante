@@ -10,10 +10,9 @@ bool DependencyStrategy::ShouldResample(Vertical const& vertical, double boost_f
 
     // Get an estimate of the number of equality pairs in the vertical
     util::PositionListIndex* pli = context_->GetPliCache()->Get(vertical);
-    double nep = pli != nullptr
-            ? pli->GetNepAsLong()
-            : current_sample->EstimateAgreements(vertical) *
-            context_->GetColumnLayoutRelationData()->GetNumTuplePairs();
+    double nep = pli != nullptr ? pli->GetNepAsLong()
+                                : current_sample->EstimateAgreements(vertical) *
+                                      context_->GetColumnLayoutRelationData()->GetNumTuplePairs();
 
     // Should the new sample be exact?
     if (nep <= context_->GetConfiguration().sample_size * boost_factor) return true;

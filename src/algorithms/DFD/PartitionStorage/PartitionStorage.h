@@ -19,10 +19,10 @@ private:
         int added_arity_;
 
         PositionListIndexRank(Vertical const* vertical,
-                              std::shared_ptr<util::PositionListIndex> pli,
-                              int initial_arity):
-            vertical_(vertical), pli_(pli), added_arity_(initial_arity) {}
+                              std::shared_ptr<util::PositionListIndex> pli, int initial_arity)
+            : vertical_(vertical), pli_(pli), added_arity_(initial_arity) {}
     };
+
     ColumnLayoutRelationData* relation_data_;
     std::unique_ptr<util::VerticalMap<util::PositionListIndex>> index_;
 

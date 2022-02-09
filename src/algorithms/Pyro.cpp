@@ -15,14 +15,8 @@ unsigned long long Pyro::ExecuteInternal() {
     auto schema = relation_->GetSchema();
 
     auto profiling_context = std::make_unique<ProfilingContext>(
-        configuration_,
-        relation_.get(),
-        ucc_consumer_,
-        fd_consumer_,
-        caching_method_,
-        eviction_method_,
-        caching_method_value_
-            );
+        configuration_, relation_.get(), ucc_consumer_, fd_consumer_, caching_method_,
+        eviction_method_, caching_method_value_);
 
     std::function<bool(DependencyCandidate const&, DependencyCandidate const&)> launch_pad_order;
     if (configuration_.launch_pad_order == "arity") {
@@ -37,24 +31,30 @@ unsigned long long Pyro::ExecuteInternal() {
     if (configuration_.is_find_keys) {
         std::unique_ptr<DependencyStrategy> strategy;
         if (configuration_.ucc_error_measure == "g1prime") {
-            strategy = std::make_unique<KeyG1Strategy>(configuration_.max_ucc_error, configuration_.error_dev);
+            strategy = std::make_unique<KeyG1Strategy>(configuration_.max_ucc_error,
+                                                       configuration_.error_dev);
         } else {
             throw std::runtime_error("Unknown key error measure.");
         }
-        search_spaces_.push_back(std::make_unique<SearchSpace>(next_id++, std::move(strategy), schema, launch_pad_order));
+        search_spaces_.push_back(std::make_unique<SearchSpace>(next_id++, std::move(strategy),
+                                                               schema, launch_pad_order));
     }
     if (configuration_.is_find_fds) {
         for (auto& rhs : schema->GetColumns()) {
             std::unique_ptr<DependencyStrategy> strategy;
             if (configuration_.ucc_error_measure == "g1prime") {
-                strategy = std::make_unique<FdG1Strategy>(rhs.get(), configuration_.max_ucc_error, configuration_.error_dev);
+                strategy = std::make_unique<FdG1Strategy>(rhs.get(), configuration_.max_ucc_error,
+                                                          configuration_.error_dev);
             } else {
                 throw std::runtime_error("Unknown key error measure.");
             }
-            search_spaces_.push_back(std::make_unique<SearchSpace>(next_id++, std::move(strategy), schema, launch_pad_order));
+            search_spaces_.push_back(std::make_unique<SearchSpace>(next_id++, std::move(strategy),
+                                                                   schema, launch_pad_order));
         }
     }
-    unsigned long long init_time_millis = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time).count();
+    unsigned long long init_time_millis = std::chrono::duration_cast<std::chrono::milliseconds>(
+                                              std::chrono::system_clock::now() - start_time)
+                                              .count();
 
     start_time = std::chrono::system_clock::now();
     unsigned int total_error_calc_count = 0;
@@ -83,7 +83,9 @@ unsigned long long Pyro::ExecuteInternal() {
             polled_space->Discover();
             AddProgress(progress_step);
 
-            millis += std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - thread_start_time).count();
+            millis += std::chrono::duration_cast<std::chrono::milliseconds>(
+                          std::chrono::system_clock::now() - thread_start_time)
+                          .count();
         }
         //cout << "Thread" << id << " stopped working, ELAPSED TIME: " << millis << "ms.\n";
     };
@@ -91,7 +93,8 @@ unsigned long long Pyro::ExecuteInternal() {
     std::vector<std::thread> threads;
     for (int i = 0; i < configuration_.parallelism; i++) {
         //std::thread();
-        threads.emplace_back(work_on_search_space, std::ref(search_spaces_), profiling_context.get(), i);
+        threads.emplace_back(work_on_search_space, std::ref(search_spaces_),
+                             profiling_context.get(), i);
     }
 
     for (int i = 0; i < configuration_.parallelism; i++) {
@@ -99,9 +102,11 @@ unsigned long long Pyro::ExecuteInternal() {
     }
 
     SetProgress(100);
-    auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time);
+    auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now() - start_time);
 
-    LOG(DEBUG) << boost::format{"FdG1 error calculation: %1% ms"} % (FdG1Strategy::nanos_ / 1000000);
+    LOG(DEBUG) << boost::format{"FdG1 error calculation: %1% ms"} %
+                      (FdG1Strategy::nanos_ / 1000000);
     std::cout << "Init time: " << init_time_millis << "ms" << std::endl;
     std::cout << "Time: " << elapsed_milliseconds.count() << " milliseconds" << std::endl;
     std::cout << "Error calculation count: " << total_error_calc_count << std::endl;
@@ -117,12 +122,11 @@ unsigned long long Pyro::ExecuteInternal() {
     return elapsed_milliseconds.count();
 }
 
-
-Pyro::Pyro(std::filesystem::path const &path, char separator, bool has_header, int seed, double max_error,
-           unsigned int max_lhs, int parallelism) :
-    PliBasedFDAlgorithm(path, separator, has_header),
-    caching_method_(CachingMethod::kCoin),
-    eviction_method_(CacheEvictionMethod::kDefault) {
+Pyro::Pyro(std::filesystem::path const& path, char separator, bool has_header, int seed,
+           double max_error, unsigned int max_lhs, int parallelism)
+    : PliBasedFDAlgorithm(path, separator, has_header),
+      caching_method_(CachingMethod::kCoin),
+      eviction_method_(CacheEvictionMethod::kDefault) {
     ucc_consumer_ = [this](auto const& key) {
         this->DiscoverUcc(key);
     };
@@ -138,4 +142,3 @@ Pyro::Pyro(std::filesystem::path const &path, char separator, bool has_header, i
                                  std::thread::hardware_concurrency() :
                                  parallelism;
 }
-

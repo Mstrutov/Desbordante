@@ -5,7 +5,7 @@
 #include "RelationalSchema.h"
 
 ColumnOrder::ColumnOrder(ColumnLayoutRelationData const* const relation_data)
-        : order_(relation_data->GetSchema()->GetNumColumns()) {
+    : order_(relation_data->GetSchema()->GetNumColumns()) {
     std::set<OrderedPartition> partitions;
     for (auto const& column_data : relation_data->GetColumnData()) {
         partitions.emplace(column_data.GetPositionListIndex(), relation_data->GetNumRows(),
@@ -18,7 +18,7 @@ ColumnOrder::ColumnOrder(ColumnLayoutRelationData const* const relation_data)
     }
 }
 
-std::vector<int> ColumnOrder::GetOrderHighDistinctCount(const Vertical &columns) const {
+std::vector<int> ColumnOrder::GetOrderHighDistinctCount(const Vertical& columns) const {
     std::vector<int> order_for_columns(columns.GetArity());
 
     int current_order_index = 0;
@@ -31,7 +31,7 @@ std::vector<int> ColumnOrder::GetOrderHighDistinctCount(const Vertical &columns)
     return order_for_columns;
 }
 
-std::vector<int> ColumnOrder::GetOrderLowDistinctCount(const Vertical &columns) const {
+std::vector<int> ColumnOrder::GetOrderLowDistinctCount(const Vertical& columns) const {
     std::vector<int> order_for_columns(columns.GetArity());
 
     assert(!order_.empty());

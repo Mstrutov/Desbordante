@@ -15,8 +15,8 @@ private:
     std::list<PartialKey> discovered_uccs_;
 
 protected:
-    std::function<void (PartialFD const&)> fd_consumer_;
-    std::function<void (PartialKey const&)> ucc_consumer_;
+    std::function<void(PartialFD const&)> fd_consumer_;
+    std::function<void(PartialKey const&)> ucc_consumer_;
 
     void DiscoverFd(PartialFD const& fd) {
         std::scoped_lock lock(discover_fd_mutex_);
@@ -29,8 +29,7 @@ protected:
     }
 
 public:
-    PartialFD RegisterFd(Vertical const& lhs, Column const& rhs,
-                                  double error, double score) const;
+    PartialFD RegisterFd(Vertical const& lhs, Column const& rhs, double error, double score) const;
     PartialKey RegisterUcc(Vertical const& key_vertical, double error,
                            double score) const;
 

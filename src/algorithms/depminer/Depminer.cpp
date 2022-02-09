@@ -23,14 +23,15 @@ unsigned long long Depminer::ExecuteInternal() {
     progress_step_ = kTotalProgressPercent / schema_->GetNumColumns();
 
     //Agree sets
-    const util::AgreeSetFactory agree_set_factory =util:: AgreeSetFactory(relation_.get(), util::AgreeSetFactory::Configuration(), this);
+    const util::AgreeSetFactory agree_set_factory =
+        util::AgreeSetFactory(relation_.get(), util::AgreeSetFactory::Configuration(), this);
     const auto agree_sets = agree_set_factory.GenAgreeSets();
     ToNextProgressPhase();
 
     //maximal sets
     const std::vector<CMAXSet> c_max_cets = GenerateCmaxSets(agree_sets);
     ToNextProgressPhase();
-    
+
     //LHS
     const auto lhs_time = std::chrono::system_clock::now();
     // 1
@@ -39,12 +40,12 @@ unsigned long long Depminer::ExecuteInternal() {
         AddProgress(progress_step_);
     }
 
-    const auto lhs_elapsed_milliseconds 
-        = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - lhs_time);
+    const auto lhs_elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now() - lhs_time);
     LOG(INFO) << "> LHS FIND TIME: " << lhs_elapsed_milliseconds.count();
     LOG(INFO) << "> FD COUNT: " << this->fd_collection_.size();
-    const auto elapsed_milliseconds 
-        = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time);
+    const auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now() - start_time);
     return elapsed_milliseconds.count();
 }
 
@@ -87,67 +88,69 @@ std::vector<CMAXSet> Depminer::GenerateCmaxSets(std::unordered_set<Vertical> con
             }
             sets_delete.clear();
         }
-        
+
         // Inverting MaxSet
         std::unordered_set<Vertical> result_super_sets;
         for (auto const& combination : super_sets) {
             result_super_sets.insert(combination.Invert());
         }
-      result.MakeNewCombinations(std::move(result_super_sets));
+        result.MakeNewCombinations(std::move(result_super_sets));
         c_max_cets.push_back(result);
         AddProgress(progress_step_);
     }
 
-    const auto elapsed_milliseconds 
-        = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time);
+    const auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now() - start_time);
     LOG(INFO) << "> CMAX GENERATION TIME: " << elapsed_milliseconds.count();
     LOG(INFO) << "> CMAX SETS COUNT: " << c_max_cets.size();
 
     return c_max_cets;
 }
 
-void Depminer::LhsForColumn(std::unique_ptr<Column> const& column, std::vector<CMAXSet> const& c_max_cets) {
-        std::unordered_set<Vertical> level;
-        // 3
-        CMAXSet correct = GenFirstLevel(c_max_cets, *column, level);
+void Depminer::LhsForColumn(std::unique_ptr<Column> const& column,
+                            std::vector<CMAXSet> const& c_max_cets) {
+    std::unordered_set<Vertical> level;
+    // 3
+    CMAXSet correct = GenFirstLevel(c_max_cets, *column, level);
 
-        const auto pli = relation_->GetColumnData(column->GetIndex()).GetPositionListIndex();
-        bool column_contains_only_equal_values =
-            pli->GetNumNonSingletonCluster() == 1 && pli->GetSize() == relation_->GetNumRows();
-        if (column_contains_only_equal_values) {
-            RegisterFd(Vertical(), *column);
-            return;
-        }
-        
-        //4
-        while (!level.empty()) {
-            std::unordered_set<Vertical> level_copy = level;
-            //5
-            for (auto const& l : level) {
-                bool is_fd = true;
-                for (auto const& combination : correct.GetCombinations()) {
-                    if (!l.Intersects(combination)) {
-                        is_fd = false;
-                        break;
-                    }
-                }
-                //6
-                if (is_fd) {
-                    if (!l.Contains(*column)) {
-                        this->RegisterFd(l, *column);
-                    }
-                    level_copy.erase(l);
-                }
-                if (level_copy.empty()) {
+    const auto pli = relation_->GetColumnData(column->GetIndex()).GetPositionListIndex();
+    bool column_contains_only_equal_values =
+        pli->GetNumNonSingletonCluster() == 1 && pli->GetSize() == relation_->GetNumRows();
+    if (column_contains_only_equal_values) {
+        RegisterFd(Vertical(), *column);
+        return;
+    }
+
+    // 4
+    while (!level.empty()) {
+        std::unordered_set<Vertical> level_copy = level;
+        // 5
+        for (auto const& l : level) {
+            bool is_fd = true;
+            for (auto const& combination : correct.GetCombinations()) {
+                if (!l.Intersects(combination)) {
+                    is_fd = false;
                     break;
                 }
             }
-            //7
-            level = GenNextLevel(level_copy);
+            // 6
+            if (is_fd) {
+                if (!l.Contains(*column)) {
+                    this->RegisterFd(l, *column);
+                }
+                level_copy.erase(l);
+            }
+            if (level_copy.empty()) {
+                break;
+            }
         }
+        // 7
+        level = GenNextLevel(level_copy);
+    }
 }
 
-CMAXSet Depminer::GenFirstLevel(std::vector<CMAXSet> const& c_max_cets, Column const& attribute, std::unordered_set<Vertical>& level) {
+CMAXSet Depminer::GenFirstLevel(std::vector<CMAXSet> const& c_max_cets, Column const& attribute,
+                                std::unordered_set<Vertical>& level) {
     CMAXSet correct_set(attribute);
     for (auto const& set : c_max_cets) {
         if (!(set.GetColumn() == attribute)) {
@@ -209,6 +212,5 @@ bool Depminer::CheckJoin(Vertical const& _p, Vertical const& _q) {
     if (p_last >= q_last) return false;
     dynamic_bitset<> intersection = p;
     intersection.intersects(q);
-    return p.count() == intersection.count()
-            && q.count() == intersection.count();
+    return p.count() == intersection.count() && q.count() == intersection.count();
 }

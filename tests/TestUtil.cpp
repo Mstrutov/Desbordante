@@ -9,19 +9,15 @@
 #include "IdentifierSet.h"
 #include "AgreeSetFactory.h"
 
-using ::testing::ContainerEq, ::testing::Eq;
 using std::deque, std::vector, std::cout, std::endl, std::unique_ptr, util::AgreeSetFactory,
-      util::MCGenMethod, util::AgreeSetsGenMethod;
+    util::MCGenMethod, util::AgreeSetsGenMethod;
+using ::testing::ContainerEq, ::testing::Eq;
 
 namespace fs = std::filesystem;
 
-TEST(pliChecker, first){
+TEST(pliChecker, first) {
     deque<vector<int>> ans = {
-            {0, 2, 8, 11},
-            {1, 5, 9},
-            {4, 14},
-            {6, 7, 18},
-            {10, 17} //null
+        {0, 2, 8, 11}, {1, 5, 9}, {4, 14}, {6, 7, 18}, {10, 17}  // null
     };
 
     auto path = fs::current_path().append("inputData").append("Test1.csv");
@@ -36,15 +32,15 @@ TEST(pliChecker, first){
         cout << "Exception raised in test: " << e.what() << endl;
         FAIL();
     }
-    ASSERT_THAT( index, ContainerEq(ans));
+    ASSERT_THAT(index, ContainerEq(ans));
 }
 
-TEST(pliChecker, second){
+TEST(pliChecker, second) {
     deque<vector<int>> ans = {
-            {0, 2, 8, 11},
-            {1, 5, 9},
-            {4, 14},
-            {6, 7, 18},
+        {0, 2, 8, 11},
+        {1, 5, 9},
+        {4, 14},
+        {6, 7, 18},
     };
     deque<vector<int>> index;
     try {
@@ -58,13 +54,11 @@ TEST(pliChecker, second){
         cout << "Exception raised in test: " << e.what() << endl;
         FAIL();
     }
-    ASSERT_THAT( index, ContainerEq(ans));
+    ASSERT_THAT(index, ContainerEq(ans));
 }
 
-TEST(pliIntersectChecker, first){
-    deque<vector<int>> ans = {
-            {2, 5}
-    };
+TEST(pliIntersectChecker, first) {
+    deque<vector<int>> ans = {{2, 5}};
     std::shared_ptr<util::PositionListIndex> intersection;
 
     try {
@@ -86,7 +80,7 @@ TEST(pliIntersectChecker, first){
     ASSERT_THAT(intersection->GetIndex(), ContainerEq(ans));
 }
 
-TEST(testingBitsetToLonglong, first){
+TEST(testingBitsetToLonglong, first) {
     size_t encoded_num = 1254;
     boost::dynamic_bitset<> simple_bitset{20, encoded_num};
 
@@ -122,7 +116,6 @@ TEST(IdentifierSetTest, Computation) {
     }
     ASSERT_THAT(id_sets_ans, ContainerEq(id_sets));
 }
-
 
 TEST(IdentifierSetTest, Intersection) {
     std::set<std::string> intersection_actual; // id set intersection result
@@ -167,7 +160,6 @@ TEST(IdentifierSetTest, Intersection) {
     }
     ASSERT_THAT(intersection_ans, ContainerEq(intersection_actual));
 }
-
 
 void TestAgreeSetFactory(AgreeSetFactory::Configuration c) {
     std::set<std::string> agree_sets_actual; // id set intersection result

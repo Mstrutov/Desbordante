@@ -11,7 +11,7 @@ void PruningMap::Rebalance() {
 
     do {
         rebalanced_group = false;
-        for (auto iter = this->begin(); iter != this->end(); ) {
+        for (auto iter = this->begin(); iter != this->end();) {
             Vertical const& key = iter->first;
             auto const& related_verticals = iter->second;
 
@@ -31,8 +31,7 @@ void PruningMap::RebalanceGroup(Vertical const& key) {
 
     for (size_t column_index = inverted_columns.find_first();
          column_index < inverted_columns.size();
-         column_index = inverted_columns.find_next(column_index))
-    {
+         column_index = inverted_columns.find_next(column_index)) {
         Vertical new_key = key.Union(*key.GetSchema()->GetColumn(column_index));
         std::unordered_set<Vertical> new_group;
 

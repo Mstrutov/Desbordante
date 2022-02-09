@@ -16,14 +16,14 @@ private:
         std::shared_ptr<std::vector<unsigned long long>> agree_set;
 
         Entry(std::shared_ptr<std::vector<unsigned long long>> agree_set, unsigned int count)
-        : count(count), agree_set(std::move(agree_set)) {}
+            : count(count), agree_set(std::move(agree_set)) {}
     };
 
     std::vector<Entry> agree_set_counters_;
 
 public:
     static std::unique_ptr<std::vector<unsigned long long>> BitSetToLongLongVector(
-            boost::dynamic_bitset<> const& bitset);
+        boost::dynamic_bitset<> const& bitset);
 
     static std::unique_ptr<ListAgreeSetSample> CreateFocusedFor(
         ColumnLayoutRelationData const* relation, Vertical const& restriction_vertical,
@@ -34,9 +34,10 @@ public:
                        std::unordered_map<boost::dynamic_bitset<>, int> const& agree_set_counters);
 
     unsigned long long GetNumAgreeSupersets(Vertical const& agreement) const override;
-    unsigned long long GetNumAgreeSupersets(Vertical const& agreement, Vertical const& disagreement) const override;
+    unsigned long long GetNumAgreeSupersets(Vertical const& agreement,
+                                            Vertical const& disagreement) const override;
     std::unique_ptr<std::vector<unsigned long long>> GetNumAgreeSupersetsExt(
-            Vertical const& agreement, Vertical const& disagreement) const override;
+        Vertical const& agreement, Vertical const& disagreement) const override;
 };
 
 } // namespace util

@@ -13,7 +13,7 @@ INITIALIZE_EASYLOGGINGPP
 
 std::string GetSelfpath();
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     el::Configurations default_conf;
     default_conf.setToDefault();
     default_conf.set(el::Level::Global,
@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
 
 //Overall, just give file path to csv to the main when execute via console or smth.
 //https://stackoverflow.com/a/27460370 - better use this function
-std::string GetSelfpath(){
+std::string GetSelfpath() {
     /*std::vector<char> buf(400);
     unsigned int len;
 

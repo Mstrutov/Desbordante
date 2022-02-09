@@ -31,9 +31,9 @@ private:
     static unsigned long long CalculateNep(unsigned int num_elements) {
         return static_cast<unsigned long long>(num_elements) * (num_elements - 1) / 2;
     }
-    static void SortClusters(std::deque<std::vector<int>> & clusters);
-    static bool TakeProbe(int position, ColumnLayoutRelationData & relation_data,
-                          Vertical const& probing_columns, std::vector<int> & probe);
+    static void SortClusters(std::deque<std::vector<int>>& clusters);
+    static bool TakeProbe(int position, ColumnLayoutRelationData& relation_data,
+                          Vertical const& probing_columns, std::vector<int>& probe);
 
 public:
     static int intersection_count_;
@@ -41,10 +41,11 @@ public:
     static const int singleton_value_id_;
 
     PositionListIndex(std::deque<std::vector<int>> index, std::vector<int> null_cluster,
-                      unsigned int size, double entropy,
-                      unsigned long long nep, unsigned int relation_size, unsigned int original_relation_size,
+                      unsigned int size, double entropy, unsigned long long nep,
+                      unsigned int relation_size, unsigned int original_relation_size,
                       double inverted_entropy = 0, double gini_impurity = 0);
-    static std::unique_ptr<PositionListIndex> CreateFor(std::vector<int>& data, bool is_null_eq_null);
+    static std::unique_ptr<PositionListIndex> CreateFor(std::vector<int>& data,
+                                                        bool is_null_eq_null);
 
     // если PT закеширована, выдаёт её, иначе предварительно вычисляет её -- тяжёлая операция
     std::shared_ptr<const std::vector<int>> CalculateAndGetProbingTable() const;
@@ -58,25 +59,49 @@ public:
 
     // std::shared_ptr<const std::vector<int>> GetProbingTable(bool isCaching);
 
-    std::deque<std::vector<int>> const & GetIndex() const { return index_; };
-    double GetNep()                             const { return (double) nep_; }
-    unsigned long long GetNepAsLong()           const { return nep_; }
-    unsigned int GetNumNonSingletonCluster()    const { return index_.size(); }
-    unsigned int GetNumCluster()                const { return index_.size() + original_relation_size_ - size_; }
-    unsigned int GetFreq()                      const { return freq_; }
-    unsigned int GetSize()                      const { return size_; }
-    double GetEntropy()                         const { return entropy_; }
-    double GetInvertedEntropy()                 const { return inverted_entropy_; }
-    double GetGiniImpurity()                    const { return gini_impurity_; }
-    double GetMaximumNip()                      const { return CalculateNep(relation_size_); }
-    double GetNip()                             const { return GetMaximumNip() - GetNepAsLong(); }
+    std::deque<std::vector<int>> const& GetIndex() const {
+        return index_;
+    };
+    double GetNep() const {
+        return (double)nep_;
+    }
+    unsigned long long GetNepAsLong() const {
+        return nep_;
+    }
+    unsigned int GetNumNonSingletonCluster() const {
+        return index_.size();
+    }
+    unsigned int GetNumCluster() const {
+        return index_.size() + original_relation_size_ - size_;
+    }
+    unsigned int GetFreq() const {
+        return freq_;
+    }
+    unsigned int GetSize() const {
+        return size_;
+    }
+    double GetEntropy() const {
+        return entropy_;
+    }
+    double GetInvertedEntropy() const {
+        return inverted_entropy_;
+    }
+    double GetGiniImpurity() const {
+        return gini_impurity_;
+    }
+    double GetMaximumNip() const {
+        return CalculateNep(relation_size_);
+    }
+    double GetNip() const {
+        return GetMaximumNip() - GetNepAsLong();
+    }
 
     void IncFreq() { freq_++; }
 
     std::unique_ptr<PositionListIndex> Intersect(PositionListIndex const* that) const;
     std::unique_ptr<PositionListIndex> Probe(std::shared_ptr<const std::vector<int>> probing_table) const;
     std::unique_ptr<PositionListIndex> ProbeAll(Vertical const& probing_columns,
-                                                ColumnLayoutRelationData & relation_data);
+                                                ColumnLayoutRelationData& relation_data);
     std::string ToString() const;
 };
 

@@ -35,19 +35,24 @@ std::vector<unsigned int> FD_MineBitsetToIndexVector(boost::dynamic_bitset<> con
 }
 
 testing::AssertionResult FD_Mine_CheckFDListEquality(
-        std::set<std::pair<std::vector<unsigned int>, unsigned int>> actual, std::list<FD> const& expected) {
+    std::set<std::pair<std::vector<unsigned int>, unsigned int>> actual,
+    std::list<FD> const& expected) {
     for (auto& fd : expected) {
-        std::vector<unsigned int> lhs_indices = FD_MineBitsetToIndexVector(fd.GetLhs().GetColumnIndices());
+        std::vector<unsigned int> lhs_indices =
+            FD_MineBitsetToIndexVector(fd.GetLhs().GetColumnIndices());
         std::sort(lhs_indices.begin(), lhs_indices.end());
 
-        if (auto it = actual.find(std::make_pair(lhs_indices, fd.GetRhs().GetIndex())); it == actual.end()) {
-            return testing::AssertionFailure() << "discovered a false FD: "
-                                               << fd.GetLhs().ToIndicesString() << "->" << fd.GetRhs().ToIndicesString();
+        if (auto it = actual.find(std::make_pair(lhs_indices, fd.GetRhs().GetIndex()));
+            it == actual.end()) {
+            return testing::AssertionFailure()
+                   << "discovered a false FD: " << fd.GetLhs().ToIndicesString() << "->"
+                   << fd.GetRhs().ToIndicesString();
         } else {
             actual.erase(it);
         }
     }
-    return actual.empty() ? testing::AssertionSuccess() : testing::AssertionFailure() << "some FDs remain undiscovered";
+    return actual.empty() ? testing::AssertionSuccess()
+                          : testing::AssertionFailure() << "some FDs remain undiscovered";
 }
 
 TEST(AlgorithmSyntheticTest, FD_Mine_ThrowsOnEmpty) {
@@ -66,14 +71,14 @@ TEST(AlgorithmSyntheticTest, FD_Mine_ReturnsEmptyOnSingleNonKey) {
 TEST(AlgorithmSyntheticTest, FD_Mine_WorksOnLongDataset) {
     auto path = std::filesystem::current_path() / "inputData" / "TestLong.csv";
 
-    std::set<std::pair<std::vector<unsigned int>, unsigned int>> true_fd_collection {{{2}, 1}};
+    std::set<std::pair<std::vector<unsigned int>, unsigned int>> true_fd_collection{{{2}, 1}};
 
     auto algorithm = CreateFD_MineAlgorithmInstance(path, ',', true);
     algorithm->Execute();
     ASSERT_TRUE(FD_Mine_CheckFDListEquality(true_fd_collection, algorithm->FdList()));
 }
 
-std::string GetJsonFDs(std::list<FD> &fd_collection) {
+std::string GetJsonFDs(std::list<FD>& fd_collection) {
     std::string result = "{\"fds\": [";
     std::list<std::string> discovered_fd_strings;
     for (auto& fd : fd_collection) {
@@ -91,11 +96,11 @@ std::string GetJsonFDs(std::list<FD> &fd_collection) {
     return result;
 }
 
-void MinimizeFDs(std::list<FD> &fd_collection) {
+void MinimizeFDs(std::list<FD>& fd_collection) {
     std::list<FD>::iterator it1 = fd_collection.begin();
-    while (it1 != fd_collection.end()){
+    while (it1 != fd_collection.end()) {
         std::list<FD>::iterator it2 = fd_collection.begin();
-        while (it2 != fd_collection.end()){
+        while (it2 != fd_collection.end()) {
             if (it1 == it2) {
                 it2++;
                 continue;
@@ -115,7 +120,7 @@ void MinimizeFDs(std::list<FD> &fd_collection) {
 }
 
 TEST_F(AlgorithmTest, FD_Mine_ReturnsSameAsPyro) {
-    auto path = std::filesystem::current_path() /"inputData";
+    auto path = std::filesystem::current_path() / "inputData";
 
     try {
         for (size_t i = 0; i < LightDatasets::DatasetQuantity(); i++) {
@@ -127,18 +132,18 @@ TEST_F(AlgorithmTest, FD_Mine_ReturnsSameAsPyro) {
             auto algorithm = CreateFD_MineAlgorithmInstance(
                 path / LightDatasets::DatasetName(i), LightDatasets::Separator(i),
                 LightDatasets::HasHeader(i));
-              
+
             auto pyro = Pyro(path / LightDatasets::DatasetName(i), LightDatasets::Separator(i),
                              LightDatasets::HasHeader(i), 0, 0, -1);
 
             algorithm->Execute();
             std::list<FD> fds = algorithm->FdList();
             pyro.Execute();
-            
-            for (auto &fd : pyro.FdList()) {
+
+            for (auto& fd : pyro.FdList()) {
                 if (fd.GetLhs().GetArity() == 0) {
                     std::list<FD>::iterator it = fds.begin();
-                    while (it != fds.end()){
+                    while (it != fds.end()) {
                         if (it->GetRhs().GetIndex() == fd.GetRhs().GetIndex()) {
                             it = fds.erase(it);
                             continue;
@@ -155,7 +160,8 @@ TEST_F(AlgorithmTest, FD_Mine_ReturnsSameAsPyro) {
             std::string results_pyro = pyro.FDAlgorithm::GetJsonFDs();
 
             EXPECT_EQ(results_pyro, algorithm_results)
-                << "The new algorithm and Pyro yield different results at " << LightDatasets::DatasetName(i);
+                << "The new algorithm and Pyro yield different results at "
+                << LightDatasets::DatasetName(i);
         }
     }
     catch (std::runtime_error& e) {

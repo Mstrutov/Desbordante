@@ -9,7 +9,8 @@ double KeyG1Strategy::CalculateKeyError(util::PositionListIndex* pli) const {
 }
 
 double KeyG1Strategy::CalculateKeyError(double num_violating_tuple_pairs) const {
-    unsigned long long num_tuple_pairs = context_->GetColumnLayoutRelationData()->GetNumTuplePairs();
+    unsigned long long num_tuple_pairs =
+        context_->GetColumnLayoutRelationData()->GetNumTuplePairs();
     if (num_tuple_pairs == 0) return 0;
     double g1 = num_violating_tuple_pairs / num_tuple_pairs;
     return Round(g1);
@@ -30,8 +31,8 @@ void KeyG1Strategy::EnsureInitialized(SearchSpace* search_space) const {
 double KeyG1Strategy::CalculateError(Vertical const& key_candidate) const {
     auto pli = context_->GetPliCache()->GetOrCreateFor(key_candidate, context_);
     auto pli_pointer = std::holds_alternative<util::PositionListIndex*>(pli)
-                      ? std::get<util::PositionListIndex*>(pli)
-                      : std::get<std::unique_ptr<util::PositionListIndex>>(pli).get();
+                           ? std::get<util::PositionListIndex*>(pli)
+                           : std::get<std::unique_ptr<util::PositionListIndex>>(pli).get();
     double error = CalculateKeyError(pli_pointer);
     calc_count_++;
     return error;
@@ -47,8 +48,8 @@ DependencyCandidate KeyG1Strategy::CreateDependencyCandidate(Vertical const& ver
     if (vertical.GetArity() == 1) {
         auto pli = context_->GetPliCache()->GetOrCreateFor(vertical, context_);
         auto pli_pointer = std::holds_alternative<util::PositionListIndex*>(pli)
-                          ? std::get<util::PositionListIndex*>(pli)
-                          : std::get<std::unique_ptr<util::PositionListIndex>>(pli).get();
+                               ? std::get<util::PositionListIndex*>(pli)
+                               : std::get<std::unique_ptr<util::PositionListIndex>>(pli).get();
         double key_error = CalculateKeyError(pli_pointer->GetNepAsLong());
         return DependencyCandidate(vertical, util::ConfidenceInterval(key_error), true);
     }
@@ -71,7 +72,6 @@ void KeyG1Strategy::RegisterDependency(Vertical const& vertical, double error,
 }
 
 std::unique_ptr<DependencyStrategy> KeyG1Strategy::CreateClone() {
-    return std::make_unique<KeyG1Strategy>(
-            (max_dependency_error_ + min_non_dependency_error_) / 2,
-            (max_dependency_error_ - min_non_dependency_error_) / 2);
+    return std::make_unique<KeyG1Strategy>((max_dependency_error_ + min_non_dependency_error_) / 2,
+                                           (max_dependency_error_ - min_non_dependency_error_) / 2);
 }

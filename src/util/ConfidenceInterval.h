@@ -23,9 +23,13 @@ public:
     //TODO: assert min_ == max_
     double Get() const { return mean_; }
 
-    ConfidenceInterval Multiply(double scalar) { return ConfidenceInterval(min_ * scalar, mean_ * scalar, max_ * scalar); }
+    ConfidenceInterval Multiply(double scalar) {
+        return ConfidenceInterval(min_ * scalar, mean_ * scalar, max_ * scalar);
+    }
     bool IsPoint() const { return min_ == max_; }
-    explicit operator std::string() const { return (boost::format("error=(%f, %f, %f)") % min_ % mean_ % max_).str(); }
+    explicit operator std::string() const {
+        return (boost::format("error=(%f, %f, %f)") % min_ % mean_ % max_).str();
+    }
 
     friend std::ostream& operator<<(std::ostream&, ConfidenceInterval const&);
 };

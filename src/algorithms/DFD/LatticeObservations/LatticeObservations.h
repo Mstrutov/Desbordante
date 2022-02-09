@@ -15,6 +15,8 @@ public:
     NodeCategory UpdateDependencyCategory(Vertical const& node);
     NodeCategory UpdateNonDependencyCategory(Vertical const& node, unsigned int rhs_index);
 
-    std::unordered_set<Vertical> GetUncheckedSubsets(const Vertical &node, ColumnOrder const&) const;
-    std::unordered_set<Vertical> GetUncheckedSupersets(const Vertical &node, unsigned int rhs_index, ColumnOrder const&) const;
+    std::unordered_set<Vertical> GetUncheckedSubsets(const Vertical& node,
+                                                     ColumnOrder const&) const;
+    std::unordered_set<Vertical> GetUncheckedSupersets(const Vertical& node, unsigned int rhs_index,
+                                                       ColumnOrder const&) const;
 };

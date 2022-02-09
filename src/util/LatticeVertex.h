@@ -13,7 +13,7 @@
 
 namespace util {
 
-class LatticeVertex{
+class LatticeVertex {
 private:
     Vertical vertical_;
     // holds either an owned PLI (unique_ptr) or a non-owned one (const*)
@@ -42,16 +42,20 @@ public:
     void SetInvalid(bool m_is_invalid) { is_invalid_ = m_is_invalid; }
 
     PositionListIndex const* GetPositionListIndex() const;
-    void SetPositionListIndex(PositionListIndex const* position_list_index)
-    { position_list_index_ = position_list_index; }
-    void AcquirePositionListIndex(std::unique_ptr<PositionListIndex> position_list_index)
-    { position_list_index_ = std::move(position_list_index); }
+    void SetPositionListIndex(PositionListIndex const* position_list_index) {
+        position_list_index_ = position_list_index;
+    }
+    void AcquirePositionListIndex(std::unique_ptr<PositionListIndex> position_list_index) {
+        position_list_index_ = std::move(position_list_index);
+    }
 
-    bool operator> (LatticeVertex const& that) const;
+    bool operator>(LatticeVertex const& that) const;
 
     std::string ToString();
 
-    static bool Comparator(LatticeVertex * v1, LatticeVertex * v2) { return *v2 > *v1; }
+    static bool Comparator(LatticeVertex* v1, LatticeVertex* v2) {
+        return *v2 > *v1;
+    }
     friend std::ostream& operator<<(std::ostream& os, LatticeVertex& lv);
 };
 

@@ -38,7 +38,8 @@ double FdG1Strategy::CalculateG1(util::PositionListIndex* lhs_pli) const {
 
         unsigned long long num_violations_in_cluster = cluster.size() * (cluster.size() - 1) / 2;
         for (auto const& [key, refined_cluster_size] : value_counts) {
-            num_violations_in_cluster -= static_cast<unsigned long long>(refined_cluster_size) * (refined_cluster_size - 1) / 2;
+            num_violations_in_cluster -= static_cast<unsigned long long>(refined_cluster_size) *
+                                         (refined_cluster_size - 1) / 2;
         }
         num_violations += num_violations_in_cluster;
     }
@@ -47,7 +48,8 @@ double FdG1Strategy::CalculateG1(util::PositionListIndex* lhs_pli) const {
 }
 
 double FdG1Strategy::CalculateG1(double num_violating_tuple_pairs) const {
-    unsigned long long num_tuple_pairs = context_->GetColumnLayoutRelationData()->GetNumTuplePairs();
+    unsigned long long num_tuple_pairs =
+        context_->GetColumnLayoutRelationData()->GetNumTuplePairs();
     if (num_tuple_pairs == 0) return 0;
     double g1 = num_violating_tuple_pairs / num_tuple_pairs;
     return Round(g1);
@@ -56,7 +58,8 @@ double FdG1Strategy::CalculateG1(double num_violating_tuple_pairs) const {
 void FdG1Strategy::EnsureInitialized(SearchSpace* search_space) const {
     if (search_space->is_initialized_) return;
 
-    double zero_fd_error = CalculateError(*context_->GetColumnLayoutRelationData()->GetSchema()->empty_vertical_);
+    double zero_fd_error =
+        CalculateError(*context_->GetColumnLayoutRelationData()->GetSchema()->empty_vertical_);
     search_space->AddLaunchPad(
         DependencyCandidate(
             *context_->GetColumnLayoutRelationData()->GetSchema()->empty_vertical_,
@@ -78,20 +81,21 @@ double FdG1Strategy::CalculateError(Vertical const& lhs) const {
         error = CalculateG1(rhs_pli->GetNip());
     } else {
         auto lhs_pli = context_->GetPliCache()->GetOrCreateFor(lhs, context_);
-        auto lhs_pli_pointer = std::holds_alternative<util::PositionListIndex*>(lhs_pli)
-            ? std::get<util::PositionListIndex*>(lhs_pli)
-            : std::get<std::unique_ptr<util::PositionListIndex>>(lhs_pli).get();
+        auto lhs_pli_pointer =
+            std::holds_alternative<util::PositionListIndex*>(lhs_pli)
+                ? std::get<util::PositionListIndex*>(lhs_pli)
+                : std::get<std::unique_ptr<util::PositionListIndex>>(lhs_pli).get();
         auto joint_pli = context_->GetPliCache()->Get(lhs.Union(static_cast<Vertical>(*rhs_)));
         error = joint_pli == nullptr
-            ? CalculateG1(lhs_pli_pointer)
-            : CalculateG1(lhs_pli_pointer->GetNepAsLong() - joint_pli->GetNepAsLong());
+                    ? CalculateG1(lhs_pli_pointer)
+                    : CalculateG1(lhs_pli_pointer->GetNepAsLong() - joint_pli->GetNepAsLong());
     }
     calc_count_++;
     return error;
 }
 
-util::ConfidenceInterval
-FdG1Strategy::CalculateG1(util::ConfidenceInterval const &num_violations) const {
+util::ConfidenceInterval FdG1Strategy::CalculateG1(
+    util::ConfidenceInterval const& num_violations) const {
     return util::ConfidenceInterval(CalculateG1(num_violations.GetMin()),
                                     CalculateG1(num_violations.GetMean()),
                                     CalculateG1(num_violations.GetMax()));
@@ -116,8 +120,8 @@ DependencyCandidate FdG1Strategy::CreateDependencyCandidate(Vertical const& vert
     return DependencyCandidate(vertical, g1, false);
 }
 
-void FdG1Strategy::RegisterDependency(
-        Vertical const& vertical, double error, DependencyConsumer const& discovery_unit) const {
+void FdG1Strategy::RegisterDependency(Vertical const& vertical, double error,
+                                      DependencyConsumer const& discovery_unit) const {
     discovery_unit.RegisterFd(vertical, *rhs_, error, 0); // TODO: calculate score?
 }
 

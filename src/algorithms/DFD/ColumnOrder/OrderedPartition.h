@@ -9,9 +9,9 @@ private:
 public:
     OrderedPartition() = delete;
     OrderedPartition(OrderedPartition const& other) = delete;
-    OrderedPartition(OrderedPartition && other) = delete;
+    OrderedPartition(OrderedPartition&& other) = delete;
     OrderedPartition& operator=(OrderedPartition const& other) = delete;
-    OrderedPartition& operator=(OrderedPartition && other) = delete;
+    OrderedPartition& operator=(OrderedPartition&& other) = delete;
 
     OrderedPartition(util::PositionListIndex const* const,
                      unsigned int number_of_rows, unsigned int column_index);

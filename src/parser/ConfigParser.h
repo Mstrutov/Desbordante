@@ -12,7 +12,6 @@
 
 namespace fs = std::filesystem;
 
-
 class ConfigParser {
 private:
     std::string output_path_;
