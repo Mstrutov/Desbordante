@@ -15,6 +15,8 @@ public:
 
     std::string ToIndicesString() const { return vertical_.ToIndicesString(); }
 
-    std::string ToString() const { return vertical_.ToString() + "~>"
-        + boost::lexical_cast<std::string>(error_) + boost::lexical_cast<std::string>(score_); }
+    std::string ToString() const {
+        return vertical_.ToString() + "~>" + boost::lexical_cast<std::string>(error_) +
+               boost::lexical_cast<std::string>(score_);
+    }
 };

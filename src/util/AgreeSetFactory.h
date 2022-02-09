@@ -30,7 +30,7 @@ enum class AgreeSetsGenMethod {
                                *  3. Iterates over all pairs of identifier sets from vector.
                                *  4. Gets agree set for current pair by intersecting.
                                */
-    kUsingMapOfIDSets       , /*< Metanome approach.
+    kUsingMapOfIDSets,        /*< Metanome approach.
                                *  Generates agree sets using identifier sets.
                                *  Algorithm works as follows:
                                *  1. Generates maximal representation
@@ -42,7 +42,7 @@ enum class AgreeSetsGenMethod {
                                *  4. Gets agree set for current pair of tuples by intersecting
                                *     their identifier sets.
                                */
-    kUsingGetAgreeSet       , /*< The most naive (so the slowest) way to generate agree sets.
+    kUsingGetAgreeSet,        /*< The most naive (so the slowest) way to generate agree sets.
                                *  Generates agree set for all pairs of tuples that
                                *  can form agree set. Tuples can form agree set if
                                *  they have the same value in at least one attribute.
@@ -53,7 +53,7 @@ enum class AgreeSetsGenMethod {
                                *     of current attribute pli.
                                *  3. Gets agree set for current pair using GetAgreeSet.
                                */
-    kUsingMCAndGetAgreeSet  , /*< In `kUsingGetAgreeSet` method, the same pair of tuples
+    kUsingMCAndGetAgreeSet,   /*< In `kUsingGetAgreeSet` method, the same pair of tuples
                                *  can be processed (passed to GetAgreeSet) multiple times.
                                *  This method similar to `kUsingGetAgreeSet`,
                                *  but avoids the above problem.
@@ -132,6 +132,7 @@ public:
         explicit Configuration(ushort threads_num) noexcept
             : threads_num(threads_num) {}
     };
+
     using SetOfVectors = std::unordered_set<std::vector<int>,
                                             boost::hash<std::vector<int>>>;
     using SetOfAgreeSets = std::unordered_set<AgreeSet>;
@@ -163,23 +164,24 @@ private:
     SetOfVectors GenMcUsingCalculateSupersets() const;
     SetOfVectors GenMcParallel() const;
 
-    void CalculateSupersets(std::unordered_set<std::vector<int>, boost::hash<std::vector<int>>> &max_representation,
-                            std::deque<std::vector<int>> const& partition) const;
+    void CalculateSupersets(
+        std::unordered_set<std::vector<int>, boost::hash<std::vector<int>>>& max_representation,
+        std::deque<std::vector<int>> const& partition) const;
     /* From Metanome: `handleList`.
      * Extremely slow for anything big eqv_class,
      * I think it is not usable at all
      */
-    void HandleEqvClass(std::vector<int>& eqv_class,
-                        std::unordered_map<size_t,
-                                           std::unordered_set<std::vector<int>,
-                                                              boost::hash<std::vector<int>>>> &max_sets,
-                        bool const first_step) const;
+    void HandleEqvClass(
+        std::vector<int>& eqv_class,
+        std::unordered_map<
+            size_t, std::unordered_set<std::vector<int>, boost::hash<std::vector<int>>>>& max_sets,
+        bool const first_step) const;
     /* From Metanome.
      * Checks if index 'contains' eqvivalence class which is superset of eqv_class.
      */
     bool IsSubset(std::vector<int> const& eqv_class,
-                  const std::unordered_map<int, std::unordered_set<size_t>> &index) const;
-    using VectorComp = std::function<bool (std::vector<int> const&, std::vector<int> const&)>;
+                  const std::unordered_map<int, std::unordered_set<size_t>>& index) const;
+    using VectorComp = std::function<bool(std::vector<int> const&, std::vector<int> const&)>;
     std::set<std::vector<int>, VectorComp> GenSortedEqvClasses(VectorComp comp) const;
 
     void AddProgress(double const val) const noexcept {
@@ -187,7 +189,6 @@ private:
             algo_->AddProgress(val);
         }
     }
-
 
     ColumnLayoutRelationData const* const relation_;
 

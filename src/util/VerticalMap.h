@@ -41,7 +41,8 @@ protected:
         // Sets given key to a given value
         // Returns the old value with ownership
         // Not a const method as SetTrie gets changed
-        std::shared_ptr<Value> Associate(Bitset const& key, size_t next_bit, std::shared_ptr<Value> value);
+        std::shared_ptr<Value> Associate(Bitset const& key, size_t next_bit,
+                                         std::shared_ptr<Value> value);
 
         // Returns a pointer to the value mapped by the given key
         std::shared_ptr<Value const> Get(Bitset const& key, size_t next_bit) const;
@@ -63,20 +64,27 @@ protected:
         SetTrie const* GetSubtrie(size_t index) const;
 
         // Calls collector on every trie that is a subset of the given subset_key
-        bool CollectSubsetKeys(Bitset const& key, size_t next_bit, Bitset& subset_key,
-                               std::function<bool(Bitset const&, std::shared_ptr<Value const>)> const& collector) const;
+        bool CollectSubsetKeys(
+            Bitset const& key, size_t next_bit, Bitset& subset_key,
+            std::function<bool(Bitset const&, std::shared_ptr<Value const>)> const& collector)
+            const;
 
         // Calls collector on every trie that is a superset of the given subsetKey
-        bool CollectSupersetKeys(Bitset const& key, size_t next_bit, Bitset& superset_key,
-                                 std::function<bool(Bitset const&, std::shared_ptr<Value const>)> const& collector) const;
+        bool CollectSupersetKeys(
+            Bitset const& key, size_t next_bit, Bitset& superset_key,
+            std::function<bool(Bitset const&, std::shared_ptr<Value const>)> const& collector)
+            const;
 
         // Calls collector on every trie that is a superset of the given subsetKey with no bits from the blacklist
-        bool CollectRestrictedSupersetKeys(Bitset const& key, Bitset const& blacklist, size_t next_bit,
-                                           Bitset& superset_key,
-                                           std::function<void(Bitset const&, std::shared_ptr<Value const>)> const& collector) const;
+        bool CollectRestrictedSupersetKeys(
+            Bitset const& key, Bitset const& blacklist, size_t next_bit, Bitset& superset_key,
+            std::function<void(Bitset const&, std::shared_ptr<Value const>)> const& collector)
+            const;
 
         // Calls collector on every entry
-        void TraverseEntries(Bitset& subset_key, std::function<void(Bitset const&, std::shared_ptr<Value const>)> collector) const;
+        void TraverseEntries(
+            Bitset& subset_key,
+            std::function<void(Bitset const&, std::shared_ptr<Value const>)> collector) const;
     };
 
     RelationalSchema const* relation_;
@@ -85,7 +93,9 @@ protected:
     long long time_spent_on_shrinking_ = 0;
     SetTrie set_trie_;
 
-    unsigned int RemoveFromUsageCounter (std::unordered_map<Vertical, unsigned int>& usage_counter, const Vertical& key);
+    unsigned int RemoveFromUsageCounter(std::unordered_map<Vertical, unsigned int>& usage_counter,
+                                        const Vertical& key);
+
 public:
     using Entry = std::pair<Vertical, std::shared_ptr<Value const>>;
     explicit VerticalMap(RelationalSchema const* relation) :
@@ -94,8 +104,8 @@ public:
     virtual bool IsEmpty() const { return size_ == 0; }
 
     // basic get-check-insert-remove operations
-    virtual std::shared_ptr<Value const> Get(Vertical const &key) const;
-    virtual std::shared_ptr<Value const> Get(Bitset const &key) const;
+    virtual std::shared_ptr<Value const> Get(Vertical const& key) const;
+    virtual std::shared_ptr<Value const> Get(Bitset const& key) const;
     virtual bool ContainsKey(Vertical const& key) const { return Get(key) != nullptr; }
     virtual std::shared_ptr<Value> Put(Vertical const& key, std::shared_ptr<Value> value);
     virtual std::shared_ptr<Value> Remove(Vertical const& key);
@@ -113,11 +123,16 @@ public:
     virtual std::vector<Vertical> GetSubsetKeys(Vertical const& vertical) const;
     virtual std::vector<Entry> GetSubsetEntries(Vertical const& vertical) const;
     virtual Entry GetAnySubsetEntry(Vertical const& vertical) const;
-    virtual Entry GetAnySubsetEntry(Vertical const& vertical, std::function<bool(Vertical const*, std::shared_ptr<Value const>)> const& condition) const;
+    virtual Entry GetAnySubsetEntry(
+        Vertical const& vertical,
+        std::function<bool(Vertical const*, std::shared_ptr<Value const>)> const& condition) const;
     virtual std::vector<Entry> GetSupersetEntries(Vertical const& vertical) const;
     virtual Entry GetAnySupersetEntry(Vertical const& vertical) const;
-    virtual Entry GetAnySupersetEntry(Vertical const& vertical, std::function<bool(Vertical const*, std::shared_ptr<Value const>)> condition) const;
-    virtual std::vector<Entry> GetRestrictedSupersetEntries(Vertical const& vertical, Vertical const& exclusion) const;
+    virtual Entry GetAnySupersetEntry(
+        Vertical const& vertical,
+        std::function<bool(Vertical const*, std::shared_ptr<Value const>)> condition) const;
+    virtual std::vector<Entry> GetRestrictedSupersetEntries(Vertical const& vertical,
+                                                            Vertical const& exclusion) const;
     virtual bool RemoveSupersetEntries(Vertical const& key);
     virtual bool RemoveSubsetEntries(Vertical const& key);
 
@@ -125,9 +140,10 @@ public:
      * !!! Untested yet - use carefully
      * */
     virtual void Shrink(double factor, std::function<bool(Entry, Entry)> const& compare,
-                        std::function<bool (Entry)> const& can_remove,
+                        std::function<bool(Entry)> const& can_remove,
                         ProfilingContext::ObjectToCache cache_object);
-    virtual void Shrink(std::unordered_map<Vertical, unsigned int>& usage_counter, std::function<bool (Entry)> const& can_remove);
+    virtual void Shrink(std::unordered_map<Vertical, unsigned int>& usage_counter,
+                        std::function<bool(Entry)> const& can_remove);
 
     virtual long long GetShrinkInvocations() { return shrink_invocations_; }
     virtual long long GetTimeSpentOnShrinking() { return time_spent_on_shrinking_; }
@@ -152,8 +168,8 @@ public:
     virtual size_t GetSize() const override;
     virtual bool IsEmpty() const override;
 
-    virtual std::shared_ptr<V const> Get(Vertical const &key) const override;
-    virtual std::shared_ptr<V const> Get(Bitset const &key) const override;
+    virtual std::shared_ptr<V const> Get(Vertical const& key) const override;
+    virtual std::shared_ptr<V const> Get(Bitset const& key) const override;
     virtual bool ContainsKey(Vertical const& key) const override;
     virtual std::shared_ptr<V> Put(Vertical const& key, std::shared_ptr<V> value) override;
     virtual std::shared_ptr<V> Remove(Vertical const& key) override;
@@ -169,21 +185,24 @@ public:
     virtual std::vector<Entry> GetSubsetEntries(Vertical const& vertical) const override;
     virtual Entry GetAnySubsetEntry(Vertical const& vertical) const override;
     virtual Entry GetAnySubsetEntry(
-            Vertical const& vertical, std::function<bool(Vertical const*, std::shared_ptr<V const>)> const& condition) const override;
+        Vertical const& vertical,
+        std::function<bool(Vertical const*, std::shared_ptr<V const>)> const& condition)
+        const override;
     virtual std::vector<Entry> GetSupersetEntries(Vertical const& vertical) const override;
     virtual Entry GetAnySupersetEntry(Vertical const& vertical) const override;
     virtual Entry GetAnySupersetEntry(
-            Vertical const& vertical, std::function<bool(Vertical const*, std::shared_ptr<V const>)> condition) const override;
+        Vertical const& vertical,
+        std::function<bool(Vertical const*, std::shared_ptr<V const>)> condition) const override;
     virtual std::vector<Entry> GetRestrictedSupersetEntries(
-            Vertical const& vertical, Vertical const& exclusion) const override;
+        Vertical const& vertical, Vertical const& exclusion) const override;
     virtual bool RemoveSupersetEntries(Vertical const& key) override;
     virtual bool RemoveSubsetEntries(Vertical const& key) override;
 
     virtual void Shrink(double factor, std::function<bool(Entry, Entry)> const& compare,
-                        std::function<bool (Entry)> const& can_remove, ProfilingContext::ObjectToCache cache_object)
-                        override;
+                        std::function<bool(Entry)> const& can_remove,
+                        ProfilingContext::ObjectToCache cache_object) override;
     virtual void Shrink(std::unordered_map<Vertical, unsigned int>& usage_counter,
-                        std::function<bool (Entry)> const& can_remove) override;
+                        std::function<bool(Entry)> const& can_remove) override;
 
     virtual long long GetShrinkInvocations() override;
     virtual long long GetTimeSpentOnShrinking() override;

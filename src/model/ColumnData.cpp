@@ -10,14 +10,12 @@
 #include <random>
 #include <utility>
 
-
 ColumnData::ColumnData(Column const* column,
-                       std::unique_ptr<util::PositionListIndex> position_list_index):
-    column_(column),
-    position_list_index_(std::move(position_list_index)) {
-        //std::get<std::unique_ptr<PositionListIndex>>(position_list_index_)->ForceCacheProbingTable();
-  position_list_index_->ForceCacheProbingTable();
-    }
+                       std::unique_ptr<util::PositionListIndex> position_list_index)
+    : column_(column), position_list_index_(std::move(position_list_index)) {
+    // std::get<std::unique_ptr<PositionListIndex>>(position_list_index_)->ForceCacheProbingTable();
+    position_list_index_->ForceCacheProbingTable();
+}
 
 /*void ColumnData::shuffle() {
     std::random_device rd;
@@ -25,7 +23,7 @@ ColumnData::ColumnData(Column const* column,
     std::shuffle(probingTable.begin(), probingTable.end(), random);
 }*/
 
-bool ColumnData::operator==(const ColumnData &rhs) {
+bool ColumnData::operator==(const ColumnData& rhs) {
     if (this == &rhs) return true;
     return this->column_ == rhs.column_;
 }

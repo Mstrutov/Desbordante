@@ -1,4 +1,5 @@
 #pragma once
+
 class VerticalInfo {
 private:
 
@@ -16,5 +17,7 @@ public:
     static VerticalInfo ForMaximalNonDependency() { return VerticalInfo(false, true); }
 
     bool IsPruningSupersets() const { return is_dependency_ || is_extremal_; }
-    bool IsPruningSubsets() const {return !is_dependency_ || is_extremal_; }
+    bool IsPruningSubsets() const {
+        return !is_dependency_ || is_extremal_;
+    }
 };

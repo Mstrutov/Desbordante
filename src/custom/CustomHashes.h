@@ -25,62 +25,60 @@ private:
 };
 
 template <>
-inline size_t CustomHashing::BitsetHash<CustomHashing::BitsetHashingMethod::kTryConvertToUlong>
-        (boost::dynamic_bitset<> const& bitset) {
-
+inline size_t CustomHashing::BitsetHash<CustomHashing::BitsetHashingMethod::kTryConvertToUlong>(
+    boost::dynamic_bitset<> const& bitset) {
     return bitset.to_ulong();
 }
 
 template <>
-inline size_t CustomHashing::BitsetHash<CustomHashing::BitsetHashingMethod::kTrimAndConvertToUlong>
-        (boost::dynamic_bitset<> const& bitset) {
-
+inline size_t CustomHashing::BitsetHash<CustomHashing::BitsetHashingMethod::kTrimAndConvertToUlong>(
+    boost::dynamic_bitset<> const& bitset) {
     boost::dynamic_bitset<> copy_bitset = bitset;
     copy_bitset.resize(std::numeric_limits<unsigned long>::digits);
     return copy_bitset.to_ulong();
 }
 
 namespace std {
-    template<>
-    struct hash<Vertical> {
-        size_t operator()(Vertical const& k) const {
-            return CustomHashing::BitsetHash(k.GetColumnIndicesRef());
-        }
-    };
+template <>
+struct hash<Vertical> {
+    size_t operator()(Vertical const& k) const {
+        return CustomHashing::BitsetHash(k.GetColumnIndicesRef());
+    }
+};
 
-    template<>
-    struct hash<Column> {
-        size_t operator()(Column const& k) const {
-            return k.GetIndex();
-        }
-    };
+template <>
+struct hash<Column> {
+    size_t operator()(Column const& k) const {
+        return k.GetIndex();
+    }
+};
 
-    template<>
-    struct hash<std::shared_ptr<Vertical>> {
-        size_t operator()(std::shared_ptr<Vertical> const& k) const {
-            return std::hash<Vertical>()(*k);
-        }
-    };
+template <>
+struct hash<std::shared_ptr<Vertical>> {
+    size_t operator()(std::shared_ptr<Vertical> const& k) const {
+        return std::hash<Vertical>()(*k);
+    }
+};
 
-    template<>
-    struct hash<std::shared_ptr<Column>> {
-        size_t operator()(std::shared_ptr<Column> const& k) const {
-            return std::hash<Column>()(*k);
-        }
-    };
+template <>
+struct hash<std::shared_ptr<Column>> {
+    size_t operator()(std::shared_ptr<Column> const& k) const {
+        return std::hash<Column>()(*k);
+    }
+};
 
-    template<class T>
-    struct hash<std::pair<Vertical, T>> {
-        size_t operator()(std::pair<Vertical, T> const& k) const {
-            return std::hash<Vertical>()(k.first);
-        }
-    };
+template <class T>
+struct hash<std::pair<Vertical, T>> {
+    size_t operator()(std::pair<Vertical, T> const& k) const {
+        return std::hash<Vertical>()(k.first);
+    }
+};
 
-    template<class T>
-    struct hash<std::pair<std::shared_ptr<Vertical>, T>> {
-        size_t operator()(std::pair<std::shared_ptr<Vertical>, T> const& k) const {
-            return std::hash<Vertical>()(*k.first);
-        }
-    };
+template <class T>
+struct hash<std::pair<std::shared_ptr<Vertical>, T>> {
+    size_t operator()(std::pair<std::shared_ptr<Vertical>, T> const& k) const {
+        return std::hash<Vertical>()(*k.first);
+    }
+};
 }
 

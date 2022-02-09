@@ -15,11 +15,11 @@
 
 using std::vector, std::set;
 
-FastFDs::FastFDs(std::filesystem::path const& path,
-                 char separator, bool has_header,
-                 unsigned int max_lhs, ushort parallelism) :
-    PliBasedFDAlgorithm(path, separator, has_header, true,
-                        { "Agree sets generation", "Finding minimal covers" }), max_lhs_(max_lhs) {
+FastFDs::FastFDs(std::filesystem::path const& path, char separator, bool has_header,
+                 unsigned int max_lhs, ushort parallelism)
+    : PliBasedFDAlgorithm(path, separator, has_header, true,
+                          {"Agree sets generation", "Finding minimal covers"}),
+      max_lhs_(max_lhs) {
     if (parallelism == 0) {
         threads_num_ = std::thread::hardware_concurrency();
         if (threads_num_ == 0) {
@@ -79,7 +79,7 @@ unsigned long long FastFDs::ExecuteInternal() {
         boost::asio::thread_pool pool(threads_num_);
 
         for (std::unique_ptr<Column> const& column : schema_->GetColumns()) {
-            boost::asio::post(pool, [&column, task](){ return task(column); });
+            boost::asio::post(pool, [&column, task]() { return task(column); });
         }
 
         pool.join();
@@ -265,7 +265,7 @@ vector<FastFDs::DiffSet> FastFDs::GetDiffSetsMod(Column const& col) const {
     LOG(DEBUG) << "Compute minimal difference sets modulo "
                << col.ToString() << ":";
     for (auto& item : diff_sets_mod) {
-         LOG(DEBUG) << item.ToString();
+        LOG(DEBUG) << item.ToString();
     }
 
     return diff_sets_mod;

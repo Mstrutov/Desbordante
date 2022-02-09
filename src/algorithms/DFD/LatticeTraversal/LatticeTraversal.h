@@ -23,25 +23,24 @@ private:
 
     std::vector<Vertical> const& unique_columns_;
     ColumnLayoutRelationData const* const relation_;
-    PartitionStorage * const partition_storage_;
+    PartitionStorage* const partition_storage_;
 
     std::random_device rd_;
     std::mt19937 gen_;
 
     bool InferCategory(Vertical const& node, unsigned int rhs_index);
-    Vertical PickNextNode(Vertical const &node, unsigned int rhs_index);
+    Vertical PickNextNode(Vertical const& node, unsigned int rhs_index);
     std::stack<Vertical> GenerateNextSeeds(Column const* const current_rhs);
 
-    std::list<Vertical> Minimize(std::unordered_set<Vertical> const&node_list) const;
-    Vertical const& TakeRandom(std::unordered_set<Vertical> &node_set);
-    static void SubstractSets(std::unordered_set<Vertical> & set,
+    std::list<Vertical> Minimize(std::unordered_set<Vertical> const& node_list) const;
+    Vertical const& TakeRandom(std::unordered_set<Vertical>& node_set);
+    static void SubstractSets(std::unordered_set<Vertical>& set,
                               std::unordered_set<Vertical> const& set_to_substract);
 
 public:
-    LatticeTraversal(Column const* const rhs,
-                     ColumnLayoutRelationData const* const relation,
+    LatticeTraversal(Column const* const rhs, ColumnLayoutRelationData const* const relation,
                      std::vector<Vertical> const& unique_verticals,
-                     PartitionStorage * const partition_storage);
+                     PartitionStorage* const partition_storage);
 
     std::unordered_set<Vertical> FindLHSs();
 };

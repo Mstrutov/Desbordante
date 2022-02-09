@@ -57,13 +57,11 @@ TEST_P(KeysTest, PliBasedAlgorithmTest) {
     GetKeysTestImpl<PliBasedFDAlgorithm>(GetParam());
 }
 
-INSTANTIATE_TEST_SUITE_P(, KeysTest, ::testing::Values(
-    KeysTestParams({ 0, 1, 2 }, "WDC_age.csv"),
-    KeysTestParams({ 0, 1, 2, 3, 4 }, "WDC_game.csv"),
-    KeysTestParams({ 0, 2 }, "WDC_appearances.csv"),
-    KeysTestParams({ 3, 4, 5 }, "WDC_astronomical.csv"),
-    KeysTestParams({ 0, 2 }, "CIPublicHighway700.csv"),
-    KeysTestParams({}, "abalone.csv", ',', false),
-    KeysTestParams({}, "adult.csv", ';', false)
-));
-
+INSTANTIATE_TEST_SUITE_P(, KeysTest,
+                         ::testing::Values(KeysTestParams({0, 1, 2}, "WDC_age.csv"),
+                                           KeysTestParams({0, 1, 2, 3, 4}, "WDC_game.csv"),
+                                           KeysTestParams({0, 2}, "WDC_appearances.csv"),
+                                           KeysTestParams({3, 4, 5}, "WDC_astronomical.csv"),
+                                           KeysTestParams({0, 2}, "CIPublicHighway700.csv"),
+                                           KeysTestParams({}, "abalone.csv", ',', false),
+                                           KeysTestParams({}, "adult.csv", ';', false)));

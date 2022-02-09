@@ -15,8 +15,8 @@
 
 class SearchSpace : public std::enable_shared_from_this<SearchSpace> {
 private:
-    using DependencyCandidateComp = std::function<bool (DependencyCandidate const&,
-                                                        DependencyCandidate const&)>;
+    using DependencyCandidateComp =
+        std::function<bool(DependencyCandidate const&, DependencyCandidate const&)>;
     ProfilingContext* context_;
     std::unique_ptr<DependencyStrategy> strategy_;
     std::unique_ptr<util::VerticalMap<VerticalInfo>> local_visitees_ = nullptr;
@@ -31,21 +31,22 @@ private:
 
     int num_nested_ = 0;
 
-
     // void Discover(std::unique_ptr<VerticalMap<VerticalInfo>> localVisitees);
     std::optional<DependencyCandidate> PollLaunchPad();
-    void EscapeLaunchPad(Vertical const& hitting_set_candidate, std::vector<Vertical> pruning_supersets);
+    void EscapeLaunchPad(Vertical const& hitting_set_candidate,
+                         std::vector<Vertical> pruning_supersets);
     void ReturnLaunchPad(DependencyCandidate const& launch_pad, bool is_defer);
 
     bool Ascend(DependencyCandidate const& launch_pad);
     void CheckEstimate(DependencyStrategy* strategy,
                        DependencyCandidate const& traversal_candidate);
     void TrickleDown(Vertical const& main_peak, double main_peak_error);
-    std::optional<Vertical> TrickleDownFrom(
-        DependencyCandidate min_dep_candidate, DependencyStrategy* strategy,
-        util::VerticalMap<VerticalInfo>* alleged_min_deps,
-        std::unordered_set<Vertical> & alleged_non_deps,
-        util::VerticalMap<VerticalInfo>* global_visitees, double boost_factor);
+    std::optional<Vertical> TrickleDownFrom(DependencyCandidate min_dep_candidate,
+                                            DependencyStrategy* strategy,
+                                            util::VerticalMap<VerticalInfo>* alleged_min_deps,
+                                            std::unordered_set<Vertical>& alleged_non_deps,
+                                            util::VerticalMap<VerticalInfo>* global_visitees,
+                                            double boost_factor);
 
     // CAREFUL: resets globalVisitees_, therefore SearchSpace could become invalidated
     std::unique_ptr<util::VerticalMap<VerticalInfo>> MoveOutGlobalVisitees() {
@@ -58,7 +59,6 @@ private:
     void MoveInLocalVisitees(std::unique_ptr<util::VerticalMap<VerticalInfo>> local_visitees) {
         local_visitees_ = std::move(local_visitees);
     }
-
 
     static void RequireMinimalDependency(DependencyStrategy* strategy,
                                          Vertical const& min_dependency);
@@ -105,7 +105,7 @@ public:
     void EnsureInitialized();
     void Discover();
     void AddLaunchPad(DependencyCandidate const& launch_pad);
-    void SetContext(ProfilingContext* context)  {
+    void SetContext(ProfilingContext* context) {
         context_ = context;
         strategy_->context_ = context;
     }

@@ -17,11 +17,9 @@ protected:
     }
 
 public:
-    explicit PliBasedFDAlgorithm(std::filesystem::path const& path,
-                                 char separator = ',', bool has_header = true,
-                                 bool const is_null_equal_null = true,
-                                 std::vector<std::string_view> phase_names = { "FD mining" }) :
-                                 FDAlgorithm(path, separator, has_header, is_null_equal_null,
-                                             std::move(phase_names)) {}
+    explicit PliBasedFDAlgorithm(std::filesystem::path const& path, char separator = ',',
+                                 bool has_header = true, bool const is_null_equal_null = true,
+                                 std::vector<std::string_view> phase_names = {"FD mining"})
+        : FDAlgorithm(path, separator, has_header, is_null_equal_null, std::move(phase_names)) {}
     std::vector<Column const*> GetKeys() const override;
 };

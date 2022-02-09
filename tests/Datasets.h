@@ -22,18 +22,12 @@ protected:
 class LightDatasets : public DatasetCollection {
 protected:
     std::vector<Dataset> datasets_ = {
-            {"CIPublicHighway10k.csv", 21537, ',', true},
-            {"neighbors10k.csv", 62210, ',', true},
-            {"WDC_astronomical.csv", 49417, ',', true},
-            {"WDC_age.csv", 44913, ',', true},
-            {"WDC_appearances.csv", 34497, ',', true},
-            {"WDC_astrology.csv", 12109, ',', true},
-            {"WDC_game.csv", 32103, ',', true},
-            {"WDC_science.csv", 44913, ',', true},
-            {"WDC_symbols.csv", 2160, ',', true},
-            {"breast_cancer.csv", 58641, ',', true},
-            {"WDC_kepler.csv", 6284, ',', true}
-    };
+        {"CIPublicHighway10k.csv", 21537, ',', true}, {"neighbors10k.csv", 62210, ',', true},
+        {"WDC_astronomical.csv", 49417, ',', true},   {"WDC_age.csv", 44913, ',', true},
+        {"WDC_appearances.csv", 34497, ',', true},    {"WDC_astrology.csv", 12109, ',', true},
+        {"WDC_game.csv", 32103, ',', true},           {"WDC_science.csv", 44913, ',', true},
+        {"WDC_symbols.csv", 2160, ',', true},         {"breast_cancer.csv", 58641, ',', true},
+        {"WDC_kepler.csv", 6284, ',', true}};
 
     // DEPRECATED -- just use
     // for (auto dataset : LightDatasets::datasets) { ... }
@@ -47,13 +41,9 @@ protected:
 class HeavyDatasets : public DatasetCollection {
 protected:
     std::vector<Dataset> datasets_ = {
-            {"adult.csv", 20873, ';', false},
-            {"CIPublicHighway.csv", 32696, ',', true},
-            {"EpicMeds.csv", 19617, '|', true},
-            {"EpicVitals.csv", 24082, '|', true},
-            {"iowa1kk.csv", 55285, ',', true},
-            {"LegacyPayors.csv", 34874, '|', true}
-    };
+        {"adult.csv", 20873, ';', false},   {"CIPublicHighway.csv", 32696, ',', true},
+        {"EpicMeds.csv", 19617, '|', true}, {"EpicVitals.csv", 24082, '|', true},
+        {"iowa1kk.csv", 55285, ',', true},  {"LegacyPayors.csv", 34874, '|', true}};
 
     // DEPRECATED -- just use
     // for (auto dataset : HeavyDatasets::datasets) { ... }

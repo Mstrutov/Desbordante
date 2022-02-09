@@ -14,7 +14,7 @@ public:
                      char separator = ',', bool has_header = true,
                      unsigned int max_lhs = -1, ushort parallelism = 0);
 private:
-    using OrderingComparator = std::function<bool (Column const&, Column const&)>;
+    using OrderingComparator = std::function<bool(Column const&, Column const&)>;
     using DiffSet = Vertical;
 
     unsigned long long ExecuteInternal() override;
@@ -35,9 +35,9 @@ private:
      * the total ordering of { B in schema_->GetColumns() | B > `attribute` (in `cur_ordering`) }
      * according to `diff_sets`
      */
-    std::set<Column, OrderingComparator> GetNextOrdering(std::vector<DiffSet> const& diff_sets,
-                                                         Column const& attribute,
-                                                         std::set<Column, OrderingComparator> const& cur_ordering) const;
+    std::set<Column, OrderingComparator> GetNextOrdering(
+        std::vector<DiffSet> const& diff_sets, Column const& attribute,
+        std::set<Column, OrderingComparator> const& cur_ordering) const;
     void FindCovers(Column const& attribute, std::vector<DiffSet> const& diff_sets_mod,
                     std::vector<DiffSet> const& cur_diff_sets, Vertical const& path,
                     std::set<Column, OrderingComparator> const& ordering);

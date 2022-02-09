@@ -13,7 +13,7 @@ std::unordered_set<Vertical> NonDependenciesMap::GetPrunedSupersets(std::unorder
     return pruned_supersets;
 }
 
-bool NonDependenciesMap::CanBePruned(const Vertical &node) const {
+bool NonDependenciesMap::CanBePruned(const Vertical& node) const {
     for (auto const& map_row : *this) {
         Vertical const& key = map_row.first;
         if (node.Contains(key)) {
@@ -35,7 +35,7 @@ void NonDependenciesMap::AddNewNonDependency(Vertical const& node_to_add) {
             auto& non_deps_for_key = map_row.second;
             bool has_superset_entry = false;
 
-            for (auto iter = non_deps_for_key.begin(); iter != non_deps_for_key.end(); ) {
+            for (auto iter = non_deps_for_key.begin(); iter != non_deps_for_key.end();) {
                 //if verticals are the same, then contains == true
                 Vertical const& non_dep = *iter;
                 if (non_dep.Contains(node_to_add)) {

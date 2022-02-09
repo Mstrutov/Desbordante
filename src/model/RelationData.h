@@ -28,7 +28,9 @@ public:
 
     unsigned int GetNumColumns() const { return schema_->GetNumColumns(); }
     double GetMaximumNip() const { return GetNumRows() * (GetNumRows() - 1) / 2.0; }
-    unsigned long long GetNumTuplePairs() const { return (unsigned long long) GetNumRows() * (GetNumRows() - 1) / 2; }
+    unsigned long long GetNumTuplePairs() const {
+        return (unsigned long long)GetNumRows() * (GetNumRows() - 1) / 2;
+    }
     RelationalSchema const* GetSchema() const { return schema_.get(); }
 
 protected:

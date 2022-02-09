@@ -42,9 +42,9 @@ public:
         kAs
     };
 
-    ProfilingContext(Configuration  configuration, ColumnLayoutRelationData* relation_data,
-                     std::function<void (PartialKey const&)> const& ucc_consumer,
-                     std::function<void (PartialFD const&)> const& fd_consumer,
+    ProfilingContext(Configuration configuration, ColumnLayoutRelationData* relation_data,
+                     std::function<void(PartialKey const&)> const& ucc_consumer,
+                     std::function<void(PartialFD const&)> const& fd_consumer,
                      CachingMethod const& caching_method,
                      CacheEvictionMethod const& eviction_method, double caching_method_value);
 
@@ -73,7 +73,7 @@ public:
     static double GetMeanEntropy(ColumnLayoutRelationData const* relation_data);
     static double GetMedianGini(ColumnLayoutRelationData const* relation_data);
 private:
-    static double GetMedianValue(std::vector<double> && values, std::string const& measure_name);
+    static double GetMedianValue(std::vector<double>&& values, std::string const& measure_name);
     static double SetMaximumEntropy(ColumnLayoutRelationData const* relation_data,
-                                    CachingMethod const & caching_method);
+                                    CachingMethod const& caching_method);
 };

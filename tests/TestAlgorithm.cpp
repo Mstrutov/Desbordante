@@ -42,19 +42,23 @@ std::vector<unsigned int> BitsetToIndexVector(boost::dynamic_bitset<> const& bit
 }
 
 testing::AssertionResult CheckFdListEquality(
-        std::set<std::pair<std::vector<unsigned int>, unsigned int>> actual, std::list<FD> const& expected) {
+    std::set<std::pair<std::vector<unsigned int>, unsigned int>> actual,
+    std::list<FD> const& expected) {
     for (auto& fd : expected) {
         std::vector<unsigned int> lhs_indices = BitsetToIndexVector(fd.GetLhs().GetColumnIndices());
         std::sort(lhs_indices.begin(), lhs_indices.end());
 
-        if (auto it = actual.find(std::make_pair(lhs_indices, fd.GetRhs().GetIndex())); it == actual.end()) {
-            return testing::AssertionFailure() << "discovered a false FD: "
-                                               << fd.GetLhs().ToIndicesString() << "->" << fd.GetRhs().ToIndicesString();
+        if (auto it = actual.find(std::make_pair(lhs_indices, fd.GetRhs().GetIndex()));
+            it == actual.end()) {
+            return testing::AssertionFailure()
+                   << "discovered a false FD: " << fd.GetLhs().ToIndicesString() << "->"
+                   << fd.GetRhs().ToIndicesString();
         } else {
             actual.erase(it);
         }
     }
-    return actual.empty() ? testing::AssertionSuccess() : testing::AssertionFailure() << "some FDs remain undiscovered";
+    return actual.empty() ? testing::AssertionSuccess()
+                          : testing::AssertionFailure() << "some FDs remain undiscovered";
 }
 
 TYPED_TEST_SUITE_P(AlgorithmTest);
@@ -75,7 +79,7 @@ TYPED_TEST_P(AlgorithmTest, ReturnsEmptyOnSingleNonKey) {
 TYPED_TEST_P(AlgorithmTest, WorksOnLongDataset) {
     auto const path = fs::current_path() / "inputData" / "TestLong.csv";
 
-    std::set<std::pair<std::vector<unsigned int>, unsigned int>> true_fd_collection {{{2}, 1}};
+    std::set<std::pair<std::vector<unsigned int>, unsigned int>> true_fd_collection{{{2}, 1}};
 
     auto algorithm = TestFixture::CreateAlgorithmInstance(path, ',', true);
     algorithm->Execute();
@@ -85,16 +89,8 @@ TYPED_TEST_P(AlgorithmTest, WorksOnLongDataset) {
 TYPED_TEST_P(AlgorithmTest, WorksOnWideDataset) {
     auto const path = fs::current_path() / "inputData" / "TestWide.csv";
 
-    std::set<std::pair<std::vector<unsigned int>, unsigned int>> true_fd_collection {
-        {{0}, 2},
-        {{0}, 4},
-        {{2}, 0},
-        {{2}, 4},
-        {{4}, 0},
-        {{4}, 2},
-        {{}, 1},
-        {{}, 3}
-    };
+    std::set<std::pair<std::vector<unsigned int>, unsigned int>> true_fd_collection{
+        {{0}, 2}, {{0}, 4}, {{2}, 0}, {{2}, 4}, {{4}, 0}, {{4}, 2}, {{}, 1}, {{}, 3}};
 
     auto algorithm = TestFixture::CreateAlgorithmInstance(path, ',', true);
     algorithm->Execute();
@@ -102,16 +98,16 @@ TYPED_TEST_P(AlgorithmTest, WorksOnWideDataset) {
 }
 
 TYPED_TEST_P(AlgorithmTest, LightDatasetsConsistentHash) {
-    auto const path = fs::current_path() /"inputData";
+    auto const path = fs::current_path() / "inputData";
 
     try {
         for (auto const& dataset : LightDatasets::datasets_) {
-            auto algorithm =
-                TestFixture::CreateAlgorithmInstance(path / dataset.name, dataset.separator, dataset.header_presence);
+            auto algorithm = TestFixture::CreateAlgorithmInstance(
+                path / dataset.name, dataset.separator, dataset.header_presence);
             algorithm->Execute();
             std::cout << dataset.name << std::endl;
             EXPECT_EQ(algorithm->Fletcher16(), dataset.hash)
-                                << "FD collection hash changed for " << dataset.name;
+                << "FD collection hash changed for " << dataset.name;
         }
     }
     catch (std::runtime_error& e) {
@@ -122,7 +118,7 @@ TYPED_TEST_P(AlgorithmTest, LightDatasetsConsistentHash) {
 }
 
 TYPED_TEST_P(AlgorithmTest, HeavyDatasetsConsistentHash) {
-    auto const path = fs::current_path() /"inputData";
+    auto const path = fs::current_path() / "inputData";
 
     try {
         for (auto const& dataset : HeavyDatasets::datasets_) {
@@ -141,15 +137,9 @@ TYPED_TEST_P(AlgorithmTest, HeavyDatasetsConsistentHash) {
     SUCCEED();
 }
 
-REGISTER_TYPED_TEST_SUITE_P(
-        AlgorithmTest,
-        ThrowsOnEmpty,
-        ReturnsEmptyOnSingleNonKey,
-        WorksOnLongDataset,
-        WorksOnWideDataset,
-        LightDatasetsConsistentHash,
-        HeavyDatasetsConsistentHash
-        );
+REGISTER_TYPED_TEST_SUITE_P(AlgorithmTest, ThrowsOnEmpty, ReturnsEmptyOnSingleNonKey,
+                            WorksOnLongDataset, WorksOnWideDataset, LightDatasetsConsistentHash,
+                            HeavyDatasetsConsistentHash);
 
 using Algorithms = ::testing::Types<Tane, Pyro, FastFDs, DFD, Depminer, FDep>;
 INSTANTIATE_TYPED_TEST_SUITE_P(, AlgorithmTest, Algorithms);

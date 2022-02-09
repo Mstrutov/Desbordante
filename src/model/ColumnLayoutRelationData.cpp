@@ -10,11 +10,9 @@
 #include "ColumnLayoutRelationData.h"
 #include "easylogging++.h"
 
-
 ColumnLayoutRelationData::ColumnLayoutRelationData(std::unique_ptr<RelationalSchema> schema,
                                                    std::vector<ColumnData> column_data)
-        : RelationData(std::move(schema)), column_data_(std::move(column_data)) {}
-
+    : RelationData(std::move(schema)), column_data_(std::move(column_data)) {}
 
 ColumnData& ColumnLayoutRelationData::GetColumnData(int column_index) {
     return column_data_[column_index];
@@ -27,7 +25,7 @@ ColumnData& ColumnLayoutRelationData::GetColumnData(int column_index) {
 std::vector<int> ColumnLayoutRelationData::GetTuple(int tuple_index) const {
     int num_columns = schema_->GetNumColumns();
     std::vector<int> tuple = std::vector<int>(num_columns);
-    for (int column_index = 0; column_index < num_columns; column_index++){
+    for (int column_index = 0; column_index < num_columns; column_index++) {
         tuple[column_index] = column_data_[column_index].GetProbingTableValue(tuple_index);
     }
     return tuple;
@@ -39,12 +37,13 @@ std::vector<int> ColumnLayoutRelationData::GetTuple(int tuple_index) const {
     }
 }*/
 
-std::unique_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::CreateFrom(CSVParser &file_input, bool is_null_eq_null) {
+std::unique_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::CreateFrom(
+    CSVParser& file_input, bool is_null_eq_null) {
     return CreateFrom(file_input, is_null_eq_null, -1, -1);
 }
 
 std::unique_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::CreateFrom(
-    CSVParser &file_input, bool is_null_eq_null, int max_cols, long max_rows) {
+    CSVParser& file_input, bool is_null_eq_null, int max_cols, long max_rows) {
     auto schema = std::make_unique<RelationalSchema>(file_input.GetRelationName(), is_null_eq_null);
     std::unordered_map<std::string, int> value_dictionary;
     int next_value_id = 1;
@@ -55,7 +54,7 @@ std::unique_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::CreateFrom(
     int row_num = 0;
     std::vector<std::string> row;
 
-    while (file_input.GetHasNext()){
+    while (file_input.GetHasNext()) {
         row = file_input.ParseNext();
 
         if (row.empty() && num_columns == 1) {
@@ -65,20 +64,20 @@ std::unique_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::CreateFrom(
             continue;
         }
 
-        if (max_rows <= 0 || row_num < max_rows){
+        if (max_rows <= 0 || row_num < max_rows) {
             int index = 0;
-            for (std::string& field : row){
-                if (field.empty()){
+            for (std::string& field : row) {
+                if (field.empty()) {
                     column_vectors[index].push_back(null_value_id);
                 } else {
                     auto location = value_dictionary.find(field);
                     int value_id;
-                    if (location == value_dictionary.end()){
-                      value_dictionary[field] = next_value_id;
-                      value_id = next_value_id;
+                    if (location == value_dictionary.end()) {
+                        value_dictionary[field] = next_value_id;
+                        value_id = next_value_id;
                         next_value_id++;
                     } else {
-                      value_id = location->second;
+                        value_id = location->second;
                     }
                     column_vectors[index].push_back(value_id);
                 }

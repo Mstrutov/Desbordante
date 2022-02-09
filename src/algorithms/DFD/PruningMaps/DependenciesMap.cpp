@@ -21,7 +21,7 @@ void DependenciesMap::AddNewDependency(Vertical const& node_to_add) {
             auto& deps_for_key = map_row.second;
             bool has_subset_entry = false;
 
-            for (auto iter = deps_for_key.begin(); iter != deps_for_key.end(); ) {
+            for (auto iter = deps_for_key.begin(); iter != deps_for_key.end();) {
                 //if verticals are the same, then contains == true
                 Vertical const& dep = *iter;
                 if (node_to_add.Contains(dep)) {

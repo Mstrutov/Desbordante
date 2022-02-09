@@ -31,7 +31,6 @@ public:
 
     explicit Vertical(Column const& col);
 
-
     Vertical(Vertical const& other) = default;
     Vertical& operator=(const Vertical& rhs) = default;
     Vertical(Vertical&& other) = default;
@@ -47,8 +46,12 @@ public:
      */
     bool operator<(Vertical const& rhs) const;
 
-    bool operator==(Vertical const& other) const { return column_indices_ == other.column_indices_; }
-    bool operator!=(Vertical const& other) const { return column_indices_ != other.column_indices_; }
+    bool operator==(Vertical const& other) const {
+        return column_indices_ == other.column_indices_;
+    }
+    bool operator!=(Vertical const& other) const {
+        return column_indices_ != other.column_indices_;
+    }
     bool operator>(Vertical const& rhs) const { return !(*this < rhs && *this == rhs); }
 
     boost::dynamic_bitset<> GetColumnIndices() const { return column_indices_; }
@@ -61,7 +64,7 @@ public:
     Vertical Union(Vertical const& that) const;
     Vertical Union(Column const& that) const;
     Vertical Project(Vertical const& that) const;
-    Vertical Without (Vertical const & that) const;
+    Vertical Without(Vertical const& that) const;
     Vertical Without(Column const& that) const;
     Vertical Invert() const;
     Vertical Invert(Vertical const& scope) const;

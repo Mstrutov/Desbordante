@@ -41,7 +41,7 @@ private:
     int const tuple_index_;
 };
 
-inline Vertical IdentifierSet::Intersect(IdentifierSet const& other) const  {
+inline Vertical IdentifierSet::Intersect(IdentifierSet const& other) const {
     boost::dynamic_bitset<> intersection(relation_->GetNumColumns());
     auto p = data_.begin();
     auto q = other.data_.begin();

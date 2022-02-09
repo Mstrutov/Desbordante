@@ -15,10 +15,9 @@
 #include <boost/dynamic_bitset.hpp>
 #include <boost/optional.hpp>
 
-
 class Column;
-class Vertical;
 
+class Vertical;
 
 class RelationalSchema {
 private:
@@ -33,7 +32,7 @@ public:
     void Init();
     std::string GetName() const { return name_; }
     std::vector<std::unique_ptr<Column>> const& GetColumns() const { return columns_; };
-    Column const* GetColumn(const std::string &col_name) const;
+    Column const* GetColumn(const std::string& col_name) const;
     Column const* GetColumn(int index) const;
     size_t GetNumColumns() const;
     Vertical GetVertical(boost::dynamic_bitset<> indices) const;
@@ -42,8 +41,9 @@ public:
     void AppendColumn(const std::string& col_name);
     void AppendColumn(Column column);
 
-    std::unordered_set<Vertical> CalculateHittingSet(std::vector<Vertical> verticals,
-                                                     boost::optional<std::function<bool (Vertical const&)>> pruning_function) const;
+    std::unordered_set<Vertical> CalculateHittingSet(
+        std::vector<Vertical> verticals,
+        boost::optional<std::function<bool(Vertical const&)>> pruning_function) const;
 
     ~RelationalSchema();
 };

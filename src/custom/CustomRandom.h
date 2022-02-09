@@ -24,7 +24,9 @@ public:
         //std::cout << "Initializing with seed = " << seed << '\n';
     }
 
-    static long long InitialScramble(long long seed) { return (seed ^ 25214903917LL) & 281474976710655LL; }
+    static long long InitialScramble(long long seed) {
+        return (seed ^ 25214903917LL) & 281474976710655LL;
+    }
 
     long long Next(int bits) {
         seed_ = (seed_ * multiplier_ + addend_) & mask_;
@@ -33,7 +35,7 @@ public:
 
     long long NextLL() {
         long long res = ((long long)(Next(32)) << 32) + Next(32);
-        return res; 
+        return res;
     }
 
     long long NextULL() {
@@ -54,11 +56,9 @@ public:
         int res = Next(31);
         int m = upper_bound - 1;
         if ((upper_bound & m) == 0)
-            res = (int) ((upper_bound * (long long)res) >> 31);
+            res = (int)((upper_bound * (long long)res) >> 31);
         else {
-            for (int u = res;
-                 u - (res = u % upper_bound) + m < 0;
-                 u = Next(31))
+            for (int u = res; u - (res = u % upper_bound) + m < 0; u = Next(31))
                 ;
         }
         // std::cout << "bounded NextInt generated " <<  res << '\n';
@@ -68,6 +68,6 @@ public:
     double NextDouble() {
         double res = (((long long)(Next(26)) << 27) + Next(27)) * kDoubleUnit;
         // std::cout << "NextDouble generated " << res << '\n';
-        return res; 
+        return res;
     }
 };

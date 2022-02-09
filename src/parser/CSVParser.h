@@ -25,14 +25,19 @@ private:
     void GetNext();
     void PeekNext();
 
-    static inline std::string & rtrim(std::string &s);
+    static inline std::string& rtrim(std::string& s);
+
 public:
     explicit CSVParser(const std::filesystem::path& path);
     CSVParser(const std::filesystem::path& path, char separator, bool has_header);
     //bool isSameChar(char separator, char escape);
     std::vector<std::string> ParseNext();
-    bool GetHasNext() const { return has_next_;}
-    char GetSeparator() const { return separator_;}
+    bool GetHasNext() const {
+        return has_next_;
+    }
+    char GetSeparator() const {
+        return separator_;
+    }
     int GetNumberOfColumns() const { return number_of_columns_; }
     std::string GetColumnName(int index) const { return column_names_[index]; }
     std::string GetRelationName() const { return relation_name_; }

@@ -15,10 +15,9 @@ void LatticeLevel::Add(std::unique_ptr<LatticeVertex> vertex) {
 
 LatticeVertex const* LatticeLevel::GetLatticeVertex(const boost::dynamic_bitset<>& column_indices) const {
     auto it = vertices_.find(column_indices);
-    if (it != vertices_.end()){
+    if (it != vertices_.end()) {
         return it->second.get();
-    }
-    else{
+    } else {
         return nullptr;
     }
 }
@@ -30,34 +29,39 @@ void LatticeLevel::GenerateNextLevel(std::vector<std::unique_ptr<LatticeLevel>>&
 
     LatticeLevel* current_level = levels[arity].get();
 
-    std::vector<LatticeVertex *> current_level_vertices;
+    std::vector<LatticeVertex*> current_level_vertices;
     for (const auto& [map_key, vertex] : current_level->GetVertices()) {
         current_level_vertices.push_back(vertex.get());
     }
 
-    std::sort(current_level_vertices.begin(), current_level_vertices.end(), LatticeVertex::Comparator);
+    std::sort(current_level_vertices.begin(), current_level_vertices.end(),
+              LatticeVertex::Comparator);
     auto next_level = std::make_unique<LatticeLevel>(arity + 1);
 
-    for (unsigned int vertex_index_1 = 0; vertex_index_1 < current_level_vertices.size(); vertex_index_1++){
+    for (unsigned int vertex_index_1 = 0; vertex_index_1 < current_level_vertices.size();
+         vertex_index_1++) {
         LatticeVertex* vertex1 = current_level_vertices[vertex_index_1];
 
         if (vertex1->GetRhsCandidates().none() && !vertex1->GetIsKeyCandidate()) {
             continue;
         }
 
-        for (unsigned int vertex_index_2 = vertex_index_1 + 1; vertex_index_2 < current_level_vertices.size(); vertex_index_2++){
+        for (unsigned int vertex_index_2 = vertex_index_1 + 1;
+             vertex_index_2 < current_level_vertices.size(); vertex_index_2++) {
             LatticeVertex* vertex2 = current_level_vertices[vertex_index_2];
 
-            if (!vertex1->ComesBeforeAndSharePrefixWith(*vertex2)){
+            if (!vertex1->ComesBeforeAndSharePrefixWith(*vertex2)) {
                 break;
             }
 
-            if (!vertex1->GetRhsCandidates().intersects(vertex1->GetRhsCandidates()) && !vertex2->GetIsKeyCandidate()){
+            if (!vertex1->GetRhsCandidates().intersects(vertex1->GetRhsCandidates()) &&
+                !vertex2->GetIsKeyCandidate()) {
                 continue;
             }
 
             Vertical child_columns = vertex1->GetVertical().Union(vertex2->GetVertical());
-            std::unique_ptr<LatticeVertex> child_vertex = std::make_unique<LatticeVertex>(child_columns);
+            std::unique_ptr<LatticeVertex> child_vertex =
+                std::make_unique<LatticeVertex>(child_columns);
 
             dynamic_bitset<> parent_indices(vertex1->GetVertical().GetSchema()->GetNumColumns());
             parent_indices |= vertex1->GetVertical().GetColumnIndices();
@@ -65,27 +69,32 @@ void LatticeLevel::GenerateNextLevel(std::vector<std::unique_ptr<LatticeLevel>>&
 
             child_vertex->GetRhsCandidates() |= vertex1->GetRhsCandidates();
             child_vertex->GetRhsCandidates() &= vertex2->GetRhsCandidates();
-            child_vertex->SetKeyCandidate(vertex1->GetIsKeyCandidate() && vertex2->GetIsKeyCandidate());
+            child_vertex->SetKeyCandidate(vertex1->GetIsKeyCandidate() &&
+                                          vertex2->GetIsKeyCandidate());
             child_vertex->SetInvalid(vertex1->GetIsInvalid() || vertex2->GetIsInvalid());
 
-            for (unsigned int i = 0, skip_index = parent_indices.find_first(); i < arity - 1; i++, skip_index = parent_indices.find_next(skip_index)) {
+            for (unsigned int i = 0, skip_index = parent_indices.find_first(); i < arity - 1;
+                 i++, skip_index = parent_indices.find_next(skip_index)) {
                 parent_indices[skip_index] = false;
-                LatticeVertex const* parent_vertex = current_level->GetLatticeVertex(parent_indices);
+                LatticeVertex const* parent_vertex =
+                    current_level->GetLatticeVertex(parent_indices);
 
-                if (parent_vertex == nullptr){
+                if (parent_vertex == nullptr) {
                     goto continueMidOuter;
                 }
                 child_vertex->GetRhsCandidates() &= parent_vertex->GetConstRhsCandidates();
-                if (child_vertex->GetRhsCandidates().none()){
+                if (child_vertex->GetRhsCandidates().none()) {
                     goto continueMidOuter;
                 }
                 child_vertex->GetParents().push_back(parent_vertex);
                 parent_indices[skip_index] = true;
 
-                child_vertex->SetKeyCandidate(child_vertex->GetIsKeyCandidate() && parent_vertex->GetIsKeyCandidate());
-                child_vertex->SetInvalid(child_vertex->GetIsInvalid() || parent_vertex->GetIsInvalid());
+                child_vertex->SetKeyCandidate(child_vertex->GetIsKeyCandidate() &&
+                                              parent_vertex->GetIsKeyCandidate());
+                child_vertex->SetInvalid(child_vertex->GetIsInvalid() ||
+                                         parent_vertex->GetIsInvalid());
 
-                if (!child_vertex->GetIsKeyCandidate() && child_vertex->GetRhsCandidates().none()){
+                if (!child_vertex->GetIsKeyCandidate() && child_vertex->GetRhsCandidates().none()) {
                     goto continueMidOuter;
                 }
             }
@@ -97,13 +106,14 @@ void LatticeLevel::GenerateNextLevel(std::vector<std::unique_ptr<LatticeLevel>>&
 
             continueMidOuter:
             continue;
-        }
+            }
     }
 
     levels.push_back(std::move(next_level));
 }
 
-void LatticeLevel::ClearLevelsBelow(std::vector<std::unique_ptr<LatticeLevel>>& levels, unsigned int arity) {
+void LatticeLevel::ClearLevelsBelow(std::vector<std::unique_ptr<LatticeLevel>>& levels,
+                                    unsigned int arity) {
     // Clear the levels from the level list
     auto it = levels.begin();
 
@@ -113,7 +123,7 @@ void LatticeLevel::ClearLevelsBelow(std::vector<std::unique_ptr<LatticeLevel>>& 
 
     //Clear child references
     if (arity < levels.size()) {
-        for (auto& [map_key, retained_vertex] : levels[arity]->GetVertices()){
+        for (auto& [map_key, retained_vertex] : levels[arity]->GetVertices()) {
             retained_vertex->GetParents().clear();
         }
     }
