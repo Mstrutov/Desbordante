@@ -66,10 +66,12 @@ std::pair<uint8_t, double> FDAlgorithm::GetProgress() const noexcept {
 }
 
 void FDAlgorithm::ToNextProgressPhase() noexcept {
+    /* Current phase done, ensure that this is displayed in the progress bar */
+    SetProgress(kTotalProgressPercent);
+
     std::scoped_lock lock(progress_mutex_);
     ++cur_phase_id_;
     assert(cur_phase_id_ < phase_names_.size());
-    assert(cur_phase_progress_ >= 100);
     cur_phase_progress_ = 0;
 }
 
