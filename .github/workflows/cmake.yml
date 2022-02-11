@@ -29,6 +29,12 @@ jobs:
       with:
         path: ${{github.workspace}}/lib/googletest
         key: ${{ runner.os }}-googletest
+    - name: Cache easyloggingpp
+      uses: actions/cache@v2
+      id: cache-easyloggingpp
+      with:
+        path: ${{github.workspace}}/lib/easyloggingpp
+        key: ${{ runner.os }}-easyloggingpp
     - name: Install Boost
       run: |
         wget -O boost_1_72_0.tar.gz https://sourceforge.net/projects/boost/files/boost/1.72.0/boost_1_72_0.tar.gz/download
@@ -45,6 +51,13 @@ jobs:
         cd lib
         git clone https://github.com/google/googletest/ --branch release-1.10.0
       if: steps.cache-googletest.outputs.cache-hit != 'true'
+    - name: Download easyloggingpp
+      run: |
+        mkdir -p lib
+        sudo chown -R $USER lib
+        cd lib
+        git clone https://github.com/amrayn/easyloggingpp/ --branch v9.97.0
+      if: steps.cache-easyloggingpp.outputs.cache-hit != 'true'
     - name: Configure CMake
       run: >
         cmake -B ${{github.workspace}}/build

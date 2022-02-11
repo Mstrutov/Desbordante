@@ -1,8 +1,9 @@
 #include <algorithm>
 
+#include <easylogging++.h>
+
 #include "ColumnCombination.h"
 #include "LatticeLevel.h"
-#include "logging/easylogging++.h"
 
 namespace util {
 

@@ -1,10 +1,10 @@
 #include <unordered_map>
 
+#include <easylogging++.h>
+
 #include "FdG1Strategy.h"
 #include "SearchSpace.h"
 #include "PLICache.h"
-
-#include "logging/easylogging++.h"
 
 unsigned long long FdG1Strategy::nanos_ = 0;
 

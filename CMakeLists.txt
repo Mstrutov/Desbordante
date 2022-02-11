@@ -42,16 +42,18 @@ include_directories(
     "src/caching"
     "src/logging"
     "src"
+
+    "lib/easyloggingpp/src"
     )
 
 # adding submodules
-add_subdirectory("src")
 add_subdirectory("lib/googletest")
+
+option(build_static_lib "Build easyloggingpp as a static library" ON)
+add_subdirectory("lib/easyloggingpp")
+
+add_subdirectory("src")
 add_subdirectory("tests")
+
 add_subdirectory("datasets")
 add_subdirectory("cfg")
-
-#target_link_libraries(metanome_cpp PRIVATE "stdc++fs" gmock)
-#target_link_libraries(metanome_cpp PRIVATE "stdc++fs" Boost::container)
-#install(TARGETS ${PROJECT_NAME} DESTINATION bin)
-#install(FILES ${metanome_cpp_src} DESTINATION src)

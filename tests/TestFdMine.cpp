@@ -3,8 +3,8 @@
 #include <iostream>
 #include <filesystem>
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 #include "Datasets.h"
 #include "Pyro.h"

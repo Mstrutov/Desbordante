@@ -2,7 +2,7 @@
 
 #include <queue>
 
-#include "logging/easylogging++.h"
+#include <easylogging++.h>
 
 // TODO: extra careful with const& -> shared_ptr conversions via make_shared-smart pointer may delete the object - pass empty deleter [](*) {}
 
@@ -688,7 +688,7 @@ void SearchSpace::PrintStats() const {
     LOG(INFO) << "Trickling down: " << trickling_down_ / 1000000 - trickling_down_from_ / 1000000;
     LOG(INFO) << "Trickling down nested:" << trickling_down_part_ / 1000000;
     LOG(INFO) << "Num nested: " << num_nested_ / 1000000;
-    LOG(INFO) << "Ascending: " << ascending_ / 100000;
+    LOG(INFO) << "Ascending: " << ascending_ / 1000000;
     LOG(INFO) << "Polling: " << polling_launch_pads_ / 1000000;
     LOG(INFO) << "Returning launch pad: " << returning_launch_pad_ / 1000000;
 }

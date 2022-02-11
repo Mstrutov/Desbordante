@@ -1,11 +1,12 @@
 #include "ProfilingContext.h"
 
 #include <utility>
+
+#include <easylogging++.h>
+
 #include "ListAgreeSetSample.h"
 #include "PLICache.h"
 #include "VerticalMap.h"
-
-#include "logging/easylogging++.h"
 
 using std::shared_ptr;
 

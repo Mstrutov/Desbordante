@@ -4,9 +4,9 @@
 #include <unordered_map>
 #include <random>
 
-#include "AgreeSetSample.h"
+#include <easylogging++.h>
 
-#include "easylogging++.h"
+#include "AgreeSetSample.h"
 
 namespace util {
 

@@ -6,14 +6,14 @@
 #include <filesystem>
 #include <string>
 
-#include "logging/easylogging++.h"
-#include "gtest/gtest.h"
+#include <easylogging++.h>
+#include <gtest/gtest.h>
 
 INITIALIZE_EASYLOGGINGPP
 
 std::string GetSelfpath();
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     el::Loggers::configureFromGlobal("logging.conf");
 
     ::testing::InitGoogleTest(&argc, argv);

@@ -13,9 +13,9 @@
 #define BOOST_THREAD_PROVIDES_FUTURE_WHEN_ALL_WHEN_ANY
 #include <boost/thread.hpp>
 #include <boost/thread/future.hpp>
+#include <easylogging++.h>
 
 #include "IdentifierSet.h"
-#include "logging/easylogging++.h"
 #include "ParallelFor.h"
 
 namespace util {

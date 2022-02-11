@@ -1,10 +1,10 @@
 #include "Fd_mine.h"
 
-#include <boost/unordered_map.hpp>
 #include <queue>
 #include <vector>
 
-#include "logging/easylogging++.h"
+#include <boost/unordered_map.hpp>
+#include <easylogging++.h>
 
 unsigned long long Fd_mine::ExecuteInternal() {
     // 1
@@ -257,14 +257,10 @@ void Fd_mine::Display() {
             if (!rhs[j] || (rhs[j] && lhs[j])) {
                 continue;
             }
-            LOG(DEBUG) << "Discovered FD: ";
-            for (size_t i = 0; i < lhs.size(); i++) {
-                if (lhs[i]) {
-                    LOG(DEBUG) << schema_->GetColumn(i)->GetName() << " ";
-                }
-            }
-            LOG(DEBUG) << "-> " << schema_->GetColumn(j)->GetName();
-            RegisterFd(Vertical(schema_, lhs), *schema_->GetColumn(j));
+            Vertical lhs_vertical(schema_, lhs);
+            LOG(DEBUG) << "Discovered FD: " << lhs_vertical.ToString()
+                       << " -> " << schema_->GetColumn(j)->GetName();
+            RegisterFd(std::move(lhs_vertical), *schema_->GetColumn(j));
             fd_counter++;
         }
     }

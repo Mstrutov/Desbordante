@@ -7,8 +7,7 @@
 #include <vector>
 
 #include <boost/program_options.hpp>
-
-#include "logging/easylogging++.h"
+#include <easylogging++.h>
 
 #include "algorithms/Pyro.h"
 #include "algorithms/TaneX.h"

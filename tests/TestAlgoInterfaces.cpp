@@ -2,8 +2,8 @@
 #include <filesystem>
 #include <vector>
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 #include "Pyro.h"
 
