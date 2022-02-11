@@ -45,16 +45,25 @@ unsigned CandidateHashTree::hashFunction(LeafRow const& nodeRow, unsigned const 
     return itemHash(currLevelElementID);
 }
 
-void CandidateHashTree::findLeaves(std::set<unsigned>::iterator const start,
-                                   HashTreeNode & subtreeRoot, std::set<unsigned> const& transactionItems) {
-    if (subtreeRoot.siblings.empty()) { //found a leaf node or final. //TODO start = end?
-        traverseAllLeaves(subtreeRoot, transactionItems);
+bool CandidateHashTree::findLeaves(std::set<unsigned>::iterator const start,
+                                   HashTreeNode & subtreeRoot, std::set<unsigned> const& transactionItems,
+                                   int transactionID) {
+    if (subtreeRoot.siblings.empty() || start == transactionItems.end()) { //found a leaf node or final. //TODO start = end?
+        if (subtreeRoot.lastVisitedTransactionID != transactionID) {
+            traverseAllLeaves(subtreeRoot, transactionItems);
+            subtreeRoot.lastVisitedTransactionID = transactionID;
+        }
+        return true;
     } else {
         unsigned const nextBranchNumber = itemHash(*start);
         auto & nextNode = subtreeRoot.siblings[nextBranchNumber];
         for (auto newStart = std::next(start); newStart != transactionItems.end(); ++newStart) {
-            findLeaves(newStart, nextNode, transactionItems);
+            if (findLeaves(newStart, nextNode, transactionItems, transactionID)) {
+                return false;
+            }
         }
+        findLeaves(transactionItems.end(), nextNode, transactionItems, transactionID);
+        return false;
         //findLeaves(std::next(start), nextNode, transactionItems);
     }
 }
@@ -85,9 +94,13 @@ void CandidateHashTree::traverseAllLeaves(HashTreeNode & subtreeRoot, std::set<u
 void CandidateHashTree::performCounting() {
     for (auto const& transaction : transactionalData->getTransactions()) { //TODO нужно ли по порядку или так норм?
         auto const& items = transaction.second.getItemsIDs();
+        auto const transactionID = transaction.first;
         for (auto start = items.begin(); start != items.end(); ++start) {
-            findLeaves(start, root, items);
+            if (findLeaves(start, root, items, transactionID)) {
+                break;
+            };
         }
+        findLeaves(items.end(), root, items, transactionID);//TODO хз надо или нет
         //findLeaves(items.begin(), root, items);
     }
 }
