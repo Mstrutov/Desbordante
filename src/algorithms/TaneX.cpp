@@ -5,13 +5,14 @@
 #include <list>
 #include <memory>
 
+#include <easylogging++.h>
+
 #include "ColumnCombination.h"
 #include "ColumnData.h"
 #include "ColumnLayoutRelationData.h"
 #include "RelationalSchema.h"
 #include "LatticeLevel.h"
 #include "LatticeVertex.h"
-#include "logging/easylogging++.h"
 
 double Tane::CalculateZeroAryFdError(ColumnData const* rhs,
                                      ColumnLayoutRelationData const* relation_data) {

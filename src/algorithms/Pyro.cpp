@@ -1,11 +1,13 @@
+#include "Pyro.h"
+
 #include <chrono>
 #include <mutex>
 #include <thread>
 
+#include <easylogging++.h>
+
 #include "FdG1Strategy.h"
 #include "KeyG1Strategy.h"
-#include "logging/easylogging++.h"
-#include "Pyro.h"
 
 std::mutex searchSpacesMutex;
 

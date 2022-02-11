@@ -1,5 +1,6 @@
 #include "ListAgreeSetSample.h"
-#include "logging/easylogging++.h"
+
+#include <easylogging++.h>
 
 namespace util {
 

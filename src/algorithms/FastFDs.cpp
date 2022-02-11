@@ -8,9 +8,9 @@
 #include <boost/asio/thread_pool.hpp>
 #include <boost/dynamic_bitset.hpp>
 #include <boost/thread.hpp>
+#include <easylogging++.h>
 
 #include "AgreeSetFactory.h"
-#include "logging/easylogging++.h"
 #include "ParallelFor.h"
 
 using std::vector, std::set;

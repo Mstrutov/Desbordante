@@ -4,12 +4,13 @@
 #include <list>
 #include <memory>
 
+#include <easylogging++.h>
+
 #include "ColumnCombination.h"
 #include "ColumnData.h"
 #include "ColumnLayoutRelationData.h"
 #include "RelationalSchema.h"
 #include "AgreeSetFactory.h"
-#include "logging/easylogging++.h"
 
 using boost::dynamic_bitset, std::make_shared, std::shared_ptr, std::setw, std::vector, std::list, std::dynamic_pointer_cast;
 

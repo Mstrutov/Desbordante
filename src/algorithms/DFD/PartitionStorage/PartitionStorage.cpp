@@ -1,6 +1,5 @@
 #include <boost/optional.hpp>
-
-#include "logging/easylogging++.h"
+#include <easylogging++.h>
 
 #include "PartitionStorage.h"
 #include "VerticalMap.h"

@@ -5,7 +5,7 @@
 #include <cassert>
 #include <system_error>
 
-#include "logging/easylogging++.h"
+#include <easylogging++.h>
 
 namespace util {
 

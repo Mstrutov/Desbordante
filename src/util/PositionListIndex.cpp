@@ -12,9 +12,9 @@
 #include <utility>
 
 #include <boost/dynamic_bitset.hpp>
+#include <easylogging++.h>
 
 #include "ColumnLayoutRelationData.h"
-#include "logging/easylogging++.h"
 #include "PositionListIndex.h"
 #include "Vertical.h"
 

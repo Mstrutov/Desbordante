@@ -2,14 +2,13 @@
 // Created by Ilya Vologin
 // https://github.com/cupertank
 //
+#include "ColumnLayoutRelationData.h"
 
 #include <map>
 #include <memory>
 #include <utility>
 
-#include "ColumnLayoutRelationData.h"
-#include "easylogging++.h"
-
+#include <easylogging++.h>
 ColumnLayoutRelationData::ColumnLayoutRelationData(std::unique_ptr<RelationalSchema> schema,
                                                    std::vector<ColumnData> column_data)
     : RelationData(std::move(schema)), column_data_(std::move(column_data)) {}

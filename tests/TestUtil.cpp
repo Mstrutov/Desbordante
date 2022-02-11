@@ -1,8 +1,8 @@
 #include <iostream>
 #include <thread>
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 #include "ColumnLayoutRelationData.h"
 #include "ListAgreeSetSample.h"

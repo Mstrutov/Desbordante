@@ -3,8 +3,8 @@
 #include <iostream>
 #include <map>
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 #include "Datasets.h"
 #include "DFD.h"

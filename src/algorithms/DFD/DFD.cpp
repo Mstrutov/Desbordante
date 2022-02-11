@@ -1,12 +1,12 @@
 #include "DFD.h"
 
 #include <boost/asio.hpp>
+#include <easylogging++.h>
 
 #include "ColumnLayoutRelationData.h"
 #include "RelationalSchema.h"
 #include "PositionListIndex.h"
 #include "LatticeTraversal/LatticeTraversal.h"
-#include "logging/easylogging++.h"
 
 
 unsigned long long DFD::ExecuteInternal() {

@@ -1,8 +1,8 @@
-#include <boost/optional.hpp>
-
-#include "logging/easylogging++.h"
-
 #include "PLICache.h"
+
+#include <boost/optional.hpp>
+#include <easylogging++.h>
+
 #include "VerticalMap.h"
 
 namespace util {
