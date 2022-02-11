@@ -9,14 +9,14 @@ void EnumerationTree::generateCandidates(Node* node) {
 
     auto const lastChildIter = std::next(children.end(), -1);
     for (auto childIter = children.begin(); childIter != lastChildIter; ++childIter) {
-        for (auto childRightSiblingIter = std::next(childIter); childRightSiblingIter != children.end(); ++childIter) {
+        for (auto childRightSiblingIter = std::next(childIter); childRightSiblingIter != children.end(); ++childRightSiblingIter) {
             std::vector<unsigned> items = childIter->items;
             items.push_back(childRightSiblingIter->items.back());
 
             if (!canBePruned(items)) {
                 //Node candidate(std::move(items));
                 childIter->children.emplace_back(std::move(items));                 //нужна ли перегрузка от rvalue? или оставить по значению
-                candidateHashTree->addCandidate(std::next(childIter->children.end(), -1), &children);        //добавляем итератор на только что добавленный в дерево кандидатов
+                candidateHashTree->addCandidate(std::next(childIter->children.end(), -1), &(childIter->children));        //добавляем итератор на только что добавленный в дерево кандидатов
             }
         }
     }
@@ -92,11 +92,11 @@ bool EnumerationTree::canBePruned(std::vector<unsigned> const& itemset) {
         }
 
         if (!foundSubset) {
-            return false;                                   //если хотя бы одно подмножество не нашли, то бан
+            return true;                                   //если хотя бы одно подмножество не нашли, то бан
         }
     }
 
-    return true;
+    return false;
 }
 
 unsigned long long EnumerationTree::findFrequent() {
@@ -104,6 +104,7 @@ unsigned long long EnumerationTree::findFrequent() {
     while (generateNextCandidateLevel()) {
         candidateHashTree->performCounting();
         candidateHashTree->pruneNodes(minsup);
+        candidateHashTree = std::make_unique<CandidateHashTree>(transactionalData.get(), 3, 3);
     }
     return 0;
 }

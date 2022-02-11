@@ -27,9 +27,11 @@ private:
 
     struct HashTreeNode {
         unsigned levelNumber;
+        int lastVisitedTransactionID = -1; //TODO ниче что не инициализируем?
         std::vector<HashTreeNode> siblings;
         std::list<LeafRow> candidates;
 
+        HashTreeNode() = delete;
         explicit HashTreeNode(unsigned levelNumber)
             : levelNumber(levelNumber) {}
     };
@@ -40,8 +42,9 @@ private:
 
     void appendRow(LeafRow row, HashTreeNode & subtreeRoot);
     void addLevel(HashTreeNode & leafNode);
-    void findLeaves(std::set<unsigned>::iterator start,
-                    HashTreeNode & subtreeRoot, std::set<unsigned> const& transactionItems);
+    bool findLeaves(std::set<unsigned>::iterator start,
+                    HashTreeNode & subtreeRoot, std::set<unsigned> const& transactionItems,
+                    int transactionID);
     static void traverseAllLeaves(HashTreeNode & subtreeRoot, std::set<unsigned> const& transactionItems);
     void prune(double minsup, HashTreeNode & subtreeRoot);
 public:
