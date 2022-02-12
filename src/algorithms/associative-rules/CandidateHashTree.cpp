@@ -108,7 +108,7 @@ void CandidateHashTree::performCounting() {
 void CandidateHashTree::prune(double minsup, HashTreeNode & subtreeRoot) {
     if (subtreeRoot.siblings.empty()) {
         for (auto & row : subtreeRoot.candidates) {
-            if (row.transactionCount < minsup * transactionalData->getUniverseSize()) {  //TODO or lessequal?
+            if (row.transactionCount < minsup * transactionalData->getNumTransactions()) {
                 row.nodeContainer->erase(row.nodeIter);
             }
         }
