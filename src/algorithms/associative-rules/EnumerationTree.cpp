@@ -68,18 +68,18 @@ void EnumerationTree::updatePath(std::queue<Node const*> & path, std::list<Node>
 }
 
 bool EnumerationTree::canBePruned(std::vector<unsigned> const& itemset) {
+    //последний элемент можем не убирать, так как мы добавили его к существующему
     for (unsigned indexToSkip = 0; indexToSkip < itemset.size() - 1; ++indexToSkip) { //itemset.size() is at least 2
         //std::list<Node> const& nodesToVisit = root.children; //TODO можно просто идти по листам вместо стека, пока не попадется пустой?????????
         std::stack<Node*> nodesToVisit;
         updatePath(nodesToVisit, root.children);
 
-        unsigned itemIndex = (indexToSkip == 0) ? 1 : 0;
+        unsigned itemIndex = 0;
         bool foundSubset = false;
 
         while (!nodesToVisit.empty()) {
-            if (itemIndex == itemset.size() - 1) {      //прошли необходимое количество вершин
-                foundSubset = true;
-                break;
+            if (itemIndex == indexToSkip) {
+                ++itemIndex;
             }
 
             unsigned nextItemID = itemset[itemIndex];   //что хотим найти
@@ -89,11 +89,13 @@ bool EnumerationTree::canBePruned(std::vector<unsigned> const& itemset) {
             if (node->items.back() == nextItemID) {
                 //we found an item, so we go a level deeper
                 //TODO вот тут кажется можно очистить стек, и заполнить новым, а не дополнять старое
-                updatePath(nodesToVisit, node->children);
                 ++itemIndex;
-                if (itemIndex == indexToSkip) {
-                    ++itemIndex;                        //TODO крайние случаи?
+                if (itemIndex == itemset.size()) {      //прошли необходимое количество вершин
+                    foundSubset = true;
+                    break;
                 }
+                nodesToVisit = std::stack<Node*>();
+                updatePath(nodesToVisit, node->children);
             }
         }
 
