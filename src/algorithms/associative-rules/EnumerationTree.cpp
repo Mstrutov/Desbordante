@@ -1,6 +1,5 @@
 #include "EnumerationTree.h"
 
-#include <stack>
 //#include "easylogging++.h"
 #include <iostream>
 
@@ -61,6 +60,13 @@ void EnumerationTree::updatePath(std::stack<Node const*> & path, std::list<Node>
     }
 }
 
+void EnumerationTree::updatePath(std::queue<Node const*> & path, std::list<Node> const& vertices) {
+    for (auto const& vertex : vertices) {
+        Node const* nodePtr = &vertex;
+        path.push(nodePtr);
+    }
+}
+
 bool EnumerationTree::canBePruned(std::vector<unsigned> const& itemset) {
     for (unsigned indexToSkip = 0; indexToSkip < itemset.size() - 1; ++indexToSkip) { //itemset.size() is at least 2
         //std::list<Node> const& nodesToVisit = root.children; //TODO можно просто идти по листам вместо стека, пока не попадется пустой?????????
@@ -100,6 +106,7 @@ bool EnumerationTree::canBePruned(std::vector<unsigned> const& itemset) {
 }
 
 unsigned long long EnumerationTree::findFrequent() {
+    //TODO branching degree и minThreshold сделать зависимыми от номера уровня кандидатов
     candidateHashTree = std::make_unique<CandidateHashTree>(transactionalData.get(), 3, 3);
     while (generateNextCandidateLevel()) {
         candidateHashTree->performCounting();
@@ -112,18 +119,17 @@ unsigned long long EnumerationTree::findFrequent() {
 unsigned long long EnumerationTree::generateAllRules() {
     //TODO обходим дерево frequentов и для каждого вызываем generateAR, полученное складываем в arCollection
     //где применяем minconf?
-    std::stack<Node const*> path;
-    //path.push(&root);
+    std::queue<Node const*> path;
     updatePath(path, root.children);
 
     while (!path.empty()) {
-        auto currNode = path.top();
+        auto currNode = path.front();
         path.pop();
 
         //generateRules(currNode->items);
         for (unsigned int item : currNode->items) {
             //LOG(DEBUG) << item;
-            std::cout << item;
+            std::cout << transactionalData->getItemUniverse()[item] << ' ';
         }
         //LOG(DEBUG) << '\n';
         std::cout << '\n';
