@@ -27,6 +27,12 @@ public:
                   bool has_header = true, double max_error = 0,
                   unsigned int max_arity = -1)
         : PliBasedFDAlgorithm(path, separator, has_header), max_fd_error_(max_error), max_ucc_error_(max_error), max_arity_(max_arity) {}
+    explicit Tane(std::shared_ptr<ColumnLayoutRelationData> relation, double max_error = 0,
+                  unsigned int max_arity = -1)
+        : PliBasedFDAlgorithm(std::move(relation)),
+          max_fd_error_(max_error),
+          max_ucc_error_(max_error),
+          max_arity_(max_arity) {}
 
     static double CalculateZeroAryFdError(ColumnData const* rhs,
                                           ColumnLayoutRelationData const* relation_data);

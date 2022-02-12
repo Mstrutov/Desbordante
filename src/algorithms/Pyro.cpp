@@ -140,3 +140,21 @@ Pyro::Pyro(std::filesystem::path const& path, char separator, bool has_header, i
                                  std::thread::hardware_concurrency() :
                                  parallelism;
 }
+
+Pyro::Pyro(std::shared_ptr<ColumnLayoutRelationData> relation, int seed, double max_error,
+           unsigned int max_lhs, int parallelism)
+    : PliBasedFDAlgorithm(std::move(relation)),
+      caching_method_(CachingMethod::kCoin),
+      eviction_method_(CacheEvictionMethod::kDefault) {
+    ucc_consumer_ = [this](auto const& key) { this->DiscoverUcc(key); };
+    fd_consumer_ = [this](auto const& fd) {
+        this->DiscoverFd(fd);
+        this->FDAlgorithm::RegisterFd(fd.lhs_, fd.rhs_);
+    };
+    configuration_.seed = seed;
+    configuration_.max_ucc_error = max_error;
+    configuration_.max_ucc_error = max_error;
+    configuration_.max_lhs = max_lhs;
+    configuration_.parallelism =
+        parallelism <= 0 ? std::thread::hardware_concurrency() : parallelism;
+}

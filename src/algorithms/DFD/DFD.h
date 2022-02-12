@@ -15,8 +15,10 @@ private:
     unsigned int number_of_threads_;
 
     unsigned long long ExecuteInternal() override;
+
 public:
     explicit DFD(std::filesystem::path const& path,
                  char separator = ',', bool has_header = true,
                  unsigned int parallelism = 0);
+    explicit DFD(std::shared_ptr<ColumnLayoutRelationData> relation, unsigned int parallelism = 0);
 };

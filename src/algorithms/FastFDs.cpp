@@ -31,6 +31,22 @@ FastFDs::FastFDs(std::filesystem::path const& path, char separator, bool has_hea
     }
 }
 
+FastFDs::FastFDs(std::shared_ptr<ColumnLayoutRelationData> relation, unsigned int max_lhs,
+                 ushort parallelism)
+    : PliBasedFDAlgorithm(std::move(relation), {"Agree sets generation", "Finding minimal covers"}),
+      max_lhs_(max_lhs) {
+    if (parallelism == 0) {
+        threads_num_ = std::thread::hardware_concurrency();
+        if (threads_num_ == 0) {
+            throw std::runtime_error(
+                "Unable to detect number of concurrent"
+                " threads supported. Specify it manually.");
+        }
+    } else {
+        threads_num_ = parallelism;
+    }
+}
+
 unsigned long long FastFDs::ExecuteInternal() {
     schema_ = relation_->GetSchema();
     percent_per_col_ = kTotalProgressPercent / schema_->GetNumColumns();

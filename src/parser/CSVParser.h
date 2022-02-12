@@ -28,6 +28,7 @@ private:
     static inline std::string& rtrim(std::string& s);
 
 public:
+    CSVParser() = default;
     explicit CSVParser(const std::filesystem::path& path);
     CSVParser(const std::filesystem::path& path, char separator, bool has_header);
     //bool isSameChar(char separator, char escape);
