@@ -1,6 +1,5 @@
 #include "CSVParser.h"
 
-#include <algorithm>
 #include <cassert>
 #include <filesystem>
 #include <fstream>
@@ -8,9 +7,11 @@
 #include <utility>
 #include <vector>
 
+#include <boost/algorithm/string.hpp>
+#include <boost/tokenizer.hpp>
+
 inline std::string& CSVParser::rtrim(std::string& s) {
-    s.erase(std::find_if(s.rbegin(), s.rend(), [](int c) { return !std::isspace(c); }).base(),
-            s.end());
+    boost::trim_right(s);
     return s;
 }
 
@@ -29,7 +30,6 @@ CSVParser::CSVParser(const std::filesystem::path& path, char separator, bool has
     if (!source_) {
         throw std::runtime_error("Error: couldn't find file " + path.string());
     }
-    // TODO: Настроить Exception
     if (separator == '\0') {
         assert(0);
     }
@@ -38,9 +38,11 @@ CSVParser::CSVParser(const std::filesystem::path& path, char separator, bool has
     } else {
         PeekNext();
     }
+
     std::vector<std::string> next_parsed = ParseNext();
     number_of_columns_ = next_parsed.size();
     column_names_ = std::move(next_parsed);
+
     if (!has_header) {
         for (int i = 0; i < number_of_columns_; i++) {
             column_names_[i] = std::to_string(i);
@@ -50,7 +52,7 @@ CSVParser::CSVParser(const std::filesystem::path& path, char separator, bool has
 
 void CSVParser::GetNext() {
     next_line_ = "";
-    getline(source_, next_line_);
+    std::getline(source_, next_line_);
     rtrim(next_line_);
 }
 
@@ -60,30 +62,64 @@ void CSVParser::PeekNext() {
     source_.seekg(len, std::ios_base::beg);
 }
 
-std::vector<std::string> CSVParser::ParseNext() {
-    std::vector<std::string> result = std::vector<std::string>();
+void CSVParser::GetLine(const unsigned long long line_index) {
+    source_.clear();
+    source_.seekg(0);
 
-    auto next_token_begin = next_line_.begin();
-    auto next_token_end = next_line_.begin();
-    bool is_escaped = false;
-    while (next_token_end != next_line_.end()) {
-        if (!is_escaped && *next_token_end == separator_) {
-            result.emplace_back(next_token_begin, next_token_end);
-            next_token_begin = next_token_end + 1;
-            next_token_end = next_token_begin;
-        } else {
-            is_escaped ^= (*next_token_end == escape_symbol_);
-            next_token_end++;
-        }
-    }
-    if (next_token_begin != next_line_.begin() || next_token_begin != next_token_end) {
-        result.emplace_back(next_token_begin, next_token_end);
+    next_line_ = "";
+
+    /* Skip header */
+    if (has_header_) {
+        std::getline(source_, next_line_);
     }
 
+    /* Index is less than the line number by one */
+    for (unsigned long long i = 0; i < line_index + 1; ++i) {
+        std::getline(source_, next_line_);
+    }
+
+    rtrim(next_line_);
+}
+
+void CSVParser::GetNextIfHas() {
     has_next_ = !source_.eof();
     if (has_next_) {
         GetNext();
     }
+}
+
+std::string CSVParser::GetUnparsedLine(const unsigned long long line_index) {
+    GetLine(line_index);
+    std::string line = next_line_;
+
+    /* For correct work of ParseNext() after this method */
+    GetNextIfHas();
+
+    return line;
+}
+
+std::vector<std::string> CSVParser::ParseString(const std::string& s) {
+    std::vector<std::string> tokens;
+    boost::escaped_list_separator<char> list_sep(escape_symbol_, separator_, quote_);
+    boost::tokenizer<boost::escaped_list_separator<char>> tokenizer(s, list_sep);
+
+    for (auto& token : tokenizer) {
+        tokens.push_back(std::move(token));
+    }
+
+    return tokens;
+}
+
+std::vector<std::string> CSVParser::ParseLine(const unsigned long long line_index) {
+    std::string unparsed_line = GetUnparsedLine(line_index);
+    std::vector<std::string> parsed = ParseString(unparsed_line);
+    return parsed;
+}
+
+std::vector<std::string> CSVParser::ParseNext() {
+    std::vector<std::string> result = ParseString(next_line_);
+
+    GetNextIfHas();
 
     return result;
 }

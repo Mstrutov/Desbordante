@@ -15,7 +15,8 @@ class CSVParser {
 private:
     std::ifstream source_;
     char separator_;
-    char escape_symbol_ = '\"';
+    char escape_symbol_ = '\\';
+    char quote_ = '\"';
     bool has_header_;
     bool has_next_;
     std::string next_line_;
@@ -24,6 +25,9 @@ private:
     std::string relation_name_;
     void GetNext();
     void PeekNext();
+    void GetLine(const unsigned long long line_index);
+    std::vector<std::string> ParseString(const std::string& s);
+    void GetNextIfHas();
 
     static inline std::string& rtrim(std::string& s);
 
@@ -31,8 +35,10 @@ public:
     CSVParser() = default;
     explicit CSVParser(const std::filesystem::path& path);
     CSVParser(const std::filesystem::path& path, char separator, bool has_header);
-    //bool isSameChar(char separator, char escape);
+
     std::vector<std::string> ParseNext();
+    std::string GetUnparsedLine(const unsigned long long line_index);
+    std::vector<std::string> ParseLine(const unsigned long long line_index);
     bool GetHasNext() const {
         return has_next_;
     }
