@@ -36,5 +36,6 @@ private:
 public:
     Fd_mine(std::filesystem::path const& path, char separator = ',', bool has_header = true)
         : PliBasedFDAlgorithm(path, separator, has_header) {}
-    ~Fd_mine() override {}
+    explicit Fd_mine(std::shared_ptr<ColumnLayoutRelationData> relation)
+        : PliBasedFDAlgorithm(std::move(relation)) {}
 };

@@ -76,3 +76,7 @@ DFD::DFD(const std::filesystem::path& path, char separator, bool has_header,
          unsigned int parallelism)
     : PliBasedFDAlgorithm(path, separator, has_header),
       number_of_threads_(parallelism <= 0 ? std::thread::hardware_concurrency() : parallelism) {}
+
+DFD::DFD(std::shared_ptr<ColumnLayoutRelationData> relation, unsigned int parallelism)
+    : PliBasedFDAlgorithm(std::move(relation)),
+      number_of_threads_(parallelism <= 0 ? std::thread::hardware_concurrency() : parallelism) {}

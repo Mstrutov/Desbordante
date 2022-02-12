@@ -37,6 +37,9 @@ public:
     // std::unique_ptr<PositionListIndex> moveOutPositionListIndex();
 
     std::shared_ptr<util::PositionListIndex> GetPliOwnership() { return position_list_index_; }
+    std::shared_ptr<util::PositionListIndex const> GetPliOwnership() const {
+        return position_list_index_;
+    }
 
     // Moves a PLI under the ownership of ColumnData
     // void moveInPositionListIndex(std::unique_ptr<PositionListIndex> positionListIndex ) { position_list_index_ = std::move(positionListIndex); }
