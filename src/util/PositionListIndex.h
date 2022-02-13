@@ -15,9 +15,13 @@ class ColumnLayoutRelationData;
 namespace util {
 
 class PositionListIndex {
+public:
+    /* Vector of tuple indices */
+    using Cluster = std::vector<int>;
+
 private:
-    std::deque<std::vector<int>> index_;
-    std::vector<int> null_cluster_;
+    std::deque<Cluster> index_;
+    Cluster null_cluster_;
     unsigned int size_;
     double entropy_;
     double inverted_entropy_;
@@ -31,16 +35,17 @@ private:
     static unsigned long long CalculateNep(unsigned int num_elements) {
         return static_cast<unsigned long long>(num_elements) * (num_elements - 1) / 2;
     }
-    static void SortClusters(std::deque<std::vector<int>>& clusters);
+    static void SortClusters(std::deque<Cluster>& clusters);
     static bool TakeProbe(int position, ColumnLayoutRelationData& relation_data,
                           Vertical const& probing_columns, std::vector<int>& probe);
 
 public:
+
     static int intersection_count_;
     static unsigned long long micros_;
     static const int singleton_value_id_;
 
-    PositionListIndex(std::deque<std::vector<int>> index, std::vector<int> null_cluster,
+    PositionListIndex(std::deque<Cluster> index, Cluster null_cluster,
                       unsigned int size, double entropy, unsigned long long nep,
                       unsigned int relation_size, unsigned int original_relation_size,
                       double inverted_entropy = 0, double gini_impurity = 0);
@@ -59,9 +64,13 @@ public:
 
     // std::shared_ptr<const std::vector<int>> GetProbingTable(bool isCaching);
 
-    std::deque<std::vector<int>> const& GetIndex() const {
+    std::deque<Cluster> const& GetIndex() const noexcept {
         return index_;
     };
+    /* If you use this method and change index in any way, all other methods will become invalid */
+    std::deque<Cluster>& GetIndex() noexcept {
+        return index_;
+    }
     double GetNep() const {
         return (double)nep_;
     }
@@ -104,6 +113,8 @@ public:
                                                 ColumnLayoutRelationData& relation_data);
     std::string ToString() const;
 };
+
+using PLI = PositionListIndex;
 
 } // namespace util
 
