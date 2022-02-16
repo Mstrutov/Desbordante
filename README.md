@@ -39,6 +39,14 @@ https://github.com/cupertank implemented essential data structures presented in 
   The `<dataset_name>.csv`, which is a user-provided dataset, should be placed in the `/path/to/Desbordante/build/target` directory.
 
 * ## Windows
+---
+**ATTENTION**
+
+Currently Windows is not supported. The last compatible version has a tag `windows-compatible` &mdash; 
+later versions might compile, but the likelihood of such an event drastically declines with each commit. 
+You can use the following guide to checkout, build and run this particular version. 
+
+---
   The following instructions were tested on Windows 10 .
   ### Dependencies
   Prior to cloning the repository and attempting to build the project, ensure that you have the following software:
@@ -54,6 +62,7 @@ https://github.com/cupertank implemented essential data structures presented in 
   ```
   git clone https://github.com/Mstrutov/Desbordante/
   cd Desbordante
+  git checkout windows-compatible
   build.bat
   ```
   *Note:* to compile the project, the script uses hard-coded path to MSVC developer command prompt, which is located
@@ -64,17 +73,17 @@ https://github.com/cupertank implemented essential data structures presented in 
   ```bash
   ├───inputData
   │   └───some-sample-csv's.csv
-  ├───Desbordante_test.exe
-  ├───Desbordante_run.exe
+  ├───fdtester_test.exe
+  ├───fdtester_run.exe
   ```
-  The `inputData` directory contains several .csv files that may be used by `Desbordante_test`. Run `Desbordante_test` to perform unit testing:
+  The `inputData` directory contains several .csv files that may be used by `fdtester_test`. Run `fdtester_test` to perform unit testing:
   ```
   cd build\target
-  Desbordante_test.exe
+  fdtester_test.exe
   ```
   The tool itself is launched via the following line:
   ```
-  Desbordante_run.exe --algo=tane --data=<dataset_name>.csv
+  fdtester_run.exe --algo=tane --data=<dataset_name>.csv
   ```
 
   The `<dataset_name>.csv`, which is a user-provided dataset, should be placed in the `\path\to\Desbordante\build\target` directory.
