@@ -19,12 +19,11 @@ private:
     double progress_step_ = 0;
 
 public:
-    explicit Depminer(std::filesystem::path const& path, char separator = ',',
-                      bool has_header = true)
-        : PliBasedFDAlgorithm(path, separator, has_header, true,
-                              {"AgreeSets generation", "Finding CMAXSets", "Finding LHS"}) {}
-    explicit Depminer(std::shared_ptr<ColumnLayoutRelationData> relation)
-        : PliBasedFDAlgorithm(std::move(relation),
+    explicit Depminer(Config const& config)
+        : PliBasedFDAlgorithm(config, {"AgreeSets generation", "Finding CMAXSets", "Finding LHS"}) {
+    }
+    explicit Depminer(std::shared_ptr<ColumnLayoutRelationData> relation, Config const& config)
+        : PliBasedFDAlgorithm(std::move(relation), config,
                               {"AgreeSets generation", "Finding CMAXSets", "Finding LHS"}) {}
 
     unsigned long long ExecuteInternal() override;

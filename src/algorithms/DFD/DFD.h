@@ -17,8 +17,6 @@ private:
     unsigned long long ExecuteInternal() override;
 
 public:
-    explicit DFD(std::filesystem::path const& path,
-                 char separator = ',', bool has_header = true,
-                 unsigned int parallelism = 0);
-    explicit DFD(std::shared_ptr<ColumnLayoutRelationData> relation, unsigned int parallelism = 0);
+    explicit DFD(Config const& config);
+    explicit DFD(std::shared_ptr<ColumnLayoutRelationData> relation, Config const& config);
 };

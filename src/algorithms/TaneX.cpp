@@ -136,7 +136,7 @@ unsigned long long Tane::ExecuteInternal() {
     levels.push_back(std::move(level1));
     AddProgress(progress_step);
 
-    for (unsigned int arity = 2; arity <= max_arity_; arity++) {
+    for (unsigned int arity = 2; arity <= max_lhs_; arity++) {
         //auto start_time = std::chrono::system_clock::now();
         util::LatticeLevel::ClearLevelsBelow(levels, arity - 1);
         util::LatticeLevel::GenerateNextLevel(levels);

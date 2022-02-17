@@ -6,7 +6,6 @@
 class PliBasedFDAlgorithm : public FDAlgorithm {
 private:
     using algos::Primitive::input_generator_;
-    using FDAlgorithm::is_null_equal_null_;
 
     void Initialize() override;
 
@@ -20,14 +19,12 @@ protected:
     }
 
 public:
-    explicit PliBasedFDAlgorithm(std::filesystem::path const& path, char separator = ',',
-                                 bool has_header = true, bool const is_null_equal_null = true,
-                                 std::vector<std::string_view> phase_names = {kDefaultPhaseName})
-        : FDAlgorithm(path, separator, has_header, is_null_equal_null, std::move(phase_names)) {}
+    explicit PliBasedFDAlgorithm(Config const& config, std::vector<std::string_view> phase_names)
+        : FDAlgorithm(config, std::move(phase_names)) {}
 
     explicit PliBasedFDAlgorithm(std::shared_ptr<ColumnLayoutRelationData> relation,
-                                 std::vector<std::string_view> phase_names = {kDefaultPhaseName})
-        : FDAlgorithm(std::move(phase_names)), relation_(std::move(relation)) {}
+                                 Config const& config, std::vector<std::string_view> phase_names)
+        : FDAlgorithm(config, std::move(phase_names)), relation_(std::move(relation)) {}
 
     std::vector<Column const*> GetKeys() const override;
 };

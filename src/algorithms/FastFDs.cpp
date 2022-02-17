@@ -15,37 +15,16 @@
 
 using std::vector, std::set;
 
-FastFDs::FastFDs(std::filesystem::path const& path, char separator, bool has_header,
-                 unsigned int max_lhs, ushort parallelism)
-    : PliBasedFDAlgorithm(path, separator, has_header, true,
-                          {"Agree sets generation", "Finding minimal covers"}),
-      max_lhs_(max_lhs) {
-    if (parallelism == 0) {
-        threads_num_ = std::thread::hardware_concurrency();
-        if (threads_num_ == 0) {
-            throw std::runtime_error("Unable to detect number of concurrent"
-                                     " threads supported. Specify it manually.");
-        }
-    } else {
-        threads_num_ = parallelism;
-    }
-}
+FastFDs::FastFDs(Config const& config)
+    : PliBasedFDAlgorithm(config, {"Agree sets generation", "Finding minimal covers"}),
+      threads_num_(config_.parallelism),
+      max_lhs_(config_.max_lhs) {}
 
-FastFDs::FastFDs(std::shared_ptr<ColumnLayoutRelationData> relation, unsigned int max_lhs,
-                 ushort parallelism)
-    : PliBasedFDAlgorithm(std::move(relation), {"Agree sets generation", "Finding minimal covers"}),
-      max_lhs_(max_lhs) {
-    if (parallelism == 0) {
-        threads_num_ = std::thread::hardware_concurrency();
-        if (threads_num_ == 0) {
-            throw std::runtime_error(
-                "Unable to detect number of concurrent"
-                " threads supported. Specify it manually.");
-        }
-    } else {
-        threads_num_ = parallelism;
-    }
-}
+FastFDs::FastFDs(std::shared_ptr<ColumnLayoutRelationData> relation, Config const& config)
+    : PliBasedFDAlgorithm(std::move(relation), config,
+                          {"Agree sets generation", "Finding minimal covers"}),
+      threads_num_(config_.parallelism),
+      max_lhs_(config_.max_lhs) {}
 
 unsigned long long FastFDs::ExecuteInternal() {
     schema_ = relation_->GetSchema();

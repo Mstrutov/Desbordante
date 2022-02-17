@@ -1,9 +1,22 @@
 #include "FDAlgorithm.h"
 
+#include <thread>
+
 unsigned long long FDAlgorithm::Execute() {
     Initialize();
 
     return ExecuteInternal();
+}
+
+void FDAlgorithm::InitConfigParallelism() {
+    if (config_.parallelism == 0) {
+        config_.parallelism = std::thread::hardware_concurrency();
+        if (config_.parallelism == 0) {
+            throw std::runtime_error("Unable to detect number of concurrent "
+                                     "threads supported by your system. "
+                                     "Please, specify it manually.");
+        }
+    }
 }
 
 std::string FDAlgorithm::GetJsonFDs() {
