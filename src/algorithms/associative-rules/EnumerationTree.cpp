@@ -34,7 +34,7 @@ bool EnumerationTree::generateNextCandidateLevel() {
         while (!path.empty()) {
             auto node = path.top();
             path.pop();
-            if (node->items.size() == levelNumber - 2) { //TODO суета
+            if (node->items.size() == levelNumber - 2) { //levelNumber is at least 2
                 generateCandidates(node);
             } else {
                 updatePath(path, node->children);
@@ -109,11 +109,11 @@ bool EnumerationTree::canBePruned(std::vector<unsigned> const& itemset) {
 
 unsigned long long EnumerationTree::findFrequent() {
     //TODO branching degree и minThreshold сделать зависимыми от номера уровня кандидатов
-    candidateHashTree = std::make_unique<CandidateHashTree>(transactionalData.get(), 3, 3);
+    candidateHashTree = std::make_unique<CandidateHashTree>(transactionalData.get(), 10, 100);
     while (generateNextCandidateLevel()) {
         candidateHashTree->performCounting();
         candidateHashTree->pruneNodes(minsup);
-        candidateHashTree = std::make_unique<CandidateHashTree>(transactionalData.get(), 3, 3);
+        candidateHashTree = std::make_unique<CandidateHashTree>(transactionalData.get(), 10, 100);
     }
     return 0;
 }
@@ -122,6 +122,7 @@ unsigned long long EnumerationTree::generateAllRules() {
     //TODO обходим дерево frequentов и для каждого вызываем generateAR, полученное складываем в arCollection
     //где применяем minconf?
     std::queue<Node const*> path;
+    unsigned rowCount = 0;
     updatePath(path, root.children);
 
     while (!path.empty()) {
@@ -131,13 +132,14 @@ unsigned long long EnumerationTree::generateAllRules() {
         //generateRules(currNode->items);
         for (unsigned int item : currNode->items) {
             //LOG(DEBUG) << item;
-            std::cout << transactionalData->getItemUniverse()[item] << ' ';
+            std::cout << '<' << transactionalData->getItemUniverse()[item] << '>' << ' ';
         }
         //LOG(DEBUG) << '\n';
         std::cout << '\n';
+        ++rowCount;
 
         updatePath(path, currNode->children);
     }
-
+    std::cout << rowCount << '\n';
     return 0;
 }

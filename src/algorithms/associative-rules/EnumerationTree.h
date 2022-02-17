@@ -32,7 +32,9 @@ private:
 public:
     explicit EnumerationTree(double minsup, double minconf,
                              std::filesystem::path const& path,
+                             TransactionalInputFormat inputFormat = TransactionalInputFormat::TwoColumns,
+                             bool hasTransactionID = false,
                              char separator = ',',
                              bool hasHeader = true)
-            : ARAlgorithm(minsup, minconf, path, separator, hasHeader) {}
+            : ARAlgorithm(minsup, minconf, path, inputFormat, hasTransactionID, separator, hasHeader) {}
 };
