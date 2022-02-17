@@ -11,6 +11,8 @@ private:
     double minconf;
     std::list<AR> arCollection;
     CSVParser inputGenerator;
+    TransactionalInputFormat inputFormat;
+    bool hasTransactionID;
 protected:
     std::unique_ptr<TransactionalData> transactionalData;
 
@@ -23,9 +25,12 @@ protected:
 public:
     ARAlgorithm(double minsup, double minconf,
                 std::filesystem::path const& path,
+                TransactionalInputFormat inputFormat = TransactionalInputFormat::TwoColumns,
+                bool hasTransactionID = false,
                 char separator = ',',
                 bool hasHeader = true)
-            : minconf(minconf), inputGenerator(path, separator, hasHeader), minsup(minsup) {}
+            : minconf(minconf), inputGenerator(path, separator, hasHeader),
+              inputFormat(inputFormat), hasTransactionID(hasTransactionID), minsup(minsup) {}
 
     std::list<AR> const& arIDsList() const noexcept { return arCollection; }
     std::list<std::vector<std::string>> arList() const; //TODO возвращает айтемы строками
