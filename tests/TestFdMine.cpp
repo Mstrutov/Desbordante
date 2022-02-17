@@ -18,7 +18,8 @@ using std::string, std::vector;
 
 std::unique_ptr<FDAlgorithm> CreateFD_MineAlgorithmInstance(
     std::filesystem::path const& path, char separator = ',', bool has_header = true) {
-    return std::make_unique<Fd_mine>(path, separator, has_header);
+    FDAlgorithm::Config c{ .data = path, .separator = separator, .has_header = has_header };
+    return std::make_unique<Fd_mine>(c);
 }
 
 class AlgorithmTest : public LightDatasets, public HeavyDatasets, public ::testing::Test {
@@ -133,8 +134,11 @@ TEST_F(AlgorithmTest, FD_Mine_ReturnsSameAsPyro) {
                 path / LightDatasets::DatasetName(i), LightDatasets::Separator(i),
                 LightDatasets::HasHeader(i));
 
-            auto pyro = Pyro(path / LightDatasets::DatasetName(i), LightDatasets::Separator(i),
-                             LightDatasets::HasHeader(i), 0, 0, -1);
+            FDAlgorithm::Config c{.data = path / LightDatasets::DatasetName(i),
+                                  .separator = LightDatasets::Separator(i),
+                                  .has_header = LightDatasets::HasHeader(i),
+                                  .special_params = {{"seed", 0}, {"error", 0.0}}};
+            auto pyro = Pyro(c);
 
             algorithm->Execute();
             std::list<FD> fds = algorithm->FdList();

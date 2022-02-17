@@ -11,7 +11,7 @@
 
 class FDep : public FDAlgorithm {
 public:
-    explicit FDep(std::filesystem::path const& path, char separator = ',', bool has_header = true);
+    explicit FDep(Config const& config);
 
     ~FDep() override = default;
 

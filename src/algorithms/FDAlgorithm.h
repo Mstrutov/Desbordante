@@ -4,6 +4,8 @@
 #include <list>
 #include <mutex>
 
+#include <boost/any.hpp>
+
 #include "CSVParser.h"
 #include "FD.h"
 #include "primitive.h"
@@ -16,33 +18,61 @@ class AgreeSetFactory;
  * Consider TANE as an example of such a FDAlgorithm usage.
  * */
 class FDAlgorithm : public algos::Primitive {
+public:
+    /* Algorithm configuration struct */
+    struct Config {
+        using ParamValue = boost::any;
+        using ParamsMap = std::unordered_map<std::string, ParamValue>;
+
+        std::filesystem::path data{};   /* Path to input file */
+        char separator = ',';           /* Separator for csv */
+        bool has_header = true;         /* Indicates if input file has header */
+        bool is_null_equal_null = true; /* Is NULL value equals another NULL value */
+        unsigned int max_lhs = -1;      /* Maximum size of lhs value in fds to mine */
+        ushort parallelism = 0;         /* Number of threads to use. If 0 is specified
+                                         * this value is initialized to
+                                         * std::thread::hardware_concurrency.
+                                         */
+
+        ParamsMap special_params{}; /* Other special parameters unique for a particular algorithm
+                                     * algorithm. Use GetSpecialParam() to retrieve parameters by
+                                     * name.
+                                     */
+    };
+
 private:
     friend util::AgreeSetFactory;
 
     std::mutex mutable register_mutex_;
 
+    void InitConfigParallelism();
+
 protected:
+    /* Algorithm configuration */
+    Config config_;
     /* содержит множество найденных функциональных зависимостей. Это поле будет использоваться при тестировании,
      * поэтому важно положить сюда все намайненные ФЗ
      * */
     std::list<FD> fd_collection_;
 
-    bool const is_null_equal_null_;
-
     virtual void Initialize() = 0;
     // Main logic of the algorithm
     virtual unsigned long long ExecuteInternal() = 0;
+
+    template <typename ParamType>
+    ParamType GetSpecialParam(std::string const& param_name) const {
+        Config::ParamValue const& value = config_.special_params.at(param_name);
+        return boost::any_cast<ParamType>(value);
+    }
+
 public:
     constexpr static std::string_view kDefaultPhaseName = "FD mining";
 
-    explicit FDAlgorithm(std::filesystem::path const& path, char separator = ',',
-                         bool has_header = true, bool const is_null_equal_null = true,
-                         std::vector<std::string_view> phase_names = {kDefaultPhaseName})
-        : Primitive(path, separator, has_header, std::move(phase_names)),
-          is_null_equal_null_(is_null_equal_null) {}
-
-    explicit FDAlgorithm(std::vector<std::string_view> phase_names = {kDefaultPhaseName})
-        : algos::Primitive(std::move(phase_names)), is_null_equal_null_(true) {}
+    explicit FDAlgorithm(Config const& config, std::vector<std::string_view> phase_names)
+        : Primitive(config.data, config.separator, config.has_header, std::move(phase_names)),
+          config_(config) {
+        InitConfigParallelism();
+    }
 
     /* эти методы кладут зависимость в хранилище - можно пользоваться ими напрямую или override-нуть,
      * если нужно какое-то кастомное поведение

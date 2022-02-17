@@ -34,8 +34,7 @@ private:
 
     unsigned long long ExecuteInternal() override;
 public:
-    Fd_mine(std::filesystem::path const& path, char separator = ',', bool has_header = true)
-        : PliBasedFDAlgorithm(path, separator, has_header) {}
-    explicit Fd_mine(std::shared_ptr<ColumnLayoutRelationData> relation)
-        : PliBasedFDAlgorithm(std::move(relation)) {}
+    Fd_mine(Config const& config) : PliBasedFDAlgorithm(config, {kDefaultPhaseName}) {}
+    explicit Fd_mine(std::shared_ptr<ColumnLayoutRelationData> relation, Config const& config)
+        : PliBasedFDAlgorithm(std::move(relation), config, {kDefaultPhaseName}) {}
 };

@@ -30,7 +30,11 @@ template<typename AlgoInterface>
 static inline void GetKeysTestImpl(KeysTestParams const& p) {
     auto const path = fs::current_path() / "inputData" / p.dataset;
     std::vector<unsigned int> actual;
-    Pyro pyro(path, p.sep, p.has_header);
+    FDAlgorithm::Config c{.data = path,
+                          .separator = p.sep,
+                          .has_header = p.has_header,
+                          .special_params = {{"seed", 0}, {"error", 0.0}}};
+    Pyro pyro(c);
 
     pyro.Execute();
 

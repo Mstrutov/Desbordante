@@ -10,11 +10,8 @@
 
 class FastFDs : public PliBasedFDAlgorithm {
 public:
-    explicit FastFDs(std::filesystem::path const& path,
-                     char separator = ',', bool has_header = true,
-                     unsigned int max_lhs = -1, ushort parallelism = 0);
-    explicit FastFDs(std::shared_ptr<ColumnLayoutRelationData> relation, unsigned int max_lhs = -1,
-                     ushort parallelism = 0);
+    explicit FastFDs(Config const& config);
+    explicit FastFDs(std::shared_ptr<ColumnLayoutRelationData> relation, Config const& config);
 
 private:
     using OrderingComparator = std::function<bool(Column const&, Column const&)>;

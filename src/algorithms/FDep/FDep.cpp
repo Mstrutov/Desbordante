@@ -7,8 +7,7 @@
 //#define PRINT_FDS
 //#endif
 
-FDep::FDep(const std::filesystem::path& path, char separator, bool has_header)
-    : FDAlgorithm(path, separator, has_header) {}
+FDep::FDep(Config const& config) : FDAlgorithm(config, {kDefaultPhaseName}) {}
 
 unsigned long long FDep::ExecuteInternal() {
     Initialize();
