@@ -10,13 +10,14 @@ namespace algos {
 
 BETTER_ENUM(AlgoMiningType, char,
 #if 1
-    fd
+    fd = 0,
+    typos
 #else
-    fd,     /* Functional dependency mining */
+    fd = 0, /* Functional dependency mining */
     cfd,    /* Conditional functional dependency mining */
     ar,     /* Association rule mining */
-    key,    /* Keys mining */
-    error   /* Errors mining */
+    key,    /* Key mining */
+    typos   /* Typo mining */
 #endif
 );
 
@@ -27,7 +28,7 @@ BETTER_ENUM(AlgoMiningType, char,
  */
 BETTER_ENUM(Algo, char,
     /* Functional dependency mining algorithms */
-    depminer,
+    depminer = 0,
     dfd,
     fastfds,
     fdep,
@@ -37,6 +38,72 @@ BETTER_ENUM(Algo, char,
 );
 
 using StdParamsMap = std::unordered_map<std::string, boost::any>;
+using AlgorithmTypesTuple = std::tuple<Depminer, DFD, FastFDs, FDep, Fd_mine, Pyro, Tane>;
+
+namespace details {
+
+/* Consider using boost:hana here to get rid of this nightmare */
+template <size_t... Is, typename F>
+constexpr void StaticForImpl(F&& f, std::index_sequence<Is...>) {
+    (f(std::integral_constant<size_t, Is>()), ...);
+}
+
+template <size_t N, typename F>
+constexpr void StaticFor(F&& f) {
+    StaticForImpl(f, std::make_index_sequence<N>());
+}
+
+template <typename Tuple, typename F>
+constexpr void ForAllTypes(F&& f) {
+    StaticFor<std::tuple_size_v<Tuple>>([&f](auto N) {
+        using TupleElement = std::tuple_element_t<N, Tuple>;
+
+        f((TupleElement const*)nullptr, N);
+    });
+}
+
+template <typename R, typename Tuple, typename F>
+constexpr R SelectType(F&& f, size_t i) {
+    R r;
+    bool found = false;
+
+    ForAllTypes<Tuple>([&r, &found, &f, i](auto const* p, auto N) {
+        if (i == N) {
+            r = f(p);
+            found = true;
+        }
+    });
+
+    if (!found) {
+        throw std::invalid_argument("Wrong enum value");
+    }
+
+    return r;
+}
+
+template <typename AlgorithmBase = Primitive, typename AlgorithmsToSelect = AlgorithmTypesTuple,
+          typename EnumType, typename... Args>
+auto CreatePrimitiveInstanceImpl(EnumType const enum_value, Args&&... args) {
+    return SelectType<std::unique_ptr<AlgorithmBase>, AlgorithmsToSelect>(
+        [&args...](auto const* p) {
+            using AlgorithmType = std::decay_t<decltype(*p)>;
+            return std::make_unique<AlgorithmType>(std::forward<Args>(args)...);
+        },
+        static_cast<size_t>(enum_value));
+}
+
+template <template <typename...> class Wrapper, typename AlgorithmBase = Primitive,
+          typename AlgorithmsToWrap = AlgorithmTypesTuple, typename EnumType, typename... Args>
+auto CreateAlgoWrapperInstanceImpl(EnumType const enum_value, Args&&... args) {
+    static_assert(std::is_base_of_v<AlgorithmBase, Wrapper<AlgorithmBase>>,
+                  "Wrapper should be derived from AlgorithmBase");
+    return SelectType<std::unique_ptr<AlgorithmBase>, AlgorithmsToWrap>(
+        [&args...](auto const* p) {
+            using AlgorithmType = std::decay_t<decltype(*p)>;
+            return std::make_unique<Wrapper<AlgorithmType>>(std::forward<Args>(args)...);
+        },
+        static_cast<size_t>(enum_value));
+}
 
 template <typename T, typename ParamsMap>
 T ExtractParamFromMap(ParamsMap& params, std::string const& param_name) {
@@ -84,58 +151,33 @@ FDAlgorithm::Config CreateFDAlgorithmConfigFromMap(ParamsMap params) {
 }
 
 template <typename ParamsMap>
-std::unique_ptr<FDAlgorithm> CreateFDAlgorithmInstance(Algo const algo, ParamsMap const& params) {
-    FDAlgorithm::Config const config = CreateFDAlgorithmConfigFromMap(params);
+std::unique_ptr<Primitive> CreateFDAlgorithmInstance(Algo const algo, ParamsMap&& params) {
+    FDAlgorithm::Config const config =
+        CreateFDAlgorithmConfigFromMap(std::forward<ParamsMap>(params));
 
-    /* A little bit ugly, but I don't know how to do it better */
-    switch (algo) {
-    case Algo::depminer:
-        return std::make_unique<Depminer>(config);
-    case Algo::dfd:
-        return std::make_unique<DFD>(config);
-    case Algo::fastfds:
-        return std::make_unique<FastFDs>(config);
-    case Algo::fdep:
-        return std::make_unique<FDep>(config);
-    case Algo::fdmine:
-        return std::make_unique<Fd_mine>(config);
-    case Algo::pyro:
-        return std::make_unique<Pyro>(config);
-    case Algo::tane:
-        return std::make_unique<Tane>(config);
-    default:
-        /* Unreachable code */
-        assert(0);
-        break;
-    }
-
-    return nullptr;
+    return details::CreatePrimitiveInstanceImpl(algo, config);
 }
 
+} // namespace details
+
 template <typename ParamsMap>
-std::unique_ptr<FDAlgorithm> CreateAlgorithmInstance(AlgoMiningType const task, Algo const algo,
-                                                     ParamsMap const& params) {
+std::unique_ptr<Primitive> CreateAlgorithmInstance(AlgoMiningType const task, Algo const algo,
+                                                   ParamsMap&& params) {
     switch (task) {
     case AlgoMiningType::fd:
-        return CreateFDAlgorithmInstance(algo, params);
-        break;
+        return details::CreateFDAlgorithmInstance(algo, std::forward<ParamsMap>(params));
     default:
-        throw std::runtime_error(task._to_string() +
-                                 std::string(" task type is not supported yet."));
+        throw std::logic_error(task._to_string() + std::string(" task type is not supported yet."));
     }
 }
 
-/* TODO(polyntsov): generic function to create algorithm of every AlgoMiningType type.
- * Call apropriate `Create'Type'AlgorithmInstance` function?
- */
 template <typename ParamsMap>
-std::unique_ptr<FDAlgorithm> CreateAlgorithmInstance(std::string const& task_name,
-                                                     std::string const& algo_name,
-                                                     ParamsMap const& params) {
+std::unique_ptr<Primitive> CreateAlgorithmInstance(std::string const& task_name,
+                                                   std::string const& algo_name,
+                                                   ParamsMap&& params) {
     AlgoMiningType const task = AlgoMiningType::_from_string(task_name.c_str());
     Algo const algo = Algo::_from_string(algo_name.c_str());
-    return CreateAlgorithmInstance(task, algo, params);
+    return CreateAlgorithmInstance(task, algo, std::forward<ParamsMap>(params));
 }
 
-} // namespace algos
-
+}  // namespace algos
