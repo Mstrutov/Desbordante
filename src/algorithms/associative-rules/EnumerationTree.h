@@ -27,8 +27,8 @@ private:
     static void updatePath(std::stack<Node const*> & path, std::list<Node> const& vertices);
     static void updatePath(std::queue<Node const*> & path, std::list<Node> const& vertices);
 
-    virtual unsigned long long generateAllRules() override;
-    virtual unsigned long long findFrequent() override;
+    unsigned long long generateAllRules() override;
+    unsigned long long findFrequent() override;
 public:
     explicit EnumerationTree(double minsup, double minconf,
                              std::filesystem::path const& path,
@@ -37,4 +37,6 @@ public:
                              char separator = ',',
                              bool hasHeader = true)
             : ARAlgorithm(minsup, minconf, path, inputFormat, hasTransactionID, separator, hasHeader) {}
+
+    std::list<std::set<std::string>> getAllFrequent() const override;
 };
