@@ -133,7 +133,7 @@ int main(int argc, char const* argv[]) {
               << "\" with separator \'" << separator
               << "\'. Header is " << (has_header ? "" : "not ") << "present. " << std::endl;
 
-    std::unique_ptr<FDAlgorithm> algorithm_instance =
+    std::unique_ptr<algos::Primitive> algorithm_instance =
         algos::CreateAlgorithmInstance(task, algo, vm);
 
     try {
