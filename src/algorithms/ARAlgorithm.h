@@ -34,6 +34,7 @@ public:
 
     std::list<AR> const& arIDsList() const noexcept { return arCollection; }
     std::list<std::vector<std::string>> arList() const; //TODO возвращает айтемы строками
+    virtual std::list<std::set<std::string>> getAllFrequent() const = 0;   //for debugging and tests
 
     unsigned long long execute();
     virtual ~ARAlgorithm() = default;

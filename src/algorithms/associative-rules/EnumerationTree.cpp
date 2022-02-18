@@ -143,3 +143,25 @@ unsigned long long EnumerationTree::generateAllRules() {
     std::cout << rowCount << '\n';
     return 0;
 }
+
+std::list<std::set<std::string>> EnumerationTree::getAllFrequent() const {
+    std::list<std::set<std::string>> frequentItemsets;
+
+    std::queue<Node const*> path;
+    updatePath(path, root.children);
+
+    while (!path.empty()) {
+        auto const currNode = path.front();
+        path.pop();
+
+        std::set<std::string> itemNames;
+        for (unsigned int item : currNode->items) {
+            itemNames.insert(transactionalData->getItemUniverse()[item]);
+        }
+
+        frequentItemsets.push_back(std::move(itemNames));
+        updatePath(path, currNode->children);
+    }
+
+    return frequentItemsets;
+}
