@@ -1,8 +1,7 @@
 #pragma once
 
 #include <boost/any.hpp>
-
-#include "better_enums/enum.h"
+#include <enum.h>
 
 #include "Algorithms.h"
 #include "TypoMiner.h"
