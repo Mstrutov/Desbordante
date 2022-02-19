@@ -8,7 +8,7 @@
 
 #include "CSVParser.h"
 #include "FD.h"
-#include "primitive.h"
+#include "Primitive.h"
 
 namespace util {
 class AgreeSetFactory;

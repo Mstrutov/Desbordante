@@ -1,4 +1,4 @@
-#include "primitive.h"
+#include "Primitive.h"
 
 #include <cassert>
 

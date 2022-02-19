@@ -4,7 +4,8 @@
 
 #include "better_enums/enum.h"
 
-#include "algorithms.h"
+#include "Algorithms.h"
+#include "TypoMiner.h"
 
 namespace algos {
 

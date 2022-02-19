@@ -4,7 +4,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "algo_factory.h"
+#include "AlgoFactory.h"
 #include "TypoMiner.h"
 
 namespace tests {
