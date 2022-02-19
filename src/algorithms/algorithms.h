@@ -9,3 +9,5 @@
 #include "algorithms/Pyro.h"
 #include "algorithms/TaneX.h"
 
+/* Algorithms for workflow for typo discovery */
+#include "algorithms/TypoMiner.h"
