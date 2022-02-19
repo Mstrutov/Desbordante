@@ -9,7 +9,7 @@
 #include <boost/program_options.hpp>
 #include <easylogging++.h>
 
-#include "algo_factory.h"
+#include "AlgoFactory.h"
 
 namespace po = boost::program_options;
 
