@@ -5,13 +5,15 @@
 
 struct Node {
     std::vector<unsigned> items;
+    double support = 0;
     std::list<Node> children;
 
     Node() = default;
     Node(Node const& node) = delete;
+    Node& operator=(Node const&) = delete;
 
     explicit Node(unsigned itemID)
-            : items({itemID}) {}
+            : items({itemID}), support(0) {}
 
     explicit Node(std::vector<unsigned> && itemsToAdd)
             : Node() {
