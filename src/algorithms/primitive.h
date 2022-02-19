@@ -36,6 +36,7 @@ public:
     Primitive& operator=(Primitive const& other) = delete;
     Primitive(Primitive&& other) = delete;
     Primitive& operator=(Primitive&& other) = delete;
+    virtual ~Primitive() = default;
 
     Primitive(std::vector<std::string_view> phase_names) : phase_names_(std::move(phase_names)) {}
     explicit Primitive(std::filesystem::path const& path, char const separator,
