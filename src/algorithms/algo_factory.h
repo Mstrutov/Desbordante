@@ -5,6 +5,7 @@
 #include "better_enums/enum.h"
 
 #include "algorithms.h"
+#include "TypoMiner.h"
 
 namespace algos {
 
@@ -158,6 +159,15 @@ std::unique_ptr<Primitive> CreateFDAlgorithmInstance(Algo const algo, ParamsMap&
     return details::CreatePrimitiveInstanceImpl(algo, config);
 }
 
+template <typename ParamsMap>
+std::unique_ptr<Primitive> CreateTyposMinerInstance(Algo const algo, ParamsMap&& params) {
+    /* Typos miner has FDAlgorithm configuration */
+    FDAlgorithm::Config const config =
+        CreateFDAlgorithmConfigFromMap(std::forward<ParamsMap>(params));
+
+    return details::CreateAlgoWrapperInstanceImpl<TypoMiner>(algo, config);
+}
+
 } // namespace details
 
 template <typename ParamsMap>
@@ -166,6 +176,8 @@ std::unique_ptr<Primitive> CreateAlgorithmInstance(AlgoMiningType const task, Al
     switch (task) {
     case AlgoMiningType::fd:
         return details::CreateFDAlgorithmInstance(algo, std::forward<ParamsMap>(params));
+    case AlgoMiningType::typos:
+        return details::CreateTyposMinerInstance(algo, std::forward<ParamsMap>(params));
     default:
         throw std::logic_error(task._to_string() + std::string(" task type is not supported yet."));
     }
