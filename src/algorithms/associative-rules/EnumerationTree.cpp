@@ -130,6 +130,7 @@ unsigned long long EnumerationTree::generateAllRules() {
         path.pop();
 
         //generateRules(currNode->items);
+        std::cout <<  currNode->support << "\t";
         for (unsigned int item : currNode->items) {
             //LOG(DEBUG) << item;
             std::cout << '<' << transactionalData->getItemUniverse()[item] << '>' << ' ';

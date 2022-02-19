@@ -108,8 +108,11 @@ void CandidateHashTree::performCounting() {
 void CandidateHashTree::prune(double minsup, HashTreeNode & subtreeRoot) {
     if (subtreeRoot.siblings.empty()) {
         for (auto & row : subtreeRoot.candidates) {
-            if (row.transactionCount < minsup * transactionalData->getNumTransactions()) {
+            double const support = static_cast<double>(row.transactionCount) / transactionalData->getNumTransactions();
+            if (support < minsup) {
                 row.nodeContainer->erase(row.nodeIter);
+            } else {
+                row.nodeIter->support = support;
             }
         }
     } else {
