@@ -46,4 +46,15 @@ public:
         boost::optional<std::function<bool(Vertical const&)>> pruning_function) const;
 
     ~RelationalSchema();
+
+    friend inline bool operator==(RelationalSchema const& l, RelationalSchema const& r);
 };
+
+inline bool operator==(RelationalSchema const& l, RelationalSchema const& r) {
+    return (l.name_ == r.name_ && l.is_null_eq_null_ == r.is_null_eq_null_ &&
+            l.columns_.size() == r.columns_.size());
+}
+inline bool operator!=(RelationalSchema const& l, RelationalSchema const& r) {
+    return !(l == r);
+}
+
