@@ -19,35 +19,8 @@ void FDAlgorithm::InitConfigParallelism() {
     }
 }
 
-std::string FDAlgorithm::GetJsonFDs() {
-    std::string result = "{\"fds\": [";
-    std::list<std::string> discovered_fd_strings;
-    for (auto& fd : fd_collection_) {
-        discovered_fd_strings.push_back(fd.ToJSONString());
-    }
-    discovered_fd_strings.sort();
-    for (auto const& fd : discovered_fd_strings) {
-        result += fd + ",";
-    }
-    if (result.back() == ',') {
-        result.erase(result.size() - 1);
-    }
-    /*result += ']';
-
-    result += ", \"uccs\": [";
-    std::list<std::string> discoveredUCCStrings;
-    for (auto& ucc : discovered_uccs_) {
-        discoveredUCCStrings.push_back(ucc.ToIndicesString());
-    }
-    discoveredUCCStrings.sort();
-    for (auto const& ucc : discoveredUCCStrings) {
-        result += '\"' + ucc + "\",";
-    }
-    if (result.back() == ',') {
-        result.erase(result.size() - 1);
-    }*/
-    result += "]}";
-    return result;
+std::string FDAlgorithm::GetJsonFDs() const {
+        return FDsToJson(fd_collection_);
 }
 
 unsigned int FDAlgorithm::Fletcher16() {

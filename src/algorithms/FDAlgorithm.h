@@ -38,6 +38,12 @@ public:
                                      * algorithm. Use GetSpecialParam() to retrieve parameters by
                                      * name.
                                      */
+
+        template <typename ParamType>
+        ParamType GetSpecialParam(std::string const& param_name) const {
+            Config::ParamValue const& value = special_params.at(param_name);
+            return boost::any_cast<ParamType>(value);
+        }
     };
 
 private:
@@ -61,8 +67,7 @@ protected:
 
     template <typename ParamType>
     ParamType GetSpecialParam(std::string const& param_name) const {
-        Config::ParamValue const& value = config_.special_params.at(param_name);
-        return boost::any_cast<ParamType>(value);
+        return config_.GetSpecialParam<ParamType>(param_name);
     }
 
 public:
@@ -98,7 +103,7 @@ public:
      * результатов разных алгоритмов. JSON - на всякий случай, если потом, например, понадобится загрузить список в
      * питон и как-нибудь его поанализировать
      * */
-    std::string GetJsonFDs();
+    std::string GetJsonFDs() const;
 
     /* Returns a vector of columns containing only unique values (i.e. keys).
      * Should be called after execute() only.
@@ -119,4 +124,22 @@ public:
     unsigned long long Execute();
 
     virtual ~FDAlgorithm() = default;
+
+    template<typename Container>
+    static std::string FDsToJson(Container const& fds) {
+        std::string result = "{\"fds\": [";
+        std::vector<std::string> discovered_fd_strings;
+        for (FD const& fd : fds) {
+            discovered_fd_strings.push_back(fd.ToJSONString());
+        }
+        std::sort(discovered_fd_strings.begin(), discovered_fd_strings.end());
+        for (std::string const& fd : discovered_fd_strings) {
+            result += fd + ",";
+        }
+        if (result.back() == ',') {
+            result.erase(result.size() - 1);
+        }
+        result += "]}";
+        return result;
+    }
 };
