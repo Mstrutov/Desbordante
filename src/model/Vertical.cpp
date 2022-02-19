@@ -85,6 +85,16 @@ std::vector<Column const*> Vertical::GetColumns() const {
     return columns;
 }
 
+std::vector<unsigned> Vertical::GetColumnIndicesAsVector() const {
+    std::vector<unsigned> columns;
+    for (size_t index = column_indices_.find_first();
+         index != boost::dynamic_bitset<>::npos;
+         index = column_indices_.find_next(index)) {
+        columns.push_back(schema_->GetColumns()[index].get()->GetIndex());
+    }
+    return columns;
+}
+
 std::string Vertical::ToString() const {
     std::string result = "[";
 

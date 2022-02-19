@@ -71,6 +71,7 @@ public:
 
     unsigned int GetArity() const { return column_indices_.count(); }
     std::vector<Column const*> GetColumns() const;
+    std::vector<unsigned> GetColumnIndicesAsVector() const;
     std::vector<Vertical> GetParents() const;
 
     std::string ToString() const;
