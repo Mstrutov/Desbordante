@@ -36,7 +36,7 @@ protected:
 
 TEST_F(ARAlgorithmTest, BookDataset) {
     auto const path = fs::current_path() / "inputData" / "transactionalData" / "rules-book.csv";
-    auto algorithm = createAlgorithmInstance(0.3, 0, path, TransactionalInputFormat::TwoColumns, false, ',', false);
+    auto algorithm = createAlgorithmInstance(0.3, 0.4, path, TransactionalInputFormat::TwoColumns, false, ',', false);
     algorithm->execute();
     auto const actual = algorithm->getAllFrequent();
     std::set<std::set<std::string>> const expected = {
@@ -88,7 +88,7 @@ TEST_F(ARAlgorithmTest, SynteticDatasetWithPruning) {
 
 TEST_F(ARAlgorithmTest, KaggleDatasetWithTIDandHeader) {
     auto const path = fs::current_path() / "inputData" / "transactionalData" / "rules-kaggle-rows.csv";
-    auto algorithm = createAlgorithmInstance(0.1, 0, path, TransactionalInputFormat::ItemsetRows, true, ',', true);
+    auto algorithm = createAlgorithmInstance(0.1, 0.5, path, TransactionalInputFormat::ItemsetRows, true, ',', true);
     algorithm->execute();
     auto const actual = algorithm->getAllFrequent();
     std::set<std::set<std::string>> const expected = {
