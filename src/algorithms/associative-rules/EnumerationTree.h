@@ -12,7 +12,7 @@
 
 class EnumerationTree : public ARAlgorithm {
 private:
-    std::unique_ptr<CandidateHashTree> candidateHashTree; //TODO где-то инициализировать
+    std::unique_ptr<CandidateHashTree> candidateHashTree; //TODO может убрать из полей, а создавать просто в методе?
 
     Node root;
     //std::vector<unsigned> currentItemset;
@@ -20,6 +20,7 @@ private:
 
     bool generateNextCandidateLevel(); //or list?
     void performCounting();
+    void foo(std::list<Node const*> & trace, Node const& node);
 
     bool canBePruned(std::vector<unsigned> const& itemset);
     static void updatePath(std::stack<Node*> & path, std::list<Node> & vertices);
@@ -27,6 +28,7 @@ private:
     static void updatePath(std::stack<Node const*> & path, std::list<Node> const& vertices);
     static void updatePath(std::queue<Node const*> & path, std::list<Node> const& vertices);
 
+    double getSupport(std::vector<unsigned> const& frequentItemset) const override;
     unsigned long long generateAllRules() override;
     unsigned long long findFrequent() override;
 public:

@@ -3,16 +3,13 @@
 #include "Itemset.h"
 
 class AR {
-private:
-    Itemset left;   //antecedent
-    Itemset right;  //consequent
-    //double conf;  //нужно ли???
-    //TODO может быть не индексы, а сразу строки?
 public:
-    AR(Itemset const& left, Itemset const& right)
-        : left(left), right(right)
-    {}
+    std::vector<unsigned> left;   //antecedent
+    std::vector<unsigned> right;  //consequent
+    double confidence = -1;
+    //TODO может быть не индексы, а сразу строки?
 
-    AR(Itemset && left, Itemset && right)
-        :left(std::move(left)), right(std::move(right)) {}
+    AR() = default;
+    AR(std::vector<unsigned> && left, std::vector<unsigned> && right, double confidence)
+        :left(std::move(left)), right(std::move(right)), confidence(confidence) {}
 };

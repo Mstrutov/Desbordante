@@ -2,6 +2,7 @@
 
 //#include "easylogging++.h"
 #include <iostream>
+#include <algorithm>
 
 void EnumerationTree::generateCandidates(Node* node) {
     auto& children = node->children;
@@ -129,7 +130,7 @@ unsigned long long EnumerationTree::generateAllRules() {
         auto currNode = path.front();
         path.pop();
 
-        //generateRules(currNode->items);
+        generateRulesFrom(currNode->items, currNode->support);
         std::cout <<  currNode->support << "\t";
         for (unsigned int item : currNode->items) {
             //LOG(DEBUG) << item;
@@ -165,4 +166,23 @@ std::list<std::set<std::string>> EnumerationTree::getAllFrequent() const {
     }
 
     return frequentItemsets;
+}
+
+double EnumerationTree::getSupport(std::vector<unsigned int> const& frequentItemset) const {
+    std::list<Node> const* path = &(root.children);
+    unsigned itemIndex = 0;
+    while (itemIndex != frequentItemset.size()) {
+        for (auto const& node : *path) {
+            if (node.items[itemIndex] == frequentItemset[itemIndex]) {
+                if (itemIndex == frequentItemset.size() - 1) {
+                    return node.support;
+                } else {
+                    path = &(node.children);
+                    break;
+                }
+            }
+        }
+        ++itemIndex;
+    }
+    return -1;
 }
