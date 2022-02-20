@@ -36,6 +36,20 @@ jobs:
       with:
         path: ${{github.workspace}}/lib/easyloggingpp
         key: ${{ runner.os }}-easyloggingpp
+    - name: Install git-lfs
+      run: |
+        curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
+        git lfs install
+    - name: Generate lfs file list
+      run: git lfs ls-files -l | cut -d' ' -f1 | sort > .lfs-assets-id
+    - name: Restore lfs cache
+      uses: actions/cache@v2
+      id: lfs-cache
+      with:
+        path: .git/lfs
+        key: ${{ runner.os }}-lfs-${{ hashFiles('.lfs-assets-id') }}-v1
+    - name: Pull lfs files
+      run: git lfs pull
     - name: Install Boost
       run: |
         wget -O boost_1_72_0.tar.gz https://sourceforge.net/projects/boost/files/boost/1.72.0/boost_1_72_0.tar.gz/download
