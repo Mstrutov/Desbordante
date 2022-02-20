@@ -7,7 +7,7 @@ on:
       - main
   workflow_dispatch:
 jobs:
-  run_tests: 
+  run_tests:
     runs-on: ubuntu-18.04
     strategy:
       matrix:
@@ -36,6 +36,12 @@ jobs:
       with:
         path: ${{github.workspace}}/lib/easyloggingpp
         key: ${{ runner.os }}-easyloggingpp
+    - name: Cache better-enums
+      uses: actions/cache@v2
+      id: cache-better-enums
+      with:
+        path: ${{github.workspace}}/lib/better-enums
+        key: ${{ runner.os }}better-enums
     - name: Install git-lfs
       run: |
         curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
@@ -62,7 +68,7 @@ jobs:
     - name: Download googletest
       run: |
         mkdir -p lib
-        sudo chown -R $USER lib 
+        sudo chown -R $USER lib
         cd lib
         git clone https://github.com/google/googletest/ --branch release-1.10.0
       if: steps.cache-googletest.outputs.cache-hit != 'true'
@@ -73,6 +79,13 @@ jobs:
         cd lib
         git clone https://github.com/amrayn/easyloggingpp/ --branch v9.97.0
       if: steps.cache-easyloggingpp.outputs.cache-hit != 'true'
+    - name: Download better-enums
+      run: |
+        mkdir -p lib
+        sudo chown -R $USER lib
+        cd lib
+        git clone https://github.com/aantron/better-enums.git --branch 0.11.3
+      if: steps.cache-better-enums.outputs.cache-hit != 'true'
     - name: Configure CMake
       run: >
         cmake -B ${{github.workspace}}/build
