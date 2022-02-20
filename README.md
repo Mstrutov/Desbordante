@@ -10,6 +10,9 @@ https://github.com/cupertank implemented essential data structures presented in 
   - CMake, version 3.13+
   - Boost library, version 1.72.0+
 
+  To use test datasets you will need:
+  - Git Large File Storage, version 3.0.2+
+
   ### Building the project
   Firstly, navigate to a desired directory.
   Then, clone the repository, cd into the project directory and launch the build script:
