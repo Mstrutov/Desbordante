@@ -15,8 +15,8 @@ unsigned long long ARAlgorithm::execute() {
     return time;
 }
 
-void ARAlgorithm::registerAR(std::vector<unsigned>&& left, std::vector<unsigned>&& right, double confidence) {
-    arCollection.emplace_back(std::move(left), std::move(right), confidence);
+void ARAlgorithm::registerARStrings(AR const& rule) {
+    arCollection.emplace_back(rule, transactionalData.get());
 }
 
 void ARAlgorithm::updatePath(std::stack<RuleNode*> & path, std::list<RuleNode> & vertices) {
@@ -38,7 +38,7 @@ void ARAlgorithm::generateRulesFrom(std::vector<unsigned int> const& frequentIte
         auto const confidence = support / lhsSupport;
         if (confidence >= minconf) {
             root.children.emplace_back(std::move(lhs), std::move(rhs), confidence);
-            arCollection.push_back(root.children.back().rule); //TODO лишнее копирование
+            arCollection.emplace_back(root.children.back().rule, transactionalData.get());
         }
     }
     if (root.children.empty()) {
@@ -88,7 +88,7 @@ bool ARAlgorithm::mergeRules(std::vector<unsigned> const& frequentItemset, doubl
             auto const confidence = support / lhsSupport;
             if (confidence >= minconf) {
                 childIter->children.emplace_back(std::move(lhs), std::move(rhs), confidence);                 //нужна ли перегрузка от rvalue? или оставить по значению
-                arCollection.push_back(childIter->children.back().rule);
+                arCollection.emplace_back(childIter->children.back().rule, transactionalData.get());
                 produceRule = true;
             }
         }

@@ -9,7 +9,7 @@
 class ARAlgorithm {
 private:
     double minconf;
-    std::list<AR> arCollection;
+    std::list<ARStrings> arCollection;
     CSVParser inputGenerator;
     TransactionalInputFormat inputFormat;
     bool hasTransactionID;
@@ -32,8 +32,7 @@ protected:
     double minsup;
 
     void generateRulesFrom(std::vector<unsigned> const& frequentItemset, double support);
-    void registerAR(std::vector<unsigned>&& left, std::vector<unsigned>&& right,
-                    double confidence);
+    void registerARStrings(AR const& rule);
 
     virtual double getSupport(std::vector<unsigned> const& frequentItemset) const = 0;
     virtual unsigned long long generateAllRules() = 0;
@@ -48,9 +47,8 @@ public:
             : minconf(minconf), inputGenerator(path, separator, hasHeader),
               inputFormat(inputFormat), hasTransactionID(hasTransactionID), minsup(minsup) {}
 
-    std::list<AR> const& arIDsList() const noexcept { return arCollection; }
-    std::list<std::vector<std::string>> arList() const; //TODO возвращает айтемы строками
-    virtual std::list<std::set<std::string>> getAllFrequent() const = 0;   //for debugging and tests
+    std::list<ARStrings> arList() const noexcept { return arCollection; }
+    virtual std::list<std::set<std::string>> getAllFrequent() const = 0;   //for debugging and testing
 
     unsigned long long execute();
     virtual ~ARAlgorithm() = default;
