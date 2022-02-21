@@ -120,29 +120,19 @@ unsigned long long EnumerationTree::findFrequent() {
 }
 
 unsigned long long EnumerationTree::generateAllRules() {
-    //TODO обходим дерево frequentов и для каждого вызываем generateAR, полученное складываем в arCollection
-    //где применяем minconf?
     std::queue<Node const*> path;
-    unsigned rowCount = 0;
     updatePath(path, root.children);
 
     while (!path.empty()) {
         auto currNode = path.front();
         path.pop();
 
-        generateRulesFrom(currNode->items, currNode->support);
-        std::cout <<  currNode->support << "\t";
-        for (unsigned int item : currNode->items) {
-            //LOG(DEBUG) << item;
-            std::cout << '<' << transactionalData->getItemUniverse()[item] << '>' << ' ';
+        if (currNode->items.size() >= 2) {
+            generateRulesFrom(currNode->items, currNode->support);
         }
-        //LOG(DEBUG) << '\n';
-        std::cout << '\n';
-        ++rowCount;
-
         updatePath(path, currNode->children);
     }
-    std::cout << rowCount << '\n';
+
     return 0;
 }
 

@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <stack>
+#include <iostream>
 
 #include "ARAlgorithm.h"
 
@@ -11,6 +12,10 @@ unsigned long long ARAlgorithm::execute() {
 
     auto time = findFrequent();
     time += generateAllRules();
+
+    for (auto const& rule : arCollection) {
+        std::cout << rule.toString() << '\n';
+    }
 
     return time;
 }
@@ -78,6 +83,10 @@ bool ARAlgorithm::mergeRules(std::vector<unsigned> const& frequentItemset, doubl
         for (auto childRightSiblingIter = std::next(childIter); childRightSiblingIter != children.end(); ++childRightSiblingIter) {
             std::vector<unsigned> rhs = childIter->rule.right;
             rhs.push_back(childRightSiblingIter->rule.right.back());
+            if (rhs.size() == frequentItemset.size()) {
+                //in this case the LHS is empty
+                continue;
+            }
 
             std::vector<unsigned> lhs;
             std::set_difference(frequentItemset.begin(), frequentItemset.end(),
