@@ -1,6 +1,7 @@
 #include "CandidateHashTree.h"
 
 #include <algorithm>
+#include "cassert"
 
 void CandidateHashTree::appendRow(LeafRow const row, HashTreeNode & subtreeRoot) {
     if (!subtreeRoot.children.empty()) {
@@ -40,7 +41,8 @@ void CandidateHashTree::addCandidate(NodeIterator nodeIter, std::list<Node> *con
 
 unsigned CandidateHashTree::hashFunction(LeafRow const& nodeRow, unsigned const levelNum) const {
     auto const& nodeItems = nodeRow.nodeIter->items;
-    auto const currLevelElementID = nodeItems[levelNum - 1];
+    assert(levelNum <= nodeItems.size());
+    auto const currLevelElementID = nodeItems.at(levelNum - 1);
     return itemHash(currLevelElementID);
 }
 
