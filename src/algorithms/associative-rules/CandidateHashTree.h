@@ -42,10 +42,10 @@ private:
 
     void appendRow(LeafRow row, HashTreeNode & subtreeRoot);
     void addLevel(HashTreeNode & leafNode);
-    bool findAndVisitLeaf(HashTreeNode & subtreeRoot,
-                          std::vector<unsigned int>::const_iterator start,
-                          std::vector<unsigned> const& transactionItems,
-                          int transactionID);
+    void findAndVisitLeaves(HashTreeNode & subtreeRoot,
+                            std::vector<unsigned int>::const_iterator start,
+                            std::vector<unsigned> const& transactionItems,
+                            int transactionID);
     static void visitLeaf(HashTreeNode & leaf, std::vector<unsigned> const& transactionItems, int tID);
     void prune(double minsup, HashTreeNode & subtreeRoot);
 public:
