@@ -53,6 +53,11 @@ std::unique_ptr<TransactionalData> TransactionalData::createFromTwoColumns(CSVPa
         }
     }
 
+    //sort items in each transaction
+    for (auto & [tID, items] : transactions) {
+        items.sort();
+    }
+
     return std::make_unique<TransactionalData>(std::move(itemUniverse), std::move(transactions));
 }
 
@@ -94,6 +99,8 @@ TransactionalData::createFromItemsetRows(CSVParser &fileInput, bool hasTransacti
             }
             items.addItemID(itemID);
         }
+
+        items.sort();
         transactions.insert({transactionId, std::move(items)});
         if (!hasTransactionID) {
             ++transactionId;
