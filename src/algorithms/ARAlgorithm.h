@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <list>
+#include <set>
 
 #include "TransactionalData.h"
 #include "AR.h"
