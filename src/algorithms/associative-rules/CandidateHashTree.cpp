@@ -3,12 +3,12 @@
 #include <algorithm>
 #include "cassert"
 
-void CandidateHashTree::appendRow(LeafRow const row, HashTreeNode & subtreeRoot) {
+void CandidateHashTree::appendRow(LeafRow row, HashTreeNode & subtreeRoot) {
     if (!subtreeRoot.children.empty()) {
         auto const hash = hashFunction(row, subtreeRoot.levelNumber);
-        appendRow(row, subtreeRoot.children[hash]);
+        appendRow(std::move(row), subtreeRoot.children[hash]);
     } else {
-        subtreeRoot.candidates.push_back(row);
+        subtreeRoot.candidates.push_back(std::move(row));
         if (subtreeRoot.candidates.size() > minThreshold) {
             addLevel(subtreeRoot);
         }
@@ -28,7 +28,7 @@ void CandidateHashTree::addLevel(HashTreeNode & leafNode) {
 
     //distribute rows of an old leaf between new leaves
     for (auto & row : leafNode.candidates) {
-        appendRow(row, leafNode); //TODO как копируем?
+        appendRow(std::move(row), leafNode);
     }
 
     leafNode.candidates.clear();
