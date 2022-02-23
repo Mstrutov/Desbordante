@@ -44,30 +44,19 @@ unsigned CandidateHashTree::hashFunction(LeafRow const& nodeRow, unsigned const 
     return itemHash(currLevelElementID);
 }
 
-bool CandidateHashTree::findAndVisitLeaf(HashTreeNode & subtreeRoot,
-                                         std::vector<unsigned>::const_iterator const start,
-                                         std::vector<unsigned> const& transactionItems,
-                                         int transactionID) {
-    if (subtreeRoot.children.empty() || start == transactionItems.end()) { //found a leaf node or final. //TODO start = end?
-        visitLeaf(subtreeRoot, transactionItems, transactionID);
-        return true;
+void CandidateHashTree::findAndVisitLeaves(HashTreeNode & subtreeRoot,
+                                           std::vector<unsigned>::const_iterator const start,
+                                           std::vector<unsigned> const& transactionItems,
+                                           int transactionID) {
+    unsigned const nextBranchNumber = itemHash(*start);
+    auto & nextNode = subtreeRoot.children[nextBranchNumber];
+    if (nextNode.children.empty()) {
+        //if nextNode is a leaf itself, then we visit it and terminate the recursion
+        visitLeaf(nextNode, transactionItems, transactionID);
     } else {
-        unsigned const nextBranchNumber = itemHash(*start);
-        auto & nextNode = subtreeRoot.children[nextBranchNumber];
-
-        /* Initially, the cycle started from the newStart = next(start) and passed newStart to findLeaf().
-         * But if 'start' points to the latest element, next(start) will point to end(),
-         * and cycle will even not enter its body. So in that case the function findAndVisitLeaf()
-         * will not be executed for the just defined nextNode. The solution is to start
-         * the cycle from 'start' and pass next(start) to the function.
-         */
-        for (auto newStart = start; newStart != transactionItems.end(); ++newStart) {
-            if (findAndVisitLeaf(nextNode, std::next(newStart), transactionItems, transactionID)) {
-                //this means nextNode is a leaf that we visited, so we can avoid traversing it in cycle again
-                break;
-            }
+        for (auto newStart = std::next(start); newStart != transactionItems.end(); ++newStart) {
+            findAndVisitLeaves(nextNode, newStart, transactionItems, transactionID);
         }
-        return false;
     }
 }
 
@@ -90,11 +79,13 @@ void CandidateHashTree::performCounting() {
     for (auto const& transaction : transactionalData->getTransactions()) { //TODO нужно ли по порядку или так норм?
         auto const& items = transaction.second.getItemsIDs();
         auto const transactionID = transaction.first;
-
-        for (auto start = items.begin(); start != items.end(); ++start) {
-            if (findAndVisitLeaf(root, start, items, transactionID)) {
-                break;
-            };
+        if (root.children.empty()) {
+            //if the root is a leaf itself
+            visitLeaf(root, items, transactionID);
+        } else {
+            for (auto start = items.begin(); start != items.end(); ++start) {
+                findAndVisitLeaves(root, start, items, transactionID);
+            }
         }
     }
 }
