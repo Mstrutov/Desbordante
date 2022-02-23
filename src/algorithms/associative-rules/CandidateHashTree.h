@@ -20,9 +20,11 @@ private:
         unsigned transactionCount = 0;
 
         LeafRow() = default;
-        //TODO копирование?
+        LeafRow(LeafRow&& other) = default;
         LeafRow(NodeIterator nodeIter, std::list<Node>* const nodeContainer)
             : nodeIter(nodeIter), nodeContainer(nodeContainer) {}
+
+        LeafRow(LeafRow const& other) = delete;
     };
 
     struct HashTreeNode {
