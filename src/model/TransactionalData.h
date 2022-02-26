@@ -13,7 +13,9 @@ private:
     std::vector<std::string> itemUniverse;
     std::unordered_map<unsigned, Itemset> transactions; //пока что map, т.к. не знаем общее количество транзкзцйи
 
-    static std::unique_ptr<TransactionalData> createFromTwoColumns(CSVParser& fileInput);
+    static std::unique_ptr<TransactionalData> createFromTwoColumns(CSVParser& fileInput,
+                                                                   unsigned tidColumn = 0,
+                                                                   unsigned itemColumn = 1);
     static std::unique_ptr<TransactionalData> createFromItemsetRows(CSVParser& fileInput, bool hasTransactionID);
 public:
     TransactionalData() = delete;
