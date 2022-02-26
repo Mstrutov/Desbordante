@@ -3,9 +3,9 @@
 #include <cassert>
 #include <unordered_map>
 
-std::unique_ptr<TransactionalData> TransactionalData::createFrom(CSVParser &fileInput,
-                                                                 TransactionalInputFormat inputFormat,
-                                                                 bool hasTransactionID) {
+std::unique_ptr<TransactionalData>
+TransactionalData::createFrom(CSVParser& fileInput, TransactionalInputFormat inputFormat,
+                                                    bool hasTransactionID) {
     switch (inputFormat) {
         case TransactionalInputFormat::TwoColumns:
             return createFromTwoColumns(fileInput);
@@ -16,31 +16,32 @@ std::unique_ptr<TransactionalData> TransactionalData::createFrom(CSVParser &file
     }
 }
 
-std::unique_ptr<TransactionalData> TransactionalData::createFromTwoColumns(CSVParser& fileInput) {
+std::unique_ptr<TransactionalData>
+TransactionalData::createFromTwoColumns(CSVParser& fileInput, unsigned tidColumn,
+                                                              unsigned itemColumn) {
     std::vector<std::string> itemUniverse;
     std::unordered_map<std::string, unsigned> itemUniverseSet;
     std::unordered_map<unsigned, Itemset> transactions;
     unsigned lastItemID = 0;
 
-    assert(fileInput.getNumberOfColumns() >= 2);
+    assert(fileInput.getNumberOfColumns() > static_cast<int>(std::max(tidColumn, itemColumn)));
     while (fileInput.getHasNext()) {
         std::vector<std::string> const row = fileInput.parseNext();
-        //TODO what if there is an incomplete row?
-
         if (row.empty()) {
             continue;
         }
 
-        unsigned const transactionId = std::stoi(row[0]);
-        std::string const& itemName = row[1];
+        unsigned const transactionId = std::stoi(row[tidColumn]);
+        std::string const& itemName = row[itemColumn];
         unsigned itemID = lastItemID;
 
-        auto const itemInsertionResult = itemUniverseSet.insert({itemName, itemID});
-        if (itemInsertionResult.second) {
+        auto const [itemIter, wasInserted] = itemUniverseSet.insert({itemName, itemID});
+        if (wasInserted) {
             itemUniverse.push_back(itemName);   //TODO лишняя трата памяти
             ++lastItemID;
-        } else {                                        //if there is item in the universe
-            itemID = itemInsertionResult.first->second; //set old item id
+        } else {
+            //if there is such item in the universe, get its itemID
+            itemID = itemIter->second;
         }
 
         auto transaction = transactions.find(transactionId);
@@ -49,7 +50,7 @@ std::unique_ptr<TransactionalData> TransactionalData::createFromTwoColumns(CSVPa
             items.addItemID(itemID);
             transactions.insert({transactionId, std::move(items)});
         } else {
-            transactions[transactionId].addItemID(itemID);
+            transaction->second.addItemID(itemID);
         }
     }
 
@@ -71,8 +72,7 @@ TransactionalData::createFromItemsetRows(CSVParser &fileInput, bool hasTransacti
 
     while (fileInput.getHasNext()) {
         std::vector<std::string> const row = fileInput.parseNext();
-
-        if (row.empty()) { //TODO empty transactions?
+        if (row.empty()) {
             continue;
         }
 
