@@ -50,11 +50,11 @@ std::unique_ptr<PositionListIndex> PositionListIndex::CreateFor(std::vector<int>
     }
 
     std::vector<int> null_cluster;
-    if (index.count(RelationData::kNullValueId) != 0) {
-        null_cluster = index[RelationData::kNullValueId];
+    if (index.count(ColumnLayoutRelationData::kNullValueId) != 0) {
+        null_cluster = index[ColumnLayoutRelationData::kNullValueId];
     }
     if (!is_null_eq_null) {
-        index.erase(RelationData::kNullValueId); // move?
+        index.erase(ColumnLayoutRelationData::kNullValueId); // move?
     }
 
     double key_gap = 0.0;
