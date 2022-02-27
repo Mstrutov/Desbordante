@@ -1,6 +1,7 @@
 #pragma once
 
 #include <boost/any.hpp>
+#include <boost/mp11/algorithm.hpp>
 #include <enum.h>
 
 #include "Algorithms.h"
@@ -42,54 +43,16 @@ using AlgorithmTypesTuple = std::tuple<Depminer, DFD, FastFDs, FDep, Fd_mine, Py
 
 namespace details {
 
-/* Consider using boost:hana here to get rid of this nightmare */
-template <size_t... Is, typename F>
-constexpr void StaticForImpl(F&& f, std::index_sequence<Is...>) {
-    (f(std::integral_constant<size_t, Is>()), ...);
-}
-
-template <size_t N, typename F>
-constexpr void StaticFor(F&& f) {
-    StaticForImpl(f, std::make_index_sequence<N>());
-}
-
-template <typename Tuple, typename F>
-constexpr void ForAllTypes(F&& f) {
-    StaticFor<std::tuple_size_v<Tuple>>([&f](auto N) {
-        using TupleElement = std::tuple_element_t<N, Tuple>;
-
-        f((TupleElement const*)nullptr, N);
-    });
-}
-
-template <typename R, typename Tuple, typename F>
-constexpr R SelectType(F&& f, size_t i) {
-    R r;
-    bool found = false;
-
-    ForAllTypes<Tuple>([&r, &found, &f, i](auto const* p, auto N) {
-        if (i == N) {
-            r = f(p);
-            found = true;
-        }
-    });
-
-    if (!found) {
-        throw std::invalid_argument("Wrong enum value");
-    }
-
-    return r;
-}
-
 template <typename AlgorithmBase = Primitive, typename AlgorithmsToSelect = AlgorithmTypesTuple,
           typename EnumType, typename... Args>
 auto CreatePrimitiveInstanceImpl(EnumType const enum_value, Args&&... args) {
-    return SelectType<std::unique_ptr<AlgorithmBase>, AlgorithmsToSelect>(
-        [&args...](auto const* p) {
-            using AlgorithmType = std::decay_t<decltype(*p)>;
-            return std::make_unique<AlgorithmType>(std::forward<Args>(args)...);
-        },
-        static_cast<size_t>(enum_value));
+    auto const create = [&args...](auto I) -> std::unique_ptr<AlgorithmBase> {
+        using AlgorithmType = std::tuple_element_t<I, AlgorithmsToSelect>;
+        return std::make_unique<AlgorithmType>(std::forward<Args>(args)...);
+    };
+
+    return boost::mp11::mp_with_index<std::tuple_size<AlgorithmsToSelect>>((size_t)enum_value,
+                                                                           create);
 }
 
 template <template <typename...> class Wrapper, typename AlgorithmBase = Primitive,
@@ -97,12 +60,13 @@ template <template <typename...> class Wrapper, typename AlgorithmBase = Primiti
 auto CreateAlgoWrapperInstanceImpl(EnumType const enum_value, Args&&... args) {
     static_assert(std::is_base_of_v<AlgorithmBase, Wrapper<AlgorithmBase>>,
                   "Wrapper should be derived from AlgorithmBase");
-    return SelectType<std::unique_ptr<AlgorithmBase>, AlgorithmsToWrap>(
-        [&args...](auto const* p) {
-            using AlgorithmType = std::decay_t<decltype(*p)>;
-            return std::make_unique<Wrapper<AlgorithmType>>(std::forward<Args>(args)...);
-        },
-        static_cast<size_t>(enum_value));
+    auto const create = [&args...](auto I) -> std::unique_ptr<AlgorithmBase> {
+        using AlgorithmType = std::tuple_element_t<I, AlgorithmsToWrap>;
+        return std::make_unique<Wrapper<AlgorithmType>>(std::forward<Args>(args)...);
+    };
+
+    return boost::mp11::mp_with_index<std::tuple_size<AlgorithmsToWrap>>((size_t)enum_value,
+                                                                         create);
 }
 
 template <typename T, typename ParamsMap>
