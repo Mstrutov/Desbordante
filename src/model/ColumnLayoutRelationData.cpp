@@ -9,17 +9,6 @@
 #include <utility>
 
 #include <easylogging++.h>
-ColumnLayoutRelationData::ColumnLayoutRelationData(std::unique_ptr<RelationalSchema> schema,
-                                                   std::vector<ColumnData> column_data)
-    : RelationData(std::move(schema)), column_data_(std::move(column_data)) {}
-
-ColumnData& ColumnLayoutRelationData::GetColumnData(int column_index) {
-    return column_data_[column_index];
-}
-
-//ColumnData const& ColumnLayoutRelationData::GetColumnData(int columnIndex) const ;
-
-//unsigned int ColumnLayoutRelationData::GetNumRows() const
 
 std::vector<int> ColumnLayoutRelationData::GetTuple(int tuple_index) const {
     int num_columns = schema_->GetNumColumns();
@@ -29,12 +18,6 @@ std::vector<int> ColumnLayoutRelationData::GetTuple(int tuple_index) const {
     }
     return tuple;
 }
-
-/*void ColumnLayoutRelationData::shuffleColumns() {
-    for (auto &columnDatum : column_data_){
-        columnDatum.shuffle();
-    }
-}*/
 
 std::unique_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::CreateFrom(
     CSVParser& file_input, bool is_null_eq_null) {
@@ -102,3 +85,4 @@ std::unique_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::CreateFrom(
 
     return std::make_unique<ColumnLayoutRelationData>(std::move(schema), std::move(column_data));
 }
+
