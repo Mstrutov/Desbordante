@@ -4,9 +4,7 @@
 #include <iostream>
 #include <algorithm>
 
-void EnumerationTree::generateCandidates(Node* node) {
-    auto& children = node->children;
-
+void EnumerationTree::generateCandidates(std::list<Node>& children) {
     auto const lastChildIter = std::next(children.end(), -1);
     for (auto childIter = children.begin(); childIter != lastChildIter; ++childIter) {
         for (auto childRightSiblingIter = std::next(childIter); childRightSiblingIter != children.end(); ++childRightSiblingIter) {
@@ -14,32 +12,30 @@ void EnumerationTree::generateCandidates(Node* node) {
             items.push_back(childRightSiblingIter->items.back());
 
             if (!canBePruned(items)) {
-                //Node candidate(std::move(items));
-                childIter->children.emplace_back(std::move(items));                 //нужна ли перегрузка от rvalue? или оставить по значению
-                candidateHashTree->addCandidate(std::next(childIter->children.end(), -1), &(childIter->children));        //добавляем итератор на только что добавленный в дерево кандидатов
+                candidates[&(*childIter)].emplace_back(std::move(items));
             }
         }
     }
 }
 
-bool EnumerationTree::generateNextCandidateLevel() {
-    if (levelNumber == 1) {
-        for (unsigned itemID = 0; itemID < transactionalData->getUniverseSize(); ++itemID) {
-            root.children.emplace_back(itemID);
-            candidateHashTree->addCandidate(std::next(root.children.end(), -1), &root.children);
-        }
-    } else {
-        std::stack<Node*> path; //TODO может итераторы?
-        path.push(&root);
+void EnumerationTree::createFirstLevelCandidates() {
+    for (unsigned itemID = 0; itemID < transactionalData->getUniverseSize(); ++itemID) {
+        candidates[&root].emplace_back(itemID);
+    }
+    ++levelNumber;
+}
 
-        while (!path.empty()) {
-            auto node = path.top();
-            path.pop();
-            if (node->items.size() == levelNumber - 2) { //levelNumber is at least 2
-                generateCandidates(node);
-            } else {
-                updatePath(path, node->children);
-            }
+bool EnumerationTree::generateNextCandidateLevel() {
+    std::stack<Node*> path;
+    path.push(&root);
+
+    while (!path.empty()) {
+        auto node = path.top();
+        path.pop();
+        if (node->items.size() == levelNumber - 2) { //levelNumber is at least 2
+            generateCandidates(node->children);
+        } else {
+            updatePath(path, node->children);
         }
     }
 
@@ -110,11 +106,14 @@ bool EnumerationTree::canBePruned(std::vector<unsigned> const& itemset) {
 
 unsigned long long EnumerationTree::findFrequent() {
     //TODO branching degree и minThreshold сделать зависимыми от номера уровня кандидатов
-    candidateHashTree = std::make_unique<CandidateHashTree>(transactionalData.get(), 10, 100);
-    while (generateNextCandidateLevel()) {
+    createFirstLevelCandidates();
+    while (!candidates.empty()) {
+        candidateHashTree = std::make_unique<CandidateHashTree>(transactionalData.get(), candidates, 5, 5);
         candidateHashTree->performCounting();
         candidateHashTree->pruneNodes(minsup);
-        candidateHashTree = std::make_unique<CandidateHashTree>(transactionalData.get(), 10, 100);
+        appendToTree();
+        candidates.clear();
+        generateNextCandidateLevel();
     }
     return 0;
 }
@@ -175,4 +174,12 @@ double EnumerationTree::getSupport(std::vector<unsigned int> const& frequentItem
         ++itemIndex;
     }
     return -1;
+}
+
+void EnumerationTree::appendToTree() {
+    for (auto& [node, children] : candidates) {
+        for (auto& child : children) {
+            node->children.push_back(std::move(child));
+        }
+    }
 }

@@ -11,18 +11,19 @@ private:
     unsigned branchingDegree;
     unsigned minThreshold;
     unsigned totalRowCount = 0;
+    std::unordered_map<Node*, std::list<Node>>& candidates;
 
     TransactionalData const* const transactionalData = nullptr;
 
     struct LeafRow {
-        NodeIterator nodeIter;
-        std::list<Node>* const nodeContainer = nullptr;
+        NodeIterator candidateNode;
+        Node* const parent;
         unsigned transactionCount = 0;
 
-        LeafRow() = default;
+        //LeafRow() = default;
         LeafRow(LeafRow&& other) = default;
-        LeafRow(NodeIterator nodeIter, std::list<Node>* const nodeContainer)
-            : nodeIter(nodeIter), nodeContainer(nodeContainer) {}
+        LeafRow(NodeIterator node, Node* parent)
+            : candidateNode(node), parent(parent) {}
 
         LeafRow(LeafRow const& other) = delete;
     };
@@ -50,13 +51,17 @@ private:
                             int transactionID);
     static void visitLeaf(HashTreeNode & leaf, std::vector<unsigned> const& transactionItems, int tID);
     void prune(double minsup, HashTreeNode & subtreeRoot);
+    void addCandidates();
 public:
     CandidateHashTree(TransactionalData const* transactionalData,
+                      std::unordered_map<Node*, std::list<Node>>& candidates,
                       unsigned branchingDegree, unsigned minThreshold)
             : branchingDegree(branchingDegree), minThreshold(minThreshold),
-              transactionalData(transactionalData), root(1) {}
+              candidates(candidates), transactionalData(transactionalData), root(1) {
+        addCandidates();
+    }
 
-    void addCandidate(NodeIterator nodeIter, std::list<Node>* nodeContainer); //maybe reference is possible
+    void addCandidate(NodeIterator candidate, Node* parent); //maybe reference is possible
     unsigned size() const noexcept { return totalRowCount; };
     void performCounting();
     void pruneNodes(double minsup);

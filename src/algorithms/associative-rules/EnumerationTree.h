@@ -15,7 +15,7 @@ private:
     std::unique_ptr<CandidateHashTree> candidateHashTree; //TODO может убрать из полей, а создавать просто в методе?
 
     Node root;
-    //std::vector<unsigned> currentItemset;
+    std::unordered_map<Node*, std::list<Node>> candidates;
     unsigned levelNumber = 1;
 
     bool generateNextCandidateLevel(); //or list?
@@ -24,9 +24,11 @@ private:
 
     bool canBePruned(std::vector<unsigned> const& itemset);
     static void updatePath(std::stack<Node*> & path, std::list<Node> & vertices);
-    void generateCandidates(Node* node);
+    void generateCandidates(std::list<Node>& children);
     static void updatePath(std::stack<Node const*> & path, std::list<Node> const& vertices);
     static void updatePath(std::queue<Node const*> & path, std::list<Node> const& vertices);
+    void createFirstLevelCandidates();
+    void appendToTree();
 
     double getSupport(std::vector<unsigned> const& frequentItemset) const override;
     unsigned long long generateAllRules() override;

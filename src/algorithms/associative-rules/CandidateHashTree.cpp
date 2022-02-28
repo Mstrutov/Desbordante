@@ -34,13 +34,13 @@ void CandidateHashTree::addLevel(HashTreeNode & leafNode) {
     leafNode.candidates.clear();
 }
 
-void CandidateHashTree::addCandidate(NodeIterator nodeIter, std::list<Node> *const nodeContainer) {
-    appendRow(LeafRow(nodeIter, nodeContainer), root);
+void CandidateHashTree::addCandidate(NodeIterator candidate, Node* parent) {
+    appendRow(LeafRow(candidate, parent), root);
     ++totalRowCount;
 }
 
 unsigned CandidateHashTree::hashFunction(LeafRow const& nodeRow, unsigned const levelNum) const {
-    auto const& nodeItems = nodeRow.nodeIter->items;
+    auto const& nodeItems = nodeRow.candidateNode->items;
     assert(levelNum <= nodeItems.size());
     auto const currLevelElementID = nodeItems.at(levelNum - 1);
     return itemHash(currLevelElementID);
@@ -69,7 +69,7 @@ void CandidateHashTree::visitLeaf(HashTreeNode & leaf, std::vector<unsigned> con
     leaf.lastVisitedTransactionID = tID;
 
     for (auto & row : leaf.candidates) {
-        auto const& candidateItems = row.nodeIter->items;
+        auto const& candidateItems = row.candidateNode->items;
         if (std::includes(transactionItems.begin(), transactionItems.end(),
                           candidateItems.begin(), candidateItems.end())) {
             row.transactionCount++;
@@ -97,9 +97,9 @@ void CandidateHashTree::prune(double minsup, HashTreeNode & subtreeRoot) {
         for (auto & row : subtreeRoot.candidates) {
             double const support = static_cast<double>(row.transactionCount) / transactionalData->getNumTransactions();
             if (support < minsup) {
-                row.nodeContainer->erase(row.nodeIter);
+                candidates[row.parent].erase(row.candidateNode);
             } else {
-                row.nodeIter->support = support;
+                row.candidateNode->support = support;
             }
         }
     } else {
@@ -111,4 +111,12 @@ void CandidateHashTree::prune(double minsup, HashTreeNode & subtreeRoot) {
 
 void CandidateHashTree::pruneNodes(double minsup) {
     prune(minsup, root);
+}
+
+void CandidateHashTree::addCandidates() {
+    for (auto& [node, candidateChildren] : candidates) {
+        for (auto child = candidateChildren.begin(); child != candidateChildren.end(); ++child) {
+            addCandidate(child, node);
+        }
+    }
 }
