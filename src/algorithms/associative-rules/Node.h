@@ -6,9 +6,10 @@
 struct Node {
     std::vector<unsigned> items;
     double support = 0;
-    std::list<Node> children;
+    std::vector<Node> children;
 
     Node() = default;
+    Node(Node&& other) = default;
     Node(Node const& node) = delete;
     Node& operator=(Node const&) = delete;
 
