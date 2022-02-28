@@ -4,8 +4,8 @@
 #include <iostream>
 #include <algorithm>
 
-void EnumerationTree::generateCandidates(std::list<Node>& children) {
-    auto const lastChildIter = std::next(children.end(), -1);
+void EnumerationTree::generateCandidates(std::vector<Node>& children) {
+    auto const lastChildIter = children.end() - 1;
     for (auto childIter = children.begin(); childIter != lastChildIter; ++childIter) {
         for (auto childRightSiblingIter = std::next(childIter); childRightSiblingIter != children.end(); ++childRightSiblingIter) {
             std::vector<unsigned> items = childIter->items;
@@ -32,7 +32,7 @@ bool EnumerationTree::generateNextCandidateLevel() {
     while (!path.empty()) {
         auto node = path.top();
         path.pop();
-        if (node->items.size() == levelNumber - 2) { //levelNumber is at least 2
+        if (node->items.size() == levelNumber - 2 && !node->children.empty()) { //levelNumber is at least 2
             generateCandidates(node->children);
         } else {
             updatePath(path, node->children);
@@ -43,21 +43,21 @@ bool EnumerationTree::generateNextCandidateLevel() {
     return candidateHashTree->size() > 0;
 }
 
-void EnumerationTree::updatePath(std::stack<Node*> & path, std::list<Node> & vertices) {
+void EnumerationTree::updatePath(std::stack<Node*> & path, std::vector<Node> & vertices) {
     for (auto iter = vertices.rbegin(); iter != vertices.rend(); ++iter) {
         Node* nodePtr = &(*iter);
         path.push(nodePtr);
     }
 }
 
-void EnumerationTree::updatePath(std::stack<Node const*> & path, std::list<Node> const& vertices) {
+void EnumerationTree::updatePath(std::stack<Node const*> & path, std::vector<Node> const& vertices) {
     for (auto iter = vertices.rbegin(); iter != vertices.rend(); ++iter) {
         Node const* nodePtr = &(*iter);
         path.push(nodePtr);
     }
 }
 
-void EnumerationTree::updatePath(std::queue<Node const*> & path, std::list<Node> const& vertices) {
+void EnumerationTree::updatePath(std::queue<Node const*> & path, std::vector<Node> const& vertices) {
     for (auto const& vertex : vertices) {
         Node const* nodePtr = &vertex;
         path.push(nodePtr);
@@ -158,18 +158,22 @@ std::list<std::set<std::string>> EnumerationTree::getAllFrequent() const {
 }
 
 double EnumerationTree::getSupport(std::vector<unsigned int> const& frequentItemset) const {
-    std::list<Node> const* path = &(root.children);
+    auto const* path = &(root.children);
     unsigned itemIndex = 0;
+    auto nodeComparator = [&itemIndex](Node const& a, std::vector<unsigned> const& items) {
+        return a.items[itemIndex] < items[itemIndex];
+    };
+
     while (itemIndex != frequentItemset.size()) {
-        for (auto const& node : *path) {
-            if (node.items[itemIndex] == frequentItemset[itemIndex]) {
-                if (itemIndex == frequentItemset.size() - 1) {
-                    return node.support;
-                } else {
-                    path = &(node.children);
-                    break;
-                }
-            }
+        auto const& nodeVector = *path;
+        auto nextNode = std::lower_bound(nodeVector.begin(), nodeVector.end(),
+                                         frequentItemset, nodeComparator);
+        if (nextNode == nodeVector.end()) {
+            break;
+        } else if (itemIndex == frequentItemset.size() - 1) {
+            return nextNode->support;
+        } else {
+            path = &(nextNode->children);
         }
         ++itemIndex;
     }

@@ -23,10 +23,10 @@ private:
     void foo(std::list<Node const*> & trace, Node const& node);
 
     bool canBePruned(std::vector<unsigned> const& itemset);
-    static void updatePath(std::stack<Node*> & path, std::list<Node> & vertices);
-    void generateCandidates(std::list<Node>& children);
-    static void updatePath(std::stack<Node const*> & path, std::list<Node> const& vertices);
-    static void updatePath(std::queue<Node const*> & path, std::list<Node> const& vertices);
+    static void updatePath(std::stack<Node*> & path, std::vector<Node> & vertices);
+    void generateCandidates(std::vector<Node>& children);
+    static void updatePath(std::stack<Node const*> & path, std::vector<Node> const& vertices);
+    static void updatePath(std::queue<Node const*> & path, std::vector<Node> const& vertices);
     void createFirstLevelCandidates();
     void appendToTree();
 
