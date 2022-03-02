@@ -86,7 +86,7 @@ TransactionalData::createFromItemsetRows(CSVParser &fileInput, bool hasTransacti
         for (; rowIterator != row.end(); ++rowIterator) {
             std::string const& itemName = *rowIterator;
             if (itemName.empty()) {
-                break;
+                continue;
             }
             unsigned itemID = lastItemID;
 
