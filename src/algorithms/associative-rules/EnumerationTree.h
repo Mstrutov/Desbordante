@@ -34,13 +34,16 @@ private:
     unsigned long long generateAllRules() override;
     unsigned long long findFrequent() override;
 public:
-    explicit EnumerationTree(double minsup, double minconf,
+    /*explicit EnumerationTree(double minsup, double minconf,
                              std::filesystem::path const& path,
                              TransactionalInputFormat inputFormat = TransactionalInputFormat::TwoColumns,
                              bool hasTransactionID = false,
                              char separator = ',',
                              bool hasHeader = true)
-            : ARAlgorithm(minsup, minconf, path, inputFormat, hasTransactionID, separator, hasHeader) {}
+            : ARAlgorithm(minsup, minconf, path, inputFormat, hasTransactionID, separator, hasHeader) {}*/
+
+    explicit EnumerationTree(Config const& config)
+        : ARAlgorithm(config, {"temp phasename"}) {}
 
     std::list<std::set<std::string>> getAllFrequent() const override;
 };

@@ -7,65 +7,103 @@
 #include <vector>
 
 #include <boost/program_options.hpp>
+#include <easylogging++.h>
 
-#include "logging/easylogging++.h"
-
-#include "algorithms/Pyro.h"
-#include "algorithms/TaneX.h"
-#include "algorithms/DFD/DFD.h"
-#include "algorithms/FDep/FDep.h"
-#include "algorithms/Fd_mine.h"
-#include "algorithms/FastFDs.h"
-#include "algorithms/depminer/Depminer.h"
-#include "algorithms/associative-rules/EnumerationTree.h"
+#include "AlgoFactory.h"
 
 namespace po = boost::program_options;
 
 INITIALIZE_EASYLOGGINGPP
 
-bool checkOptions(std::string const& alg, double error) {
-    if (alg != "pyro" && alg != "tane" && alg != "fastfds" && alg != "fdmine" && alg != "dfd" && alg != "depminer"
-        && alg != "fdep" && alg != "apriori") {
-        std::cout << "ERROR: no matching algorithm. Available algorithms are:\n\tpyro\n\ttane.\n" << std::endl;
+template<typename BetterEnumType>
+static std::string EnumToAvailableValues() {
+    std::stringstream avail_values;
+
+    avail_values << '[';
+
+    for (auto const& name : BetterEnumType::_names()) {
+        avail_values << name << '|';
+    }
+
+    avail_values.seekp(-1, avail_values.cur);
+    avail_values << ']';
+
+    return avail_values.str();
+}
+
+static bool CheckOptions(std::string const& task, std::string const& alg, double error) {
+    if (!algos::AlgoMiningType::_is_valid(task.c_str())) {
+        std::cout << "ERROR: no matching task."
+                     " Available tasks (primitives to mine) are:\n" +
+                     EnumToAvailableValues<algos::AlgoMiningType>() + '\n';
         return false;
     }
-    if (error > 1 || error < 0) {
-        std::cout << "ERROR: error should be between 0 and 1.\n" << std::endl;
+
+    if (!algos::Algo::_is_valid(alg.c_str())) {
+        std::cout << "ERROR: no matching algorithm."
+                     " Available algorithms are:\n" +
+                     EnumToAvailableValues<algos::Algo>() + '\n';
+        return false;
     }
+
+    if (error > 1 || error < 0) {
+        std::cout << "ERROR: error should be between 0 and 1.\n";
+    }
+
     return true;
 }
 
-int main(int argc, char const *argv[]) {
-    std::string alg = "apriori";
+int main(int argc, char const* argv[]) {
+    std::string algo;
     std::string dataset;
+    std::string task;
     char separator = ',';
-    bool hasHeader = true;
+    bool has_header = true;
     int seed = 0;
     double error = 0.0;
-    unsigned int maxLhs = -1;
-    unsigned int parallelism = 0;
+    unsigned int max_lhs = -1;
+    ushort threads = 0;
+    bool is_null_equal_null = true;
 
-    double minconf = 0;
-    double minsup = 0;
-    unsigned int inputFormatInteger = 0;
-    bool hasTransactionID = false;
+    double minsup = 0.0;
+    double minconf = 0.0;
+    std::string ar_input_format;
+    //bool has_transaction_id = false;
+
+    std::string const algo_desc = "algorithm to use. Available algorithms:\n" +
+                                  EnumToAvailableValues<algos::Algo>() +
+                                  " for FD mining.";
+    std::string const task_desc = "type of dependency to mine. Available tasks:\n" +
+                                  EnumToAvailableValues<algos::AlgoMiningType>();
 
     po::options_description desc("Allowed options");
     desc.add_options()
-            ("help", "print help")
-            ("algo", po::value<std::string>(&alg), "algorithm [pyro|tane|fastfds|fdmine|dfd|fdep]")
-            ("data", po::value<std::string>(&dataset), "path to CSV file, relative to ./inputData")
-            ("sep", po::value<char>(&separator), "CSV separator")
-            ("hasHeader", po::value<bool>(&hasHeader), "CSV header presence flag [true|false]. Default true")
-            ("seed", po::value<int>(&seed), "RNG seed")
-            ("error", po::value<double>(&error), "error for AFD algorithms. Default 0.01")
-            ("maxLHS", po::value<unsigned int>(&maxLhs),
-             (std::string("max considered LHS size. Default: ") + std::to_string((unsigned int)-1)).c_str())
-            ("minsup", po::value<double>(&minsup))
-            ("minconf", po::value<double>(&minconf))
-            ("inputFormat", po::value<unsigned int>(&inputFormatInteger))
-            ("hasTID", po::value<bool>(&hasTransactionID))
-            ;
+        ("help", "print this message and exit")
+        ("task", po::value<std::string>(&task),
+         task_desc.c_str())
+        ("algo", po::value<std::string>(&algo),
+         algo_desc.c_str())
+        ("data", po::value<std::string>(&dataset),
+         "path to CSV file, relative to ./inputData")
+        ("separator,s", po::value<char>(&separator)->default_value(separator),
+         "CSV separator")
+        ("has_header", po::value<bool>(&has_header)->default_value(has_header),
+         "CSV header presence flag [true|false]")
+        ("seed", po::value<int>(&seed)->default_value(seed), "RNG seed")
+        ("error", po::value<double>(&error)->default_value(error),
+         "error for AFD algorithms")
+        ("max_lhs", po::value<unsigned int>(&max_lhs)->default_value(max_lhs),
+         "max considered LHS size")
+        ("threads", po::value<ushort>(&threads)->default_value(threads),
+         "number of threads to use. If 0 is specified then as many threads are used as "
+         "the hardware can handle concurrently.")
+        ("is_null_equal_null", po::value<bool>(&is_null_equal_null)->default_value(true),
+         "Is NULL value equals another NULL value")
+        ("minsup", po::value<double>(&minsup), "minimal support value")
+        ("minconf", po::value<double>(&minconf), "minimal confidence value")
+        ("ar_input_format", po::value<string>(&ar_input_format),
+          "singular or tabular")
+        ;
 
     po::variables_map vm;
     try {
@@ -84,44 +122,32 @@ int main(int argc, char const *argv[]) {
 
     el::Loggers::configureFromGlobal("logging.conf");
 
-    std::transform(alg.begin(), alg.end(), alg.begin(), [](unsigned char c){ return std::tolower(c); });
+    std::transform(algo.begin(), algo.end(), algo.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
 
-    if (!checkOptions(alg, error)) {
+    if (!CheckOptions(task, algo, error)) {
         std::cout << desc << std::endl;
         return 1;
     }
-    std::cout << "Input: algorithm \"" << alg
+
+    /* Remove options that are not related to the algorithm configuration */
+    vm.erase("task");
+    vm.erase("algo");
+
+    std::cout << "Input: algorithm \"" << algo
               << "\" with seed " << std::to_string(seed)
               << ", error \"" << std::to_string(error)
-              << ", maxLHS \"" << std::to_string(maxLhs)
+              << ", max_lhs \"" << std::to_string(max_lhs)
               << "\" and dataset \"" << dataset
               << "\" with separator \'" << separator
-              << "\'. Header is " << (hasHeader ? "" : "not ") << "present. " << std::endl;
-    auto path = std::filesystem::current_path() / "inputData" / dataset;
+              << "\'. Header is " << (has_header ? "" : "not ") << "present. " << std::endl;
 
-    std::unique_ptr<FDAlgorithm> algorithmInstance;
-    std::unique_ptr<ARAlgorithm> arAlgorithmInstance;
-    if (alg == "pyro") {
-        algorithmInstance = std::make_unique<Pyro>(path, separator, hasHeader, seed, error, maxLhs, parallelism);
-    } else if (alg == "tane"){
-        algorithmInstance = std::make_unique<Tane>(path, separator, hasHeader, error, maxLhs);
-    } else if (alg == "dfd") {
-        algorithmInstance = std::make_unique<DFD>(path, separator, hasHeader, parallelism);
-    } else if (alg == "fdmine"){
-        algorithmInstance = std::make_unique<Fd_mine>(path, separator, hasHeader);
-    } else if (alg == "fastfds") {
-        algorithmInstance = std::make_unique<FastFDs>(path, separator, hasHeader, maxLhs, parallelism);
-    } else if (alg == "depminer") {
-        algorithmInstance = std::make_unique<Depminer>(path, separator, hasHeader);
-    } else if (alg == "fdep") {
-        algorithmInstance = std::make_unique<FDep>(path, separator, hasHeader);
-    } else if (alg == "apriori") {
-        auto const inputFormat = static_cast<TransactionalInputFormat>(inputFormatInteger);
-        arAlgorithmInstance = std::make_unique<EnumerationTree>(minsup, minconf, path, inputFormat, hasTransactionID, separator, hasHeader);
-    }
+    std::unique_ptr<algos::Primitive> algorithm_instance =
+        algos::CreateAlgorithmInstance(task, algo, vm);
+
     try {
-        unsigned long long elapsedTime = arAlgorithmInstance->execute();
-        std::cout << "> ELAPSED TIME: " << elapsedTime << std::endl;
+        unsigned long long elapsed_time = algorithm_instance->Execute();
+        std::cout << "> ELAPSED TIME: " << elapsed_time << std::endl;
     } catch (std::runtime_error& e) {
         std::cout << e.what() << std::endl;
         return 1;

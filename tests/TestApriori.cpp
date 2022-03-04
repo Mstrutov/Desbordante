@@ -50,14 +50,15 @@ protected:
             std::filesystem::path const& path,
             TransactionalInputFormat inputFormat = TransactionalInputFormat::TwoColumns,
             bool hasTID = false, char separator = ',', bool hasHeader = true) {
-        return std::make_unique<EnumerationTree>(minsup, minconf, path, inputFormat, hasTID, separator, hasHeader);
+        ARAlgorithm::Config const config = {path, separator, hasHeader, inputFormat, minsup, minconf, hasTID};
+        return std::make_unique<EnumerationTree>(config);
     }
 };
 
 TEST_F(ARAlgorithmTest, BookDataset) {
     auto const path = fs::current_path() / "inputData" / "transactionalData" / "rules-book.csv";
     auto algorithm = createAlgorithmInstance(0.3, 0.5, path, TransactionalInputFormat::TwoColumns, false, ',', false);
-    algorithm->execute();
+    algorithm->Execute();
     auto const actualFrequent = algorithm->getAllFrequent();
     std::set<std::set<std::string>> const expectedFrequent = {
              {"Bread"}, {"Milk"}, {"Eggs"}, {"Cheese"}, {"Yogurt"},
@@ -88,7 +89,7 @@ TEST_F(ARAlgorithmTest, BookDataset) {
 TEST_F(ARAlgorithmTest, PresentationExtendedDataset) {
     auto const path = fs::current_path() / "inputData" / "transactionalData" / "rules-presentation-extended.csv";
     auto algorithm = createAlgorithmInstance(0.6, 0, path, TransactionalInputFormat::TwoColumns, false, ',', false);
-    algorithm->execute();
+    algorithm->Execute();
     auto const actual = algorithm->getAllFrequent();
     std::set<std::set<std::string>> const expected = {
             {"Bread"}, {"Milk"}, {"Diaper"}, {"Beer"},
@@ -101,7 +102,7 @@ TEST_F(ARAlgorithmTest, PresentationExtendedDataset) {
 TEST_F(ARAlgorithmTest, PresentationDataset) {
     auto const path = fs::current_path() / "inputData" / "transactionalData" / "rules-presentation.csv";
     auto algorithm = createAlgorithmInstance(0.6, 0, path, TransactionalInputFormat::TwoColumns, false, ',', false);
-    algorithm->execute();
+    algorithm->Execute();
 
     auto const actual = algorithm->getAllFrequent();
     std::set<std::set<std::string>> const expected = {
@@ -128,7 +129,7 @@ TEST_F(ARAlgorithmTest, PresentationDataset) {
 TEST_F(ARAlgorithmTest, SynteticDatasetWithPruning) {
     auto const path = fs::current_path() / "inputData" / "transactionalData" / "rules-synthetic-2.csv";
     auto algorithm = createAlgorithmInstance(0.13, 1.00001, path, TransactionalInputFormat::TwoColumns, false, ',', false);
-    algorithm->execute();
+    algorithm->Execute();
 
     auto const actual = algorithm->getAllFrequent();
     std::set<std::set<std::string>> const expected = {
@@ -148,7 +149,7 @@ TEST_F(ARAlgorithmTest, SynteticDatasetWithPruning) {
 TEST_F(ARAlgorithmTest, KaggleDatasetWithTIDandHeader) {
     auto const path = fs::current_path() / "inputData" / "transactionalData" / "rules-kaggle-rows.csv";
     auto algorithm = createAlgorithmInstance(0.1, 0.5, path, TransactionalInputFormat::ItemsetRows, true, ',', true);
-    algorithm->execute();
+    algorithm->Execute();
 
     auto const actualFrequent = algorithm->getAllFrequent();
     std::set<std::set<std::string>> const expectedFrequent = {
