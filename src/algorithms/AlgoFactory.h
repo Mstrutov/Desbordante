@@ -12,7 +12,8 @@ namespace algos {
 BETTER_ENUM(AlgoMiningType, char,
 #if 1
     fd = 0,
-    typos
+    typos,
+    ar
 #else
     fd = 0, /* Functional dependency mining */
     cfd,    /* Conditional functional dependency mining */
@@ -35,11 +36,13 @@ BETTER_ENUM(Algo, char,
     fdep,
     fdmine,
     pyro,
-    tane
+    tane,
+    apriori
 );
 
 using StdParamsMap = std::unordered_map<std::string, boost::any>;
 using AlgorithmTypesTuple = std::tuple<Depminer, DFD, FastFDs, FDep, Fd_mine, Pyro, Tane>;
+using ArAlgorithmTuplesType = std::tuple<EnumerationTree>;
 
 namespace details {
 
@@ -115,6 +118,20 @@ FDAlgorithm::Config CreateFDAlgorithmConfigFromMap(ParamsMap params) {
 }
 
 template <typename ParamsMap>
+ARAlgorithm::Config CreateArAlgorithmConfigFromMap(ParamsMap params) {
+    ARAlgorithm::Config c;
+
+    c.data = std::filesystem::current_path() / "inputData" /
+             ExtractParamFromMap<std::string>(params, "data");
+    c.separator = ExtractParamFromMap<char>(params, "separator");
+    c.has_header = ExtractParamFromMap<bool>(params, "has_header");
+    c.minsup = ExtractParamFromMap<double>(params, "minsup");
+    c.minconf = ExtractParamFromMap<double>(params, "minconf");
+
+    return c;
+}
+
+template <typename ParamsMap>
 std::unique_ptr<Primitive> CreateFDAlgorithmInstance(Algo const algo, ParamsMap&& params) {
     FDAlgorithm::Config const config =
         CreateFDAlgorithmConfigFromMap(std::forward<ParamsMap>(params));
@@ -131,6 +148,24 @@ std::unique_ptr<Primitive> CreateTyposMinerInstance(Algo const algo, ParamsMap&&
     return details::CreateAlgoWrapperInstanceImpl<TypoMiner>(algo, config);
 }
 
+template <typename ParamsMap>
+std::unique_ptr<Primitive> CreateArAlgorithmInstance(/*Algo const algo, */ParamsMap&& params) {
+    ARAlgorithm::Config const config =
+        CreateArAlgorithmConfigFromMap(std::forward<ParamsMap>(params));
+
+    //return details::CreatePrimitiveInstanceImpl<Primitive, ArAlgorithmTuplesType>(algo, config);
+
+    /* Temporary fix. Template function CreatePrimitiveInstanceImpl does not compile with the new
+     * config type ARAlgorithm::Config, even though Apriori algo has been added to Algo enum.
+     * So I can suggest two solutions. The first is to implement some base class for the configs
+     * (but I'm  not sure if it will work properly) or for Algo enum (I think it is complicated too).
+     * The other solution is to add a new ArAlgo enum with an AR algorithms and change
+     * CreateAlgorithmInstance function such that it could create enum instance depending on
+     * the passed task type.
+     */
+    return std::make_unique<EnumerationTree>(config);
+}
+
 } // namespace details
 
 template <typename ParamsMap>
@@ -141,6 +176,8 @@ std::unique_ptr<Primitive> CreateAlgorithmInstance(AlgoMiningType const task, Al
         return details::CreateFDAlgorithmInstance(algo, std::forward<ParamsMap>(params));
     case AlgoMiningType::typos:
         return details::CreateTyposMinerInstance(algo, std::forward<ParamsMap>(params));
+    case AlgoMiningType::ar:
+        return details::CreateArAlgorithmInstance(/*algo, */std::forward<ParamsMap>(params));
     default:
         throw std::logic_error(task._to_string() + std::string(" task type is not supported yet."));
     }

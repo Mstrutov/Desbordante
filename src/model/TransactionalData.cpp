@@ -24,9 +24,9 @@ TransactionalData::createFromTwoColumns(CSVParser& fileInput, unsigned tidColumn
     std::unordered_map<unsigned, Itemset> transactions;
     unsigned lastItemID = 0;
 
-    assert(fileInput.getNumberOfColumns() > static_cast<int>(std::max(tidColumn, itemColumn)));
-    while (fileInput.getHasNext()) {
-        std::vector<std::string> const row = fileInput.parseNext();
+    assert(fileInput.GetNumberOfColumns() > static_cast<int>(std::max(tidColumn, itemColumn)));
+    while (fileInput.GetHasNext()) {
+        std::vector<std::string> const row = fileInput.ParseNext();
         if (row.empty()) {
             continue;
         }
@@ -70,8 +70,8 @@ TransactionalData::createFromItemsetRows(CSVParser &fileInput, bool hasTransacti
     unsigned lastItemID = 0;
     unsigned transactionId = 0;
 
-    while (fileInput.getHasNext()) {
-        std::vector<std::string> const row = fileInput.parseNext();
+    while (fileInput.GetHasNext()) {
+        std::vector<std::string> const row = fileInput.ParseNext();
         if (row.empty()) {
             continue;
         }
