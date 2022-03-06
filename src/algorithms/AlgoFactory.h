@@ -128,6 +128,20 @@ ARAlgorithm::Config CreateArAlgorithmConfigFromMap(ParamsMap params) {
     c.minsup = ExtractParamFromMap<double>(params, "minsup");
     c.minconf = ExtractParamFromMap<double>(params, "minconf");
 
+    std::shared_ptr<InputFormat> input_format;
+    auto const input_format_arg = ExtractParamFromMap<std::string>(params, "input_format");
+    if (input_format_arg == "singular") {
+        unsigned const  tid_column_index = ExtractParamFromMap<unsigned>(params, "tid_column_index");
+        unsigned const item_column_index = ExtractParamFromMap<unsigned>(params, "item_column_index");
+        input_format = std::make_shared<Singular>(tid_column_index, item_column_index);
+    } else if (input_format_arg == "tabular") {
+        bool const has_header = ExtractParamFromMap<bool>(params, "has_tid");
+        input_format = std::make_shared<Tabular>(has_header);
+    } else {
+        throw std::logic_error("\"" + input_format_arg + "\"" + " format is not supported in AR mining");
+    }
+    c.input_format = std::move(input_format);
+
     return c;
 }
 

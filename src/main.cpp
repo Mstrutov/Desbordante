@@ -68,7 +68,9 @@ int main(int argc, char const* argv[]) {
     double minsup = 0.0;
     double minconf = 0.0;
     std::string ar_input_format;
-    //bool has_transaction_id = false;
+    unsigned tid_column_index = 0;
+    unsigned item_column_index = 1;
+    bool has_transaction_id = false;
 
     std::string const algo_desc = "algorithm to use. Available algorithms:\n" +
                                   EnumToAvailableValues<algos::Algo>() +
@@ -99,10 +101,17 @@ int main(int argc, char const* argv[]) {
          "the hardware can handle concurrently.")
         ("is_null_equal_null", po::value<bool>(&is_null_equal_null)->default_value(true),
          "Is NULL value equals another NULL value")
+
         ("minsup", po::value<double>(&minsup), "minimal support value")
         ("minconf", po::value<double>(&minconf), "minimal confidence value")
-        ("ar_input_format", po::value<string>(&ar_input_format),
-          "singular or tabular")
+        ("input_format", po::value<string>(&ar_input_format),
+         "format of the input dataset. [singular|tabular] for AR mining")
+        ("tid_column_index", po::value<unsigned>(&tid_column_index)->default_value(0),
+         "index of the column where a tid is stored (for singular input type)")
+        ("item_column_index", po::value<unsigned>(&item_column_index)->default_value(1),
+         "index of the column where an item name is stored (for \"singular\" input type)")
+        ("has_tid", po::value<bool>(&has_transaction_id)->default_value(false),
+         "does the first column contain a transaction id (for \"tabular\" input type)")
         ;
 
     po::variables_map vm;

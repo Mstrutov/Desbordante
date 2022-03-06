@@ -4,15 +4,14 @@
 #include <unordered_map>
 
 std::unique_ptr<TransactionalData>
-TransactionalData::createFrom(CSVParser& fileInput, TransactionalInputFormat inputFormat,
-                                                    bool hasTransactionID) {
-    switch (inputFormat) {
-        case TransactionalInputFormat::TwoColumns:
-            return createFromTwoColumns(fileInput);
-        case TransactionalInputFormat::ItemsetRows:
-            return createFromItemsetRows(fileInput, hasTransactionID);
-        default:
-            return createFromTwoColumns(fileInput);
+TransactionalData::createFrom(CSVParser& fileInput, InputFormat const& inputFormat) {
+    if (typeid(inputFormat) == typeid(Singular)) {
+        return TransactionalData::createFromTwoColumns(fileInput, inputFormat.tid_column_index(),
+                                                                  inputFormat.item_column_index());
+    } else if (typeid(inputFormat) == typeid(Tabular)) {
+        return TransactionalData::createFromItemsetRows(fileInput, inputFormat.tid_presence());
+    } else {
+        throw std::logic_error("This input type is not maintained yet");
     }
 }
 

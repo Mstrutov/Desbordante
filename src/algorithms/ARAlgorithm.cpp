@@ -5,7 +5,7 @@
 #include "ARAlgorithm.h"
 
 unsigned long long ARAlgorithm::Execute() {
-    transactionalData = TransactionalData::createFrom(input_generator_, inputFormat, hasTransactionID);
+    transactionalData = TransactionalData::createFrom(input_generator_, *inputFormat);
     if (transactionalData->getNumTransactions() == 0) {
         throw std::runtime_error("Got an empty .csv file: AR mining is meaningless.");
     }
