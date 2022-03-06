@@ -32,6 +32,5 @@ public:
     size_t getNumTransactions() const noexcept { return transactions.size(); }
 
     static std::unique_ptr<TransactionalData> createFrom(CSVParser& fileInput,
-                                                         TransactionalInputFormat inputType,
-                                                         bool hasTransactionID = false);
+                                                         InputFormat const& inputType);
 };

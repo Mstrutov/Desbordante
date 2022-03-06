@@ -16,17 +16,15 @@ public:
         std::filesystem::path data{};   /* Path to input file */
         char separator = ',';           /* Separator for csv */
         bool has_header = true;         /* Indicates if input file has header */
-        TransactionalInputFormat input_format = TransactionalInputFormat::TwoColumns;
+        std::shared_ptr<InputFormat> input_format;
         double minsup = 0;
         double minconf = 0;
-        bool hasTID = false;
     };
 
 private:
     double minconf;
     std::list<ARStrings> arCollection;
-    TransactionalInputFormat inputFormat = TransactionalInputFormat::ItemsetRows;
-    bool hasTransactionID = false;
+    std::shared_ptr<InputFormat> inputFormat;
 
     struct RuleNode {
         AR rule;
@@ -52,18 +50,9 @@ protected:
     virtual unsigned long long generateAllRules() = 0;
     virtual unsigned long long findFrequent() = 0;
 public:
-    /*ARAlgorithm(double minsup, double minconf,
-                std::filesystem::path const& path,
-                TransactionalInputFormat inputFormat = TransactionalInputFormat::TwoColumns,
-                bool hasTransactionID = false,
-                char separator = ',',
-                bool hasHeader = true)
-            : minconf(minconf), inputGenerator(path, separator, hasHeader),
-              inputFormat(inputFormat), hasTransactionID(hasTransactionID), minsup(minsup) {}*/
     explicit ARAlgorithm(Config const& config, std::vector<std::string_view> phase_names)
         : Primitive(config.data, config.separator, config.has_header, std::move(phase_names)),
-          minconf(config.minconf), inputFormat(config.input_format), hasTransactionID(config.hasTID),
-          minsup(config.minsup) {}
+          minconf(config.minconf), inputFormat(config.input_format), minsup(config.minsup) {}
 
     std::list<ARStrings> arList() const noexcept { return arCollection; }
     virtual std::list<std::set<std::string>> getAllFrequent() const = 0;   //for debugging and testing
