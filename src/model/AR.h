@@ -2,52 +2,49 @@
 
 #include "Itemset.h"
 
-class AR {
-public:
+struct ArIDs {
     std::vector<unsigned> left;   //antecedent
     std::vector<unsigned> right;  //consequent
     double confidence = -1;
-    //TODO может быть не индексы, а сразу строки?
 
-    AR() = default;
-    AR(std::vector<unsigned> && left, std::vector<unsigned> && right, double confidence)
+    ArIDs() = default;
+    ArIDs(std::vector<unsigned>&& left, std::vector<unsigned>&& right, double confidence)
         :left(std::move(left)), right(std::move(right)), confidence(confidence) {}
 };
 
-class ARStrings {
-public:
+struct ARStrings {
     std::list<std::string> left;   //antecedent
     std::list<std::string> right;  //consequent
     double confidence = -1;
 
     ARStrings() = default;
-    ARStrings(std::list<std::string> && left, std::list<std::string> && right, double confidence)
+    ARStrings(std::list<std::string>&& left, std::list<std::string>&& right, double confidence)
             :left(std::move(left)), right(std::move(right)), confidence(confidence) {}
 
-    ARStrings(AR const& idsRule, TransactionalData const* transactionalData)
-            : confidence(idsRule.confidence) {
-        auto const& itemNamesMap = transactionalData->getItemUniverse();
+    ARStrings(ArIDs const& id_format_rule, TransactionalData const* transactional_data)
+            : confidence(id_format_rule.confidence) {
+        auto const& item_names_map = transactional_data->GetItemUniverse();
 
-        for (auto itemID : idsRule.left) {
-            this->left.push_back(itemNamesMap[itemID]);
+        for (auto itemID : id_format_rule.left) {
+            this->left.push_back(item_names_map[itemID]);
         }
-        for (auto itemID : idsRule.right) {
-            this->right.push_back(itemNamesMap[itemID]);
+        for (auto itemID : id_format_rule.right) {
+            this->right.push_back(item_names_map[itemID]);
         }
     }
 
-    std::string toString() const {
+    std::string ToString() const {
         std::string result;
         result.append(std::to_string(confidence));
         result.append("\t{");
-        for (auto const& itemName : left) {
-            result.append(itemName);
+        for (auto const& item_name : left) {
+            result.append(item_name);
             result.append(", ");
         }
         result.erase(result.size() - 2, 2);
         result.append("} -> {");
-        for (auto const& itemName : right) {
-            result.append(itemName);
+        for (auto const& item_name : right) {
+            result.append(item_name);
             result.append(", ");
         }
         result.erase(result.size() - 2, 2);

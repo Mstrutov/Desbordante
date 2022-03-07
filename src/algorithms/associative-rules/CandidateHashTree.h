@@ -8,61 +8,63 @@ class TransactionalData;
 class CandidateHashTree {
     using NodeIterator = std::list<Node>::iterator;
 private:
-    unsigned branchingDegree;
-    unsigned minThreshold;
-    unsigned totalRowCount = 0;
-    std::unordered_map<Node*, std::list<Node>>& candidates;
+    unsigned branching_degree_;
+    unsigned min_threshold_;
+    unsigned total_row_count_ = 0;
+    std::unordered_map<Node*, std::list<Node>>& candidates_;
 
-    TransactionalData const* const transactionalData = nullptr;
+    TransactionalData const* const transactional_data_ = nullptr;
 
     struct LeafRow {
-        NodeIterator candidateNode;
+        NodeIterator candidate_node;
         Node* const parent;
-        unsigned transactionCount = 0;
+        unsigned transaction_count = 0;
 
-        //LeafRow() = default;
         LeafRow(LeafRow&& other) = default;
         LeafRow(NodeIterator node, Node* parent)
-            : candidateNode(node), parent(parent) {}
+            : candidate_node(node), parent(parent) {}
 
         LeafRow(LeafRow const& other) = delete;
     };
 
     struct HashTreeNode {
-        unsigned levelNumber;
-        int lastVisitedTransactionID = -1; //TODO ниче что не инициализируем?
+        unsigned level_number;
+        int last_visited_transaction_id = -1;
         std::vector<HashTreeNode> children;
         std::list<LeafRow> candidates;
 
         HashTreeNode() = delete;
-        explicit HashTreeNode(unsigned levelNumber)
-            : levelNumber(levelNumber) {}
+        explicit HashTreeNode(unsigned level_number)
+            : level_number(level_number) {}
     };
 
-    HashTreeNode root;
-    unsigned hashFunction(LeafRow const& nodeRow, unsigned levelNum) const;
-    unsigned itemHash(unsigned itemID) const noexcept { return itemID % branchingDegree; }
+    HashTreeNode root_;
+    unsigned HashFunction(LeafRow const& node_row, unsigned level_num) const;
+    unsigned ItemHash(unsigned item_id) const noexcept { return item_id % branching_degree_; }
 
-    void appendRow(LeafRow row, HashTreeNode & subtreeRoot);
-    void addLevel(HashTreeNode & leafNode);
-    void findAndVisitLeaves(HashTreeNode & subtreeRoot,
-                            std::vector<unsigned int>::const_iterator start,
-                            std::vector<unsigned> const& transactionItems,
-                            int transactionID);
-    static void visitLeaf(HashTreeNode & leaf, std::vector<unsigned> const& transactionItems, int tID);
-    void prune(double minsup, HashTreeNode & subtreeRoot);
-    void addCandidates();
+    void AppendRow(LeafRow row, HashTreeNode& subtree_root);
+    void AddLevel(HashTreeNode& leaf_node);
+    void FindAndVisitLeaves(HashTreeNode& subtree_root,
+                            std::vector<unsigned>::const_iterator start,
+                            std::vector<unsigned> const& transaction_items,
+                            int tid);
+    static void VisitLeaf(HashTreeNode& leaf, std::vector<unsigned> const& transaction_items, int tID);
+    void Prune(double minsup, HashTreeNode& subtree_root);
+    void AddCandidates();
 public:
-    CandidateHashTree(TransactionalData const* transactionalData,
+    CandidateHashTree(TransactionalData const* transactional_data,
                       std::unordered_map<Node*, std::list<Node>>& candidates,
-                      unsigned branchingDegree, unsigned minThreshold)
-            : branchingDegree(branchingDegree), minThreshold(minThreshold),
-              candidates(candidates), transactionalData(transactionalData), root(1) {
-        addCandidates();
+                      unsigned branching_degree, unsigned min_threshold)
+            : branching_degree_(branching_degree),
+              min_threshold_(min_threshold),
+              candidates_(candidates),
+              transactional_data_(transactional_data),
+              root_(1) {
+        AddCandidates();
     }
 
-    void addCandidate(NodeIterator candidate, Node* parent); //maybe reference is possible
-    unsigned size() const noexcept { return totalRowCount; };
-    void performCounting();
-    void pruneNodes(double minsup);
+    void AddCandidate(NodeIterator candidate, Node* parent); //maybe reference is possible
+    unsigned size() const noexcept { return total_row_count_; };
+    void PerformCounting();
+    void PruneNodes(double minsup);
 };
