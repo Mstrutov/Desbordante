@@ -22,40 +22,43 @@ public:
     };
 
 private:
-    double minconf;
-    std::list<ARStrings> arCollection;
-    std::shared_ptr<InputFormat> inputFormat;
+    double minconf_;
+    std::list<ARStrings> ar_collection_;
+    std::shared_ptr<InputFormat> input_format_;
 
     struct RuleNode {
-        AR rule;
+        ArIDs rule;
         std::list<RuleNode> children;
         RuleNode() = default;
         RuleNode(std::vector<unsigned>&& left, std::vector<unsigned>&& right, double confidence)
             : rule(std::move(left), std::move(right), confidence) {}
     };
 
-    RuleNode root;
+    RuleNode root_;
 
-    bool generateRuleLevel(std::vector<unsigned> const& frequentItemset, double support, unsigned levelNumber);
-    bool mergeRules(std::vector<unsigned> const& frequentItemset, double support, RuleNode* node);
-    static void updatePath(std::stack<RuleNode*> & path, std::list<RuleNode> & vertices);
+    bool GenerateRuleLevel(std::vector<unsigned> const& frequent_itemset,
+                           double support, unsigned level_number);
+    bool MergeRules(std::vector<unsigned> const& frequent_itemset, double support, RuleNode* node);
+    static void UpdatePath(std::stack<RuleNode*>& path, std::list<RuleNode>& vertices);
 protected:
-    std::unique_ptr<TransactionalData> transactionalData;
-    double minsup;
+    std::unique_ptr<TransactionalData> transactional_data_;
+    double minsup_;
 
-    void generateRulesFrom(std::vector<unsigned> const& frequentItemset, double support);
-    void registerARStrings(AR const& rule);
+    void GenerateRulesFrom(std::vector<unsigned> const& frequent_itemset, double support);
+    void registerARStrings(ArIDs const& rule);
 
-    virtual double getSupport(std::vector<unsigned> const& frequentItemset) const = 0;
-    virtual unsigned long long generateAllRules() = 0;
-    virtual unsigned long long findFrequent() = 0;
+    virtual double GetSupport(std::vector<unsigned> const& frequent_itemset) const = 0;
+    virtual unsigned long long GenerateAllRules() = 0;
+    virtual unsigned long long FindFrequent() = 0;
 public:
     explicit ARAlgorithm(Config const& config, std::vector<std::string_view> phase_names)
         : Primitive(config.data, config.separator, config.has_header, std::move(phase_names)),
-          minconf(config.minconf), inputFormat(config.input_format), minsup(config.minsup) {}
+          minconf_(config.minconf),
+          input_format_(config.input_format),
+          minsup_(config.minsup) {}
 
-    std::list<ARStrings> arList() const noexcept { return arCollection; }
-    virtual std::list<std::set<std::string>> getAllFrequent() const = 0;   //for debugging and testing
+    std::list<ARStrings> GetArList() const noexcept { return ar_collection_; }
+    virtual std::list<std::set<std::string>> GetFrequentList() const = 0;   //for debugging and testing
 
     unsigned long long Execute() override;
     virtual ~ARAlgorithm() = default;

@@ -10,27 +10,31 @@
 
 class TransactionalData {
 private:
-    std::vector<std::string> itemUniverse;
-    std::unordered_map<unsigned, Itemset> transactions; //пока что map, т.к. не знаем общее количество транзкзцйи
+    std::vector<std::string> item_universe_;
+    std::unordered_map<unsigned, Itemset> transactions_;
 
-    static std::unique_ptr<TransactionalData> createFromTwoColumns(CSVParser& fileInput,
-                                                                   unsigned tidColumn = 0,
-                                                                   unsigned itemColumn = 1);
-    static std::unique_ptr<TransactionalData> createFromItemsetRows(CSVParser& fileInput, bool hasTransactionID);
+    static std::unique_ptr<TransactionalData> CreateFromSingular(CSVParser& file_input,
+                                                                 unsigned tid_col_index = 0,
+                                                                 unsigned item_col_index = 1);
+
+    static std::unique_ptr<TransactionalData>  CreateFromTabular(CSVParser& file_input,
+                                                                 bool has_tid);
 public:
     TransactionalData() = delete;
     TransactionalData(TransactionalData const&) = delete;
     TransactionalData& operator=(TransactionalData const&) = delete;
 
-    TransactionalData(std::vector<std::string>&& itemUniverse, std::unordered_map<unsigned, Itemset>&& transactions)
-        : itemUniverse(std::move(itemUniverse)), transactions(std::move(transactions)) {}
+    TransactionalData(std::vector<std::string>&& item_universe,
+                      std::unordered_map<unsigned, Itemset>&& transactions)
+        : item_universe_(std::move(item_universe)), transactions_(std::move(transactions)) {}
 
-    std::vector<std::string> const& getItemUniverse() const noexcept { return itemUniverse; }
-    std::unordered_map<unsigned, Itemset> const& getTransactions() const noexcept { return transactions; }
+    std::vector<std::string> const& GetItemUniverse() const noexcept { return item_universe_; }
+    std::unordered_map<unsigned, Itemset> const& GetTransactions() const noexcept
+                                                                     { return transactions_; }
 
-    size_t    getUniverseSize() const noexcept { return itemUniverse.size(); }
-    size_t getNumTransactions() const noexcept { return transactions.size(); }
+    size_t    GetUniverseSize() const noexcept { return item_universe_.size(); }
+    size_t GetNumTransactions() const noexcept { return transactions_.size(); }
 
-    static std::unique_ptr<TransactionalData> createFrom(CSVParser& fileInput,
-                                                         InputFormat const& inputType);
+    static std::unique_ptr<TransactionalData> CreateFrom(CSVParser& file_input,
+                                                         InputFormat const& input_type);
 };

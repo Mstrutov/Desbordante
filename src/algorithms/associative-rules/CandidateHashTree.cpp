@@ -3,120 +3,121 @@
 #include <algorithm>
 #include "cassert"
 
-void CandidateHashTree::appendRow(LeafRow row, HashTreeNode & subtreeRoot) {
-    if (!subtreeRoot.children.empty()) {
-        auto const hash = hashFunction(row, subtreeRoot.levelNumber);
-        appendRow(std::move(row), subtreeRoot.children[hash]);
+void CandidateHashTree::AppendRow(LeafRow row, HashTreeNode& subtree_root) {
+    if (!subtree_root.children.empty()) {
+        auto const hash = HashFunction(row, subtree_root.level_number);
+        AppendRow(std::move(row), subtree_root.children[hash]);
     } else {
-        subtreeRoot.candidates.push_back(std::move(row));
-        if (subtreeRoot.candidates.size() > minThreshold) {
-            addLevel(subtreeRoot);
+        subtree_root.candidates.push_back(std::move(row));
+        if (subtree_root.candidates.size() > min_threshold_) {
+            AddLevel(subtree_root);
         }
     }
 }
 
-void CandidateHashTree::addLevel(HashTreeNode & leafNode) {
-    unsigned const nextLevelNumber = leafNode.levelNumber + 1;
+void CandidateHashTree::AddLevel(HashTreeNode& leaf_node) {
+    unsigned const next_level_number = leaf_node.level_number + 1;
 
     //by this we make leaf node interior
-    leafNode.children.reserve(branchingDegree);
-    for (unsigned siblingNum = 0; siblingNum < branchingDegree; ++siblingNum) {
+    leaf_node.children.reserve(branching_degree_);
+    for (unsigned siblingNum = 0; siblingNum < branching_degree_; ++siblingNum) {
         //generate new leaf nodes
-        leafNode.children.emplace_back(nextLevelNumber);
+        leaf_node.children.emplace_back(next_level_number);
     }
-    leafNode.children.shrink_to_fit();
+    leaf_node.children.shrink_to_fit();
 
     //distribute rows of an old leaf between new leaves
-    for (auto & row : leafNode.candidates) {
-        appendRow(std::move(row), leafNode);
+    for (auto& row : leaf_node.candidates) {
+        AppendRow(std::move(row), leaf_node);
     }
 
-    leafNode.candidates.clear();
+    leaf_node.candidates.clear();
 }
 
-void CandidateHashTree::addCandidate(NodeIterator candidate, Node* parent) {
-    appendRow(LeafRow(candidate, parent), root);
-    ++totalRowCount;
+void CandidateHashTree::AddCandidate(NodeIterator candidate, Node* parent) {
+    AppendRow(LeafRow(candidate, parent), root_);
+    ++total_row_count_;
 }
 
-unsigned CandidateHashTree::hashFunction(LeafRow const& nodeRow, unsigned const levelNum) const {
-    auto const& nodeItems = nodeRow.candidateNode->items;
-    assert(levelNum <= nodeItems.size());
-    auto const currLevelElementID = nodeItems.at(levelNum - 1);
-    return itemHash(currLevelElementID);
+unsigned CandidateHashTree::HashFunction(LeafRow const& node_row, unsigned level_num) const {
+    auto const& node_items = node_row.candidate_node->items;
+    assert(level_num <= node_items.size());
+    auto const curr_level_element_id = node_items.at(level_num - 1);
+    return ItemHash(curr_level_element_id);
 }
 
-void CandidateHashTree::findAndVisitLeaves(HashTreeNode & subtreeRoot,
-                                           std::vector<unsigned>::const_iterator const start,
-                                           std::vector<unsigned> const& transactionItems,
-                                           int transactionID) {
-    unsigned const nextBranchNumber = itemHash(*start);
-    auto & nextNode = subtreeRoot.children[nextBranchNumber];
-    if (nextNode.children.empty()) {
+void CandidateHashTree::FindAndVisitLeaves(HashTreeNode& subtree_root,
+                                           std::vector<unsigned>::const_iterator start,
+                                           std::vector<unsigned> const& transaction_items,
+                                           int tid) {
+    unsigned const next_branch_number = ItemHash(*start);
+    auto& next_node = subtree_root.children[next_branch_number];
+    if (next_node.children.empty()) {
         //if nextNode is a leaf itself, then we visit it and terminate the recursion
-        visitLeaf(nextNode, transactionItems, transactionID);
+        VisitLeaf(next_node, transaction_items, tid);
     } else {
-        for (auto newStart = std::next(start); newStart != transactionItems.end(); ++newStart) {
-            findAndVisitLeaves(nextNode, newStart, transactionItems, transactionID);
+        for (auto new_start = std::next(start); new_start != transaction_items.end(); ++new_start) {
+            FindAndVisitLeaves(next_node, new_start, transaction_items, tid);
         }
     }
 }
 
-void CandidateHashTree::visitLeaf(HashTreeNode & leaf, std::vector<unsigned> const& transactionItems, int tID) {
-    if (leaf.lastVisitedTransactionID == tID) {
-        return;
-    }
-    leaf.lastVisitedTransactionID = tID;
+void CandidateHashTree::VisitLeaf(HashTreeNode& leaf,
+                                  std::vector<unsigned> const& transaction_items, int tID) {
+    if (leaf.last_visited_transaction_id == tID) { return; }
 
-    for (auto & row : leaf.candidates) {
-        auto const& candidateItems = row.candidateNode->items;
-        if (std::includes(transactionItems.begin(), transactionItems.end(),
-                          candidateItems.begin(), candidateItems.end())) {
-            row.transactionCount++;
+    leaf.last_visited_transaction_id = tID;
+
+    for (auto& row : leaf.candidates) {
+        auto const& candidate_items = row.candidate_node->items;
+        if (std::includes(transaction_items.begin(), transaction_items.end(),
+                          candidate_items.begin(), candidate_items.end())) {
+            row.transaction_count++;
         }
     }
 }
 
-void CandidateHashTree::performCounting() {
-    for (auto const& transaction : transactionalData->getTransactions()) { //TODO нужно ли по порядку или так норм?
-        auto const& items = transaction.second.getItemsIDs();
-        auto const transactionID = transaction.first;
-        if (root.children.empty()) {
+void CandidateHashTree::PerformCounting() {
+    for (auto const& transaction : transactional_data_->GetTransactions()) {
+        auto const& items = transaction.second.GetItemsIDs();
+        auto const tid = transaction.first;
+        if (root_.children.empty()) {
             //if the root is a leaf itself
-            visitLeaf(root, items, transactionID);
+            VisitLeaf(root_, items, tid);
         } else {
             for (auto start = items.begin(); start != items.end(); ++start) {
-                findAndVisitLeaves(root, start, items, transactionID);
+                FindAndVisitLeaves(root_, start, items, tid);
             }
         }
     }
 }
 
-void CandidateHashTree::prune(double minsup, HashTreeNode & subtreeRoot) {
-    if (subtreeRoot.children.empty()) {
-        for (auto & row : subtreeRoot.candidates) {
-            double const support = static_cast<double>(row.transactionCount) / transactionalData->getNumTransactions();
+void CandidateHashTree::Prune(double minsup, HashTreeNode& subtree_root) {
+    if (subtree_root.children.empty()) {
+        for (auto& row : subtree_root.candidates) {
+            double const support = static_cast<double>(row.transaction_count) /
+                                   transactional_data_->GetNumTransactions();
             if (support < minsup) {
-                candidates[row.parent].erase(row.candidateNode);
+                candidates_[row.parent].erase(row.candidate_node);
             } else {
-                row.candidateNode->support = support;
+                row.candidate_node->support = support;
             }
         }
     } else {
-        for (auto & sibling : subtreeRoot.children) {
-            prune(minsup, sibling);
+        for (auto& sibling : subtree_root.children) {
+            Prune(minsup, sibling);
         }
     }
 }
 
-void CandidateHashTree::pruneNodes(double minsup) {
-    prune(minsup, root);
+void CandidateHashTree::PruneNodes(double minsup) {
+    Prune(minsup, root_);
 }
 
-void CandidateHashTree::addCandidates() {
-    for (auto& [node, candidateChildren] : candidates) {
-        for (auto child = candidateChildren.begin(); child != candidateChildren.end(); ++child) {
-            addCandidate(child, node);
+void CandidateHashTree::AddCandidates() {
+    for (auto& [node, candidate_children] : candidates_) {
+        for (auto child = candidate_children.begin(); child != candidate_children.end(); ++child) {
+            AddCandidate(child, node);
         }
     }
 }

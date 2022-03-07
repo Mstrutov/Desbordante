@@ -9,8 +9,9 @@
 
 namespace fs = std::filesystem;
 
-testing::AssertionResult checkFrequentListsEquality(std::list<std::set<std::string>> const& actual,
-                                                    std::set<std::set<std::string>>  const& expected) {
+testing::AssertionResult
+CheckFrequentListsEquality(std::list<std::set<std::string>> const& actual,
+                           std::set<std::set<std::string>>  const& expected) {
     if (actual.size() != expected.size()) {
         return ::testing::AssertionFailure() << "count of frequent itemsets does not match: expected "
                                              << expected.size() << ", got " << actual.size();
@@ -24,9 +25,9 @@ testing::AssertionResult checkFrequentListsEquality(std::list<std::set<std::stri
     }
 }
 
-testing::AssertionResult checkAssociationRulesListsEquality(std::list<ARStrings> const& actual,
-                                                            std::set<std::pair<std::set<std::string>,
-                                                                               std::set<std::string>>> const& expected) {
+testing::AssertionResult CheckAssociationRulesListsEquality(
+        std::list<ARStrings> const& actual,
+        std::set<std::pair<std::set<std::string>, std::set<std::string>>> const& expected) {
     if (actual.size() != expected.size()) {
         return ::testing::AssertionFailure() << "count of generated rules does not match: expected "
                                              << expected.size() << ", got " << actual.size();
@@ -45,31 +46,32 @@ testing::AssertionResult checkAssociationRulesListsEquality(std::list<ARStrings>
 
 class ARAlgorithmTest : public ::testing::Test {
 protected:
-    std::unique_ptr<ARAlgorithm> createAlgorithmInstance(
+    static std::unique_ptr<ARAlgorithm> CreateAlgorithmInstance(
             double minsup, double minconf,
             std::filesystem::path const& path,
             std::shared_ptr<InputFormat> inputFormat,
             char separator = ',', bool hasHeader = true) {
-        ARAlgorithm::Config const config = {path, separator, hasHeader, std::move(inputFormat), minsup, minconf};
+        ARAlgorithm::Config const config = {path, separator, hasHeader, std::move(inputFormat),
+                                                                                minsup, minconf};
         return std::make_unique<EnumerationTree>(config);
     }
 };
 
 TEST_F(ARAlgorithmTest, BookDataset) {
     auto const path = fs::current_path() / "inputData" / "transactionalData" / "rules-book.csv";
-    auto inputParams = std::make_shared<Singular>(0, 1);
-    auto algorithm = createAlgorithmInstance(0.3, 0.5, path, std::move(inputParams), ',', false);
+    auto input_params = std::make_shared<Singular>(0, 1);
+    auto algorithm = CreateAlgorithmInstance(0.3, 0.5, path, std::move(input_params), ',', false);
     algorithm->Execute();
-    auto const actualFrequent = algorithm->getAllFrequent();
-    std::set<std::set<std::string>> const expectedFrequent = {
+    auto const actual_frequent = algorithm->GetFrequentList();
+    std::set<std::set<std::string>> const expected_frequent = {
              {"Bread"}, {"Milk"}, {"Eggs"}, {"Cheese"}, {"Yogurt"},
              {"Bread", "Milk"}, {"Eggs", "Milk"}, {"Cheese", "Milk"}, {"Eggs", "Yogurt"}, {"Milk", "Yogurt"},
              {"Eggs", "Milk", "Yogurt"}
     };
-    ASSERT_TRUE(checkFrequentListsEquality(actualFrequent, expectedFrequent));
+    ASSERT_TRUE(CheckFrequentListsEquality(actual_frequent, expected_frequent));
 
-    auto const actualRules = algorithm->arList();
-    std::set<std::pair<std::set<std::string>, std::set<std::string>>> expectedRules = {
+    auto const actual_rules = algorithm->GetArList();
+    std::set<std::pair<std::set<std::string>, std::set<std::string>>> expected_rules = {
             {{"Bread"}, {"Milk"}},
             {{"Cheese"}, {"Milk"}},
             {{"Milk"}, {"Eggs"}},
@@ -84,38 +86,38 @@ TEST_F(ARAlgorithmTest, BookDataset) {
             {{"Yogurt"}, {"Milk", "Eggs"}},
             {{"Eggs"}, {"Yogurt", "Milk"}}
     };
-    ASSERT_TRUE(checkAssociationRulesListsEquality(actualRules, expectedRules));
+    ASSERT_TRUE(CheckAssociationRulesListsEquality(actual_rules, expected_rules));
 }
 
 TEST_F(ARAlgorithmTest, PresentationExtendedDataset) {
     auto const path = fs::current_path() / "inputData" / "transactionalData" / "rules-presentation-extended.csv";
-    auto inputParams = std::make_shared<Singular>(0, 1);
-    auto algorithm = createAlgorithmInstance(0.6, 0, path, std::move(inputParams), ',', false);
+    auto input_params = std::make_shared<Singular>(0, 1);
+    auto algorithm = CreateAlgorithmInstance(0.6, 0, path, std::move(input_params), ',', false);
     algorithm->Execute();
-    auto const actual = algorithm->getAllFrequent();
+    auto const actual = algorithm->GetFrequentList();
     std::set<std::set<std::string>> const expected = {
             {"Bread"}, {"Milk"}, {"Diaper"}, {"Beer"},
             {"Bread", "Milk"}, {"Diaper", "Beer"}, {"Beer", "Milk"}, {"Bread", "Beer"}, {"Milk", "Diaper"}, {"Bread", "Diaper"},
             {"Bread", "Diaper", "Beer"}, {"Milk", "Diaper", "Beer"}
     };
-    ASSERT_TRUE(checkFrequentListsEquality(actual, expected));
+    ASSERT_TRUE(CheckFrequentListsEquality(actual, expected));
 }
 
 TEST_F(ARAlgorithmTest, PresentationDataset) {
     auto const path = fs::current_path() / "inputData" / "transactionalData" / "rules-presentation.csv";
-    auto inputParams = std::make_shared<Singular>(0, 1);
-    auto algorithm = createAlgorithmInstance(0.6, 0, path, std::move(inputParams), ',', false);
+    auto input_params = std::make_shared<Singular>(0, 1);
+    auto algorithm = CreateAlgorithmInstance(0.6, 0, path, std::move(input_params), ',', false);
     algorithm->Execute();
 
-    auto const actual = algorithm->getAllFrequent();
+    auto const actual = algorithm->GetFrequentList();
     std::set<std::set<std::string>> const expected = {
             {"Bread"}, {"Milk"}, {"Diaper"}, {"Beer"},
             {"Bread", "Milk"}, {"Diaper", "Beer"}, {"Milk", "Diaper"}, {"Bread", "Diaper"}
     };
-    ASSERT_TRUE(checkFrequentListsEquality(actual, expected));
+    ASSERT_TRUE(CheckFrequentListsEquality(actual, expected));
 
-    auto const actualRules = algorithm->arList();
-    std::set<std::pair<std::set<std::string>, std::set<std::string>>> expectedRules = {
+    auto const actual_rules = algorithm->GetArList();
+    std::set<std::pair<std::set<std::string>, std::set<std::string>>> expected_rules = {
             {{"Bread"}, {"Milk"}},
             {{"Milk"}, {"Bread"}},
             {{"Diaper"}, {"Beer"}},
@@ -125,39 +127,40 @@ TEST_F(ARAlgorithmTest, PresentationDataset) {
             {{"Diaper"}, {"Bread"}},
             {{"Bread"}, {"Diaper"}}
     };
-    ASSERT_TRUE(checkAssociationRulesListsEquality(actualRules, expectedRules))
+    ASSERT_TRUE(CheckAssociationRulesListsEquality(actual_rules, expected_rules))
             << "conf=0: generated not all of the combinations from the frequent itemsets";
 }
 
 TEST_F(ARAlgorithmTest, SynteticDatasetWithPruning) {
     auto const path = fs::current_path() / "inputData" / "transactionalData" / "rules-synthetic-2.csv";
-    auto inputParams = std::make_shared<Singular>(0, 1);
-    auto algorithm = createAlgorithmInstance(0.13, 1.00001, path, std::move(inputParams), ',', false);
+    auto input_params = std::make_shared<Singular>(0, 1);
+    auto algorithm =
+        CreateAlgorithmInstance(0.13, 1.00001, path, std::move(input_params), ',', false);
     algorithm->Execute();
 
-    auto const actual = algorithm->getAllFrequent();
+    auto const actual = algorithm->GetFrequentList();
     std::set<std::set<std::string>> const expected = {
             {"a"}, {"b"}, {"c"}, {"d"}, {"e"}, {"f"},
             {"a", "b"}, {"a", "c"}, {"a", "d"}, {"a", "f"}, {"b", "c"}, {"c", "d"}, {"c", "f"}, {"d", "f"},
             {"a", "c", "d"}, {"a", "c", "f"}, {"a", "d", "f"}, {"c", "d", "f"},
             {"a", "c", "d", "f"}
     };
-    ASSERT_TRUE(checkFrequentListsEquality(actual, expected));
+    ASSERT_TRUE(CheckFrequentListsEquality(actual, expected));
 
-    auto const actualRules = algorithm->arList();
-    std::set<std::pair<std::set<std::string>, std::set<std::string>>> expectedRules = {};
-    ASSERT_TRUE(checkAssociationRulesListsEquality(actualRules, expectedRules))
+    auto const actual_rules = algorithm->GetArList();
+    std::set<std::pair<std::set<std::string>, std::set<std::string>>> expected_rules = {};
+    ASSERT_TRUE(CheckAssociationRulesListsEquality(actual_rules, expected_rules))
              << "conf=1: generated some rules with the confidence value above one";
 }
 
 TEST_F(ARAlgorithmTest, KaggleDatasetWithTIDandHeader) {
     auto const path = fs::current_path() / "inputData" / "transactionalData" / "rules-kaggle-rows.csv";
-    auto inputParams = std::make_shared<Tabular>(true);
-    auto algorithm = createAlgorithmInstance(0.1, 0.5, path, std::move(inputParams),',', true);
+    auto input_params = std::make_shared<Tabular>(true);
+    auto algorithm = CreateAlgorithmInstance(0.1, 0.5, path, std::move(input_params), ',', true);
     algorithm->Execute();
 
-    auto const actualFrequent = algorithm->getAllFrequent();
-    std::set<std::set<std::string>> const expectedFrequent = {
+    auto const actualFrequent = algorithm->GetFrequentList();
+    std::set<std::set<std::string>> const expected_frequent = {
             {"BISCUIT"}, {"BOURNVITA"}, {"BREAD"}, {"COCK"}, {"COFFEE"}, {"CORNFLAKES"}, {"JAM"}, {"MAGGI"},
                 {"MILK"}, {"SUGER"}, {"TEA"},
             {"BISCUIT", "BREAD"}, {"COCK", "BISCUIT"}, {"BISCUIT", "COFFEE"}, {"CORNFLAKES", "BISCUIT"}, {"MAGGI", "BISCUIT"},
@@ -171,10 +174,10 @@ TEST_F(ARAlgorithmTest, KaggleDatasetWithTIDandHeader) {
                 {"CORNFLAKES", "COCK", "COFFEE"},
             {"CORNFLAKES", "COCK", "BISCUIT", "COFFEE"},
     };
-    ASSERT_TRUE(checkFrequentListsEquality(actualFrequent, expectedFrequent));
+    ASSERT_TRUE(CheckFrequentListsEquality(actualFrequent, expected_frequent));
 
-    auto const actualRules = algorithm->arList();
-    std::set<std::pair<std::set<std::string>, std::set<std::string>>> expectedRules = {
+    auto const actual_rules = algorithm->GetArList();
+    std::set<std::pair<std::set<std::string>, std::set<std::string>>> expected_rules = {
             {{"BISCUIT"}, {"BREAD"}},
             {{"COCK"}, {"BISCUIT"}},
             {{"CORNFLAKES"}, {"BISCUIT"}},
@@ -242,5 +245,5 @@ TEST_F(ARAlgorithmTest, KaggleDatasetWithTIDandHeader) {
             {{"COFFEE", "CORNFLAKES"}, {"COCK", "BISCUIT"}},
             {{"COCK"}, {"BISCUIT", "COFFEE", "CORNFLAKES"}}
     };
-    ASSERT_TRUE(checkAssociationRulesListsEquality(actualRules, expectedRules));
+    ASSERT_TRUE(CheckAssociationRulesListsEquality(actual_rules, expected_rules));
 }

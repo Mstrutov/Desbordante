@@ -5,102 +5,107 @@
 #include "ARAlgorithm.h"
 
 unsigned long long ARAlgorithm::Execute() {
-    transactionalData = TransactionalData::createFrom(input_generator_, *inputFormat);
-    if (transactionalData->getNumTransactions() == 0) {
+    transactional_data_ = TransactionalData::CreateFrom(input_generator_, *input_format_);
+    if (transactional_data_->GetNumTransactions() == 0) {
         throw std::runtime_error("Got an empty .csv file: AR mining is meaningless.");
     }
 
-    auto time = findFrequent();
-    time += generateAllRules();
+    auto time = FindFrequent();
+    time += GenerateAllRules();
 
-    for (auto const& rule : arCollection) {
-        std::cout << rule.toString() << '\n';
+    for (auto const& rule : ar_collection_) {
+        std::cout << rule.ToString() << '\n';
     }
 
     return time;
 }
 
-void ARAlgorithm::registerARStrings(AR const& rule) {
-    arCollection.emplace_back(rule, transactionalData.get());
+void ARAlgorithm::registerARStrings(ArIDs const& rule) {
+    ar_collection_.emplace_back(rule, transactional_data_.get());
 }
 
-void ARAlgorithm::updatePath(std::stack<RuleNode*> & path, std::list<RuleNode> & vertices) {
+void ARAlgorithm::UpdatePath(std::stack<RuleNode*>& path, std::list<RuleNode>& vertices) {
     for (auto iter = vertices.rbegin(); iter != vertices.rend(); ++iter) {
-        RuleNode* nodePtr = &(*iter);
-        path.push(nodePtr);
+        RuleNode* node_ptr = &(*iter);
+        path.push(node_ptr);
     }
 }
 
-void ARAlgorithm::generateRulesFrom(std::vector<unsigned int> const& frequentItemset, double support) {
-    root.children.clear();
-    for (auto itemID : frequentItemset) {
-        std::vector<unsigned> rhs {itemID};
+void ARAlgorithm::GenerateRulesFrom(std::vector<unsigned int> const& frequent_itemset,
+                                    double support) {
+    root_.children.clear();
+    for (auto item_id : frequent_itemset) {
+        std::vector<unsigned> rhs {item_id};
         std::vector<unsigned> lhs;
-        std::set_difference(frequentItemset.begin(), frequentItemset.end(),
+        std::set_difference(frequent_itemset.begin(), frequent_itemset.end(),
                             rhs.begin(), rhs.end(),
                             std::back_inserter(lhs));
-        auto const lhsSupport = getSupport(lhs);
-        auto const confidence = support / lhsSupport;
-        if (confidence >= minconf) {
-            root.children.emplace_back(std::move(lhs), std::move(rhs), confidence);
-            arCollection.emplace_back(root.children.back().rule, transactionalData.get());
+        auto const lhs_support = GetSupport(lhs);
+        auto const confidence = support / lhs_support;
+        if (confidence >= minconf_) {
+            root_.children.emplace_back(std::move(lhs), std::move(rhs), confidence);
+            ar_collection_.emplace_back(root_.children.back().rule, transactional_data_.get());
         }
     }
-    if (root.children.empty()) {
+    if (root_.children.empty()) {
         return;
     }
 
-    unsigned levelNumber = 2;
-    while (generateRuleLevel(frequentItemset, support, levelNumber)) {
-        ++levelNumber;
+    unsigned level_number = 2;
+    while (GenerateRuleLevel(frequent_itemset, support, level_number)) {
+        ++level_number;
     }
 }
 
-bool ARAlgorithm::generateRuleLevel(std::vector<unsigned> const& frequentItemset, double support, unsigned levelNumber) {
-    bool generatedAny = false;
+bool ARAlgorithm::GenerateRuleLevel(std::vector<unsigned> const& frequent_itemset, double support,
+                                    unsigned level_number) {
+    bool generated_any = false;
     std::stack<RuleNode*> path;
-    path.push(&root);
+    path.push(&root_);
 
     while (!path.empty()) {
         auto node = path.top(); //TODO попробовать как-то синхронизировать пусть с генерацией
         path.pop();
-        if (node->rule.right.size() == levelNumber - 2) { //levelNumber is at least 2
-            generatedAny = mergeRules(frequentItemset, support, node);
+        if (node->rule.right.size() == level_number - 2) { //levelNumber is at least 2
+            generated_any = MergeRules(frequent_itemset, support, node);
         } else {
-            updatePath(path, node->children);
+            UpdatePath(path, node->children);
         }
     }
 
-    return generatedAny;
+    return generated_any;
 }
 
-bool ARAlgorithm::mergeRules(std::vector<unsigned> const& frequentItemset, double support, RuleNode* node) {
+bool ARAlgorithm::MergeRules(std::vector<unsigned> const& frequent_itemset, double support,
+                             RuleNode* node) {
     auto& children = node->children;
-    bool produceRule = false;
+    bool is_rule_produced = false;
 
-    auto const lastChildIter = std::next(children.end(), -1);
-    for (auto childIter = children.begin(); childIter != lastChildIter; ++childIter) {
-        for (auto childRightSiblingIter = std::next(childIter); childRightSiblingIter != children.end(); ++childRightSiblingIter) {
-            std::vector<unsigned> rhs = childIter->rule.right;
-            rhs.push_back(childRightSiblingIter->rule.right.back());
-            if (rhs.size() == frequentItemset.size()) {
+    auto const last_child_iter = std::next(children.end(), -1);
+    for (auto child_iter = children.begin(); child_iter != last_child_iter; ++child_iter) {
+        for (auto child_right_sibling_iter = std::next(child_iter);
+                        child_right_sibling_iter != children.end(); ++child_right_sibling_iter) {
+            std::vector<unsigned> rhs = child_iter->rule.right;
+            rhs.push_back(child_right_sibling_iter->rule.right.back());
+            if (rhs.size() == frequent_itemset.size()) {
                 //in this case the LHS is empty
                 continue;
             }
 
             std::vector<unsigned> lhs;
-            std::set_difference(frequentItemset.begin(), frequentItemset.end(),
+            std::set_difference(frequent_itemset.begin(), frequent_itemset.end(),
                                 rhs.begin(), rhs.end(),
                                 std::back_inserter(lhs));
 
-            auto const lhsSupport = getSupport(lhs);
-            auto const confidence = support / lhsSupport;
-            if (confidence >= minconf) {
-                childIter->children.emplace_back(std::move(lhs), std::move(rhs), confidence);                 //нужна ли перегрузка от rvalue? или оставить по значению
-                arCollection.emplace_back(childIter->children.back().rule, transactionalData.get());
-                produceRule = true;
+            auto const lhs_support = GetSupport(lhs);
+            auto const confidence = support / lhs_support;
+            if (confidence >= minconf_) {
+                child_iter->children.emplace_back(std::move(lhs), std::move(rhs), confidence);                 //нужна ли перегрузка от rvalue? или оставить по значению
+                ar_collection_.emplace_back(child_iter->children.back().rule,
+                                            transactional_data_.get());
+                is_rule_produced = true;
             }
         }
     }
-    return produceRule;
+    return is_rule_produced;
 }

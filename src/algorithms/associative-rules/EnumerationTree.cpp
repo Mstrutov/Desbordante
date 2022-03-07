@@ -4,99 +4,100 @@
 #include <iostream>
 #include <algorithm>
 
-void EnumerationTree::generateCandidates(std::vector<Node>& children) {
-    auto const lastChildIter = children.end() - 1;
-    for (auto childIter = children.begin(); childIter != lastChildIter; ++childIter) {
-        for (auto childRightSiblingIter = std::next(childIter); childRightSiblingIter != children.end(); ++childRightSiblingIter) {
-            std::vector<unsigned> items = childIter->items;
-            items.push_back(childRightSiblingIter->items.back());
+void EnumerationTree::GenerateCandidates(std::vector<Node>& children) {
+    auto const last_child_iter = children.end() - 1;
+    for (auto child_iter = children.begin(); child_iter != last_child_iter; ++child_iter) {
+        for (auto child_right_sibling_iter = std::next(child_iter);
+                  child_right_sibling_iter != children.end(); ++child_right_sibling_iter) {
+            std::vector<unsigned> items = child_iter->items;
+            items.push_back(child_right_sibling_iter->items.back());
 
-            if (!canBePruned(items)) {
-                candidates[&(*childIter)].emplace_back(std::move(items));
+            if (!CanBePruned(items)) {
+                candidates_[&(*child_iter)].emplace_back(std::move(items));
             }
         }
     }
 }
 
-void EnumerationTree::createFirstLevelCandidates() {
-    for (unsigned itemID = 0; itemID < transactionalData->getUniverseSize(); ++itemID) {
-        candidates[&root].emplace_back(itemID);
+void EnumerationTree::CreateFirstLevelCandidates() {
+    for (unsigned item_id = 0; item_id < transactional_data_->GetUniverseSize(); ++item_id) {
+        candidates_[&root_].emplace_back(item_id);
     }
-    ++levelNumber;
+    ++level_num_;
 }
 
-bool EnumerationTree::generateNextCandidateLevel() {
+bool EnumerationTree::GenerateNextCandidateLevel() {
     std::stack<Node*> path;
-    path.push(&root);
+    path.push(&root_);
 
     while (!path.empty()) {
         auto node = path.top();
         path.pop();
-        if (node->items.size() == levelNumber - 2 && !node->children.empty()) { //levelNumber is at least 2
-            generateCandidates(node->children);
+        if (node->items.size() == level_num_ - 2 && !node->children.empty()) { //levelNumber is at least 2
+            GenerateCandidates(node->children);
         } else {
-            updatePath(path, node->children);
+            UpdatePath(path, node->children);
         }
     }
 
-    ++levelNumber;
-    return candidateHashTree->size() > 0;
+    ++level_num_;
+    return candidate_hash_tree_->size() > 0;
 }
 
-void EnumerationTree::updatePath(std::stack<Node*> & path, std::vector<Node> & vertices) {
+void EnumerationTree::UpdatePath(std::stack<Node*>& path, std::vector<Node>& vertices) {
     for (auto iter = vertices.rbegin(); iter != vertices.rend(); ++iter) {
-        Node* nodePtr = &(*iter);
-        path.push(nodePtr);
+        Node* node_ptr = &(*iter);
+        path.push(node_ptr);
     }
 }
 
-void EnumerationTree::updatePath(std::stack<Node const*> & path, std::vector<Node> const& vertices) {
+void EnumerationTree::UpdatePath(std::stack<Node const*>& path, std::vector<Node> const& vertices) {
     for (auto iter = vertices.rbegin(); iter != vertices.rend(); ++iter) {
-        Node const* nodePtr = &(*iter);
-        path.push(nodePtr);
+        Node const* node_ptr = &(*iter);
+        path.push(node_ptr);
     }
 }
 
-void EnumerationTree::updatePath(std::queue<Node const*> & path, std::vector<Node> const& vertices) {
+void EnumerationTree::UpdatePath(std::queue<Node const*>& path, std::vector<Node> const& vertices) {
     for (auto const& vertex : vertices) {
-        Node const* nodePtr = &vertex;
-        path.push(nodePtr);
+        Node const* node_ptr = &vertex;
+        path.push(node_ptr);
     }
 }
 
-bool EnumerationTree::canBePruned(std::vector<unsigned> const& itemset) {
+bool EnumerationTree::CanBePruned(std::vector<unsigned> const& itemset) {
     //последний элемент можем не убирать, так как мы добавили его к существующему
-    for (unsigned indexToSkip = 0; indexToSkip < itemset.size() - 1; ++indexToSkip) { //itemset.size() is at least 2
+    for (unsigned index_to_skip = 0; index_to_skip < itemset.size() - 1; ++index_to_skip) { //itemset.size() is at least 2
         //std::list<Node> const& nodesToVisit = root.children; //TODO можно просто идти по листам вместо стека, пока не попадется пустой?????????
-        std::stack<Node*> nodesToVisit;
-        updatePath(nodesToVisit, root.children);
+        std::stack<Node*> nodes_to_visit;
+        UpdatePath(nodes_to_visit, root_.children);
 
-        unsigned itemIndex = 0;
-        bool foundSubset = false;
+        unsigned item_index = 0;
+        bool found_subset = false;
 
-        while (!nodesToVisit.empty()) {
-            if (itemIndex == indexToSkip) {
-                ++itemIndex;
+        while (!nodes_to_visit.empty()) {
+            if (item_index == index_to_skip) {
+                ++item_index;
             }
 
-            unsigned nextItemID = itemset[itemIndex];   //что хотим найти
-            auto node = nodesToVisit.top();
-            nodesToVisit.pop();
+            unsigned next_item_id = itemset[item_index];   //что хотим найти
+            auto node = nodes_to_visit.top();
+            nodes_to_visit.pop();
 
-            if (node->items.back() == nextItemID) {
+            if (node->items.back() == next_item_id) {
                 //we found an item, so we go a level deeper
                 //TODO вот тут кажется можно очистить стек, и заполнить новым, а не дополнять старое
-                ++itemIndex;
-                if (itemIndex == itemset.size()) {      //прошли необходимое количество вершин
-                    foundSubset = true;
+                ++item_index;
+                if (item_index == itemset.size()) {      //прошли необходимое количество вершин
+                    found_subset = true;
                     break;
                 }
-                nodesToVisit = std::stack<Node*>();
-                updatePath(nodesToVisit, node->children);
+                nodes_to_visit = std::stack<Node*>();
+                UpdatePath(nodes_to_visit, node->children);
             }
         }
 
-        if (!foundSubset) {
+        if (!found_subset) {
             return true;                                   //если хотя бы одно подмножество не нашли, то бан
         }
     }
@@ -104,84 +105,92 @@ bool EnumerationTree::canBePruned(std::vector<unsigned> const& itemset) {
     return false;
 }
 
-unsigned long long EnumerationTree::findFrequent() {
+unsigned long long EnumerationTree::FindFrequent() {
     //TODO branching degree и minThreshold сделать зависимыми от номера уровня кандидатов
-    createFirstLevelCandidates();
-    while (!candidates.empty()) {
-        candidateHashTree = std::make_unique<CandidateHashTree>(transactionalData.get(), candidates, 5, 5);
-        candidateHashTree->performCounting();
-        candidateHashTree->pruneNodes(minsup);
-        appendToTree();
-        candidates.clear();
-        generateNextCandidateLevel();
+    CreateFirstLevelCandidates();
+    while (!candidates_.empty()) {
+        candidate_hash_tree_ = std::make_unique<CandidateHashTree>(transactional_data_.get(), candidates_, 20, 500);
+        candidate_hash_tree_->PerformCounting();
+        candidate_hash_tree_->PruneNodes(minsup_);
+        AppendToTree();
+        candidates_.clear();
+        GenerateNextCandidateLevel();
     }
     return 0;
 }
 
-unsigned long long EnumerationTree::generateAllRules() {
+unsigned long long EnumerationTree::GenerateAllRules() {
     std::queue<Node const*> path;
-    updatePath(path, root.children);
+    UpdatePath(path, root_.children);
+    unsigned frequent_count = 0;
 
     while (!path.empty()) {
-        auto currNode = path.front();
+        auto curr_node = path.front();
         path.pop();
 
-        if (currNode->items.size() >= 2) {
-            generateRulesFrom(currNode->items, currNode->support);
+        ++frequent_count;
+        std::cout << curr_node->support << " ";
+        for (unsigned int item : curr_node->items) {
+            std::cout << '<' << transactional_data_->GetItemUniverse()[item] << '>' << ' ';
         }
-        updatePath(path, currNode->children);
-    }
+        std::cout << '\n';
 
+        if (curr_node->items.size() >= 2) {
+            GenerateRulesFrom(curr_node->items, curr_node->support);
+        }
+        UpdatePath(path, curr_node->children);
+    }
+    std::cout << frequent_count << '\n';
     return 0;
 }
 
-std::list<std::set<std::string>> EnumerationTree::getAllFrequent() const {
-    std::list<std::set<std::string>> frequentItemsets;
+std::list<std::set<std::string>> EnumerationTree::GetFrequentList() const {
+    std::list<std::set<std::string>> frequent_itemsets;
 
     std::queue<Node const*> path;
-    updatePath(path, root.children);
+    UpdatePath(path, root_.children);
 
     while (!path.empty()) {
-        auto const currNode = path.front();
+        auto const curr_node = path.front();
         path.pop();
 
-        std::set<std::string> itemNames;
-        for (unsigned int item : currNode->items) {
-            itemNames.insert(transactionalData->getItemUniverse()[item]);
+        std::set<std::string> item_names;
+        for (unsigned int item : curr_node->items) {
+            item_names.insert(transactional_data_->GetItemUniverse()[item]);
         }
 
-        frequentItemsets.push_back(std::move(itemNames));
-        updatePath(path, currNode->children);
+        frequent_itemsets.push_back(std::move(item_names));
+        UpdatePath(path, curr_node->children);
     }
 
-    return frequentItemsets;
+    return frequent_itemsets;
 }
 
-double EnumerationTree::getSupport(std::vector<unsigned int> const& frequentItemset) const {
-    auto const* path = &(root.children);
-    unsigned itemIndex = 0;
-    auto nodeComparator = [&itemIndex](Node const& a, std::vector<unsigned> const& items) {
-        return a.items[itemIndex] < items[itemIndex];
+double EnumerationTree::GetSupport(std::vector<unsigned int> const& frequent_itemset) const {
+    auto const* path = &(root_.children);
+    unsigned item_index = 0;
+    auto node_comparator = [&item_index](Node const& node, std::vector<unsigned> const& items) {
+        return node.items[item_index] < items[item_index];
     };
 
-    while (itemIndex != frequentItemset.size()) {
-        auto const& nodeVector = *path;
-        auto nextNode = std::lower_bound(nodeVector.begin(), nodeVector.end(),
-                                         frequentItemset, nodeComparator);
-        if (nextNode == nodeVector.end()) {
+    while (item_index != frequent_itemset.size()) {
+        auto const& node_vector = *path;
+        auto next_node = std::lower_bound(node_vector.begin(), node_vector.end(), frequent_itemset,
+                                         node_comparator);
+        if (next_node == node_vector.end()) {
             break;
-        } else if (itemIndex == frequentItemset.size() - 1) {
-            return nextNode->support;
+        } else if (item_index == frequent_itemset.size() - 1) {
+            return next_node->support;
         } else {
-            path = &(nextNode->children);
+            path = &(next_node->children);
         }
-        ++itemIndex;
+        ++item_index;
     }
     return -1;
 }
 
-void EnumerationTree::appendToTree() {
-    for (auto& [node, children] : candidates) {
+void EnumerationTree::AppendToTree() {
+    for (auto& [node, children] : candidates_) {
         for (auto& child : children) {
             node->children.push_back(std::move(child));
         }

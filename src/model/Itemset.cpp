@@ -2,6 +2,6 @@
 
 #include <algorithm>
 
-void Itemset::sort() {
-    std::sort(indices.begin(), indices.end());
+void Itemset::Sort() {
+    std::sort(indices_.begin(), indices_.end());
 }
