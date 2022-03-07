@@ -106,10 +106,18 @@ bool EnumerationTree::CanBePruned(std::vector<unsigned> const& itemset) {
 }
 
 unsigned long long EnumerationTree::FindFrequent() {
-    //TODO branching degree и minThreshold сделать зависимыми от номера уровня кандидатов
     CreateFirstLevelCandidates();
     while (!candidates_.empty()) {
-        candidate_hash_tree_ = std::make_unique<CandidateHashTree>(transactional_data_.get(), candidates_, 20, 500);
+        unsigned candidates_count = 0;
+        for (auto const& [parent, candidate_children] : candidates_){
+            candidates_count += candidate_children.size();
+        }
+        auto const branching_degree = level_num_;
+        auto const min_treshold = candidates_count / branching_degree + 1;
+
+        candidate_hash_tree_ = std::make_unique<CandidateHashTree>(transactional_data_.get(),
+                                                                   candidates_,
+                                                                   branching_degree, min_treshold);
         candidate_hash_tree_->PerformCounting();
         candidate_hash_tree_->PruneNodes(minsup_);
         AppendToTree();

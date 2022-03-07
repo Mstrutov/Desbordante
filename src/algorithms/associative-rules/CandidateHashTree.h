@@ -8,8 +8,8 @@ class TransactionalData;
 class CandidateHashTree {
     using NodeIterator = std::list<Node>::iterator;
 private:
-    unsigned branching_degree_;
-    unsigned min_threshold_;
+    unsigned const branching_degree_;
+    unsigned const min_threshold_;
     unsigned total_row_count_ = 0;
     std::unordered_map<Node*, std::list<Node>>& candidates_;
 
