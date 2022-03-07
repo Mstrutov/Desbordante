@@ -9,7 +9,14 @@ void CandidateHashTree::AppendRow(LeafRow row, HashTreeNode& subtree_root) {
         AppendRow(std::move(row), subtree_root.children[hash]);
     } else {
         subtree_root.candidates.push_back(std::move(row));
-        if (subtree_root.candidates.size() > min_threshold_) {
+
+        /* If the number of candidates in a leaf node is more than min_thresold, a leaf node becomes
+         * an internal node and the tree expands. But if there is no more levels to expand (maximum
+         * level number equals to the cardinality of a candidates), min_threshold is ignored
+         * and a new candidates are just appended without trying to further grow the tree.*/
+        if (subtree_root.candidates.size() > min_threshold_ &&
+            subtree_root.level_number <= row.candidate_node->items.size()
+            ) {
             AddLevel(subtree_root);
         }
     }
