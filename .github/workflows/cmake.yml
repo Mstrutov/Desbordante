@@ -54,8 +54,8 @@ jobs:
       with:
         path: .git/lfs
         key: ${{ runner.os }}-lfs-${{ hashFiles('.lfs-assets-id') }}-v1
-    - name: Pull lfs files
-      run: git lfs pull
+    - name: Pull datasets
+      run: bash pull_datasets.sh
     - name: Install Boost
       run: |
         wget -O boost_1_72_0.tar.gz https://sourceforge.net/projects/boost/files/boost/1.72.0/boost_1_72_0.tar.gz/download
