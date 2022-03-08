@@ -65,8 +65,8 @@ public:
 template <typename PreciseAlgo, typename ApproxAlgo>
 TypoMiner<PreciseAlgo, ApproxAlgo>::TypoMiner(Config const& config)
     : Primitive(config.data, config.separator, config.has_header,
-                {"Precise fd algorithm execution", "Approximate fd algoritm execution",
-                 "Extracting fds with non-zero error"}) {
+                {/*"Precise fd algorithm execution", "Approximate fd algoritm execution",
+                 "Extracting fds with non-zero error"*/}) {
     static_assert(std::is_base_of_v<PliBasedFDAlgorithm, ApproxAlgo>,
                   "Approximate algorithm must be relation based");
     if (config.GetSpecialParam<double>("error") == 0.0) {
