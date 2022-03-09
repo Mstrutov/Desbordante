@@ -70,7 +70,7 @@ TEST_F(ARAlgorithmTest, BookDataset) {
     };
     ASSERT_TRUE(CheckFrequentListsEquality(actual_frequent, expected_frequent));
 
-    auto const actual_rules = algorithm->GetArList();
+    auto const actual_rules = algorithm->GetArStringsList();
     std::set<std::pair<std::set<std::string>, std::set<std::string>>> expected_rules = {
             {{"Bread"}, {"Milk"}},
             {{"Cheese"}, {"Milk"}},
@@ -116,7 +116,7 @@ TEST_F(ARAlgorithmTest, PresentationDataset) {
     };
     ASSERT_TRUE(CheckFrequentListsEquality(actual, expected));
 
-    auto const actual_rules = algorithm->GetArList();
+    auto const actual_rules = algorithm->GetArStringsList();
     std::set<std::pair<std::set<std::string>, std::set<std::string>>> expected_rules = {
             {{"Bread"}, {"Milk"}},
             {{"Milk"}, {"Bread"}},
@@ -147,7 +147,7 @@ TEST_F(ARAlgorithmTest, SynteticDatasetWithPruning) {
     };
     ASSERT_TRUE(CheckFrequentListsEquality(actual, expected));
 
-    auto const actual_rules = algorithm->GetArList();
+    auto const actual_rules = algorithm->GetArStringsList();
     std::set<std::pair<std::set<std::string>, std::set<std::string>>> expected_rules = {};
     ASSERT_TRUE(CheckAssociationRulesListsEquality(actual_rules, expected_rules))
              << "conf=1: generated some rules with the confidence value above one";
@@ -176,7 +176,7 @@ TEST_F(ARAlgorithmTest, KaggleDatasetWithTIDandHeader) {
     };
     ASSERT_TRUE(CheckFrequentListsEquality(actualFrequent, expected_frequent));
 
-    auto const actual_rules = algorithm->GetArList();
+    auto const actual_rules = algorithm->GetArStringsList();
     std::set<std::pair<std::set<std::string>, std::set<std::string>>> expected_rules = {
             {{"BISCUIT"}, {"BREAD"}},
             {{"COCK"}, {"BISCUIT"}},

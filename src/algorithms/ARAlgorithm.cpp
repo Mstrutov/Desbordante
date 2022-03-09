@@ -14,14 +14,10 @@ unsigned long long ARAlgorithm::Execute() {
     time += GenerateAllRules();
 
     for (auto const& rule : ar_collection_) {
-        std::cout << rule.ToString() << '\n';
+        std::cout << ARStrings(rule, transactional_data_.get()).ToString() << '\n';
     }
 
     return time;
-}
-
-void ARAlgorithm::registerARStrings(ArIDs const& rule) {
-    ar_collection_.emplace_back(rule, transactional_data_.get());
 }
 
 void ARAlgorithm::UpdatePath(std::stack<RuleNode*>& path, std::list<RuleNode>& vertices) {
@@ -31,7 +27,7 @@ void ARAlgorithm::UpdatePath(std::stack<RuleNode*>& path, std::list<RuleNode>& v
     }
 }
 
-void ARAlgorithm::GenerateRulesFrom(std::vector<unsigned int> const& frequent_itemset,
+void ARAlgorithm::GenerateRulesFrom(std::vector<unsigned> const& frequent_itemset,
                                     double support) {
     root_.children.clear();
     for (auto item_id : frequent_itemset) {
@@ -43,8 +39,9 @@ void ARAlgorithm::GenerateRulesFrom(std::vector<unsigned int> const& frequent_it
         auto const lhs_support = GetSupport(lhs);
         auto const confidence = support / lhs_support;
         if (confidence >= minconf_) {
-            root_.children.emplace_back(std::move(lhs), std::move(rhs), confidence);
-            ar_collection_.emplace_back(root_.children.back().rule, transactional_data_.get());
+            auto const& new_ar = ar_collection_.emplace_back(std::move(lhs), std::move(rhs),
+                                                             confidence);
+            root_.children.emplace_back(new_ar);
         }
     }
     if (root_.children.empty()) {
@@ -100,12 +97,20 @@ bool ARAlgorithm::MergeRules(std::vector<unsigned> const& frequent_itemset, doub
             auto const lhs_support = GetSupport(lhs);
             auto const confidence = support / lhs_support;
             if (confidence >= minconf_) {
-                child_iter->children.emplace_back(std::move(lhs), std::move(rhs), confidence);                 //нужна ли перегрузка от rvalue? или оставить по значению
-                ar_collection_.emplace_back(child_iter->children.back().rule,
-                                            transactional_data_.get());
+                auto const& new_ar = ar_collection_.emplace_back(std::move(lhs), std::move(rhs),
+                                                                     confidence);
+                child_iter->children.emplace_back(new_ar);
                 is_rule_produced = true;
             }
         }
     }
     return is_rule_produced;
+}
+
+std::list<ARStrings> ARAlgorithm::GetArStringsList() const {
+    std::list<ARStrings> ar_strings;
+    for (auto const& ar : ar_collection_) {
+        ar_strings.emplace_back(ar, transactional_data_.get());
+    }
+    return ar_strings;
 }
