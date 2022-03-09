@@ -23,15 +23,19 @@ public:
 
 private:
     double minconf_;
-    std::list<ARStrings> ar_collection_;
+    std::list<ArIDs> ar_collection_;
     std::shared_ptr<InputFormat> input_format_;
 
     struct RuleNode {
         ArIDs rule;
         std::list<RuleNode> children;
         RuleNode() = default;
-        RuleNode(std::vector<unsigned>&& left, std::vector<unsigned>&& right, double confidence)
-            : rule(std::move(left), std::move(right), confidence) {}
+
+        /* Temporary fix. Now we allocate generated AR twice -- in ar_collection_
+         * and also in a rule node by copying it.
+         * */
+        explicit RuleNode(ArIDs const& rule)
+            : rule(rule) {}
     };
 
     RuleNode root_;
@@ -45,7 +49,6 @@ protected:
     double minsup_;
 
     void GenerateRulesFrom(std::vector<unsigned> const& frequent_itemset, double support);
-    void registerARStrings(ArIDs const& rule);
 
     virtual double GetSupport(std::vector<unsigned> const& frequent_itemset) const = 0;
     virtual unsigned long long GenerateAllRules() = 0;
@@ -57,8 +60,12 @@ public:
           input_format_(config.input_format),
           minsup_(config.minsup) {}
 
-    std::list<ARStrings> GetArList() const noexcept { return ar_collection_; }
+    std::list<ArIDs> const& GetArIDsList() const noexcept { return ar_collection_; };
+    std::vector<std::string> const& GetItemNamesVector() const noexcept {
+        return transactional_data_->GetItemUniverse(); }
+
     virtual std::list<std::set<std::string>> GetFrequentList() const = 0;   //for debugging and testing
+    std::list<ARStrings> GetArStringsList() const;
 
     unsigned long long Execute() override;
     virtual ~ARAlgorithm() = default;

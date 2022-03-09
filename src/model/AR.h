@@ -8,6 +8,7 @@ struct ArIDs {
     double confidence = -1;
 
     ArIDs() = default;
+    ArIDs(ArIDs const& other) = default;
     ArIDs(std::vector<unsigned>&& left, std::vector<unsigned>&& right, double confidence)
         :left(std::move(left)), right(std::move(right)), confidence(confidence) {}
 };
