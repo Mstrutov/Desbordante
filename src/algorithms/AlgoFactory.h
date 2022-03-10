@@ -37,6 +37,8 @@ BETTER_ENUM(Algo, char,
     fdmine,
     pyro,
     tane,
+
+    /* Association rules mining algorithms */
     apriori
 );
 

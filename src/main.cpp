@@ -65,6 +65,7 @@ int main(int argc, char const* argv[]) {
     ushort threads = 0;
     bool is_null_equal_null = true;
 
+    /*Options for association rule mining algorithms*/
     double minsup = 0.0;
     double minconf = 0.0;
     std::string ar_input_format;
@@ -102,16 +103,17 @@ int main(int argc, char const* argv[]) {
         ("is_null_equal_null", po::value<bool>(&is_null_equal_null)->default_value(true),
          "Is NULL value equals another NULL value")
 
-        ("minsup", po::value<double>(&minsup), "minimal support value")
-        ("minconf", po::value<double>(&minconf), "minimal confidence value")
+        /*Options for association rule mining algorithms*/
+        ("minsup", po::value<double>(&minsup), "minimal support value (between 0 and 1)")
+        ("minconf", po::value<double>(&minconf), "minimal confidence value (between 0 and 1)")
         ("input_format", po::value<string>(&ar_input_format),
          "format of the input dataset. [singular|tabular] for AR mining")
         ("tid_column_index", po::value<unsigned>(&tid_column_index)->default_value(0),
-         "index of the column where a tid is stored (for singular input type)")
+         "index of the column where a tid is stored (only for \"singular\" input type)")
         ("item_column_index", po::value<unsigned>(&item_column_index)->default_value(1),
-         "index of the column where an item name is stored (for \"singular\" input type)")
+         "index of the column where an item name is stored (only for \"singular\" input type)")
         ("has_tid", po::value<bool>(&has_transaction_id)->default_value(false),
-         "does the first column contain a transaction id (for \"tabular\" input type)")
+         "does the first column contain a transaction id (only for \"tabular\" input type)")
         ;
 
     po::variables_map vm;
@@ -143,13 +145,23 @@ int main(int argc, char const* argv[]) {
     vm.erase("task");
     vm.erase("algo");
 
-    std::cout << "Input: algorithm \"" << algo
-              << "\" with seed " << std::to_string(seed)
-              << ", error \"" << std::to_string(error)
-              << ", max_lhs \"" << std::to_string(max_lhs)
-              << "\" and dataset \"" << dataset
-              << "\" with separator \'" << separator
-              << "\'. Header is " << (has_header ? "" : "not ") << "present. " << std::endl;
+    if (task == "fd" || task == "typos") {
+        std::cout << "Input: algorithm \"" << algo
+                  << "\" with seed " << std::to_string(seed)
+                  << ", error \"" << std::to_string(error)
+                  << ", max_lhs \"" << std::to_string(max_lhs)
+                  << "\" and dataset \"" << dataset
+                  << "\" with separator \'" << separator
+                  << "\'. Header is " << (has_header ? "" : "not ") << "present. " << std::endl;
+    } else if (task == "ar") {
+        std::cout << "Input: algorithm \"" << algo
+                  << "\" with min. support threshold \"" << std::to_string(minsup)
+                  << "\", min. confidence threshold \"" << std::to_string(minconf)
+                  << "\" and dataset \"" << dataset
+                  << "\". Input type is \"" << ar_input_format
+                  << "\" with separator \'" << separator
+                  << "\'. Header is " << (has_header ? "" : "not ") << "present. " << std::endl;
+    }
 
     std::unique_ptr<algos::Primitive> algorithm_instance =
         algos::CreateAlgorithmInstance(task, algo, vm);
