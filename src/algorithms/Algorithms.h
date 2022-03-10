@@ -10,5 +10,4 @@
 #include "algorithms/TaneX.h"
 
 /*Association rule mining algorithms */
-#include "algorithms/association-rules/EnumerationTree.h"
-
+#include "algorithms/association-rules/Apriori.h"

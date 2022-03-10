@@ -1,11 +1,8 @@
 #include <filesystem>
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-
-#include "EnumerationTree.h"
-#include "AR.h"
+#include "Apriori.h"
 #include "Datasets.h"
+#include "gtest/gtest.h"
 
 namespace fs = std::filesystem;
 
@@ -53,7 +50,7 @@ protected:
             char separator = ',', bool hasHeader = true) {
         ARAlgorithm::Config const config = {path, separator, hasHeader, std::move(inputFormat),
                                                                                 minsup, minconf};
-        return std::make_unique<EnumerationTree>(config);
+        return std::make_unique<Apriori>(config);
     }
 };
 
@@ -161,18 +158,22 @@ TEST_F(ARAlgorithmTest, KaggleDatasetWithTIDandHeader) {
 
     auto const actualFrequent = algorithm->GetFrequentList();
     std::set<std::set<std::string>> const expected_frequent = {
-            {"BISCUIT"}, {"BOURNVITA"}, {"BREAD"}, {"COCK"}, {"COFFEE"}, {"CORNFLAKES"}, {"JAM"}, {"MAGGI"},
-                {"MILK"}, {"SUGER"}, {"TEA"},
-            {"BISCUIT", "BREAD"}, {"COCK", "BISCUIT"}, {"BISCUIT", "COFFEE"}, {"CORNFLAKES", "BISCUIT"}, {"MAGGI", "BISCUIT"},
-                {"MILK", "BISCUIT"}, {"BISCUIT", "TEA"}, {"BREAD", "BOURNVITA"}, {"SUGER", "BOURNVITA"}, {"TEA", "BOURNVITA"},
-                {"COFFEE", "BREAD"}, {"JAM", "BREAD"}, {"MAGGI", "BREAD"}, {"MILK", "BREAD"}, {"BREAD", "SUGER"}, {"TEA", "BREAD"},
-                {"COCK", "COFFEE"}, {"CORNFLAKES", "COCK"}, {"CORNFLAKES", "COFFEE"}, {"COFFEE", "SUGER"}, {"CORNFLAKES", "MILK"},
-                {"CORNFLAKES", "TEA"}, {"JAM", "MAGGI"}, {"MAGGI", "TEA"},
-            {"MILK", "BISCUIT", "BREAD"}, {"COCK", "BISCUIT", "COFFEE"}, {"CORNFLAKES", "COCK", "BISCUIT"},
-                {"CORNFLAKES", "BISCUIT", "COFFEE"}, {"MAGGI", "BISCUIT", "TEA"}, {"TEA", "BREAD", "BOURNVITA"},
-                {"BREAD", "COFFEE", "SUGER"}, {"JAM", "MAGGI", "BREAD"}, {"MAGGI", "TEA", "BREAD"},
-                {"CORNFLAKES", "COCK", "COFFEE"},
-            {"CORNFLAKES", "COCK", "BISCUIT", "COFFEE"},
+            {"BISCUIT"}, {"BOURNVITA"}, {"BREAD"}, {"COCK"}, {"COFFEE"}, {"CORNFLAKES"},
+            {"JAM"}, {"MAGGI"}, {"MILK"}, {"SUGER"}, {"TEA"},
+            {"BISCUIT", "BREAD"}, {"COCK", "BISCUIT"}, {"BISCUIT", "COFFEE"},
+            {"CORNFLAKES", "BISCUIT"}, {"MAGGI", "BISCUIT"},
+            {"MILK", "BISCUIT"}, {"BISCUIT", "TEA"}, {"BREAD", "BOURNVITA"},
+            {"SUGER", "BOURNVITA"}, {"TEA", "BOURNVITA"},
+            {"COFFEE", "BREAD"}, {"JAM", "BREAD"}, {"MAGGI", "BREAD"}, {"MILK", "BREAD"},
+            {"BREAD", "SUGER"}, {"TEA", "BREAD"}, {"COCK", "COFFEE"}, {"CORNFLAKES", "COCK"},
+            {"CORNFLAKES", "COFFEE"}, {"COFFEE", "SUGER"}, {"CORNFLAKES", "MILK"},
+            {"CORNFLAKES", "TEA"}, {"JAM", "MAGGI"}, {"MAGGI", "TEA"},
+            {"MILK", "BISCUIT", "BREAD"}, {"COCK", "BISCUIT", "COFFEE"},
+            {"CORNFLAKES", "COCK", "BISCUIT"}, {"CORNFLAKES", "BISCUIT", "COFFEE"},
+            {"MAGGI", "BISCUIT", "TEA"}, {"TEA", "BREAD", "BOURNVITA"},
+            {"BREAD", "COFFEE", "SUGER"}, {"JAM", "MAGGI", "BREAD"}, {"MAGGI", "TEA", "BREAD"},
+            {"CORNFLAKES", "COCK", "COFFEE"},
+            {"CORNFLAKES", "COCK", "BISCUIT", "COFFEE"}
     };
     ASSERT_TRUE(CheckFrequentListsEquality(actualFrequent, expected_frequent));
 
