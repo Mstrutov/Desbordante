@@ -28,6 +28,7 @@ private:
     void GetLine(const unsigned long long line_index);
     std::vector<std::string> ParseString(const std::string& s);
     void GetNextIfHas();
+    void SkipLine();
 
     static inline std::string& rtrim(std::string& s);
 
@@ -48,4 +49,5 @@ public:
     int GetNumberOfColumns() const { return number_of_columns_; }
     std::string GetColumnName(int index) const { return column_names_[index]; }
     std::string GetRelationName() const { return relation_name_; }
+    void Reset();
 };

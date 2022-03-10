@@ -31,7 +31,7 @@ CSVParser::CSVParser(const std::filesystem::path& path, char separator, bool has
         throw std::runtime_error("Error: couldn't find file " + path.string());
     }
     if (separator == '\0') {
-        assert(0);
+        throw std::invalid_argument("Invalid separator");
     }
     if (has_header) {
         GetNext();
@@ -62,21 +62,31 @@ void CSVParser::PeekNext() {
     source_.seekg(len, std::ios_base::beg);
 }
 
-void CSVParser::GetLine(const unsigned long long line_index) {
+void CSVParser::SkipLine() {
+    source_.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+}
+
+void CSVParser::Reset() {
     source_.clear();
     source_.seekg(0);
 
-    next_line_ = "";
+    next_line_.clear();
 
     /* Skip header */
     if (has_header_) {
-        std::getline(source_, next_line_);
+        SkipLine();
+    }
+}
+
+void CSVParser::GetLine(const unsigned long long line_index) {
+    Reset();
+
+    /* Index is less than the line number by one. Skip line_index lines */
+    for (unsigned long long i = 0; i < line_index; ++i) {
+        SkipLine();
     }
 
-    /* Index is less than the line number by one */
-    for (unsigned long long i = 0; i < line_index + 1; ++i) {
-        std::getline(source_, next_line_);
-    }
+    std::getline(source_, next_line_);
 
     rtrim(next_line_);
 }
@@ -92,7 +102,7 @@ std::string CSVParser::GetUnparsedLine(const unsigned long long line_index) {
     GetLine(line_index);
     std::string line = next_line_;
 
-    /* For correct work of ParseNext() after this method */
+    /* For correctness of ParseNext() after this method */
     GetNextIfHas();
 
     return line;
@@ -123,3 +133,4 @@ std::vector<std::string> CSVParser::ParseNext() {
 
     return result;
 }
+
