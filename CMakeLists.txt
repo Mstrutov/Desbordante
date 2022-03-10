@@ -35,6 +35,7 @@ include_directories(
     "src/algorithms/association-rules"
     "src/algorithms/depminer"
     "src/model"
+    "src/model/types"
     "src/util"
     "src/parser"
     "src/parser/json"
