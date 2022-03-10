@@ -32,7 +32,7 @@ message(${Boost_INCLUDE_DIRS})
 include_directories(
     "src/algorithms"
     "src/algorithms/DFD"
-    "src/algorithms/associative-rules"
+    "src/algorithms/association-rules"
     "src/algorithms/depminer"
     "src/model"
     "src/util"
