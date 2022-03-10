@@ -1,10 +1,10 @@
-#include "EnumerationTree.h"
+#include "Apriori.h"
 
 //#include "easylogging++.h"
 #include <iostream>
 #include <algorithm>
 
-void EnumerationTree::GenerateCandidates(std::vector<Node>& children) {
+void Apriori::GenerateCandidates(std::vector<Node>& children) {
     auto const last_child_iter = children.end() - 1;
     for (auto child_iter = children.begin(); child_iter != last_child_iter; ++child_iter) {
         for (auto child_right_sibling_iter = std::next(child_iter);
@@ -19,14 +19,14 @@ void EnumerationTree::GenerateCandidates(std::vector<Node>& children) {
     }
 }
 
-void EnumerationTree::CreateFirstLevelCandidates() {
+void Apriori::CreateFirstLevelCandidates() {
     for (unsigned item_id = 0; item_id < transactional_data_->GetUniverseSize(); ++item_id) {
         candidates_[&root_].emplace_back(item_id);
     }
     ++level_num_;
 }
 
-bool EnumerationTree::GenerateNextCandidateLevel() {
+bool Apriori::GenerateNextCandidateLevel() {
     std::stack<Node*> path;
     path.push(&root_);
 
@@ -44,28 +44,28 @@ bool EnumerationTree::GenerateNextCandidateLevel() {
     return candidate_hash_tree_->size() > 0;
 }
 
-void EnumerationTree::UpdatePath(std::stack<Node*>& path, std::vector<Node>& vertices) {
+void Apriori::UpdatePath(std::stack<Node*>& path, std::vector<Node>& vertices) {
     for (auto iter = vertices.rbegin(); iter != vertices.rend(); ++iter) {
         Node* node_ptr = &(*iter);
         path.push(node_ptr);
     }
 }
 
-void EnumerationTree::UpdatePath(std::stack<Node const*>& path, std::vector<Node> const& vertices) {
+void Apriori::UpdatePath(std::stack<Node const*>& path, std::vector<Node> const& vertices) {
     for (auto iter = vertices.rbegin(); iter != vertices.rend(); ++iter) {
         Node const* node_ptr = &(*iter);
         path.push(node_ptr);
     }
 }
 
-void EnumerationTree::UpdatePath(std::queue<Node const*>& path, std::vector<Node> const& vertices) {
+void Apriori::UpdatePath(std::queue<Node const*>& path, std::vector<Node> const& vertices) {
     for (auto const& vertex : vertices) {
         Node const* node_ptr = &vertex;
         path.push(node_ptr);
     }
 }
 
-bool EnumerationTree::CanBePruned(std::vector<unsigned> const& itemset) {
+bool Apriori::CanBePruned(std::vector<unsigned> const& itemset) {
     //последний элемент можем не убирать, так как мы добавили его к существующему
     for (unsigned index_to_skip = 0; index_to_skip < itemset.size() - 1; ++index_to_skip) { //itemset.size() is at least 2
         //std::list<Node> const& nodesToVisit = root.children; //TODO можно просто идти по листам вместо стека, пока не попадется пустой?????????
@@ -105,7 +105,7 @@ bool EnumerationTree::CanBePruned(std::vector<unsigned> const& itemset) {
     return false;
 }
 
-unsigned long long EnumerationTree::FindFrequent() {
+unsigned long long Apriori::FindFrequent() {
     CreateFirstLevelCandidates();
     while (!candidates_.empty()) {
         unsigned candidates_count = 0;
@@ -127,7 +127,7 @@ unsigned long long EnumerationTree::FindFrequent() {
     return 0;
 }
 
-unsigned long long EnumerationTree::GenerateAllRules() {
+unsigned long long Apriori::GenerateAllRules() {
     std::queue<Node const*> path;
     UpdatePath(path, root_.children);
     unsigned frequent_count = 0;
@@ -152,7 +152,7 @@ unsigned long long EnumerationTree::GenerateAllRules() {
     return 0;
 }
 
-std::list<std::set<std::string>> EnumerationTree::GetFrequentList() const {
+std::list<std::set<std::string>> Apriori::GetFrequentList() const {
     std::list<std::set<std::string>> frequent_itemsets;
 
     std::queue<Node const*> path;
@@ -174,7 +174,7 @@ std::list<std::set<std::string>> EnumerationTree::GetFrequentList() const {
     return frequent_itemsets;
 }
 
-double EnumerationTree::GetSupport(std::vector<unsigned int> const& frequent_itemset) const {
+double Apriori::GetSupport(std::vector<unsigned int> const& frequent_itemset) const {
     auto const* path = &(root_.children);
     unsigned item_index = 0;
     auto node_comparator = [&item_index](Node const& node, std::vector<unsigned> const& items) {
@@ -197,7 +197,7 @@ double EnumerationTree::GetSupport(std::vector<unsigned int> const& frequent_ite
     return -1;
 }
 
-void EnumerationTree::AppendToTree() {
+void Apriori::AppendToTree() {
     for (auto& [node, children] : candidates_) {
         for (auto& child : children) {
             node->children.push_back(std::move(child));

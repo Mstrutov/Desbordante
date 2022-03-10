@@ -10,7 +10,7 @@
 #include "ARAlgorithm.h"
 #include "Node.h"
 
-class EnumerationTree : public ARAlgorithm {
+class Apriori : public ARAlgorithm {
 private:
     std::unique_ptr<CandidateHashTree> candidate_hash_tree_; //TODO может убрать из полей, а создавать просто в методе?
 
@@ -32,7 +32,7 @@ private:
     unsigned long long GenerateAllRules() override;
     unsigned long long FindFrequent() override;
 public:
-    explicit EnumerationTree(Config const& config)
+    explicit Apriori(Config const& config)
         : ARAlgorithm(config, {"AR mining"}) {}
 
     std::list<std::set<std::string>> GetFrequentList() const override;

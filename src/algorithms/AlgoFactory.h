@@ -44,7 +44,7 @@ BETTER_ENUM(Algo, char,
 
 using StdParamsMap = std::unordered_map<std::string, boost::any>;
 using AlgorithmTypesTuple = std::tuple<Depminer, DFD, FastFDs, FDep, Fd_mine, Pyro, Tane>;
-using ArAlgorithmTuplesType = std::tuple<EnumerationTree>;
+using ArAlgorithmTuplesType = std::tuple<Apriori>;
 
 namespace details {
 
@@ -179,7 +179,7 @@ std::unique_ptr<Primitive> CreateArAlgorithmInstance(/*Algo const algo, */Params
      * CreateAlgorithmInstance function such that it could create enum instance depending on
      * the passed task type.
      */
-    return std::make_unique<EnumerationTree>(config);
+    return std::make_unique<Apriori>(config);
 }
 
 } // namespace details
