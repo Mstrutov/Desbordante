@@ -7,6 +7,7 @@
 
 #include "Algorithms.h"
 #include "TypoMiner.h"
+#include "Metric_FD/MetricVerifier.h"
 
 namespace algos {
 
@@ -14,7 +15,8 @@ BETTER_ENUM(AlgoMiningType, char,
 #if 1
     fd = 0,
     typos,
-    ar
+    ar,
+    metric
 #else
     fd = 0, /* Functional dependency mining */
     cfd,    /* Conditional functional dependency mining */
@@ -40,6 +42,7 @@ BETTER_ENUM(Algo, char,
     tane,
     fun,
 
+    metric,
     /* Association rules mining algorithms */
     apriori
 );
@@ -186,6 +189,14 @@ std::unique_ptr<Primitive> CreateArAlgorithmInstance(/*Algo const algo, */Params
     return std::make_unique<Apriori>(config);
 }
 
+template <typename ParamsMap>
+std::unique_ptr<Primitive> CreateMetricVerifier(ParamsMap&& params) {
+    FDAlgorithm::Config const config =
+        CreateFDAlgorithmConfigFromMap(std::forward<ParamsMap>(params));
+
+    return details::CreatePrimitiveInstanceImpl<Primitive, std::tuple<MetricVerifier>>(0, config);
+}
+
 } // namespace details
 
 template <typename ParamsMap>
@@ -198,6 +209,8 @@ std::unique_ptr<Primitive> CreateAlgorithmInstance(AlgoMiningType const task, Al
         return details::CreateTypoMinerInstance(algo, std::forward<ParamsMap>(params));
     case AlgoMiningType::ar:
         return details::CreateArAlgorithmInstance(/*algo, */std::forward<ParamsMap>(params));
+    case AlgoMiningType::metric:
+        return details::CreateMetricVerifier(std::forward<ParamsMap>(params));
     default:
         throw std::logic_error(task._to_string() + std::string(" task type is not supported yet."));
     }
