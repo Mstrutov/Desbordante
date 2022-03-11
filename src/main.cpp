@@ -73,6 +73,11 @@ int main(int argc, char const* argv[]) {
     unsigned item_column_index = 1;
     bool has_transaction_id = false;
 
+    /*Options for metric verifier algorithm*/
+    std::vector<unsigned int> lhs_indices;
+    unsigned int rhs_index;
+    long double parameter;
+
     std::string const algo_desc = "algorithm to use. Available algorithms:\n" +
                                   EnumToAvailableValues<algos::Algo>() +
                                   " for FD mining.";
@@ -114,6 +119,13 @@ int main(int argc, char const* argv[]) {
          "index of the column where an item name is stored (only for \"singular\" input type)")
         ("has_tid", po::value<bool>(&has_transaction_id)->default_value(false),
          "does the first column contain a transaction id (only for \"tabular\" input type)")
+
+         /*Options for metric verifier algorithm*/
+         ("lhs_indices", po::value<std::vector<unsigned int>>(&lhs_indices)->multitoken(),
+          "LHS column indices for metric FD verification")
+         ("rhs_index", po::value<unsigned int>(&rhs_index),
+          "RHS column indices for metric FD verification")
+         ("parameter", po::value<long double>(&parameter), "metric FD parameter")
         ;
 
     po::variables_map vm;
