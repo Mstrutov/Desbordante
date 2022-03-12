@@ -87,7 +87,15 @@ template<typename F>
 static void TestForEachAlgo(F&& test) {
     for (algos::Algo const algo : algos::Algo::_values()) {
         try {
-            test(algo);
+            /* Temporary fix. Currently, the Algo enum contains all the algorithms, including
+             * FD mining algorithms and Apriori AR mining algorithm. But the template
+             * TypoMiner class can be instantiated only with the classes that lies in the
+             * AlgorithmTypesTuple tuple, which can not contain Apriori algorithm class (due to the
+             * current architecture)
+             * */
+            if (algo != +algos::Algo::apriori) {
+                test(algo);
+            }
         } catch (std::runtime_error const& e) {
             std::cout << "Exception raised in test: " << e.what() << std::endl;
             FAIL();
