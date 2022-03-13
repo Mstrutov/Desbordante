@@ -201,4 +201,49 @@ TYPED_TEST(TestNumeric, ValueToString) {
     test(-1231.123456678987654321);
 }
 
+struct TestStringParam {
+    std::string const l;
+    std::string const r;
+
+    TestStringParam(std::string l, std::string r) noexcept
+        : l(std::move(l)), r(std::move(r)) {}
+};
+
+class TestString : public ::testing::TestWithParam<TestStringParam> {};
+
+TEST_P(TestString, Default) {
+    TestStringParam const& p = GetParam();
+    std::string const& l_val = p.l;
+    std::string const& r_val = p.r;
+    std::string const concat_result_val = l_val + r_val;
+    std::unique_ptr<mo::Type> type(mo::CreateType(mo::TypeId::kString, true));
+    mo::StringType const* s = static_cast<mo::StringType const*>(type.get());
+    model::CompareResult cr = s->Compare(l_val, r_val);
+
+    using Owner = std::unique_ptr<std::byte[], mo::StringTypeDeleter>;
+
+    Owner l_owner(s->MakeValue(l_val), s->GetDeleter());
+    Owner r_owner(s->MakeValue(r_val), s->GetDeleter());
+    Owner concat_result_owner(s->MakeValue(concat_result_val), s->GetDeleter());
+    std::byte* l = l_owner.get();
+    std::byte* r = r_owner.get();
+    std::byte* concat_result = concat_result_owner.get();
+
+    EXPECT_EQ(s->Compare(l, r), cr);
+
+    std::unique_ptr<std::byte[]> actual(s->Concat(l, r));
+
+    EXPECT_EQ(s->Compare(actual.get(), concat_result), mo::CompareResult::kEqual);
+    EXPECT_EQ(s->ValueToString(actual.get()), concat_result_val);
+}
+
+INSTANTIATE_TEST_SUITE_P(TestStringSuite, TestString,
+                         ::testing::Values(TestStringParam("123", "123"),
+                                           TestStringParam("aa", "bbbb"),
+                                           TestStringParam("a", "abcde"),
+                                           TestStringParam("", ""),
+                                           TestStringParam("", "abc"),
+                                           TestStringParam("abc", ""),
+                                           TestStringParam("bb", "aa")));
+
 }  // namespace tests
