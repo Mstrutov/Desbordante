@@ -8,6 +8,9 @@
 #include "ListAgreeSetSample.h"
 #include "IdentifierSet.h"
 #include "AgreeSetFactory.h"
+#include "LevenshteinDistance.h"
+
+namespace tests {
 
 using std::deque, std::vector, std::cout, std::endl, std::unique_ptr, util::AgreeSetFactory,
     util::MCGenMethod, util::AgreeSetsGenMethod;
@@ -242,3 +245,30 @@ TEST(AgreeSetFactoryTest, MCGenParallel) {
 }
 #endif
 
+struct TestLevenshteinParam {
+    std::string l;
+    std::string r;
+    unsigned expected;
+
+    TestLevenshteinParam(std::string l, std::string r, unsigned expected) noexcept
+        : l(std::move(l)), r(std::move(r)), expected(expected) {}
+};
+
+class TestLevenshtein : public ::testing::TestWithParam<TestLevenshteinParam> {};
+
+TEST_P(TestLevenshtein, Default) {
+    TestLevenshteinParam const& p = GetParam();
+    unsigned actual = util::LevenshteinDistance(p.l, p.r);
+    EXPECT_EQ(actual, p.expected);
+}
+
+INSTANTIATE_TEST_SUITE_P(TestLevenshteinSuite, TestLevenshtein,
+                         ::testing::Values(TestLevenshteinParam("1", "1", 0),
+                                           TestLevenshteinParam("1", "12", 1),
+                                           TestLevenshteinParam("petr", "p1tr", 1),
+                                           TestLevenshteinParam("book", "back", 2),
+                                           TestLevenshteinParam("book", "", 4),
+                                           TestLevenshteinParam("", "book", 4),
+                                           TestLevenshteinParam("randomstring", "juststring", 6)));
+
+}  // namespace tests
