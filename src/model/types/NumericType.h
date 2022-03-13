@@ -21,6 +21,7 @@ public:
     virtual std::byte* Max(std::byte const* l, std::byte const* r, std::byte* res) const = 0;
     virtual std::byte* Power(std::byte const* num, long double pow, std::byte* res) const = 0;
     virtual std::byte* Abs(std::byte const* num, std::byte* res) const = 0;
+    virtual std::byte* Dist(std::byte const* l, std::byte const* r, std::byte* res) const = 0;
 
     [[nodiscard]] virtual std::byte const* Min() const = 0;
     [[nodiscard]] virtual std::byte const* Max() const = 0;
@@ -56,6 +57,10 @@ public:
     std::byte* Max(std::byte const* l, std::byte const* r, std::byte* res) const override;
     std::byte* Power(std::byte const* num, long double pow, std::byte* res) const override;
     std::byte* Abs(std::byte const* num, std::byte* res) const override;
+
+    T Dist(std::byte const* l, std::byte const* r) const {
+        return std::abs(GetValue(l) - GetValue(r));
+    }
 
     [[nodiscard]] std::byte const* Min() const override {
         return reinterpret_cast<std::byte const*>(&kMinValue);
@@ -152,6 +157,12 @@ std::byte* NumericType<T>::Power(std::byte const* num, long double pow, std::byt
 template <typename T>
 std::byte* NumericType<T>::Abs(std::byte const* num, std::byte* res) const {
     GetValue(res) = std::abs(GetValue(num));
+    return res;
+}
+
+template <typename T>
+std::byte* NumericType<T>::Dist(std::byte const* l, std::byte const* r, std::byte* res) const {
+    GetValue(res) = Dist(l, r);
     return res;
 }
 
