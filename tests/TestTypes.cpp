@@ -189,6 +189,24 @@ TYPED_TEST(TestNumeric, Pow) {
     test(-21, -7);
 }
 
+TYPED_TEST(TestNumeric, Dist) {
+    using Type = typename TypeParam::UnderlyingType;
+    auto test = [this](Type l, Type r) {
+        this->SetActualAndLiteral(l, r);
+        this->ExpectEq(std::abs(l - r),
+                       this->type_->Dist(this->actual_ptr_, this->literal_ptr_, this->actual_ptr_),
+                       TestFixture::GetErrorStr(l, r));
+    };
+
+    test(0, 100);
+    test(22, 12);
+    test(123, 321);
+    test(2.72, 1.3123141);
+    test(-102, 11);
+    test(-123, 123);
+    test(-21, -7);
+}
+
 TYPED_TEST(TestNumeric, ValueToString) {
     auto test = [this](typename TypeParam::UnderlyingType v) {
         this->SetActual(v);
