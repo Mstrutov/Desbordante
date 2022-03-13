@@ -22,14 +22,7 @@ public:
         auto const& l_val = GetValue<String>(l);
         auto const& r_val = GetValue<String>(r);
 
-        int const res = l_val.compare(r_val);
-        if (res == 0) {
-            return CompareResult::kEqual;
-        }
-        if (res < 0) {
-            return CompareResult::kLess;
-        }
-        return CompareResult::kGreater;
+        return Compare(l_val, r_val);
     }
 
     [[nodiscard]] size_t Hash(std::byte const* value) const override {
@@ -44,15 +37,45 @@ public:
         new (dest) String(std::move(s));
     }
 
-    [[nodiscard]] std::byte* MakeValue(String v) const {
+    [[nodiscard]] std::byte* MakeValue(String v = "") const {
         std::byte* buf = Allocate();
         new (buf) String(std::move(v));
         return buf;
+    }
+
+    CompareResult Compare(String const& l_val, String const& r_val) const {
+        int const res = l_val.compare(r_val);
+        if (res == 0) {
+            return CompareResult::kEqual;
+        }
+        if (res < 0) {
+            return CompareResult::kLess;
+        }
+        return CompareResult::kGreater;
+    }
+
+    std::byte* Concat(std::byte* l, std::byte* r, std::byte* result) const {
+        String const& l_val = GetValue<String>(l);
+        String const& r_val = GetValue<String>(r);
+
+        GetValue<String>(result) = l_val + r_val;
+        return result;
+    }
+
+    std::byte* Concat(std::byte *l, std::byte* r) const {
+        std::byte* result = MakeValue();
+        return Concat(l, r, result);
+    }
+
+    auto GetDeleter() const {
+        return [this](std::byte const* v) { Free(v); };
     }
 
     static void Destruct(std::byte const* v) {
         reinterpret_cast<String const*>(v)->~String();
     }
 };
+
+using StringTypeDeleter = decltype(std::declval<StringType>().GetDeleter());
 
 }  // namespace model
