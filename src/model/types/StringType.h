@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Type.h"
+#include "util/LevenshteinDistance.h"
 
 namespace model {
 
@@ -69,6 +70,11 @@ public:
 
     auto GetDeleter() const {
         return [this](std::byte const* v) { Free(v); };
+    }
+
+    /* Returns Levenshtein distance between l and r */
+    unsigned Dist(std::byte const* l, std::byte const* r) const {
+        return util::LevenshteinDistance(GetValue<String>(l), GetValue<String>(r));
     }
 
     static void Destruct(std::byte const* v) {
