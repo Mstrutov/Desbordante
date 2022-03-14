@@ -1,7 +1,9 @@
 #include "CandidateHashTree.h"
 
 #include <algorithm>
-#include "cassert"
+#include <cassert>
+
+namespace algos {
 
 void CandidateHashTree::AppendRow(LeafRow row, HashTreeNode& subtree_root) {
     if (!subtree_root.children.empty()) {
@@ -15,8 +17,7 @@ void CandidateHashTree::AppendRow(LeafRow row, HashTreeNode& subtree_root) {
          * level number equals to the cardinality of a candidates), min_threshold is ignored
          * and a new candidates are just appended without trying to further grow the tree.*/
         if (subtree_root.candidates.size() > min_threshold_ &&
-            subtree_root.level_number <= row.candidate_node->items.size()
-            ) {
+             subtree_root.level_number <= row.candidate_node->items.size()) {
             AddLevel(subtree_root);
         }
     }
@@ -25,15 +26,14 @@ void CandidateHashTree::AppendRow(LeafRow row, HashTreeNode& subtree_root) {
 void CandidateHashTree::AddLevel(HashTreeNode& leaf_node) {
     unsigned const next_level_number = leaf_node.level_number + 1;
 
-    //by this we make leaf node interior
+    // by this we make leaf node interior
     leaf_node.children.reserve(branching_degree_);
     for (unsigned siblingNum = 0; siblingNum < branching_degree_; ++siblingNum) {
-        //generate new leaf nodes
+        // generate new leaf nodes
         leaf_node.children.emplace_back(next_level_number);
     }
-    leaf_node.children.shrink_to_fit();
 
-    //distribute rows of an old leaf between new leaves
+    // distribute rows of an old leaf between new leaves
     for (auto& row : leaf_node.candidates) {
         AppendRow(std::move(row), leaf_node);
     }
@@ -49,7 +49,7 @@ void CandidateHashTree::AddCandidate(NodeIterator candidate, Node* parent) {
 unsigned CandidateHashTree::HashFunction(LeafRow const& node_row, unsigned level_num) const {
     auto const& node_items = node_row.candidate_node->items;
     assert(level_num <= node_items.size());
-    auto const curr_level_element_id = node_items.at(level_num - 1);
+    auto const curr_level_element_id = node_items[level_num - 1];
     return ItemHash(curr_level_element_id);
 }
 
@@ -60,7 +60,7 @@ void CandidateHashTree::FindAndVisitLeaves(HashTreeNode& subtree_root,
     unsigned const next_branch_number = ItemHash(*start);
     auto& next_node = subtree_root.children[next_branch_number];
     if (next_node.children.empty()) {
-        //if nextNode is a leaf itself, then we visit it and terminate the recursion
+        // if nextNode is a leaf itself, then we visit it and terminate the recursion
         VisitLeaf(next_node, transaction_items, tid);
     } else {
         for (auto new_start = std::next(start); new_start != transaction_items.end(); ++new_start) {
@@ -70,10 +70,10 @@ void CandidateHashTree::FindAndVisitLeaves(HashTreeNode& subtree_root,
 }
 
 void CandidateHashTree::VisitLeaf(HashTreeNode& leaf,
-                                  std::vector<unsigned> const& transaction_items, int tID) {
-    if (leaf.last_visited_transaction_id == tID) { return; }
+                                  std::vector<unsigned> const& transaction_items, int tid) {
+    if (leaf.last_visited_transaction_id == tid) { return; }
 
-    leaf.last_visited_transaction_id = tID;
+    leaf.last_visited_transaction_id = tid;
 
     for (auto& row : leaf.candidates) {
         auto const& candidate_items = row.candidate_node->items;
@@ -89,7 +89,7 @@ void CandidateHashTree::PerformCounting() {
         auto const& items = transaction.second.GetItemsIDs();
         auto const tid = transaction.first;
         if (root_.children.empty()) {
-            //if the root is a leaf itself
+            // if the root is a leaf itself
             VisitLeaf(root_, items, tid);
         } else {
             for (auto start = items.begin(); start != items.end(); ++start) {
@@ -128,3 +128,5 @@ void CandidateHashTree::AddCandidates() {
         }
     }
 }
+
+} // namespace algos

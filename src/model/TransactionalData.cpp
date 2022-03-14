@@ -3,8 +3,10 @@
 #include <cassert>
 #include <unordered_map>
 
-std::unique_ptr<TransactionalData>
-TransactionalData::CreateFrom(CSVParser& file_input, InputFormat const& input_type) {
+namespace model {
+
+std::unique_ptr<TransactionalData> TransactionalData::CreateFrom(CSVParser& file_input,
+                                                                 InputFormat const& input_type) {
     if (typeid(input_type) == typeid(Singular)) {
         return TransactionalData::CreateFromSingular(file_input, input_type.tid_column_index(),
                                                      input_type.item_column_index());
@@ -15,16 +17,17 @@ TransactionalData::CreateFrom(CSVParser& file_input, InputFormat const& input_ty
     }
 }
 
-std::unique_ptr<TransactionalData>
-TransactionalData::CreateFromSingular(CSVParser& file_input, unsigned tid_col_index,
-                                                             unsigned item_col_index) {
+std::unique_ptr<TransactionalData> TransactionalData::CreateFromSingular(CSVParser& file_input,
+                                                                         unsigned tid_col_index,
+                                                                         unsigned item_col_index) {
     std::vector<std::string> item_universe;
     std::unordered_map<std::string, unsigned> item_universe_set;
     std::unordered_map<unsigned, Itemset> transactions;
     unsigned latest_item_id = 0;
 
-    assert(file_input.GetNumberOfColumns() > static_cast<int>(std::max(tid_col_index,
-                                                                       item_col_index)));
+    assert(file_input.GetNumberOfColumns() >
+           static_cast<int>(std::max(tid_col_index, item_col_index)));
+
     while (file_input.GetHasNext()) {
         std::vector<std::string> const row = file_input.ParseNext();
         if (row.empty()) {
@@ -37,10 +40,11 @@ TransactionalData::CreateFromSingular(CSVParser& file_input, unsigned tid_col_in
 
         auto const [item_iter, was_inserted] = item_universe_set.insert({item_name, item_id});
         if (was_inserted) {
-            item_universe.push_back(item_name);   //TODO лишняя трата памяти
+            // TODO(alexandrsmirn) попробовать избежать этого добавления.
+            item_universe.push_back(item_name);
             ++latest_item_id;
         } else {
-            //if there is such item in the universe, get its itemID
+            // if this item already exists in the universe, set the old item id
             item_id = item_iter->second;
         }
 
@@ -54,7 +58,7 @@ TransactionalData::CreateFromSingular(CSVParser& file_input, unsigned tid_col_in
         }
     }
 
-    //sort items in each transaction
+    // sort items in each transaction
     for (auto& [tid, items] : transactions) {
         items.Sort();
     }
@@ -62,8 +66,8 @@ TransactionalData::CreateFromSingular(CSVParser& file_input, unsigned tid_col_in
     return std::make_unique<TransactionalData>(std::move(item_universe), std::move(transactions));
 }
 
-std::unique_ptr<TransactionalData>
-TransactionalData::CreateFromTabular(CSVParser& file_input, bool has_tid) {
+std::unique_ptr<TransactionalData> TransactionalData::CreateFromTabular(CSVParser& file_input,
+                                                                        bool has_tid) {
     std::vector<std::string> item_universe;
     std::unordered_map<std::string, unsigned> item_universe_set;
     std::unordered_map<unsigned, Itemset> transactions;
@@ -77,7 +81,7 @@ TransactionalData::CreateFromTabular(CSVParser& file_input, bool has_tid) {
         }
 
         auto row_iter = row.begin();
-        if (has_tid)  {
+        if (has_tid) {
             tid = std::stoi(*row_iter);
             row_iter++;
         }
@@ -92,10 +96,12 @@ TransactionalData::CreateFromTabular(CSVParser& file_input, bool has_tid) {
 
             auto const item_insertion_result = item_universe_set.insert({item_name, item_id});
             if (item_insertion_result.second) {
-                item_universe.push_back(item_name);   //TODO лишняя трата памяти
+                // TODO(alexandrsmirn) попробовать избежать этого добавления.
+                item_universe.push_back(item_name);
                 ++latest_item_id;
-            } else {                                        //if there is item in the universe
-                item_id = item_insertion_result.first->second; //set old item id
+            } else {
+                // if this item already exists in the universe, set the old item id
+                item_id = item_insertion_result.first->second;
             }
             items.AddItemId(item_id);
         }
@@ -109,3 +115,5 @@ TransactionalData::CreateFromTabular(CSVParser& file_input, bool has_tid) {
 
     return std::make_unique<TransactionalData>(std::move(item_universe), std::move(transactions));
 }
+
+} // namespace model

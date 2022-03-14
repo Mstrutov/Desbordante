@@ -1,7 +1,9 @@
 #pragma once
 
-#include <vector>
 #include <list>
+#include <vector>
+
+namespace algos {
 
 struct Node {
     std::vector<unsigned> items;
@@ -10,14 +12,18 @@ struct Node {
 
     Node() = default;
     Node(Node&& other) = default;
+    Node& operator=(Node&& other) = default;
+
     Node(Node const& node) = delete;
     Node& operator=(Node const&) = delete;
 
     explicit Node(unsigned item_id)
-            : items({item_id}), support(0) {}
+        : items({item_id}), support(0) {}
 
     explicit Node(std::vector<unsigned>&& items_to_add)
-            : Node() {
+        : Node() {
         std::swap(items_to_add, items);
     }
 };
+
+} // namespace algos
