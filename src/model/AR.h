@@ -11,9 +11,13 @@ struct ArIDs {
     double confidence = -1;
 
     ArIDs() = default;
-    ArIDs(ArIDs const& other) = default;
-    ArIDs(std::vector<unsigned>&& left, std::vector<unsigned>&& right, double confidence)
+    ArIDs(std::vector<unsigned> left, std::vector<unsigned> right, double confidence)
         : left(std::move(left)), right(std::move(right)), confidence(confidence) {}
+
+    ArIDs(ArIDs const& other) = default;
+    ArIDs& operator=(ArIDs const& other) = default;
+    ArIDs(ArIDs&& other) = default;
+    ArIDs& operator=(ArIDs&& other) = default;
 };
 
 struct ARStrings {
@@ -22,7 +26,7 @@ struct ARStrings {
     double confidence = -1;
 
     ARStrings() = default;
-    ARStrings(std::list<std::string>&& left, std::list<std::string>&& right, double confidence)
+    ARStrings(std::list<std::string> left, std::list<std::string> right, double confidence)
         : left(std::move(left)), right(std::move(right)), confidence(confidence) {}
 
     ARStrings(ArIDs const& id_format_rule, TransactionalData const* transactional_data)
@@ -36,6 +40,11 @@ struct ARStrings {
             this->right.push_back(item_names_map[itemID]);
         }
     }
+
+    ARStrings(ARStrings const& other) = default;
+    ARStrings& operator=(ARStrings const& other) = default;
+    ARStrings(ARStrings&& other) = default;
+    ARStrings& operator=(ARStrings&& other) = default;
 
     std::string ToString() const {
         std::string result;
@@ -59,4 +68,3 @@ struct ARStrings {
 };
 
 } // namespace model
-

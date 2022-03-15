@@ -29,33 +29,26 @@ std::unique_ptr<TransactionalData> TransactionalData::CreateFromSingular(CSVPars
            static_cast<int>(std::max(tid_col_index, item_col_index)));
 
     while (file_input.GetHasNext()) {
-        std::vector<std::string> const row = file_input.ParseNext();
+        std::vector<std::string> row = file_input.ParseNext();
         if (row.empty()) {
             continue;
         }
 
         unsigned const tid = std::stoi(row[tid_col_index]);
-        std::string const& item_name = row[item_col_index];
+        std::string& item_name = row[item_col_index];
         unsigned item_id = latest_item_id;
 
-        auto const [item_iter, was_inserted] = item_universe_set.insert({item_name, item_id});
+        auto const [item_iter, was_inserted] = item_universe_set.try_emplace(item_name, item_id);
         if (was_inserted) {
             // TODO(alexandrsmirn) попробовать избежать этого добавления.
-            item_universe.push_back(item_name);
+            item_universe.push_back(std::move(item_name));
             ++latest_item_id;
         } else {
             // if this item already exists in the universe, set the old item id
             item_id = item_iter->second;
         }
 
-        auto transaction = transactions.find(tid);
-        if (transaction == transactions.end()) {
-            Itemset items;
-            items.AddItemId(item_id);
-            transactions.insert({tid, std::move(items)});
-        } else {
-            transaction->second.AddItemId(item_id);
-        }
+        transactions[tid].AddItemId(item_id);
     }
 
     // sort items in each transaction
@@ -63,7 +56,8 @@ std::unique_ptr<TransactionalData> TransactionalData::CreateFromSingular(CSVPars
         items.Sort();
     }
 
-    return std::make_unique<TransactionalData>(std::move(item_universe), std::move(transactions));
+    return std::unique_ptr<TransactionalData>(new TransactionalData(std::move(item_universe),
+                                                                    std::move(transactions)));
 }
 
 std::unique_ptr<TransactionalData> TransactionalData::CreateFromTabular(CSVParser& file_input,
@@ -75,7 +69,7 @@ std::unique_ptr<TransactionalData> TransactionalData::CreateFromTabular(CSVParse
     unsigned tid = 0;
 
     while (file_input.GetHasNext()) {
-        std::vector<std::string> const row = file_input.ParseNext();
+        std::vector<std::string> row = file_input.ParseNext();
         if (row.empty()) {
             continue;
         }
@@ -88,32 +82,33 @@ std::unique_ptr<TransactionalData> TransactionalData::CreateFromTabular(CSVParse
 
         Itemset items;
         for (; row_iter != row.end(); ++row_iter) {
-            std::string const& item_name = *row_iter;
+            std::string& item_name = *row_iter;
             if (item_name.empty()) {
                 continue;
             }
             unsigned item_id = latest_item_id;
 
-            auto const item_insertion_result = item_universe_set.insert({item_name, item_id});
-            if (item_insertion_result.second) {
+            auto const [item_iter, was_inserted] = item_universe_set.try_emplace(item_name, item_id);
+            if (was_inserted) {
                 // TODO(alexandrsmirn) попробовать избежать этого добавления.
-                item_universe.push_back(item_name);
+                item_universe.push_back(std::move(item_name));
                 ++latest_item_id;
             } else {
                 // if this item already exists in the universe, set the old item id
-                item_id = item_insertion_result.first->second;
+                item_id = item_iter->second;
             }
             items.AddItemId(item_id);
         }
 
         items.Sort();
-        transactions.insert({tid, std::move(items)});
+        transactions.emplace(tid, std::move(items));
         if (!has_tid) {
             ++tid;
         }
     }
 
-    return std::make_unique<TransactionalData>(std::move(item_universe), std::move(transactions));
+    return std::unique_ptr<TransactionalData>(new TransactionalData(std::move(item_universe),
+                                                                    std::move(transactions)));
 }
 
 } // namespace model

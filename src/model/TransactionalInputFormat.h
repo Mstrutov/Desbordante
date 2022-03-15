@@ -4,8 +4,8 @@ namespace model {
 
 class InputFormat {
 public:
-    virtual unsigned tid_column_index() const noexcept = 0;
-    virtual unsigned item_column_index() const noexcept = 0;
+    virtual unsigned tid_column_index() const noexcept { return 0; };
+    virtual unsigned item_column_index() const noexcept { return 0; };
     virtual bool tid_presence() const noexcept = 0;
 
     virtual ~InputFormat() = default;
@@ -33,8 +33,6 @@ public:
     explicit Tabular(bool has_tid)
         : has_tid_(has_tid) {}
 
-    unsigned tid_column_index() const noexcept override { return 0; }
-    unsigned item_column_index() const noexcept override { return 0; }
     bool tid_presence() const noexcept override { return has_tid_; }
 };
 
