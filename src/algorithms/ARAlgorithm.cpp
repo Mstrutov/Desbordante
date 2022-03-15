@@ -2,7 +2,8 @@
 
 #include <algorithm>
 #include <cassert>
-#include <iostream>
+
+#include "easylogging++.h"
 
 namespace algos {
 
@@ -15,10 +16,7 @@ unsigned long long ARAlgorithm::Execute() {
     auto time = FindFrequent();
     time += GenerateAllRules();
 
-    for (auto const& rule : ar_collection_) {
-        std::cout << model::ARStrings(rule, transactional_data_.get()).ToString() << '\n';
-    }
-
+    LOG(INFO) << "> Count of association rules: " << ar_collection_.size();
     return time;
 }
 

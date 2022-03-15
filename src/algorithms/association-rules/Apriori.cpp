@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <iostream>
 
 #include "easylogging++.h"
 
@@ -115,6 +114,8 @@ bool Apriori::CanBePruned(std::vector<unsigned> const& itemset) {
 }
 
 unsigned long long Apriori::FindFrequent() {
+    auto start_time = std::chrono::system_clock::now();
+
     CreateFirstLevelCandidates();
     while (!candidates_.empty()) {
         unsigned candidates_count = 0;
@@ -133,32 +134,38 @@ unsigned long long Apriori::FindFrequent() {
         candidates_.clear();
         GenerateNextCandidateLevel();
     }
-    return 0;
+
+    auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now() - start_time);
+    long long millis = elapsed_milliseconds.count();
+
+    return millis;
 }
 
 unsigned long long Apriori::GenerateAllRules() {
+    auto start_time = std::chrono::system_clock::now();
+
     std::queue<Node const*> path;
     UpdatePath(path, root_.children);
-    unsigned frequent_count = 0;
+    unsigned long long frequent_count = 0;
 
     while (!path.empty()) {
         auto curr_node = path.front();
         path.pop();
 
         ++frequent_count;
-        std::cout << curr_node->support << " ";
-        for (unsigned int item : curr_node->items) {
-            std::cout << '<' << transactional_data_->GetItemUniverse()[item] << '>' << ' ';
-        }
-        std::cout << '\n';
-
         if (curr_node->items.size() >= 2) {
             GenerateRulesFrom(curr_node->items, curr_node->support);
         }
         UpdatePath(path, curr_node->children);
     }
-    std::cout << frequent_count << '\n';
-    return 0;
+
+    auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now() - start_time);
+    long long millis = elapsed_milliseconds.count();
+
+    LOG(INFO) << "> Count of frequent itemsets: " << frequent_count;
+    return millis;
 }
 
 std::list<std::set<std::string>> Apriori::GetFrequentList() const {
