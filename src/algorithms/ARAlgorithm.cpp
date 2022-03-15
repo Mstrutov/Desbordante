@@ -81,7 +81,7 @@ bool ARAlgorithm::MergeRules(std::vector<unsigned> const& frequent_itemset, doub
     auto& children = node->children;
     bool is_rule_produced = false;
 
-    auto const last_child_iter = std::next(children.end(), -1);
+    auto const last_child_iter = std::prev(children.end());
     for (auto child_iter = children.begin(); child_iter != last_child_iter; ++child_iter) {
         for (auto child_right_sibling_iter = std::next(child_iter);
                   child_right_sibling_iter != children.end(); ++child_right_sibling_iter) {
