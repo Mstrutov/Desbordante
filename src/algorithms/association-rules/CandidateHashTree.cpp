@@ -10,6 +10,7 @@ void CandidateHashTree::AppendRow(LeafRow row, HashTreeNode& subtree_root) {
         auto const hash = HashFunction(row, subtree_root.level_number);
         AppendRow(std::move(row), subtree_root.children[hash]);
     } else {
+        unsigned const max_level_number = row.candidate_node->items.size();
         subtree_root.candidates.push_back(std::move(row));
 
         /* If the number of candidates in a leaf node is more than min_thresold, a leaf node becomes
@@ -17,7 +18,7 @@ void CandidateHashTree::AppendRow(LeafRow row, HashTreeNode& subtree_root) {
          * level number equals to the cardinality of a candidates), min_threshold is ignored
          * and a new candidates are just appended without trying to further grow the tree.*/
         if (subtree_root.candidates.size() > min_threshold_ &&
-             subtree_root.level_number <= row.candidate_node->items.size()) {
+             subtree_root.level_number <= max_level_number) {
             AddLevel(subtree_root);
         }
     }
