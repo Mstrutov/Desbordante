@@ -47,6 +47,14 @@ public:
         return type->Compare(RetrieveValue(l), RetrieveValue(r));
     }
 
+    void Free(std::byte const* value) const noexcept override {
+        TypeId const type_id = RetrieveTypeId(value);
+        if (type_id == +TypeId::kString || type_id == +TypeId::kBigInt) {
+            StringType::Destruct(RetrieveValue(value));
+        }
+        Type::Free(value);
+    }
+
     [[nodiscard]] size_t Hash(std::byte const* value) const final {
         std::unique_ptr<Type> type = RetrieveType(value);
         return type->Hash(RetrieveValue(value));
