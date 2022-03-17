@@ -38,11 +38,11 @@ public:
 
     /* Operations on values of current type */
 
-    class Hash {
+    class Hasher {
         Type const* type_;
 
     public:
-        explicit Hash(Type const* type) : type_(type) {}
+        explicit Hasher(Type const* type) noexcept : type_(type) {}
         size_t operator()(std::byte const* key) const {
             return type_->Hash(key);
         }
@@ -52,11 +52,19 @@ public:
         Type const* type_;
 
     public:
-        explicit Comparator(Type const* type) : type_(type) {}
+        explicit Comparator(Type const* type) noexcept : type_(type) {}
         size_t operator()(std::byte const* a, std::byte const* b) const {
             return (type_->Compare(a, b) == CompareResult::kEqual);
         }
     };
+
+    Comparator GetComparator() const noexcept {
+        return Comparator(this);
+    }
+
+    Hasher GetHasher() const noexcept {
+        return Hasher(this);
+    }
 
     void Print(std::byte const* value, std::ostream& os) const {
         os << ValueToString(value);
