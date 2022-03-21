@@ -32,6 +32,10 @@ public:
                type_id_ == +TypeId::kDouble;
     }
 
+    [[nodiscard]] bool IsMetrizable() const noexcept {
+        return IsNumeric() || type_id_ == +TypeId::kString;
+    }
+
     [[nodiscard]] std::string ToString() const {
         return type_id_._to_string();
     }

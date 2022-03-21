@@ -1,14 +1,15 @@
 #pragma once
 
+#include "IMetrizableType.h"
 #include "Type.h"
 #include "util/LevenshteinDistance.h"
 
 namespace model {
 
-class StringType : public Type {
+class StringType : public IMetrizableType {
 public:
     /* type_id parameter is temporary for BigIntType */
-    explicit StringType(TypeId type_id = TypeId::kString) noexcept : Type(type_id) {}
+    explicit StringType(TypeId type_id = TypeId::kString) noexcept : IMetrizableType(type_id) {}
 
     void Free(std::byte const* value) const noexcept override {
         Destruct(value);
@@ -73,7 +74,7 @@ public:
     }
 
     /* Returns Levenshtein distance between l and r */
-    unsigned Dist(std::byte const* l, std::byte const* r) const {
+    double Dist(std::byte const* l, std::byte const* r) const override {
         return util::LevenshteinDistance(GetValue<String>(l), GetValue<String>(r));
     }
 
