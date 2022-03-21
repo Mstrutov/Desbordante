@@ -20,6 +20,9 @@ public:
     using RelationData::AbstractRelationData;
 
     [[nodiscard]] unsigned int GetNumRows() const final {
+        if (column_data_.empty()) {
+            return 0;
+        }
         return column_data_[0].GetProbingTable().size();
     }
     [[nodiscard]] std::vector<int> GetTuple(int tuple_index) const;
