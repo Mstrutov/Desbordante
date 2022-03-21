@@ -4,13 +4,14 @@
 #include <limits>
 #include <sstream>
 
+#include "IMetrizableType.h"
 #include "Type.h"
 
 namespace model {
 
-class INumericType : public Type {
+class INumericType : public IMetrizableType {
 public:
-    explicit INumericType(TypeId id) noexcept : Type(id) {}
+    explicit INumericType(TypeId id) noexcept : IMetrizableType(id) {}
 
     virtual std::byte* Negate(std::byte const* value, std::byte* res) const = 0;
     virtual std::byte* Add(std::byte const* l, std::byte const* r, std::byte* res) const = 0;
@@ -21,7 +22,6 @@ public:
     virtual std::byte* Max(std::byte const* l, std::byte const* r, std::byte* res) const = 0;
     virtual std::byte* Power(std::byte const* num, long double pow, std::byte* res) const = 0;
     virtual std::byte* Abs(std::byte const* num, std::byte* res) const = 0;
-    virtual std::byte* Dist(std::byte const* l, std::byte const* r, std::byte* res) const = 0;
 
     [[nodiscard]] virtual std::byte const* Min() const = 0;
     [[nodiscard]] virtual std::byte const* Max() const = 0;
@@ -58,7 +58,7 @@ public:
     std::byte* Power(std::byte const* num, long double pow, std::byte* res) const override;
     std::byte* Abs(std::byte const* num, std::byte* res) const override;
 
-    T Dist(std::byte const* l, std::byte const* r) const {
+    double Dist(std::byte const* l, std::byte const* r) const override {
         return std::abs(GetValue(l) - GetValue(r));
     }
 
@@ -157,12 +157,6 @@ std::byte* NumericType<T>::Power(std::byte const* num, long double pow, std::byt
 template <typename T>
 std::byte* NumericType<T>::Abs(std::byte const* num, std::byte* res) const {
     GetValue(res) = std::abs(GetValue(num));
-    return res;
-}
-
-template <typename T>
-std::byte* NumericType<T>::Dist(std::byte const* l, std::byte const* r, std::byte* res) const {
-    GetValue(res) = Dist(l, r);
     return res;
 }
 

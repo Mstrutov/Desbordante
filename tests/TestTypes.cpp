@@ -193,9 +193,9 @@ TYPED_TEST(TestNumeric, Dist) {
     using Type = typename TypeParam::UnderlyingType;
     auto test = [this](Type l, Type r) {
         this->SetActualAndLiteral(l, r);
-        this->ExpectEq(std::abs(l - r),
-                       this->type_->Dist(this->actual_ptr_, this->literal_ptr_, this->actual_ptr_),
-                       TestFixture::GetErrorStr(l, r));
+        EXPECT_DOUBLE_EQ(std::abs(l - r),
+                         this->type_->Dist(this->actual_ptr_, this->literal_ptr_))
+            << this->GetErrorStr(l, r);
     };
 
     test(0, 100);
