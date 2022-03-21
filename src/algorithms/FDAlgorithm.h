@@ -44,6 +44,10 @@ public:
             Config::ParamValue const& value = special_params.at(param_name);
             return boost::any_cast<ParamType>(value);
         }
+
+        bool HasParam(std::string const& param_name) const {
+            return special_params.find(param_name) != special_params.end();
+        }
     };
 
 private:
