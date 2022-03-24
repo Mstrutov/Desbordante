@@ -19,12 +19,14 @@ public:
 
     using RelationData::AbstractRelationData;
 
-    unsigned int GetNumRows() const final { return column_data_[0].GetProbingTable().size(); }
-    std::vector<int> GetTuple(int tuple_index) const;
+    [[nodiscard]] unsigned int GetNumRows() const final {
+        return column_data_[0].GetProbingTable().size();
+    }
+    [[nodiscard]] std::vector<int> GetTuple(int tuple_index) const;
 
     static std::unique_ptr<ColumnLayoutRelationData> CreateFrom(CSVParser& file_input,
-                                                                bool is_null_eq_null);
-    static std::unique_ptr<ColumnLayoutRelationData> CreateFrom(
-        CSVParser& file_input, bool is_null_eq_null, int max_cols, long max_rows);
+                                                                bool is_null_eq_null,
+                                                                int max_cols = -1,
+                                                                long max_rows = -1);
 };
 
