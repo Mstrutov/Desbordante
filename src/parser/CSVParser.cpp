@@ -71,6 +71,7 @@ void CSVParser::Reset() {
     source_.seekg(0);
 
     next_line_.clear();
+    has_next_ = true;
 
     /* Skip header */
     if (has_header_) {
@@ -108,13 +109,13 @@ std::string CSVParser::GetUnparsedLine(const unsigned long long line_index) {
     return line;
 }
 
-std::vector<std::string> CSVParser::ParseString(const std::string& s) {
+std::vector<std::string> CSVParser::ParseString(const std::string& s) const {
     std::vector<std::string> tokens;
     boost::escaped_list_separator<char> list_sep(escape_symbol_, separator_, quote_);
     boost::tokenizer<boost::escaped_list_separator<char>> tokenizer(s, list_sep);
 
     for (auto& token : tokenizer) {
-        tokens.push_back(std::move(token));
+        tokens.push_back(token);
     }
 
     return tokens;
