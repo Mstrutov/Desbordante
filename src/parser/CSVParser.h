@@ -26,7 +26,7 @@ private:
     void GetNext();
     void PeekNext();
     void GetLine(const unsigned long long line_index);
-    std::vector<std::string> ParseString(const std::string& s);
+    std::vector<std::string> ParseString(const std::string& s) const;
     void GetNextIfHas();
     void SkipLine();
 
