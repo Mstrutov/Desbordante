@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
 #include <easylogging++.h>
 
@@ -31,12 +32,22 @@ static std::string EnumToAvailableValues() {
     return avail_values.str();
 }
 
-static bool CheckOptions(std::string const& task, std::string const& alg, double error) {
+static bool CheckOptions(std::string const& task, std::string const& alg, std::string const& metric, double error) {
     if (!algos::AlgoMiningType::_is_valid(task.c_str())) {
         std::cout << "ERROR: no matching task."
                      " Available tasks (primitives to mine) are:\n" +
                      EnumToAvailableValues<algos::AlgoMiningType>() + '\n';
         return false;
+    }
+
+    if(task == "metric"){
+        if (!algos::Metric::_is_valid(metric.c_str())) {
+            std::cout << "ERROR: no matching metric."
+                         " Available metrics are:\n" +
+                EnumToAvailableValues<algos::Metric>() + '\n';
+            return false;
+        }
+        return true;
     }
 
     if (!algos::Algo::_is_valid(alg.c_str())) {
@@ -57,6 +68,7 @@ int main(int argc, char const* argv[]) {
     std::string algo;
     std::string dataset;
     std::string task;
+    std::string metric;
     char separator = ',';
     bool has_header = true;
     int seed = 0;
@@ -83,6 +95,8 @@ int main(int argc, char const* argv[]) {
                                   " for FD mining.";
     std::string const task_desc = "type of dependency to mine. Available tasks:\n" +
                                   EnumToAvailableValues<algos::AlgoMiningType>();
+    std::string const metric_desc = "metric to use. Available metrics:\n" +
+        EnumToAvailableValues<algos::Metric>();
 
     po::options_description desc("Allowed options");
     desc.add_options()
@@ -121,6 +135,7 @@ int main(int argc, char const* argv[]) {
          "does the first column contain a transaction id (only for \"tabular\" input type)")
 
          /*Options for metric verifier algorithm*/
+         ("metric", po::value<std::string>(&metric), metric_desc.c_str())
          ("lhs_indices", po::value<std::vector<unsigned int>>(&lhs_indices)->multitoken(),
           "LHS column indices for metric FD verification")
          ("rhs_index", po::value<unsigned int>(&rhs_index),
@@ -148,7 +163,7 @@ int main(int argc, char const* argv[]) {
     std::transform(algo.begin(), algo.end(), algo.begin(),
                    [](unsigned char c) { return std::tolower(c); });
 
-    if (!CheckOptions(task, algo, error)) {
+    if (!CheckOptions(task, algo, metric, error)) {
         std::cout << desc << std::endl;
         return 1;
     }
@@ -171,6 +186,20 @@ int main(int argc, char const* argv[]) {
                   << "\", min. confidence threshold \"" << std::to_string(minconf)
                   << "\" and dataset \"" << dataset
                   << "\". Input type is \"" << ar_input_format
+                  << "\" with separator \'" << separator
+                  << "\'. Header is " << (has_header ? "" : "not ") << "present. " << std::endl;
+    }
+    else if(task == "metric") {
+        algo = "metric";
+        std::stringstream stringstream;
+        copy(lhs_indices.begin(), lhs_indices.end(), std::ostream_iterator<int>(stringstream, " "));
+        string lhs_indices_str = stringstream.str();
+        boost::trim_right(lhs_indices_str);
+        std::cout << "Input metric \"" << metric
+                  << "\" with parameter \"" << parameter
+                  << "\" with LHS indices \"" << lhs_indices_str
+                  << "\" with RHS index\"" << rhs_index
+                  << "\" and dataset \"" << dataset
                   << "\" with separator \'" << separator
                   << "\'. Header is " << (has_header ? "" : "not ") << "present. " << std::endl;
     }

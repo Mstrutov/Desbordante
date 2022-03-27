@@ -7,7 +7,6 @@
 
 #include "Algorithms.h"
 #include "TypoMiner.h"
-#include "Metric_FD/MetricVerifier.h"
 
 namespace algos {
 
@@ -22,7 +21,8 @@ BETTER_ENUM(AlgoMiningType, char,
     cfd,    /* Conditional functional dependency mining */
     ar,     /* Association rule mining */
     key,    /* Key mining */
-    typos   /* Typo mining */
+    typos,  /* Typo mining */
+    metric  /* Metric functional dependency verifying*/
 #endif
 );
 
@@ -42,9 +42,10 @@ BETTER_ENUM(Algo, char,
     tane,
     fun,
 
-    metric,
     /* Association rules mining algorithms */
-    apriori
+    apriori,
+
+    metric
 );
 
 using StdParamsMap = std::unordered_map<std::string, boost::any>;
@@ -155,6 +156,22 @@ ARAlgorithm::Config CreateArAlgorithmConfigFromMap(ParamsMap params) {
 }
 
 template <typename ParamsMap>
+MetricVerifier::Config CreateMetricVerifierConfigFromMap(ParamsMap params) {
+    MetricVerifier::Config c;
+
+    c.data = std::filesystem::current_path() / "inputData" /
+        ExtractParamFromMap<std::string>(params, "data");
+    c.separator = ExtractParamFromMap<char>(params, "separator");
+    c.has_header = ExtractParamFromMap<bool>(params, "has_header");
+    c.is_null_equal_null = ExtractParamFromMap<bool>(params, "is_null_equal_null");
+    c.parameter = ExtractParamFromMap<long double>(params, "parameter");
+    c.lhs_indices = ExtractParamFromMap<std::vector<unsigned int>>(params, "lhs_indices");
+    c.rhs_index = ExtractParamFromMap<unsigned int>(params, "rhs_index");
+    c.metric = ExtractParamFromMap<std::string>(params, "metric");
+    return c;
+}
+
+template <typename ParamsMap>
 std::unique_ptr<Primitive> CreateFDAlgorithmInstance(Algo const algo, ParamsMap&& params) {
     FDAlgorithm::Config const config =
         CreateFDAlgorithmConfigFromMap(std::forward<ParamsMap>(params));
@@ -190,11 +207,10 @@ std::unique_ptr<Primitive> CreateArAlgorithmInstance(/*Algo const algo, */Params
 }
 
 template <typename ParamsMap>
-std::unique_ptr<Primitive> CreateMetricVerifier(ParamsMap&& params) {
-    FDAlgorithm::Config const config =
-        CreateFDAlgorithmConfigFromMap(std::forward<ParamsMap>(params));
-
-    return details::CreatePrimitiveInstanceImpl<Primitive, std::tuple<MetricVerifier>>(0, config);
+std::unique_ptr<Primitive> CreateMetricVerifierInstance(ParamsMap&& params) {
+    MetricVerifier::Config const config =
+        CreateMetricVerifierConfigFromMap(std::forward<ParamsMap>(params));
+    return std::make_unique<MetricVerifier>(config);
 }
 
 } // namespace details
@@ -210,7 +226,7 @@ std::unique_ptr<Primitive> CreateAlgorithmInstance(AlgoMiningType const task, Al
     case AlgoMiningType::ar:
         return details::CreateArAlgorithmInstance(/*algo, */std::forward<ParamsMap>(params));
     case AlgoMiningType::metric:
-        return details::CreateMetricVerifier(std::forward<ParamsMap>(params));
+        return details::CreateMetricVerifierInstance(std::forward<ParamsMap>(params));
     default:
         throw std::logic_error(task._to_string() + std::string(" task type is not supported yet."));
     }

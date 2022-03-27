@@ -12,3 +12,5 @@
 
 /*Association rule mining algorithms */
 #include "algorithms/association-rules/Apriori.h"
+
+#include "algorithms/Metric_FD/MetricVerifier.h"
