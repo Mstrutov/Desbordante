@@ -1,4 +1,5 @@
 #include <functional>
+#include <utility>
 
 #include <boost/functional/hash.hpp>
 #include <gmock/gmock.h>
@@ -34,19 +35,39 @@ struct FDsParam : TestingParam {
     std::vector<FdByIndices> expected;
 
     template<typename... Params>
-    FDsParam(std::vector<FdByIndices> expected, Params&&... params)
+    explicit FDsParam(std::vector<FdByIndices> expected, Params&&... params)
         : TestingParam(std::forward<Params>(params)...), expected(std::move(expected)) {}
 };
 
 struct ClustersParam : TestingParam {
+    using ClustersVec = std::vector<util::PLI::Cluster>;
     using FdToClustersMap =
-        std::unordered_map<FdByIndices, std::vector<util::PLI::Cluster>, boost::hash<FdByIndices>>;
+        std::unordered_map<FdByIndices, ClustersVec, boost::hash<FdByIndices>>;
+
     FdToClustersMap expected;
 
-    template<typename... Params>
-    ClustersParam(FdToClustersMap expected, Params&&... params)
+    template <typename... Params>
+    explicit ClustersParam(FdToClustersMap expected, Params&&... params)
         : TestingParam(std::forward<Params>(params)...), expected(std::move(expected)) {}
 
+};
+
+struct LinesParam : TestingParam {
+    using TyposVec = std::vector<util::PLI::Cluster::value_type>;
+    using ClusterAndTyposPair = std::pair<util::PLI::Cluster, TyposVec>;
+    using FdToTyposMap =
+        std::unordered_map<FdByIndices, std::vector<ClusterAndTyposPair>, boost::hash<FdByIndices>>;
+
+    double ratio;
+    double radius;
+    FdToTyposMap expected;
+
+    template <typename... Params>
+    explicit LinesParam(FdToTyposMap expected, double ratio, double radius, Params&&... params)
+        : TestingParam(std::forward<Params>(params)...),
+          ratio(ratio),
+          radius(radius),
+          expected(std::move(expected)) {}
 };
 
 static std::unique_ptr<algos::TypoMiner<FDAlgorithm>> CreateTypoMiner(algos::Algo const algo,
@@ -57,7 +78,7 @@ static std::unique_ptr<algos::TypoMiner<FDAlgorithm>> CreateTypoMiner(algos::Alg
     return std::unique_ptr<algos::TypoMiner<FDAlgorithm>>(casted);
 }
 
-static std::string MakeJsonFromFds(std::vector<FdByIndices> fds) {
+static std::string MakeJsonFromFds(std::vector<FdByIndices> const& fds) {
     std::string json_fds = "{\"fds\": [";
 
     for (FdByIndices const& fd : fds) {
@@ -70,7 +91,7 @@ static std::string MakeJsonFromFds(std::vector<FdByIndices> fds) {
             }
         }
         json_fds += "], rhs: ";
-        assert(fd.size() != 0);
+        assert(!fd.empty());
         json_fds += std::to_string(fd.back());
         json_fds += "},";
     }
@@ -143,7 +164,7 @@ static FdByIndices FDtoFdByIndices(FD const& fd) {
     return fd_by_indicies;
 }
 
-TEST_P(ClustersWithTyposMiningTest, SyntheticTest) {
+TEST_P(ClustersWithTyposMiningTest, FindClustersWithTypos) {
     auto const test = [&param = GetParam()](algos::Algo const algo) {
         ClustersParam::FdToClustersMap const& expected = GetParam().expected;
         auto typo_miner = CreateTypoMiner(algo, GetParam().params);
@@ -157,7 +178,7 @@ TEST_P(ClustersWithTyposMiningTest, SyntheticTest) {
                 typo_miner->FindClustersWithTypos(fd);
             EXPECT_EQ(expected_cluster, actual_cluster)
                 << "TyposMiner with " << algo._to_string() << " as precise algorithm\n"
-                << "Clusters of FD: " << fd.ToJSONString() << std::endl;
+                << "Clusters of FD: " << fd.ToJSONString();
 
         }
     };
@@ -174,4 +195,37 @@ INSTANTIATE_TEST_SUITE_P(
                         {FdByIndices{1, 2}, {util::PLI::Cluster{7, 9}}} },
                       "SimpleTypos.csv", ',', true, true, -1, 0.1, 0)));
 
-} // namespace tests
+
+class LinesWithTyposMiningTest : public ::testing::TestWithParam<LinesParam> {};
+
+TEST_P(LinesWithTyposMiningTest, FindLinesWithTypos) {
+    auto const& p = GetParam();
+    auto typo_miner = CreateTypoMiner(algos::Algo::pyro, GetParam().params);
+    RelationalSchema const* schema = typo_miner->GetRelationData().GetSchema();
+
+    for (auto const& [fd_by_indices, clusters_with_typos] : p.expected) {
+        assert(fd_by_indices.size() > 1);
+        auto bitset = schema->IndicesToBitset(fd_by_indices.cbegin(),
+                                              std::prev(fd_by_indices.cend()));
+        FD fd(schema->GetVertical(std::move(bitset)), *schema->GetColumn(fd_by_indices.back()));
+        for (auto const& [cluster, typos] : clusters_with_typos) {
+            std::vector<util::PLI::Cluster::value_type> const actual =
+                typo_miner->FindLinesWithTypos(fd, cluster, p.radius, p.ratio);
+            EXPECT_EQ(typos, actual);
+        }
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    TypoMinerTestSuite, LinesWithTyposMiningTest,
+    ::testing::Values(
+        LinesParam({{ FdByIndices{1, 2},
+                    {std::pair(util::PLI::Cluster{7, 9}, std::vector{7, 9})} }},
+                   1, -1, "SimpleTypos.csv", ',', true, true, -1, 0.05, 0),
+        LinesParam({ {FdByIndices{0, 1},
+                      {std::pair(util::PLI::Cluster{4, 0, 1, 5, 6}, std::vector{4})}},
+                     {FdByIndices{1, 2},
+                      {std::pair(util::PLI::Cluster{7, 9}, std::vector{7, 9})}} },
+                   1, -1, "SimpleTypos.csv", ',', true, true, -1, 0.1, 0)));
+
+}  // namespace tests
