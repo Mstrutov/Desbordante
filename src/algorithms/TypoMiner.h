@@ -1,7 +1,9 @@
 #pragma once
 
+#include "ColumnLayoutTypedRelationData.h"
 #include "Primitive.h"
 #include "Pyro.h"
+#include "Types.h"
 
 namespace algos {
 
@@ -12,20 +14,31 @@ private:
     std::unique_ptr<FDAlgorithm> approx_algo_;
     std::vector<FD> approx_fds_;
     std::shared_ptr<ColumnLayoutRelationData> relation_;
+    std::unique_ptr<model::ColumnLayoutTypedRelationData> typed_relation_;
+    /* Config members */
+    double radius_ = -1; /* Maximal distance between two values to consider one of them a typo */
+    double ratio_;       /* Maximal fraction of deviations per cluster to flag the cluster as
+                          * containing typos */
 
     static bool FDLess(FD const& l, FD const& r);
     static auto MakeTuplesByIndicesComparator(std::map<int, unsigned> const& frequency_map);
 
+    std::unordered_map<int, unsigned> CreateFrequencies(util::PLI::Cluster const& cluster,
+                                                        std::vector<int> const& probing_table) const;
     std::map<int, unsigned> CreateFrequencyMap(Column const& cluster_col,
                                                util::PLI::Cluster const& cluster) const;
-
-    void ClarifyTypos(FD const& fd) {
-        /* TODO(polyntsov): implement this */
-        (void)fd;
+    unsigned GetMostFrequentValueIndex(Column const& cluster_col,
+                                       util::PLI::Cluster const& cluster) const;
+    bool ValuesAreClose(std::byte const* l, std::byte const* r,
+                        model::Type const& type) const {
+        assert(type.IsMetrizable());
+        return static_cast<model::IMetrizableType const&>(type).Dist(l, r) < radius_;
     }
 
 public:
     using Config = FDAlgorithm::Config;
+    using TyposVec = std::vector<util::PLI::Cluster::value_type>;
+    using ClusterTyposPair = std::pair<util::PLI::Cluster, TyposVec>;
 
     struct SquashedElement {
         int tuple_index;  /* Tuple index */
@@ -33,7 +46,7 @@ public:
                            * following immediately after the given */
     };
 
-    TypoMiner(Config const& config);
+    explicit TypoMiner(Config const& config);
 
     unsigned long long Execute() override;
 
@@ -52,10 +65,44 @@ public:
      * in rhs column than t2[sort_on.rhs].
      */
     void SortCluster(FD const& sort_on, util::PLI::Cluster& cluster) const;
+    /* Finds lines in a cluster that has typos on typos_fd.GetRhs() column values. A value is said
+     * to contain a typo if it differs from the most frequent value in the cluster by less
+     * than radius_ and the fraction of such values (values_num / cluster_size) is less than ratio_.
+     * NOTE: The cluster argument is asumed to be consistent with the rhs of typos_fd, i.e.
+     * indices in the cluster represent value indices in the typos_fd.GetRhs() column. Otherwise
+     * the behavior of this method is undefined.
+     * Most likely you want to pass to this method as arguments pure approximate FD some_fd and
+     * a cluster retrieved from the FindClustersWithTypos(some_fd).
+     */
+    TyposVec FindLinesWithTypos(FD const& typos_fd, util::PLI::Cluster const& cluster) const;
+    TyposVec FindLinesWithTypos(FD const& typos_fd, util::PLI::Cluster const& cluster,
+                                double new_radius, double new_ratio);
+    std::vector<ClusterTyposPair> FindClustersAndLinesWithTypos(
+        FD const& typos_fd, bool const sort_clusters = true);
 
     /* Returns vector of approximate fds only (there are no precise fds) */
     std::vector<FD> const& GetApproxFDs() const noexcept {
         return approx_fds_;
+    }
+    double GetRadius() const noexcept {
+        return radius_;
+    }
+    double GetRatio() const noexcept {
+        return ratio_;
+    }
+    double SetRadius(double radius) {
+        if (!(radius == -1 || radius >= 0)) {
+            throw std::invalid_argument("Radius should be greater or equal to zero or equal to -1");
+        }
+        radius_ = radius;
+        return radius_;
+    }
+    double SetRatio(double ratio) {
+        if (!(ratio >= 0 && ratio <= 1)) {
+            throw std::invalid_argument("Ratio should be between 0 and 1");
+        }
+        ratio_ = ratio;
+        return ratio_;
     }
     std::string GetApproxFDsAsJson() const {
         return FDAlgorithm::FDsToJson(approx_fds_);
@@ -70,16 +117,32 @@ TypoMiner<PreciseAlgo, ApproxAlgo>::TypoMiner(Config const& config)
     static_assert(std::is_base_of_v<PliBasedFDAlgorithm, ApproxAlgo>,
                   "Approximate algorithm must be relation based");
     if (config.GetSpecialParam<double>("error") == 0.0) {
-        throw std::invalid_argument("Typos mining with error = 0 is meaningless");
+        throw std::invalid_argument("Typo mining with error = 0 is meaningless");
     }
+
     Config precise_config = config;
     precise_config.special_params["error"] = 0.0;
     relation_ = ColumnLayoutRelationData::CreateFrom(input_generator_, config.is_null_equal_null);
+    input_generator_.Reset();
+    typed_relation_ = model::ColumnLayoutTypedRelationData::CreateFrom(input_generator_,
+                                                                       config.is_null_equal_null);
+
+    if (config.HasParam("radius")) {
+        SetRadius(config.GetSpecialParam<double>("radius"));
+    }
+    if (config.HasParam("ratio")) {
+        SetRatio(config.GetSpecialParam<double>("ratio"));
+    } else {
+        /* Should be good heuristic. Or set ratio to 1 by default? */
+        SetRatio((relation_->GetNumRows() == 0) ? 1 : 2.0 / relation_->GetNumRows());
+    }
+
     if constexpr (std::is_base_of_v<PliBasedFDAlgorithm, PreciseAlgo>) {
         precise_algo_ = std::make_unique<PreciseAlgo>(relation_, precise_config);
     } else {
         precise_algo_ = std::make_unique<PreciseAlgo>(precise_config);
     }
+
     approx_algo_ = std::make_unique<ApproxAlgo>(relation_, config);
 }
 
@@ -116,7 +179,7 @@ std::vector<util::PLI::Cluster> TypoMiner<PreciseAlgo, ApproxAlgo>::FindClusters
     std::vector<int> const& probing_table =
         relation_->GetColumnData(typos_fd.GetRhs().GetIndex()).GetProbingTable();
 
-    assert(lhs_columns.size() != 0);
+    assert(!lhs_columns.empty());
 
     for (Column const* col : lhs_columns) {
         ColumnData const& col_data = relation_->GetColumnData(col->GetIndex());
@@ -168,12 +231,12 @@ std::vector<util::PLI::Cluster> TypoMiner<PreciseAlgo, ApproxAlgo>::FindClusters
 template <typename PreciseAlgo, typename ApproxAlgo>
 std::vector<typename TypoMiner<PreciseAlgo, ApproxAlgo>::SquashedElement>
 TypoMiner<PreciseAlgo, ApproxAlgo>::SquashCluster(FD const& squash_on,
-                                                   util::PLI::Cluster const& cluster) {
+                                                  util::PLI::Cluster const& cluster) {
     std::vector<SquashedElement> squashed;
     std::vector<int> const& probing_table =
         relation_->GetColumnData(squash_on.GetRhs().GetIndex()).GetProbingTable();
 
-    if(cluster.empty()) {
+    if (cluster.empty()) {
         return squashed;
     }
 
@@ -201,12 +264,76 @@ void TypoMiner<PreciseAlgo, ApproxAlgo>::SortCluster(FD const& sort_on,
 }
 
 template <typename PreciseAlgo, typename ApproxAlgo>
-std::map<int, unsigned> TypoMiner<PreciseAlgo, ApproxAlgo>::CreateFrequencyMap(
-    Column const& cluster_col, util::PLI::Cluster const& cluster) const {
-    std::map<int, unsigned> frequencies;
-    std::map<int, unsigned> frequency_map;
+std::vector<util::PLI::Cluster::value_type> TypoMiner<PreciseAlgo, ApproxAlgo>::FindLinesWithTypos(
+    FD const& typos_fd, util::PLI::Cluster const& cluster, double new_radius, double new_ratio) {
+    SetRadius(new_radius);
+    SetRatio(new_ratio);
+    return FindLinesWithTypos(typos_fd, cluster);
+}
+
+template <typename PreciseAlgo, typename ApproxAlgo>
+std::vector<util::PLI::Cluster::value_type> TypoMiner<PreciseAlgo, ApproxAlgo>::FindLinesWithTypos(
+    FD const& typos_fd, util::PLI::Cluster const& cluster) const {
+    std::vector<util::PLI::Cluster::value_type> typos;
+    unsigned long num_of_close_values = 0;
+    Column const& col = typos_fd.GetRhs();
+    model::TypedColumnData const& col_data =
+        typed_relation_->GetColumnData(col.GetIndex());
     std::vector<int> const& probing_table =
-        relation_->GetColumnData(cluster_col.GetIndex()).GetProbingTable();
+        relation_->GetColumnData(col.GetIndex()).GetProbingTable();
+    std::vector<std::byte const*> const& data = col_data.GetData();
+    model::Type const& type = col_data.GetType();
+
+    unsigned most_freq_index = GetMostFrequentValueIndex(col, cluster);
+    int most_freq_value = probing_table[most_freq_index];
+
+    if (most_freq_value == 0 || col_data.IsMixed() || !type.IsMetrizable()) {
+        if (ratio_ == 1) {
+            return cluster;
+        }
+        return {};
+    }
+
+    for (util::PLI::Cluster::value_type tuple_index : cluster) {
+        if (most_freq_value == probing_table[tuple_index]) {
+            continue;
+        }
+        if (radius_ == -1 ||
+            ValuesAreClose(data[most_freq_index], data[tuple_index], type)) {
+            num_of_close_values++;
+            typos.push_back(tuple_index);
+        }
+    }
+
+    if (double(num_of_close_values) / col_data.GetNumRows() > ratio_) {
+        return {};
+    }
+
+    return typos;
+}
+
+template <typename PreciseAlgo, typename ApproxAlgo>
+std::vector<typename TypoMiner<PreciseAlgo, ApproxAlgo>::ClusterTyposPair>
+TypoMiner<PreciseAlgo, ApproxAlgo>::FindClustersAndLinesWithTypos(const FD& typos_fd,
+                                                                  const bool sort_clusters) {
+    std::vector<ClusterTyposPair> result;
+    std::vector<util::PLI::Cluster> clusters = FindClustersWithTypos(typos_fd, sort_clusters);
+
+    result.reserve(clusters.size());
+
+    for (auto& cluster : clusters) {
+        TyposVec typos = FindLinesWithTypos(typos_fd, cluster);
+        if (!typos.empty()) {
+            result.emplace_back(std::move(cluster), std::move(typos));
+        }
+    }
+
+    return result;
+}
+template <typename PreciseAlgo, typename ApproxAlgo>
+std::unordered_map<int, unsigned> TypoMiner<PreciseAlgo, ApproxAlgo>::CreateFrequencies(
+    util::PLI::Cluster const& cluster, std::vector<int> const& probing_table) const {
+    std::unordered_map<int, unsigned> frequencies;
 
     for (int const tuple_index : cluster) {
         int const probing_table_value = probing_table[tuple_index];
@@ -216,9 +343,42 @@ std::map<int, unsigned> TypoMiner<PreciseAlgo, ApproxAlgo>::CreateFrequencyMap(
         }
     }
 
+    return frequencies;
+}
+
+template <typename PreciseAlgo, typename ApproxAlgo>
+unsigned TypoMiner<PreciseAlgo, ApproxAlgo>::GetMostFrequentValueIndex(
+    Column const& cluster_col, util::PLI::Cluster const& cluster) const {
+    assert(!cluster.empty());
+    std::vector<int> const& probing_table =
+        relation_->GetColumnData(cluster_col.GetIndex()).GetProbingTable();
+    std::unordered_map<int, unsigned> frequencies = CreateFrequencies(cluster, probing_table);
+
+    unsigned most_frequent_index = cluster.size();
+    unsigned most_frequent_value = 0;
     for (int const tuple_index : cluster) {
         int const probing_table_value = probing_table[tuple_index];
-        int const value = (probing_table_value == 0) ? 1 : frequencies[probing_table_value];
+        unsigned const value = (probing_table_value == 0) ? 1 : frequencies.at(probing_table_value);
+        if (value > most_frequent_value) {
+            most_frequent_value = value;
+            most_frequent_index = tuple_index;
+        }
+    }
+
+    return most_frequent_index;
+}
+
+template <typename PreciseAlgo, typename ApproxAlgo>
+std::map<int, unsigned> TypoMiner<PreciseAlgo, ApproxAlgo>::CreateFrequencyMap(
+    Column const& cluster_col, util::PLI::Cluster const& cluster) const {
+    std::map<int, unsigned> frequency_map;
+    std::vector<int> const& probing_table =
+        relation_->GetColumnData(cluster_col.GetIndex()).GetProbingTable();
+    std::unordered_map<int, unsigned> frequencies = CreateFrequencies(cluster, probing_table);
+
+    for (int const tuple_index : cluster) {
+        int const probing_table_value = probing_table[tuple_index];
+        int const value = (probing_table_value == 0) ? 1 : frequencies.at(probing_table_value);
         frequency_map[tuple_index] = value;
     }
 
