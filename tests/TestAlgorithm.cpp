@@ -13,6 +13,7 @@
 #include "Pyro.h"
 #include "RelationalSchema.h"
 #include "TaneX.h"
+#include "FUN.h"
 #include "TestingUtils.h"
 #include "Depminer.h"
 
@@ -141,5 +142,5 @@ REGISTER_TYPED_TEST_SUITE_P(AlgorithmTest, ThrowsOnEmpty, ReturnsEmptyOnSingleNo
                             WorksOnLongDataset, WorksOnWideDataset, LightDatasetsConsistentHash,
                             HeavyDatasetsConsistentHash);
 
-using Algorithms = ::testing::Types<Tane, Pyro, FastFDs, DFD, Depminer, FDep>;
+using Algorithms = ::testing::Types<Tane, Pyro, FastFDs, DFD, Depminer, FDep, algos::FUN>;
 INSTANTIATE_TYPED_TEST_SUITE_P(, AlgorithmTest, Algorithms);

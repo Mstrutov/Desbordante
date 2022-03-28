@@ -6,6 +6,7 @@
 #include "algorithms/FastFDs.h"
 #include "algorithms/FDep/FDep.h"
 #include "algorithms/Fd_mine.h"
+#include "algorithms/FUN.h"
 #include "algorithms/Pyro.h"
 #include "algorithms/TaneX.h"
 
