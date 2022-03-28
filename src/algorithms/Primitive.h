@@ -38,9 +38,12 @@ public:
     Primitive& operator=(Primitive&& other) = delete;
     virtual ~Primitive() = default;
 
-    Primitive(std::vector<std::string_view> phase_names) : phase_names_(std::move(phase_names)) {}
-    explicit Primitive(std::filesystem::path const& path, char const separator,
-                       bool const has_header, std::vector<std::string_view> phase_names)
+    explicit Primitive(std::vector<std::string_view> phase_names)
+        : phase_names_(std::move(phase_names)) {}
+    Primitive(CSVParser input_generator, std::vector<std::string_view> phase_names)
+        : input_generator_(std::move(input_generator)), phase_names_(std::move(phase_names)) {}
+    Primitive(std::filesystem::path const& path, char const separator, bool const has_header,
+              std::vector<std::string_view> phase_names)
         : input_generator_(path, separator, has_header), phase_names_(std::move(phase_names)) {}
 
     virtual unsigned long long Execute() = 0;

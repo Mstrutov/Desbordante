@@ -70,12 +70,12 @@ struct LinesParam : TestingParam {
           expected(std::move(expected)) {}
 };
 
-static std::unique_ptr<algos::TypoMiner<FDAlgorithm>> CreateTypoMiner(algos::Algo const algo,
-                                                                      algos::StdParamsMap m) {
+static std::unique_ptr<algos::TypoMiner> CreateTypoMiner(algos::Algo const algo,
+                                                         algos::StdParamsMap m) {
     auto typo_miner =
         algos::CreateAlgorithmInstance(algos::AlgoMiningType::typos, algo, std::move(m));
-    auto casted = static_cast<algos::TypoMiner<FDAlgorithm> *>(typo_miner.release());
-    return std::unique_ptr<algos::TypoMiner<FDAlgorithm>>(casted);
+    auto casted = static_cast<algos::TypoMiner*>(typo_miner.release());
+    return std::unique_ptr<algos::TypoMiner>(casted);
 }
 
 static std::string MakeJsonFromFds(std::vector<FdByIndices> const& fds) {
