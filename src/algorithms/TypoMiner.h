@@ -104,6 +104,10 @@ public:
         ratio_ = ratio;
         return ratio_;
     }
+    ColumnLayoutRelationData const& GetRelationData() const noexcept {
+        assert(relation_ != nullptr);
+        return *relation_;
+    }
     std::string GetApproxFDsAsJson() const {
         return FDAlgorithm::FDsToJson(approx_fds_);
     }
