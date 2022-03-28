@@ -61,14 +61,14 @@ auto CreatePrimitiveInstanceImpl(EnumType const enum_value, Args&&... args) {
                                                                            create);
 }
 
-template <template <typename...> class Wrapper, typename AlgorithmBase = Primitive,
+template <typename Wrapper, typename AlgorithmBase = Primitive,
           typename AlgorithmsToWrap = AlgorithmTypesTuple, typename EnumType, typename... Args>
 auto CreateAlgoWrapperInstanceImpl(EnumType const enum_value, Args&&... args) {
-    static_assert(std::is_base_of_v<AlgorithmBase, Wrapper<AlgorithmBase>>,
+    static_assert(std::is_base_of_v<AlgorithmBase, Wrapper>,
                   "Wrapper should be derived from AlgorithmBase");
     auto const create = [&args...](auto I) -> std::unique_ptr<AlgorithmBase> {
         using AlgorithmType = std::tuple_element_t<I, AlgorithmsToWrap>;
-        return std::make_unique<Wrapper<AlgorithmType>>(std::forward<Args>(args)...);
+        return Wrapper::template CreateFrom<AlgorithmType>(std::forward<Args>(args)...);
     };
 
     return boost::mp11::mp_with_index<std::tuple_size<AlgorithmsToWrap>>((size_t)enum_value,
@@ -135,7 +135,8 @@ ARAlgorithm::Config CreateArAlgorithmConfigFromMap(ParamsMap params) {
     auto const input_format_arg = ExtractParamFromMap<std::string>(params, "input_format");
     if (input_format_arg == "singular") {
         unsigned const tid_column_index = ExtractParamFromMap<unsigned>(params, "tid_column_index");
-        unsigned const item_column_index = ExtractParamFromMap<unsigned>(params, "item_column_index");
+        unsigned const item_column_index =
+            ExtractParamFromMap<unsigned>(params, "item_column_index");
         input_format = std::make_shared<model::Singular>(tid_column_index, item_column_index);
     } else if (input_format_arg == "tabular") {
         bool const has_header = ExtractParamFromMap<bool>(params, "has_tid");
@@ -158,7 +159,7 @@ std::unique_ptr<Primitive> CreateFDAlgorithmInstance(Algo const algo, ParamsMap&
 }
 
 template <typename ParamsMap>
-std::unique_ptr<Primitive> CreateTyposMinerInstance(Algo const algo, ParamsMap&& params) {
+std::unique_ptr<Primitive> CreateTypoMinerInstance(Algo const algo, ParamsMap&& params) {
     /* Typos miner has FDAlgorithm configuration */
     FDAlgorithm::Config const config =
         CreateFDAlgorithmConfigFromMap(std::forward<ParamsMap>(params));
@@ -193,7 +194,7 @@ std::unique_ptr<Primitive> CreateAlgorithmInstance(AlgoMiningType const task, Al
     case AlgoMiningType::fd:
         return details::CreateFDAlgorithmInstance(algo, std::forward<ParamsMap>(params));
     case AlgoMiningType::typos:
-        return details::CreateTyposMinerInstance(algo, std::forward<ParamsMap>(params));
+        return details::CreateTypoMinerInstance(algo, std::forward<ParamsMap>(params));
     case AlgoMiningType::ar:
         return details::CreateArAlgorithmInstance(/*algo, */std::forward<ParamsMap>(params));
     default:
