@@ -38,13 +38,14 @@ BETTER_ENUM(Algo, char,
     fdmine,
     pyro,
     tane,
+    fun,
 
     /* Association rules mining algorithms */
     apriori
 );
 
 using StdParamsMap = std::unordered_map<std::string, boost::any>;
-using AlgorithmTypesTuple = std::tuple<Depminer, DFD, FastFDs, FDep, Fd_mine, Pyro, Tane>;
+using AlgorithmTypesTuple = std::tuple<Depminer, DFD, FastFDs, FDep, Fd_mine, Pyro, Tane, FUN>;
 using ArAlgorithmTuplesType = std::tuple<Apriori>;
 
 namespace details {
