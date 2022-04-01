@@ -45,6 +45,7 @@ BETTER_ENUM(Algo, char,
     /* Association rules mining algorithms */
     apriori,
 
+    /* Metric verifier algorithm */
     metric
 );
 
@@ -159,15 +160,19 @@ template <typename ParamsMap>
 MetricVerifier::Config CreateMetricVerifierConfigFromMap(ParamsMap params) {
     MetricVerifier::Config c;
 
+    c.parameter = ExtractParamFromMap<double>(params, "parameter");
+    if (c.parameter < 0) {
+        throw std::invalid_argument("Parameter should not be less than zero.");
+    }
     c.data = std::filesystem::current_path() / "inputData" /
         ExtractParamFromMap<std::string>(params, "data");
     c.separator = ExtractParamFromMap<char>(params, "separator");
     c.has_header = ExtractParamFromMap<bool>(params, "has_header");
     c.is_null_equal_null = ExtractParamFromMap<bool>(params, "is_null_equal_null");
-    c.parameter = ExtractParamFromMap<long double>(params, "parameter");
     c.lhs_indices = ExtractParamFromMap<std::vector<unsigned int>>(params, "lhs_indices");
     c.rhs_index = ExtractParamFromMap<unsigned int>(params, "rhs_index");
     c.metric = ExtractParamFromMap<std::string>(params, "metric");
+    c.dist_to_null_infinity = ExtractParamFromMap<bool>(params, "dist_to_null_infinity");
     return c;
 }
 
