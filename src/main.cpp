@@ -68,7 +68,6 @@ int main(int argc, char const* argv[]) {
     std::string algo;
     std::string dataset;
     std::string task;
-    std::string metric;
     char separator = ',';
     bool has_header = true;
     int seed = 0;
@@ -86,9 +85,11 @@ int main(int argc, char const* argv[]) {
     bool has_transaction_id = false;
 
     /*Options for metric verifier algorithm*/
+    std::string metric;
     std::vector<unsigned int> lhs_indices;
-    unsigned int rhs_index;
-    long double parameter;
+    unsigned int rhs_index = 0;
+    long double parameter = 0;
+    bool dist_to_null_infinity = false;
 
     std::string const algo_desc = "algorithm to use. Available algorithms:\n" +
                                   EnumToAvailableValues<algos::Algo>() +
@@ -134,13 +135,15 @@ int main(int argc, char const* argv[]) {
         ("has_tid", po::value<bool>(&has_transaction_id)->default_value(false),
          "does the first column contain a transaction id (only for \"tabular\" input type)")
 
-         /*Options for metric verifier algorithm*/
-         ("metric", po::value<std::string>(&metric), metric_desc.c_str())
-         ("lhs_indices", po::value<std::vector<unsigned int>>(&lhs_indices)->multitoken(),
-          "LHS column indices for metric FD verification")
-         ("rhs_index", po::value<unsigned int>(&rhs_index),
-          "RHS column indices for metric FD verification")
-         ("parameter", po::value<long double>(&parameter), "metric FD parameter")
+        /*Options for metric verifier algorithm*/
+        ("metric", po::value<std::string>(&metric), metric_desc.c_str())
+        ("lhs_indices", po::value<std::vector<unsigned int>>(&lhs_indices)->multitoken(),
+         "LHS column indices for metric FD verification")
+        ("rhs_index", po::value<unsigned int>(&rhs_index),
+         "RHS column indices for metric FD verification")
+        ("parameter", po::value<long double>(&parameter), "metric FD parameter")
+        ("dist_to_null_infinity", po::value<bool>(&dist_to_null_infinity)->default_value(false),
+        "Determines whether distance to NULL value is infinity")
         ;
 
     po::variables_map vm;

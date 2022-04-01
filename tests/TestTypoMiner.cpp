@@ -113,8 +113,9 @@ static void TestForEachAlgo(F&& test) {
              * TypoMiner class can be instantiated only with the classes that lies in the
              * AlgorithmTypesTuple tuple, which can not contain Apriori algorithm class (due to the
              * current architecture)
+             * Same issue with "metric" algorithm
              * */
-            if (algo != +algos::Algo::apriori) {
+            if (algo != +algos::Algo::apriori && algo != +algos::Algo::metric) {
                 test(algo);
             }
         } catch (std::runtime_error const& e) {
