@@ -26,6 +26,9 @@ public:
     int GetProbingTableValue(int tuple_index) const {
         return (*position_list_index_->GetCachedProbingTable())[tuple_index];
     }
+    bool IsSingleton(int tuple_index) const noexcept {
+        return GetProbingTableValue(tuple_index) == util::PLI::singleton_value_id_;
+    }
     util::PositionListIndex const* GetPositionListIndex() const {
         return position_list_index_.get();
     }
@@ -36,5 +39,9 @@ public:
     }
 
     std::string ToString() const final { return "Data for " + column_->ToString(); }
+
+    static bool IsValueSingleton(int value) noexcept {
+        return value == util::PLI::singleton_value_id_;
+    }
 };
 
