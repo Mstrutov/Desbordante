@@ -65,7 +65,8 @@ std::vector<util::PLI::Cluster> TypoMiner::FindClustersWithTypos(FD const& typos
             }
         }
 
-        if (cluster_rhs_value == -1 || (cluster_rhs_value == 0 && cluster.size() != 1)) {
+        if (cluster_rhs_value == -1 ||
+            (ColumnData::IsValueSingleton(cluster_rhs_value) && cluster.size() != 1)) {
             /* Actually intersection_pli is owned only by this method most of the time
              * (when lhs_columns.size() != 1), so we can here move cluster when
              * lhs_columns.size() != 1. But that leads to more cumbersome and complex code.
@@ -126,24 +127,26 @@ std::vector<util::PLI::Cluster::value_type> TypoMiner::FindLinesWithTypos(
 
 std::vector<util::PLI::Cluster::value_type> TypoMiner::FindLinesWithTypos(
     FD const& typos_fd, util::PLI::Cluster const& cluster) const {
-    std::vector<util::PLI::Cluster::value_type> typos;
-    unsigned long num_of_close_values = 0;
     Column const& col = typos_fd.GetRhs();
     model::TypedColumnData const& col_data = typed_relation_->GetColumnData(col.GetIndex());
     std::vector<int> const& probing_table =
         relation_->GetColumnData(col.GetIndex()).GetProbingTable();
-    std::vector<std::byte const*> const& data = col_data.GetData();
     model::Type const& type = col_data.GetType();
 
     unsigned most_freq_index = GetMostFrequentValueIndex(col, cluster);
     int most_freq_value = probing_table[most_freq_index];
 
-    if (most_freq_value == 0 || col_data.IsMixed() || !type.IsMetrizable()) {
+    if (ColumnData::IsValueSingleton(most_freq_value) || col_data.IsMixed() ||
+        !type.IsMetrizable()) {
         if (ratio_ == 1) {
             return cluster;
         }
         return {};
     }
+
+    std::vector<util::PLI::Cluster::value_type> typos;
+    unsigned long num_of_close_values = 0;
+    std::vector<std::byte const*> const& data = col_data.GetData();
 
     for (util::PLI::Cluster::value_type tuple_index : cluster) {
         if (most_freq_value == probing_table[tuple_index]) {
@@ -202,12 +205,14 @@ unsigned TypoMiner::GetMostFrequentValueIndex(Column const& cluster_col,
     std::unordered_map<int, unsigned> frequencies = CreateFrequencies(cluster, probing_table);
 
     unsigned most_frequent_index = cluster.size();
-    unsigned most_frequent_value = 0;
+    unsigned largest_frequency = 0;
     for (int const tuple_index : cluster) {
         int const probing_table_value = probing_table[tuple_index];
-        unsigned const value = (probing_table_value == 0) ? 1 : frequencies.at(probing_table_value);
-        if (value > most_frequent_value) {
-            most_frequent_value = value;
+        unsigned const frequency = (ColumnData::IsValueSingleton(probing_table_value))
+                                   ? 1
+                                   : frequencies.at(probing_table_value);
+        if (frequency > largest_frequency) {
+            largest_frequency = frequency;
             most_frequent_index = tuple_index;
         }
     }
@@ -224,7 +229,9 @@ std::map<int, unsigned> TypoMiner::CreateFrequencyMap(Column const& cluster_col,
 
     for (int const tuple_index : cluster) {
         int const probing_table_value = probing_table[tuple_index];
-        int const value = (probing_table_value == 0) ? 1 : frequencies.at(probing_table_value);
+        unsigned const value = (ColumnData::IsValueSingleton(probing_table_value))
+                                   ? 1
+                                   : frequencies.at(probing_table_value);
         frequency_map[tuple_index] = value;
     }
 
