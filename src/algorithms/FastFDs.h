@@ -8,6 +8,8 @@
 #include "PliBasedFDAlgorithm.h"
 #include "Vertical.h"
 
+namespace algos {
+
 class FastFDs : public PliBasedFDAlgorithm {
 public:
     explicit FastFDs(Config const& config);
@@ -67,3 +69,4 @@ private:
     double percent_per_col_;
 };
 
+}  // namespace algos

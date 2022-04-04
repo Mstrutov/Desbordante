@@ -8,6 +8,7 @@
 #include "PositionListIndex.h"
 #include "LatticeTraversal/LatticeTraversal.h"
 
+namespace algos {
 
 unsigned long long DFD::ExecuteInternal() {
     partition_storage_ = std::make_unique<PartitionStorage>(relation_.get(),
@@ -78,3 +79,5 @@ DFD::DFD(Config const& config)
 DFD::DFD(std::shared_ptr<ColumnLayoutRelationData> relation, Config const& config)
     : PliBasedFDAlgorithm(std::move(relation), config, {kDefaultPhaseName}),
       number_of_threads_(config_.parallelism) {}
+
+}  // namespace algos

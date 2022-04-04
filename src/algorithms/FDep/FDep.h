@@ -9,6 +9,8 @@
 #include "RelationData.h"
 #include "RelationalSchema.h"
 
+namespace algos {
+
 class FDep : public FDAlgorithm {
 public:
     explicit FDep(Config const& config);
@@ -50,3 +52,5 @@ private:
     // Presented as vector of vectors (tuples of the relation).
     void LoadData();
 };
+
+}  // namespace algos

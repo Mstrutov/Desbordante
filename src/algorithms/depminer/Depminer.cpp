@@ -12,6 +12,8 @@
 #include "RelationalSchema.h"
 #include "AgreeSetFactory.h"
 
+namespace algos {
+
 using boost::dynamic_bitset, std::make_shared, std::shared_ptr, std::setw, std::vector, std::list, std::dynamic_pointer_cast;
 
 unsigned long long Depminer::ExecuteInternal() {
@@ -213,3 +215,5 @@ bool Depminer::CheckJoin(Vertical const& _p, Vertical const& _q) {
     intersection.intersects(q);
     return p.count() == intersection.count() && q.count() == intersection.count();
 }
+
+}  // namespace algos

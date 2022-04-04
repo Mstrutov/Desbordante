@@ -9,6 +9,8 @@
 #include "FdG1Strategy.h"
 #include "KeyG1Strategy.h"
 
+namespace algos {
+
 std::mutex searchSpacesMutex;
 
 unsigned long long Pyro::ExecuteInternal() {
@@ -143,3 +145,5 @@ Pyro::Pyro(std::shared_ptr<ColumnLayoutRelationData> relation, Config const& con
     : PliBasedFDAlgorithm(std::move(relation), config, {kDefaultPhaseName}) {
     init();
 }
+
+}  // namespace algos

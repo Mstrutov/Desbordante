@@ -10,10 +10,10 @@
 #include "DFD.h"
 #include "FastFDs.h"
 #include "FDep/FDep.h"
+#include "FUN.h"
 #include "Pyro.h"
 #include "RelationalSchema.h"
 #include "TaneX.h"
-#include "FUN.h"
 #include "TestingUtils.h"
 #include "Depminer.h"
 
@@ -142,5 +142,6 @@ REGISTER_TYPED_TEST_SUITE_P(AlgorithmTest, ThrowsOnEmpty, ReturnsEmptyOnSingleNo
                             WorksOnLongDataset, WorksOnWideDataset, LightDatasetsConsistentHash,
                             HeavyDatasetsConsistentHash);
 
-using Algorithms = ::testing::Types<Tane, Pyro, FastFDs, DFD, Depminer, FDep, algos::FUN>;
+using Algorithms = ::testing::Types<algos::Tane, algos::Pyro, algos::FastFDs, algos::DFD,
+                                    algos::Depminer, algos::FDep, algos::FUN>;
 INSTANTIATE_TYPED_TEST_SUITE_P(, AlgorithmTest, Algorithms);

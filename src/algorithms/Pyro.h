@@ -8,6 +8,8 @@
 #include "PliBasedFDAlgorithm.h"
 #include "SearchSpace.h"
 
+namespace algos {
+
 class Pyro : public DependencyConsumer, public PliBasedFDAlgorithm {
 private:
     constexpr static const char* kSeed = "seed";
@@ -28,3 +30,5 @@ public:
     explicit Pyro(Config const& config);
     explicit Pyro(std::shared_ptr<ColumnLayoutRelationData> relation, Config const& config);
 };
+
+}  // namespace algos
