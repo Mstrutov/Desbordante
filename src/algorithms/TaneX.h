@@ -7,6 +7,8 @@
 #include "PositionListIndex.h"
 #include "RelationData.h"
 
+namespace algos {
+
 class Tane : public PliBasedFDAlgorithm {
 private:
     /* Special config parameters */
@@ -49,3 +51,5 @@ public:
     // void RegisterFd(Vertical const* lhs, Column const* rhs, double error, RelationalSchema const* schema);
     void RegisterUcc(Vertical const& key, double error, RelationalSchema const* schema);
 };
+
+}  // namespace algos

@@ -138,7 +138,7 @@ TEST_F(AlgorithmTest, FD_Mine_ReturnsSameAsPyro) {
                                   .separator = LightDatasets::Separator(i),
                                   .has_header = LightDatasets::HasHeader(i),
                                   .special_params = {{"seed", 0}, {"error", 0.0}}};
-            auto pyro = Pyro(c);
+            auto pyro = algos::Pyro(c);
 
             algorithm->Execute();
             std::list<FD> fds = algorithm->FdList();

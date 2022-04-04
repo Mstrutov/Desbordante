@@ -34,7 +34,7 @@ static inline void GetKeysTestImpl(KeysTestParams const& p) {
                           .separator = p.sep,
                           .has_header = p.has_header,
                           .special_params = {{"seed", 0}, {"error", 0.0}}};
-    Pyro pyro(c);
+    algos::Pyro pyro(c);
 
     pyro.Execute();
 

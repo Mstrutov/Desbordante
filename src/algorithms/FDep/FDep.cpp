@@ -7,6 +7,8 @@
 //#define PRINT_FDS
 //#endif
 
+namespace algos {
+
 FDep::FDep(Config const& config) : FDAlgorithm(config, {kDefaultPhaseName}) {}
 
 unsigned long long FDep::ExecuteInternal() {
@@ -126,3 +128,5 @@ void FDep::LoadData() {
         }
     }
 }
+
+}  // namespace algos

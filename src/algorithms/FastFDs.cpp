@@ -13,6 +13,8 @@
 #include "AgreeSetFactory.h"
 #include "ParallelFor.h"
 
+namespace algos {
+
 using std::vector, std::set;
 
 FastFDs::FastFDs(Config const& config)
@@ -307,3 +309,4 @@ void FastFDs::GenDiffSets() {
     }
 }
 
+}  // namespace algos

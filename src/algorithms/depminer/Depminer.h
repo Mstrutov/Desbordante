@@ -5,6 +5,8 @@
 #include "PliBasedFDAlgorithm.h"
 #include "depminer/CMAXSet.h"
 
+namespace algos {
+
 class Depminer : public PliBasedFDAlgorithm {
 private:
     static CMAXSet GenFirstLevel(std::vector<CMAXSet> const& cmax_sets, Column const& attribute,
@@ -30,3 +32,5 @@ public:
 
     const RelationalSchema* schema_ = nullptr;
 };
+
+}  // namespace algos

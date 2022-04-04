@@ -14,6 +14,8 @@
 #include "LatticeLevel.h"
 #include "LatticeVertex.h"
 
+namespace algos {
+
 double Tane::CalculateZeroAryFdError(ColumnData const* rhs,
                                      ColumnLayoutRelationData const* relation_data) {
     return 1 - rhs->GetPositionListIndex()->GetNepAsLong() /
@@ -274,3 +276,5 @@ unsigned long long Tane::ExecuteInternal() {
 
     return apriori_millis_;
 }
+
+}  // namespace algos
