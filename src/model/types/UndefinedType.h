@@ -7,7 +7,7 @@ namespace model {
 
 class UndefinedType final : public EmptyType, public NullType {
 private:
-    static inline void ThrowUnsupportedOperation() {
+    [[noreturn]] static inline void ThrowUnsupportedOperation() {
         throw std::logic_error("Meaningless operation. Use EmptyType or NullType methods directly");
     }
 
@@ -17,19 +17,15 @@ public:
 
     std::string ValueToString([[maybe_unused]] std::byte const* value) const final {
         ThrowUnsupportedOperation();
-        /* To suppress warning */
-        assert(false);
     }
 
     CompareResult Compare([[maybe_unused]] std::byte const* l,
                           [[maybe_unused]] std::byte const* r) const final {
         ThrowUnsupportedOperation();
-        assert(false);
     }
 
     size_t Hash([[maybe_unused]] std::byte const* value) const final {
         ThrowUnsupportedOperation();
-        assert(false);
     }
 
     [[nodiscard]] size_t GetSize() const noexcept final {
