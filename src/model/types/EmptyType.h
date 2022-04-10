@@ -8,7 +8,7 @@ namespace model {
 
 class EmptyType : public virtual Type {
 private:
-    static inline void ThrowUnsupportedOperation() {
+    [[noreturn]] static inline void ThrowUnsupportedOperation() {
         throw std::logic_error("Meaningless operation");
     }
 
@@ -23,13 +23,10 @@ public:
     CompareResult Compare([[maybe_unused]] std::byte const* l,
                           [[maybe_unused]] std::byte const* r) const override {
         ThrowUnsupportedOperation();
-        /* To suppress warning */
-        assert(false);
     }
 
     size_t Hash([[maybe_unused]] std::byte const* value) const override {
         ThrowUnsupportedOperation();
-        assert(false);
     }
 
     [[nodiscard]] size_t GetSize() const noexcept override {
