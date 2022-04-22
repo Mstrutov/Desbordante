@@ -18,8 +18,9 @@ struct MetricVerifyingParams {
                           std::string const& dataset,
                           char const separator,
                           bool const has_header,
-                          bool const dist_to_null_infinity,
-                          bool const expected)
+                          bool const dist_to_null_infinity = false,
+                          bool const expected = true,
+                          unsigned const q = 2)
         : params({{"parameter", min_parameter},
                   {"lhs_indices", lhs_indices},
                   {"rhs_index", rhs_index},
@@ -28,6 +29,7 @@ struct MetricVerifyingParams {
                   {"has_header", has_header},
                   {"is_null_equal_null", true},
                   {"metric", metric},
+                  {"q", q},
                   {"dist_to_null_infinity", dist_to_null_infinity}}),
           expected(expected) {}
 };
@@ -65,21 +67,30 @@ TEST_P(TestMetricVerifying, DefaultTest) {
 INSTANTIATE_TEST_SUITE_P(
     MetricVerifierTestSuite, TestMetricVerifying,
     ::testing::Values(
-        MetricVerifyingParams("euclidian", 2, {0, 1}, 2, "TestLong.csv", ',', true, false, true),
-        MetricVerifyingParams("euclidian", 1, {0}, 1, "TestLong.csv", ',', true, false, true),
-        MetricVerifyingParams("euclidian", 4, {1}, 0, "TestLong.csv", ',', true, false, true),
-        MetricVerifyingParams("euclidian", 5, {0}, 2, "TestLong.csv", ',', true, false, true),
-        MetricVerifyingParams("euclidian", 0, {2}, 1, "TestLong.csv", ',', true, false, true),
-        MetricVerifyingParams("euclidian", 20500, {0}, 4, "TestMetric.csv", ',', true, false, true),
-        MetricVerifyingParams("euclidian", 1059, {1}, 4, "TestMetric.csv", ',', true, false, true),
-        MetricVerifyingParams("euclidian", 1, {1, 0}, 4, "TestMetric.csv", ',', true, false, true),
+        MetricVerifyingParams("euclidian", 2, {0, 1}, 2, "TestLong.csv", ',', true),
+        MetricVerifyingParams("euclidian", 1, {0}, 1, "TestLong.csv", ',', true),
+        MetricVerifyingParams("euclidian", 4, {1}, 0, "TestLong.csv", ',', true),
+        MetricVerifyingParams("euclidian", 5, {0}, 2, "TestLong.csv", ',', true),
+        MetricVerifyingParams("euclidian", 0, {2}, 1, "TestLong.csv", ',', true),
+        MetricVerifyingParams("euclidian", 20500, {0}, 4, "TestMetric.csv", ',', true),
+        MetricVerifyingParams("euclidian", 1059, {1}, 4, "TestMetric.csv", ',', true),
+        MetricVerifyingParams("euclidian", 1, {1, 0}, 4, "TestMetric.csv", ',', true),
+        MetricVerifyingParams("euclidian", 4.5724231, {0}, 2, "TestMetric.csv", ',', true),
+        MetricVerifyingParams("euclidian", 7.53, {0}, 3, "TestMetric.csv", ',', true),
+        MetricVerifyingParams("levenshtein", 2, {0}, 5, "TestMetric.csv", ',', true),
+        MetricVerifyingParams("levenshtein", 3, {1}, 5, "TestMetric.csv", ',', true),
+        MetricVerifyingParams("levenshtein", 4, {0}, 6, "TestMetric.csv", ',', true),
+        MetricVerifyingParams("levenshtein", 10, {0}, 6, "TestMetric.csv", ',', true, true, false),
         MetricVerifyingParams(
-            "euclidian", 4.5724231, {0}, 2, "TestMetric.csv", ',', true, false, true),
-        MetricVerifyingParams("euclidian", 7.53, {0}, 3, "TestMetric.csv", ',', true, false, true),
-        MetricVerifyingParams("levenshtein", 2, {0}, 5, "TestMetric.csv", ',', true, false, true),
-        MetricVerifyingParams("levenshtein", 5, {1}, 5, "TestMetric.csv", ',', true, false, true),
-        MetricVerifyingParams("levenshtein", 4, {0}, 6, "TestMetric.csv", ',', true, false, true),
-        MetricVerifyingParams("levenshtein", 10, {0}, 6, "TestMetric.csv", ',', true, true, false)
+            "cosine", 0.661938299, {0}, 7, "TestMetric.csv", ',', true, false, true, 2),
+        MetricVerifyingParams("cosine", 0.5, {1}, 7, "TestMetric.csv", ',', true, false, true, 2),
+        MetricVerifyingParams("cosine", 0.75, {1}, 6, "TestMetric.csv", ',', true, false, true, 2),
+        MetricVerifyingParams(
+            "cosine", 0.0298575, {1}, 5, "TestMetric.csv", ',', true, false, true, 1),
+        MetricVerifyingParams(
+            "cosine", 0.661938299, {0}, 8, "TestMetric.csv", ',', true, false, true, 3),
+        MetricVerifyingParams(
+            "cosine", 0.525658351, {1}, 8, "TestMetric.csv", ',', true, false, true, 3)
     ));
 
 }  // namespace tests

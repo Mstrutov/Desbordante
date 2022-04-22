@@ -1,7 +1,6 @@
 #include "MetricVerifier.h"
 
 #include <chrono>
-#include <utility>
 
 #include "easylogging++.h"
 
@@ -13,6 +12,7 @@ MetricVerifier::MetricVerifier(Config const& config)
       lhs_indices_(config.lhs_indices),
       rhs_index_(config.rhs_index),
       parameter_(config.parameter),
+      q_(config.q),
       dist_to_null_infinity_(config.dist_to_null_infinity) {
     relation_ =
         ColumnLayoutRelationData::CreateFrom(input_generator_, config.is_null_equal_null);
@@ -30,6 +30,7 @@ MetricVerifier::MetricVerifier(Config const& config,
       lhs_indices_(config.lhs_indices),
       rhs_index_(config.rhs_index),
       parameter_(config.parameter),
+      q_(config.q),
       dist_to_null_infinity_(config.dist_to_null_infinity),
       typed_relation_(std::move(typed_relation)),
       relation_(std::move(relation)) {}
@@ -47,9 +48,7 @@ unsigned long long MetricVerifier::Execute() {
 
     bool indices_out_of_range = rhs_index_ >= cols_count
         || std::any_of(lhs_indices_.begin(), lhs_indices_.end(),
-                       [cols_count](unsigned int i) {
-                           return i >= cols_count;
-                       });
+                       [cols_count](unsigned int i) { return i >= cols_count; });
     if (indices_out_of_range) {
         throw std::runtime_error(
             "Column index should be less than the number of columns in the dataset.");
@@ -70,10 +69,9 @@ unsigned long long MetricVerifier::Execute() {
     } else {
         LOG(INFO) << "Metric fd does not hold.";
     }
-    auto elapsed_milliseconds =
-        std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::system_clock::now() - start_time
-        );
+
+    auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now() - start_time);
     return elapsed_milliseconds.count();
 }
 
@@ -100,12 +98,42 @@ bool MetricVerifier::VerifyMetricFD(model::TypedColumnData const& col) const {
             throw std::runtime_error("\"levenshtein\" metric does not match RHS column type");
         }
         compare_function = [this, &col](util::PLI::Cluster const& cluster) {
-            return CompareStringValues(cluster, col);
+            auto const& type = dynamic_cast<model::StringType const&>(col.GetType());
+            return CompareStringValues(
+                cluster, col, [&type](std::byte const* a, std::byte const* b) {
+                    return type.Dist(a, b);
+                });
+        };
+        break;
+    case Metric::cosine:
+        if (col.GetTypeId() != +model::TypeId::kString) {
+            throw std::runtime_error("\"cosine\" metric does not match RHS column type");
+        }
+        compare_function = [this, &col](util::PLI::Cluster const& cluster) {
+            auto const& type = dynamic_cast<model::StringType const&>(col.GetType());
+            std::unordered_map<std::string, util::QGramVector> q_gram_map;
+            return CompareStringValues(cluster, col, GetCosineDistFunction(type, q_gram_map));
         };
         break;
     }
 
-    return std::all_of(pli->GetIndex().begin(), pli->GetIndex().end(), compare_function);
+    return std::all_of(pli->GetIndex().cbegin(), pli->GetIndex().cend(), compare_function);
+}
+
+std::function<double(std::byte const*, std::byte const*)> MetricVerifier::GetCosineDistFunction(
+    model::StringType const& type,
+    std::unordered_map<std::string, util::QGramVector>& q_gram_map) const {
+    return [this, &type, &q_gram_map](std::byte const* a, std::byte const* b) -> double {
+        std::string str1 = type.ValueToString(a);
+        std::string str2 = type.ValueToString(b);
+        if (str1.length() < q_ || str2.length() < q_) {
+            throw std::runtime_error("q-gram length should not exceed the minimum string length "
+                                     "in the dataset");
+        }
+        util::QGramVector& v1 = q_gram_map.try_emplace(str1, str1, q_).first->second;
+        util::QGramVector& v2 = q_gram_map.try_emplace(str2, str2, q_).first->second;
+        return v1.CosineDistance(v2);
+    };
 }
 
 bool MetricVerifier::CompareNumericValues(
@@ -116,8 +144,7 @@ bool MetricVerifier::CompareNumericValues(
     std::byte const* min_value = nullptr;
     for (int row_index : cluster) {
         if (col.IsNull(row_index) || col.IsEmpty(row_index)) {
-            if (dist_to_null_infinity_)
-                return false;
+            if (dist_to_null_infinity_) return false;
             continue;
         }
         if (max_value == nullptr) {
@@ -137,27 +164,22 @@ bool MetricVerifier::CompareNumericValues(
 }
 
 bool MetricVerifier::CompareStringValues(
-    const util::PLI::Cluster& cluster, const model::TypedColumnData& col) const {
-    auto const& type = dynamic_cast<model::StringType const&>(col.GetType());
+    util::PLI::Cluster const& cluster,
+    model::TypedColumnData const& col,
+    std::function<double(std::byte const*, std::byte const*)> const& distance_function) const {
     std::vector<std::byte const*> const& data = col.GetData();
     for (size_t i = 0; i < cluster.size() - 1; ++i) {
         if (col.IsNull(cluster[i]) || col.IsEmpty(cluster[i])) {
-            if (dist_to_null_infinity_)
-                return false;
+            if (dist_to_null_infinity_) return false;
             continue;
         }
-        double max_dist = 0;
         for (size_t j = i + 1; j < cluster.size(); ++j) {
             if (col.IsNull(cluster[j]) || col.IsEmpty(cluster[j])) {
-                if (dist_to_null_infinity_)
-                    return false;
+                if (dist_to_null_infinity_) return false;
                 continue;
             }
-            max_dist = std::max(max_dist, type.Dist(data[cluster[i]], data[cluster[j]]));
-            if (max_dist > parameter_) return false;
+            if (distance_function(data[cluster[i]], data[cluster[j]]) > parameter_) return false;
         }
-        /* The distance between point and its furthest neighbor doesn't exceed half of the diameter */
-        if (max_dist * 2 <= parameter_) return true;
     }
     return true;
 }
