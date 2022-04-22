@@ -22,7 +22,7 @@ BETTER_ENUM(AlgoMiningType, char,
     ar,     /* Association rule mining */
     key,    /* Key mining */
     typos,  /* Typo mining */
-    metric  /* Metric functional dependency verifying*/
+    metric  /* Metric functional dependency verifying */
 #endif
 );
 
@@ -163,6 +163,10 @@ MetricVerifier::Config CreateMetricVerifierConfigFromMap(ParamsMap params) {
     c.parameter = ExtractParamFromMap<double>(params, "parameter");
     if (c.parameter < 0) {
         throw std::invalid_argument("Parameter should not be less than zero.");
+    }
+    c.q = ExtractParamFromMap<unsigned>(params, "q");
+    if (c.q <= 0) {
+        throw std::invalid_argument("Q-gram length should be greater than zero.");
     }
     c.data = std::filesystem::current_path() / "inputData" /
         ExtractParamFromMap<std::string>(params, "data");

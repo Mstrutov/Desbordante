@@ -88,7 +88,8 @@ int main(int argc, char const* argv[]) {
     std::string metric;
     std::vector<unsigned int> lhs_indices;
     unsigned int rhs_index = 0;
-    long double parameter = 0;
+    double parameter = 0;
+    unsigned int q = 2;
     bool dist_to_null_infinity = false;
 
     std::string const algo_desc = "algorithm to use. Available algorithms:\n" +
@@ -141,9 +142,10 @@ int main(int argc, char const* argv[]) {
          "LHS column indices for metric FD verification")
         ("rhs_index", po::value<unsigned int>(&rhs_index),
          "RHS column indices for metric FD verification")
-        ("parameter", po::value<long double>(&parameter), "metric FD parameter")
+        ("parameter", po::value<double>(&parameter), "metric FD parameter")
+        ("q", po::value<unsigned int>(&q)->default_value(2), "q-gram length for cosine metric")
         ("dist_to_null_infinity", po::value<bool>(&dist_to_null_infinity)->default_value(false),
-        "Determines whether distance to NULL value is infinity")
+        "Determines whether distance to NULL value is infinity or zero")
         ;
 
     po::variables_map vm;
@@ -191,15 +193,15 @@ int main(int argc, char const* argv[]) {
                   << "\". Input type is \"" << ar_input_format
                   << "\" with separator \'" << separator
                   << "\'. Header is " << (has_header ? "" : "not ") << "present. " << std::endl;
-    }
-    else if(task == "metric") {
+    } else if (task == "metric") {
         algo = "metric";
-        std::stringstream stringstream;
-        copy(lhs_indices.begin(), lhs_indices.end(), std::ostream_iterator<int>(stringstream, " "));
-        string lhs_indices_str = stringstream.str();
+        std::stringstream stream;
+        copy(lhs_indices.begin(), lhs_indices.end(), std::ostream_iterator<int>(stream, " "));
+        string lhs_indices_str = stream.str();
         boost::trim_right(lhs_indices_str);
-        std::cout << "Input metric \"" << metric
-                  << "\" with parameter \"" << parameter
+        std::cout << "Input metric \"" << metric;
+        if (metric == "cosine") std::cout << "\" with q \"" << q;
+        std::cout << "\" with parameter \"" << parameter
                   << "\" with LHS indices \"" << lhs_indices_str
                   << "\" with RHS index\"" << rhs_index
                   << "\" and dataset \"" << dataset
