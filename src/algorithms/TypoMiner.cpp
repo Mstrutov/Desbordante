@@ -36,8 +36,24 @@ std::vector<util::PLI::Cluster> TypoMiner::FindClustersWithTypos(FD const& typos
     std::vector<Column const*> const lhs_columns = typos_fd.GetLhs().GetColumns();
     std::vector<int> const& probing_table =
         relation_->GetColumnData(typos_fd.GetRhs().GetIndex()).GetProbingTable();
+    auto const sort_cluster = [this, &typos_fd](util::PLI::Cluster& cluster) {
+        std::map<int, unsigned> const frequency_map =
+            CreateFrequencyMap(typos_fd.GetRhs(), cluster);
+        std::stable_sort(cluster.begin(), cluster.end(),
+                         MakeTuplesByIndicesComparator(frequency_map));
+    };
 
-    assert(!lhs_columns.empty());
+    if (lhs_columns.empty()) {
+        /* If an approximate fd []->rhs holds then it is implied that rhs contains
+         * only equal values with some deviations, which are considered errors,
+         * so there is only one 'cluster with typos' containing all rows */
+        util::PLI::Cluster cluster(relation_->GetNumRows());
+        std::iota(cluster.begin(), cluster.end(), 0);
+        if (sort_clusters) {
+            sort_cluster(cluster);
+        }
+        return {cluster};
+    }
 
     for (Column const* col : lhs_columns) {
         ColumnData const& col_data = relation_->GetColumnData(col->GetIndex());
@@ -76,10 +92,7 @@ std::vector<util::PLI::Cluster> TypoMiner::FindClustersWithTypos(FD const& typos
             clusters.push_back(cluster);
 
             if (sort_clusters) {
-                std::map<int, unsigned> const frequency_map =
-                    CreateFrequencyMap(typos_fd.GetRhs(), clusters.back());
-                std::stable_sort(clusters.back().begin(), clusters.back().end(),
-                                 MakeTuplesByIndicesComparator(frequency_map));
+                sort_cluster(clusters.back());
             }
         }
     }
