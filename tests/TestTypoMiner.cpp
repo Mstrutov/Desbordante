@@ -154,6 +154,7 @@ INSTANTIATE_TEST_SUITE_P(
     ::testing::Values(
         /* Expected fds should be sorted by lhs */
         FDsParam({{1, 2}}, "SimpleTypos.csv", ',', true, true, -1, 0.05, 0),
+        FDsParam({{0, 1}, {0, 2}, {1, 2}, {0}}, "SimpleTypos.csv", ',', true, true, -1, 0.81, 0),
         FDsParam({{0, 1}, {1, 2}}, "SimpleTypos.csv", ',', true, true, -1, 0.1, 0)));
 
 
@@ -194,7 +195,13 @@ INSTANTIATE_TEST_SUITE_P(
                       "SimpleTypos.csv", ',', true, true, -1, 0.05, 0),
         ClustersParam({ {FdByIndices{0, 1}, {util::PLI::Cluster{4, 0, 1, 5, 6}}},
                         {FdByIndices{1, 2}, {util::PLI::Cluster{7, 9}}} },
-                      "SimpleTypos.csv", ',', true, true, -1, 0.1, 0)));
+                      "SimpleTypos.csv", ',', true, true, -1, 0.1, 0),
+        ClustersParam({ {FdByIndices{0, 1}, {util::PLI::Cluster{4, 0, 1, 5, 6}}},
+                        {FdByIndices{1, 2}, {util::PLI::Cluster{7, 9}}},
+                        {FdByIndices{0, 2}, {util::PLI::Cluster{4, 0, 1, 5, 6},
+                                             util::PLI::Cluster{7, 9}}},
+                        {FdByIndices{0}, {util::PLI::Cluster{8, 2, 3, 7, 9, 0, 1, 4, 5, 6}}}},
+                      "SimpleTypos.csv", ',', true, true, -1, 0.81, 0)));
 
 
 class LinesWithTyposMiningTest : public ::testing::TestWithParam<LinesParam> {};
