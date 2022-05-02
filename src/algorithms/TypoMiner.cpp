@@ -114,7 +114,8 @@ std::vector<TypoMiner::SquashedElement> TypoMiner::SquashCluster(
     squashed.push_back({.tuple_index = *prev, .amount = 1});
 
     for (auto it = std::next(cluster.cbegin()); it != cluster.cend(); ++it) {
-        if (probing_table[*it] == probing_table[*prev]) {
+        if (probing_table[*it] != util::PLI::singleton_value_id_ &&
+            probing_table[*it] == probing_table[*prev]) {
             squashed.back().amount++;
         } else {
             squashed.push_back({.tuple_index = *it, .amount = 1});
