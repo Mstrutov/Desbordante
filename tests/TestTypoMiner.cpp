@@ -204,6 +204,55 @@ INSTANTIATE_TEST_SUITE_P(
                       "SimpleTypos.csv", ',', true, true, -1, 0.81, 0)));
 
 
+class SquashClusterTest : public ::testing::TestWithParam<TestingParam> {};
+
+static void VerifySquashed(ColumnLayoutRelationData const& rel, FD const& fd,
+                           util::PLI::Cluster const& cluster,
+                           std::vector<algos::TypoMiner::SquashedElement> const& squashed) {
+    std::vector<int> const& probing_table =
+        rel.GetColumnData(fd.GetRhs().GetIndex()).GetProbingTable();
+    unsigned cluster_index = 0;
+    for (auto const& squashed_element : squashed) {
+        int const value = probing_table[squashed_element.tuple_index];
+        ASSERT_FALSE(value == util::PLI::singleton_value_id_ && squashed_element.amount != 1);
+        for (unsigned i = 0; i != squashed_element.amount; ++i, ++cluster_index) {
+            /* Check that tuples in one squashed element have equal values in rhs */
+            int const actual_value = probing_table[cluster[cluster_index]];
+            ASSERT_EQ(value, actual_value)
+                << "Squashed element tuple index: " << squashed_element.tuple_index
+                << "\n\tamount: " << squashed_element.amount
+                << "\nFD: " << fd.ToJSONString() << '\n';
+        }
+        /* Check that the next tuple (after the last in this squashed element) is not equal to
+         * previous one and therefore is correctly not presented at this squashed element */
+        ASSERT_TRUE(cluster_index == cluster.size() || value == util::PLI::singleton_value_id_ ||
+                    value != probing_table[cluster[cluster_index]]);
+    }
+}
+
+TEST_P(SquashClusterTest, SquashCluster) {
+    auto typo_miner = CreateTypoMiner(algos::Algo::pyro, GetParam().params);
+    ColumnLayoutRelationData const& rel = typo_miner->GetRelationData();
+    typo_miner->Execute();
+
+    for (FD const& fd : typo_miner->GetApproxFDs()) {
+        std::vector<util::PLI::Cluster> const actual_clusters =
+            typo_miner->FindClustersWithTypos(fd);
+        for (auto const& cluster : actual_clusters) {
+            std::vector<algos::TypoMiner::SquashedElement> squashed =
+                typo_miner->SquashCluster(fd, cluster);
+            VerifySquashed(rel, fd, cluster, squashed);
+        }
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    TypoMinerTestSuite, SquashClusterTest,
+    ::testing::Values(TestingParam("SimpleTypos.csv", ',', true, true, -1, 0.05, 0),
+                      TestingParam("SimpleTypos.csv", ',', true, true, -1, 0.1, 0),
+                      TestingParam("SimpleTypos.csv", ',', true, true, -1, 0.81, 0)));
+
+
 class LinesWithTyposMiningTest : public ::testing::TestWithParam<LinesParam> {};
 
 TEST_P(LinesWithTyposMiningTest, FindLinesWithTypos) {
