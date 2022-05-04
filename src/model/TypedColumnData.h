@@ -101,6 +101,10 @@ public:
         }
     }
 
+    bool IsNullOrEmpty(unsigned int index) const noexcept {
+        return IsNull(index) || IsEmpty(index);
+    }
+
     TypeId GetValueTypeId(unsigned int index) const noexcept {
         TypeId const type_id = type_->GetTypeId();
         if (type_id == +TypeId::kMixed) {
