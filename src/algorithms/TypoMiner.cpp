@@ -151,7 +151,8 @@ std::vector<util::PLI::Cluster::value_type> TypoMiner::FindLinesWithTypos(
     int most_freq_value = probing_table[most_freq_index];
 
     if (ColumnData::IsValueSingleton(most_freq_value) || col_data.IsMixed() ||
-        !type.IsMetrizable()) {
+        !type.IsMetrizable() || col_data.IsEmpty(most_freq_index) ||
+        col_data.IsNullOrEmpty(most_freq_index)) {
         if (ratio_ == 1) {
             return cluster;
         }
@@ -163,7 +164,11 @@ std::vector<util::PLI::Cluster::value_type> TypoMiner::FindLinesWithTypos(
     std::vector<std::byte const*> const& data = col_data.GetData();
 
     for (util::PLI::Cluster::value_type tuple_index : cluster) {
-        if (most_freq_value == probing_table[tuple_index]) {
+        /* Temporary ignoring NULL or empty values. Maybe it should be decided by some parameter
+         * if NULL (empty) value is close to any non-NULL (non-empty) or not (as in metric
+         * dependecies).
+         */
+        if (most_freq_value == probing_table[tuple_index] || col_data.IsNullOrEmpty(tuple_index)) {
             continue;
         }
         if (radius_ == -1 || ValuesAreClose(data[most_freq_index], data[tuple_index], type)) {
