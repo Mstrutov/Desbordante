@@ -1,4 +1,15 @@
-https://github.com/cupertank implemented essential data structures presented in src/model, src/parser, src/tests and src/util
+# About
+
+Desbordante is a high-performance data profiler that is capable of discovering many different patterns in data using various algorithms. The currently supported data patterns are:
+* Functional dependencies, both exact and approximate
+* Conditional functional dependencies
+* Association rules
+
+It also allows to run data cleaning scenarios using these algorithms. At the moment, we have  implemented a typo detection scenario using an exact and approximate functional dependency discovery algorithm.
+
+The algorithms of Desbordante are implemented in C++ to maximize the resulting performance. They can be run using either a console version or a web-application that features an easy-to-use web interface. 
+
+You can try the deployed version [here](https://desbordante.unidata-platform.ru/). You have to register in order to process your own datasets. Keep in mind that due to a large demand various time and memory limits are enforced (and a task is killed if it goes outside of acceptable ranges).
 
 # Installation guide
 * ## Ubuntu
