@@ -16,6 +16,8 @@ The algorithms of Desbordante are implemented in C++ to maximize the resulting p
 
 You can try the deployed version [here](https://desbordante.unidata-platform.ru/). You have to register in order to process your own datasets. Keep in mind that due to a large demand various time and memory limits are enforced (and a task is killed if it goes outside of acceptable ranges).
 
+A brief introduction into the tool and its use-cases is presented [here](https://habr.com/ru/company/unidata/blog/667636/) (in Russian, the English version is in the works).
+
 # Installation guide
 
 ## Ubuntu
