@@ -72,4 +72,6 @@ constexpr auto kDCfdMaximumLhs = "cfd max considered LHS size";
 const std::string _kDCfdAlgo = "CFD algorithm to use\n" +
                                        EnumToAvailableValues<algos::CfdAlgo>();
 const auto kDCfdAlgo = _kDCfdAlgo.c_str();
+
+constexpr auto kDARAlgorithm = "Association rule mining algorithm implemented by Borgelt";
 }

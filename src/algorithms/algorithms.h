@@ -15,6 +15,7 @@
 
 /*Association rule mining algorithms */
 #include "algorithms/association_rules/apriori.h"
+#include "algorithms/association_rules/borgelt.h"
 
 /* Conditional functional dependency mining algorithms */
 #include "algorithms/cfd/cfd_discovery.h"

@@ -16,7 +16,7 @@
 namespace algos {
 
 class ARAlgorithm : public algos::Primitive {
-private:
+protected:
     using MinSupType = double;
     double minconf_;
     InputFormat input_format_ = InputFormat::singular;
@@ -61,9 +61,9 @@ protected:
     virtual double GetSupport(std::vector<unsigned> const& frequent_itemset) const = 0;
     virtual unsigned long long GenerateAllRules() = 0;
     virtual unsigned long long FindFrequent() = 0;
-    void FitInternal(model::IDatasetStream &data_stream) final;
-    void MakeExecuteOptsAvailable() final;
-    unsigned long long ExecuteInternal() final;
+    void FitInternal(model::IDatasetStream &data_stream) override;
+    void MakeExecuteOptsAvailable() override;
+    unsigned long long ExecuteInternal() override;
 
 public:
     explicit ARAlgorithm(std::vector<std::string_view> phase_names);
