@@ -124,6 +124,7 @@ int main(int argc, char const* argv[]) {
             (onam::kMinimumSupport, po::value<double>(), desc::kDMinimumSupport)
             (onam::kMinimumConfidence, po::value<double>(), desc::kDMinimumConfidence)
             (onam::kInputFormat, po::value<algos::InputFormat>(), desc::kDInputFormat)
+            (onam::kARAlgorithm, po::value<std::string>(), desc::kDARAlgorithm)
             ;
 
     po::options_description ar_singular_options("AR \"singular\" input format options");

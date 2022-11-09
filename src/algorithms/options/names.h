@@ -33,4 +33,5 @@ constexpr auto kIterationsLimit = "iterations_limit";
 constexpr auto kPairingRule = "pairing_rule";
 constexpr auto kPreciseAlgorithm = "precise_algorithm";
 constexpr auto kApproximateAlgorithm = "approximate_algorithm";
+constexpr auto kARAlgorithm = "ar_algorithm";
 }  // namespace algos::config::names

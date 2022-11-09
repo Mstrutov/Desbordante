@@ -15,6 +15,7 @@
 
 /*Association rule mining algorithms */
 #include "algorithms/association_rules/apriori.h"
+#include "algorithms/association_rules/borgelt.h"
 
 /* Metric FD verifier */
 #include "algorithms/metric/metric_verifier.h"

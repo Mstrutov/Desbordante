@@ -60,4 +60,6 @@ constexpr auto kDRatio = "ratio between the number of deviating values in a clus
 constexpr auto kDPreciseAlgorithm = "Algorithm that gives exact FDs for typo miner to compare "
                                     "against approximate FDs";
 constexpr auto kDApproximateAlgorithm = "Algorithm which gets approximate FDs for typo miner";
+
+constexpr auto kDARAlgorithm = "Association rule mining algorithm implemented by Borgelt";
 }

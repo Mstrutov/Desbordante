@@ -25,6 +25,8 @@ private:
     int number_of_columns_;
     std::vector<std::string> column_names_;
     std::string relation_name_;
+
+    std::filesystem::path path_;
     void GetNext();
     void PeekNext();
     void GetLine(const unsigned long long line_index);
@@ -47,6 +49,9 @@ public:
     }
     char GetSeparator() const {
         return separator_;
+    }
+    std::filesystem::path GetPath() {
+        return path_;
     }
     size_t GetNumberOfColumns() const override { return number_of_columns_; }
     std::string GetColumnName(int index) const override { return column_names_[index]; }
