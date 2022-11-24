@@ -15,6 +15,7 @@
 #include "algorithms/options/descriptions.h"
 #include "algorithms/options/names.h"
 #include "algorithms/create_primitive.h"
+#include "algorithms/cfd/enums.h"
 
 namespace po = boost::program_options;
 namespace onam = algos::config::names;
@@ -66,11 +67,18 @@ void validate(boost::any& v, const std::vector<std::string>& values, InputFormat
     }
 }
 
+void validate(boost::any& v, const std::vector<std::string>& values, CfdAlgo*, int) {
+    const std::string& s = po::validators::get_single_string(values);
+    try {
+        v = boost::any(CfdAlgo::_from_string_nocase(s.c_str()));
+    } catch (std::runtime_error& e) {
+        throw po::validation_error(po::validation_error::invalid_option_value);
+    }
+}
 }  // namespace algos
 
 int main(int argc, char const* argv[]) {
     std::string primitive;
-
     /*Options for algebraic constraints algorithm*/
     char bin_operation = '+';
     double fuzziness = 0.15;
@@ -126,6 +134,16 @@ int main(int argc, char const* argv[]) {
             (onam::kInputFormat, po::value<algos::InputFormat>(), desc::kDInputFormat)
             ;
 
+    po::options_description cfd_options("CFD options");
+    cfd_options.add_options()
+            (onam::kCfdMinimumSupport, po::value<unsigned>(),desc::kDCfdMinimumSupport)
+            (onam::kCfdMinimumConfidence, po::value<double>(), desc::kDCfdMinimumConfidence)
+            (onam::kCfdMaximumLhs, po::value<unsigned int>()->default_value(0), desc::kDCfdMaximumLhs)
+            (onam::kCfdColumnsNumber, po::value<unsigned int>()->default_value(0), desc::kDCfdColumnsNumber)
+            (onam::kCfdTuplesNumber, po::value<unsigned int>()->default_value(0), desc::kDCfdTuplesNumber)
+            (onam::kCfdAlgo, po::value<algos::CfdAlgo>(), desc::kDCfdAlgo)
+        ;
+
     po::options_description ar_singular_options("AR \"singular\" input format options");
     ar_singular_options.add_options()
             (onam::kTIdColumnIndex, po::value<unsigned>(), desc::kDTIdColumnIndex)
@@ -180,7 +198,7 @@ int main(int argc, char const* argv[]) {
 
     po::options_description all_options("Allowed options");
     all_options.add(info_options).add(general_options).add(fd_options)
-        .add(mfd_options).add(ar_options).add(ac_options).add(typo_options);
+        .add(mfd_options).add(ar_options).add(ac_options).add(typo_options).add(cfd_options);
 
     po::variables_map vm;
     try {

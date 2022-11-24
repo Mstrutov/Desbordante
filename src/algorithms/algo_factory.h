@@ -12,6 +12,7 @@
 #include "algorithms/legacy_algorithms.h"
 #include "algorithms/options/names.h"
 #include "algorithms/typo_miner.h"
+#include "algorithms/cfd/cfd_discovery.h"
 
 namespace algos {
 
