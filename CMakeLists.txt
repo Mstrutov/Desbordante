@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.11)
 project(Desbordante)
 
 # By default select Debug build
@@ -66,5 +66,6 @@ add_subdirectory("tests")
 
 add_subdirectory("datasets")
 add_subdirectory("cfg")
+add_subdirectory("external")
 
 add_subdirectory("python_bindings")
