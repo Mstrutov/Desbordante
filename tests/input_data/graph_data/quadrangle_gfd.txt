@@ -1,0 +1,6 @@
+2 1
+0[label=polygon];
+1[label=triangle];
+0->1[label=three_sides];
+
+0.sides=1.sides

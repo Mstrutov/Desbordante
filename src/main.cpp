@@ -197,9 +197,21 @@ int main(int argc, char const* argv[]) {
          "one of available pairing rules: trivial")
         ;
 
+    po::options_description gfdvalid_options("GFD validation options");
+    gfdvalid_options.add_options()
+        (onam::kGFDData, po::value<std::vector<std::string>>(), desc::kDGFDData)
+        ;
+
     po::options_description all_options("Allowed options");
-    all_options.add(info_options).add(general_options).add(fd_options)
-        .add(mfd_options).add(ar_options).add(ac_options).add(typo_options).add(cfd_options);
+    all_options.add(info_options)
+            .add(general_options)
+            .add(fd_options)
+            .add(mfd_options)
+            .add(ar_options)
+            .add(ac_options)
+            .add(typo_options)
+            .add(cfd_options)
+            .add(gfdvalid_options);
 
     po::variables_map vm;
     try {

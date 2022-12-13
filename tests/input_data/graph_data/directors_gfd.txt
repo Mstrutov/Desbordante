@@ -1,0 +1,6 @@
+2 1
+0[label=person];
+1[label=film];
+0->1[label=directed];
+0.celebrity=high
+1.success=high

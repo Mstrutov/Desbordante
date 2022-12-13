@@ -7,8 +7,9 @@
 
 namespace algos {
 
-using PrimitiveTypes = std::tuple<Depminer, DFD, FastFDs, FDep, Fd_mine, Pyro, Tane, FUN,
-        hyfd::HyFD, Aid, Apriori, Borgelt, metric::MetricVerifier, DataStats, CFDDiscovery>;
+using PrimitiveTypes =
+        std::tuple<Depminer, DFD, FastFDs, FDep, Fd_mine, Pyro, Tane, FUN, hyfd::HyFD, Aid, Apriori,
+                   Borgelt, metric::MetricVerifier, DataStats, CFDDiscovery, GFDValidation>;
 
 /* Enumeration of all supported non-pipeline primitives. If you implement a new
  * primitive please add its corresponding value to this enum and to the type
@@ -40,7 +41,10 @@ BETTER_ENUM(PrimitiveType, char,
     stats,
 
 /* Conditional functional dependencies mining algorithm */
-    cfd
+    cfd,
+
+/* Functional dependency validating algorithms */
+    gfdvalid
 )
 
 template <typename PrimitiveBase = Primitive>

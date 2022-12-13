@@ -1,0 +1,23 @@
+10 12
+0[label=person name=Milana eyes=brown body_type=mesomorph];
+1[label=person name=Kirill eyes=brown body_type=ectomorph];
+2[label=person name=Ksenia eyes=brown body_type=endomorph];
+3[label=person name=Dmitry eyes=blue body_type=mesomorph];
+4[label=person name=Nastya eyes=brown body_type=endomorph];
+5[label=person name=Angela eyes=brown body_type=mesomorph];
+6[label=person name=Daniil eyes=green body_type=mesomorph];
+7[label=person name=Geralt eyes=blue body_type=mesomorph];
+8[label=person name=Maksim eyes=green body_type=ectomorph];
+9[label=person name=Matvey eyes=brown body_type=ectomorph];
+4->0[label=mom];
+4->1[label=dad];
+5->0[label=mom];
+5->1[label=dad];
+6->2[label=mom];
+6->3[label=dad];
+7->2[label=mom];
+7->3[label=dad];
+8->5[label=mom];
+8->6[label=dad];
+9->5[label=mom];
+9->6[label=dad];

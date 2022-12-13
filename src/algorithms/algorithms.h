@@ -13,6 +13,9 @@
 #include "algorithms/statistics/data_stats.h"
 #include "algorithms/tane.h"
 
+/* Functional dependency validating algorithms */
+#include "algorithms/gfd/gfd_validation.h"
+
 /*Association rule mining algorithms */
 #include "algorithms/association_rules/apriori.h"
 #include "algorithms/association_rules/borgelt.h"

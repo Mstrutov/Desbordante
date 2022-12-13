@@ -81,6 +81,26 @@ std::unique_ptr<Primitive> CreateAcAlgorithmInstance(ParamsMap&& params) {
     return std::make_unique<ACAlgorithm>(config);
 }
 
+template <typename ParamsMap>
+std::unique_ptr<Primitive> CreateGFDValidationInstance(ParamsMap&& params) {
+    namespace onam = config::names;
+    auto graph_path = std::filesystem::current_path() / "input_data" /
+                      ExtractOptionValue<std::string>(params, onam::kData);
+    std::ifstream f(graph_path);
+    Graph graph = GFDtools::Parser::parse_graph(f);
+    f.close();
+    std::vector<GFD> gfds = {};
+    auto gfd_paths = ExtractOptionValue<std::vector<std::string>>(params, onam::kGFDData);
+    for (const auto& path : gfd_paths) {
+        auto gfd_path = std::filesystem::current_path() / "input_data" / path;
+        f.open(gfd_path);
+        GFD gfd = GFDtools::Parser::parse_gfd(f);
+        f.close();
+        gfds.push_back(gfd);
+    }
+    return std::make_unique<GFDValidation>(graph, gfds);
+}
+
 }  // namespace details
 
 template <typename OptionMap>
@@ -141,6 +161,9 @@ std::unique_ptr<Primitive> CreatePrimitive(std::string const& primitive_name,
     }
     if (primitive_name == "typo_miner") {
         return CreateTypoMiner(std::forward<OptionMap>(options));
+    }
+    if (primitive_name == "gfdvalid") {
+        return details::CreateGFDValidationInstance(std::forward<OptionMap>(options));
     }
     PrimitiveType const primitive_enum = PrimitiveType::_from_string_nocase(primitive_name.c_str());
     return CreatePrimitive(primitive_enum, std::forward<OptionMap>(options));

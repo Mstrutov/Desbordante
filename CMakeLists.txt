@@ -49,7 +49,7 @@ include_directories(
     "src"
     )
 
-include_directories(SYSTEM "lib/easyloggingpp/src" "lib/better-enums/")
+include_directories(SYSTEM "lib/easyloggingpp/src" "lib/better-enums/" "lib/eigen/")
 
 # adding submodules
 add_subdirectory("lib/googletest")
@@ -59,6 +59,7 @@ set( CMAKE_BUILD_TYPE_COPY "${CMAKE_BUILD_TYPE}" )
 set( CMAKE_BUILD_TYPE "Release" )
 option(build_static_lib "Build easyloggingpp as a static library" ON)
 add_subdirectory("lib/easyloggingpp")
+add_subdirectory("lib/eigen")
 set( CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE_COPY} )
 
 add_subdirectory("src")

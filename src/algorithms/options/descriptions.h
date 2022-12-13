@@ -73,5 +73,7 @@ const std::string _kDCfdAlgo = "CFD algorithm to use\n" +
                                        EnumToAvailableValues<algos::CfdAlgo>();
 const auto kDCfdAlgo = _kDCfdAlgo.c_str();
 
+constexpr auto kDGFDData = "Path to file with GFD, relative to ./input_data";
+
 constexpr auto kDARAlgorithm = "Association rule mining algorithm implemented by Borgelt";
 }

@@ -66,6 +66,12 @@ jobs:
       with:
         path: ${{github.workspace}}/lib/pybind11
         key: ${{ runner.os }}-pybind11
+    - name: Cache eigen
+      uses: actions/cache@v3
+      id: cache-eigen
+      with:
+        path: ${{github.workspace}}/lib/eigen
+        key: ${{ runner.os }}eigen
 
     - name: Install Boost
       run: |
@@ -104,6 +110,13 @@ jobs:
         cd lib
         git clone https://github.com/pybind/pybind11.git --branch v2.10
       if: steps.cache-pybind11.outputs.cache-hit != 'true'
+    - name: Download eigen
+      run: |
+        mkdir -p lib
+        sudo chown -R $USER lib
+        cd lib
+        git clone https://gitlab.com/libeigen/eigen.git
+      if: steps.cache-eigen.outputs.cache-hit != 'true'
       
     - name: Generate compile_commands.json
       run: |

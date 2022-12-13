@@ -1,0 +1,13 @@
+6 6
+0[label=quadrilateral angles=arbitrary sides=arbitrary];
+1[label=parallelogram angles=pairwise_equal sides=pairwise_equal];
+2[label=trapezoid angles=arbitrary sides=parallel_and_arbitrary];
+3[label=rectangle angles=equal sides=pairwise_equal];
+4[label=rhombus angles=pairwise_equal sides=equal];
+5[label=square angles=equal sides=equal];
+0->1[label=two_pairs_of_parallel_sides];
+0->2[label=one_pair_of_parallel_sides];
+1->3[label=equality_of_angles];
+1->4[label=equality_of_sides];
+3->5[label=equality_of_sides];
+4->5[label=equality_of_angles];

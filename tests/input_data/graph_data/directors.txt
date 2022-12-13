@@ -1,0 +1,22 @@
+12 9
+0[label=person name=James_Cameron celebrity=high];
+1[label=film name=Avatar success=high year=2009];
+2[label=film name=Titanic success=high year=1997];
+3[label=film name=Piranha_II success= year=1981];
+4[label=film name=Terminator success=high year=1984];
+5[label=person name=Robert_Zemeckis celebrity=high];
+6[label=film name=The_Walk success=high year=2015];
+7[label=film name=Back_to_the_future success=high year=1985];
+8[label=film name=Forrest_Gump success=high year=1994];
+9[label=person name=James_Toback celebrity=low];
+10[label=film name=Tyson success=high year=2008];
+11[label=film name=Fingers success=high year=1978];
+0->1[label=directed];
+0->2[label=directed];
+0->3[label=directed];
+0->4[label=directed];
+5->6[label=directed];
+5->7[label=directed];
+5->8[label=directed];
+9->10[label=directed];
+9->11[label=directed];

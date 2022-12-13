@@ -1,0 +1,6 @@
+2 1
+0[label=person];
+1[label=person];
+0->1[label=mom];
+1.eyes=brown
+0.eyes=brown
