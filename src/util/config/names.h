@@ -26,6 +26,7 @@ constexpr auto kQGramLength = "q";
 constexpr auto kMetricAlgorithm = "metric_algorithm";
 constexpr auto kRadius = "radius";
 constexpr auto kRatio = "ratio";
+constexpr auto kPliRelation = "pli_relation";
 constexpr auto kBinaryOperation = "bin_operation";
 constexpr auto kFuzziness = "fuzziness";
 constexpr auto kFuzzinessProbability = "p_fuzz";

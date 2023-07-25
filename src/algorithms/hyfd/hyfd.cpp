@@ -18,7 +18,7 @@
 
 namespace algos::hyfd {
 
-HyFD::HyFD() : PliBasedFDAlgorithm({}) {}
+HyFD::HyFD(bool request_prepared_data) : PliBasedFDAlgorithm({}, request_prepared_data) {}
 
 unsigned long long HyFD::ExecuteInternal() {
     using namespace hy;

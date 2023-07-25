@@ -41,6 +41,7 @@ constexpr auto kDRadius = "maximum difference between a value and the most commo
                           "cluster";
 constexpr auto kDRatio = "ratio between the number of deviating values in a cluster and the "
                          "cluster's size";
+constexpr auto kDPliRelation = "PliBasedFDAlgorithm's data field";
 constexpr auto kDPreciseAlgorithm = "Algorithm that gives exact FDs for typo miner to compare "
                                     "against approximate FDs";
 constexpr auto kDApproximateAlgorithm = "Algorithm which gets approximate FDs for typo miner";

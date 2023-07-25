@@ -77,7 +77,7 @@ public:
 
 class FUN : public PliBasedFDAlgorithm {
 public:
-    FUN();
+    FUN(bool request_prepared_data = false);
 
     // Entities from the algorithm itself
 private:

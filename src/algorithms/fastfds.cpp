@@ -19,18 +19,15 @@ namespace algos {
 
 using std::vector, std::set;
 
-FastFDs::FastFDs() : PliBasedFDAlgorithm({"Agree sets generation", "Finding minimal covers"}) {
+FastFDs::FastFDs(bool request_prepared_data)
+    : PliBasedFDAlgorithm({"Agree sets generation", "Finding minimal covers"},
+                          request_prepared_data) {
     RegisterOptions();
 }
 
 void FastFDs::RegisterOptions() {
-    RegisterOption(util::config::MaxLhsOpt(&max_lhs_));
-    RegisterOption(util::config::ThreadNumberOpt(&threads_num_));
-}
-
-void FastFDs::MakeExecuteOptsAvailable() {
-    MakeOptionsAvailable(
-            {util::config::MaxLhsOpt.GetName(), util::config::ThreadNumberOpt.GetName()});
+    RegisterInitialExecOption(util::config::MaxLhsOpt(&max_lhs_));
+    RegisterInitialExecOption(util::config::ThreadNumberOpt(&threads_num_));
 }
 
 void FastFDs::ResetStateFd() {

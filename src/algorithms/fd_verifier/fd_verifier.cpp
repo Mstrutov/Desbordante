@@ -15,7 +15,6 @@ namespace algos::fd_verifier {
 
 FDVerifier::FDVerifier() : Algorithm({}) {
     RegisterOptions();
-    MakeOptionsAvailable({util::config::TableOpt.GetName(), util::config::EqualNullsOpt.GetName()});
 }
 
 void FDVerifier::RegisterOptions() {
@@ -26,15 +25,10 @@ void FDVerifier::RegisterOptions() {
         util::config::ValidateIndex(rhs_index, relation_->GetSchema()->GetNumColumns());
     };
 
-    RegisterOption(util::config::TableOpt(&input_table_));
-    RegisterOption(util::config::EqualNullsOpt(&is_null_equal_null_));
-    RegisterOption(util::config::LhsIndicesOpt(&lhs_indices_, get_schema_cols));
-    RegisterOption(Option{&rhs_index_, kRhsIndex, kDRhsIndex}.SetValueCheck(check_rhs));
-}
-
-void FDVerifier::MakeExecuteOptsAvailable() {
-    using namespace util::config::names;
-    MakeOptionsAvailable({util::config::LhsIndicesOpt.GetName(), kRhsIndex});
+    RegisterInitialLoadOption(util::config::TableOpt(&input_table_));
+    RegisterInitialLoadOption(util::config::EqualNullsOpt(&is_null_equal_null_));
+    RegisterInitialExecOption(util::config::LhsIndicesOpt(&lhs_indices_, get_schema_cols));
+    RegisterInitialExecOption(Option{&rhs_index_, kRhsIndex, kDRhsIndex}.SetValueCheck(check_rhs));
 }
 
 void FDVerifier::LoadDataInternal() {

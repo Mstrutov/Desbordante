@@ -12,8 +12,25 @@
 
 namespace python_bindings {
 
+// Currently, only two scenarios are supported. Either
+// (scenario 1)
+//  1. create the algorithm
+//  2. set options using `set_option`
+//  3. call `load_data` with no arguments
+//  4. set options using `set_option`
+//  5. call `execute` with no arguments
+// or
+// (scenario 2)
+//  1. create the algorithm
+//  2. call `load_data` with option arguments
+//  3. call `execute` with option arguments
+// Using the class in any other way from Python is undefined behaviour.
+// scenario 2 is intended for use from Python's interactive shell
+// scenario 1 is intended for use in scripts where parameters are set one-by-one
 class PyAlgorithmBase {
 private:
+    bool set_option_used_on_stage_ = false;
+
     void LoadProvidedData(pybind11::kwargs const& kwargs, util::config::InputTable table);
 
 protected:
@@ -24,24 +41,26 @@ protected:
     void Configure(pybind11::kwargs const& kwargs, util::config::InputTable table = nullptr);
 
 public:
+    // (scenario 1)
     void SetOption(std::string_view option_name, pybind11::handle option_value);
 
     [[nodiscard]] std::unordered_set<std::string_view> GetNeededOptions() const;
 
+    [[nodiscard]] std::unordered_set<std::string_view> GetPossibleOptions() const;
+
+    [[nodiscard]] std::string_view GetDescription(std::string_view option_name) const;
+
     [[nodiscard]] pybind11::frozenset GetOptionType(std::string_view option_name) const;
 
     // For pandas dataframes
+    // (scenario 2)
     void LoadData(pybind11::handle dataframe, std::string name, pybind11::kwargs const& kwargs);
 
+    // (scenario 2)
     void LoadData(std::string_view path, char separator, bool has_header,
                   pybind11::kwargs const& kwargs);
 
-    // For the case when the "data" option has been set by `set_option`.
-    // Currently, there is no use case where we want to set other options in
-    // bulk with kwargs when the "data" option is set by `set_option`, so this
-    // method assumes that all the other data loading options have already been
-    // set by `set_option` as well and doesn't accept any arguments. This only
-    // moves the algorithm to the execution stage.
+    // (scenario 1)
     void LoadData();
 
     pybind11::int_ Execute(pybind11::kwargs const& kwargs);

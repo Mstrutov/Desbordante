@@ -80,7 +80,6 @@ private:
     void RestrictRangesAmount(std::vector<std::byte const*>& ranges) const;
     void RegisterOptions();
     void LoadDataInternal() override;
-    void MakeExecuteOptsAvailable() override;
     void ResetState() override;
 
 public:

@@ -13,9 +13,7 @@ namespace algos {
 
 ARAlgorithm::ARAlgorithm(std::vector<std::string_view> phase_names)
     : Algorithm(std::move(phase_names)) {
-    using namespace util::config::names;
     RegisterOptions();
-    MakeOptionsAvailable({kTable, kInputFormat});
 }
 
 void ARAlgorithm::RegisterOptions() {
@@ -24,24 +22,20 @@ void ARAlgorithm::RegisterOptions() {
     auto sing_eq = [](InputFormat input_format) { return input_format == +InputFormat::singular; };
     auto tab_eq = [](InputFormat input_format) { return input_format == +InputFormat::tabular; };
 
-    RegisterOption(util::config::TableOpt(&input_table_));
+    RegisterInitialLoadOption(util::config::TableOpt(&input_table_));
+    RegisterInitialLoadOption(
+            Option{&input_format_, kInputFormat, kDInputFormat}.SetConditionalOpts(
+                    {{sing_eq, {kTIdColumnIndex, kItemColumnIndex}}, {tab_eq, {kFirstColumnTId}}}));
+    RegisterInitialExecOption(Option{&minconf_, kMinimumConfidence, kDMinimumConfidence, 0.0});
+    RegisterInitialExecOption(Option{&minsup_, kMinimumSupport, kDMinimumSupport, 0.0});
     RegisterOption(Option{&first_column_tid_, kFirstColumnTId, kDFirstColumnTId, false});
     RegisterOption(Option{&item_column_index_, kItemColumnIndex, kDItemColumnIndex, 1u});
-    RegisterOption(Option{&minconf_, kMinimumConfidence, kDMinimumConfidence, 0.0});
-    RegisterOption(Option{&minsup_, kMinimumSupport, kDMinimumSupport, 0.0});
     RegisterOption(Option{&tid_column_index_, kTIdColumnIndex, kDTIdColumnIndex, 0u});
-    RegisterOption(Option{&input_format_, kInputFormat, kDInputFormat}.SetConditionalOpts(
-            {{sing_eq, {kTIdColumnIndex, kItemColumnIndex}}, {tab_eq, {kFirstColumnTId}}}));
 }
 
 void ARAlgorithm::ResetState() {
     ar_collection_.clear();
     ResetStateAr();
-}
-
-void ARAlgorithm::MakeExecuteOptsAvailable() {
-    using namespace util::config::names;
-    MakeOptionsAvailable({kMinimumSupport, kMinimumConfidence});
 }
 
 void ARAlgorithm::LoadDataInternal() {

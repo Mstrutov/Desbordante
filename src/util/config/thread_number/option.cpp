@@ -11,10 +11,9 @@ extern const CommonOption<ThreadNumType> ThreadNumberOpt{
             if (value == 0) {
                 value = std::thread::hardware_concurrency();
                 if (value == 0) {
-                    throw std::runtime_error(
-                            "Unable to detect number of concurrent threads "
-                            "supported by your system. Please, specify it "
-                            "manually.");
+                    throw std::invalid_argument(
+                            "Unable to detect number of concurrent threads supported by your "
+                            "system. Please, specify it manually.");
                 }
             }
         }};

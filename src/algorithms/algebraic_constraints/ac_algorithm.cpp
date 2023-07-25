@@ -9,20 +9,18 @@
 
 #include "types/create_type.h"
 #include "util/config/names_and_descriptions.h"
+#include "util/config/option_using.h"
 #include "util/config/tabular_data/input_table/option.h"
 
 namespace algos {
 
 ACAlgorithm::ACAlgorithm() : Algorithm({}) {
     RegisterOptions();
-    MakeOptionsAvailable({util::config::TableOpt.GetName()});
     ac_exception_finder_ = std::make_unique<algebraic_constraints::ACExceptionFinder>();
 }
 
 void ACAlgorithm::RegisterOptions() {
-    using namespace util::config::names;
-    using namespace util::config::descriptions;
-    using util::config::Option;
+    DESBORDANTE_OPTION_USING;
 
     auto check_and_set_binop = [this](Binop bin_operation) {
         switch (bin_operation) {
@@ -56,29 +54,28 @@ void ACAlgorithm::RegisterOptions() {
         if (parameter <= 0) throw std::invalid_argument("Parameter out of range");
     };
 
-    RegisterOption(util::config::TableOpt(&input_table_));
-    RegisterOption(Option{&bin_operation_, kBinaryOperation, kDBinaryOperation}.SetValueCheck(
-            check_and_set_binop));
-    RegisterOption(Option{&fuzziness_, kFuzziness, kDFuzziness}.SetValueCheck(check_fuzziness));
-    RegisterOption(Option{&p_fuzz_, kFuzzinessProbability, kDFuzzinessProbability}.SetValueCheck(
-            check_double_parameter));
-    RegisterOption(Option{&weight_, kWeight, kDWeight}.SetValueCheck(check_double_parameter));
-    RegisterOption(
+    RegisterInitialLoadOption(util::config::TableOpt(&input_table_));
+    RegisterInitialExecOption(
+            Option{&bin_operation_, kBinaryOperation, kDBinaryOperation}.SetValueCheck(
+                    check_and_set_binop));
+    RegisterInitialExecOption(
+            Option{&fuzziness_, kFuzziness, kDFuzziness}.SetValueCheck(check_fuzziness));
+    RegisterInitialExecOption(
+            Option{&p_fuzz_, kFuzzinessProbability, kDFuzzinessProbability}.SetValueCheck(
+                    check_double_parameter));
+    RegisterInitialExecOption(
+            Option{&weight_, kWeight, kDWeight}.SetValueCheck(check_double_parameter));
+    RegisterInitialExecOption(
             Option{&bumps_limit_, kBumpsLimit, kDBumpsLimit}.SetValueCheck(check_non_negative));
-    RegisterOption(Option{&iterations_limit_, kIterationsLimit, kDIterationsLimit}.SetValueCheck(
-            check_positive));
-    RegisterOption(Option{&seed_, kACSeed, kDACSeed});
+    RegisterInitialExecOption(
+            Option{&iterations_limit_, kIterationsLimit, kDIterationsLimit}.SetValueCheck(
+                    check_positive));
+    RegisterInitialExecOption(Option{&seed_, kACSeed, kDACSeed});
 }
 
 void ACAlgorithm::LoadDataInternal() {
     typed_relation_ = model::ColumnLayoutTypedRelationData::CreateFrom(*input_table_,
                                                                        false);  // nulls are ignored
-}
-
-void ACAlgorithm::MakeExecuteOptsAvailable() {
-    using namespace util::config::names;
-    MakeOptionsAvailable({kFuzziness, kFuzzinessProbability, kWeight, kBumpsLimit, kIterationsLimit,
-                          kACSeed, kBinaryOperation});
 }
 
 void ACAlgorithm::ResetState() {

@@ -36,7 +36,6 @@ protected:
     util::config::InputTable input_table_;
 
     void LoadDataInternal() final;
-    void MakeExecuteOptsAvailable() final;
     unsigned long long ExecuteInternal() final;
 
 public:

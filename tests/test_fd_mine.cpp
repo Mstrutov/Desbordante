@@ -167,7 +167,7 @@ TEST_F(AlgorithmTest, FD_Mine_ReturnsSameAsPyro) {
             StdParamsMap params_map{{onam::kCsvPath, test_data_dir / LightDatasets::DatasetName(i)},
                                     {onam::kSeparator, LightDatasets::Separator(i)},
                                     {onam::kHasHeader, LightDatasets::HasHeader(i)},
-                                    {onam::kSeed, decltype(Configuration::seed){0}},
+                                    {onam::kSeed, decltype(Parameters::seed){0}},
                                     {onam::kError, util::config::ErrorType{0.0}}};
             auto pyro_ptr = algos::CreateAndLoadAlgorithm<algos::Pyro>(params_map);
             auto& pyro = *pyro_ptr;

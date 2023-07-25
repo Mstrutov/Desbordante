@@ -2,7 +2,7 @@
 #include "pli_cache.h"
 
 bool DependencyStrategy::ShouldResample(Vertical const& vertical, double boost_factor) const {
-    if (context_->GetConfiguration().sample_size <= 0 || vertical.GetArity() < 1) return false;
+    if (context_->GetParameters().sample_size <= 0 || vertical.GetArity() < 1) return false;
 
     // Do we have an exact sample already?
     auto current_sample = context_->GetAgreeSetSample(vertical);
@@ -15,9 +15,9 @@ bool DependencyStrategy::ShouldResample(Vertical const& vertical, double boost_f
                                       context_->GetColumnLayoutRelationData()->GetNumTuplePairs();
 
     // Should the new sample be exact?
-    if (nep <= context_->GetConfiguration().sample_size * boost_factor) return true;
+    if (nep <= context_->GetParameters().sample_size * boost_factor) return true;
 
     // Will we achieve an improved sampling ratio?
-    double new_sampling_ratio = context_->GetConfiguration().sample_size * boost_factor / nep;
+    double new_sampling_ratio = context_->GetParameters().sample_size * boost_factor / nep;
     return new_sampling_ratio >= 2 * current_sample->GetSamplingRatio();
 }

@@ -1,5 +1,8 @@
 #include "algorithms/typo_miner.h"
 
+#include <typeindex>
+#include <typeinfo>
+
 #include "util/config/equal_nulls/option.h"
 #include "util/config/error/option.h"
 #include "util/config/names_and_descriptions.h"
@@ -8,18 +11,98 @@
 
 namespace algos {
 
+static const std::type_index void_index = typeid(void);
+static const std::type_info& error_type = typeid(util::config::ErrorType);
+
+static std::unique_ptr<FDAlgorithm> GetAlgorithm(AlgorithmType algorithm) {
+    if (IsDerived<PliBasedFDAlgorithm>(algorithm)) {
+        return CreateAlgorithmInstance<PliBasedFDAlgorithm>(algorithm, true);
+    }
+    return CreateAlgorithmInstance<FDAlgorithm>(algorithm);
+}
+
+util::config::Configuration::FuncTuple TypoMiner::MakeConfigFunctions() {
+    using util::config::names::kPliRelation;
+    using OptionNameSet = util::config::Configuration::OptionNameSet;
+
+    // To whomever it may concern: if you are making another pipeline, please
+    // figure out a way to generalize this.
+    auto add_external_needed_opts = [this](OptionNameSet& needed_options) {
+        if (GetCurrentStage() == +util::config::ConfigurationStage::load_data) {
+            for (FDAlgorithm* algo : {precise_algo_.get(), approx_algo_.get()}) {
+                // PLI-based algorithm data are loaded by TypoMiner itself on this stage.
+                if (dynamic_cast<PliBasedFDAlgorithm*>(algo) != nullptr) continue;
+                OptionNameSet needed_by_algo = algo->GetNeededOptions();
+                needed_options.insert(needed_by_algo.begin(), needed_by_algo.end());
+            }
+            return;
+        }
+        OptionNameSet precise_options = precise_algo_->GetNeededOptions();
+        OptionNameSet approx_options = approx_algo_->GetNeededOptions();
+        needed_options.insert(precise_options.begin(), precise_options.end());
+        needed_options.insert(approx_options.begin(), approx_options.end());
+    };
+    auto set_external_opt = [this](std::string_view option_name, boost::any const& value) {
+        if (option_name == kPliRelation) {
+            throw std::logic_error("You do not manage this option.");
+        }
+        if (option_name == util::config::ErrorOpt.GetName()) {
+            if (value.type() != error_type) {
+                throw std::invalid_argument("Incorrect error type.");
+            }
+            if (value.empty()) {
+                throw std::invalid_argument("Must specify error value when mining typos.");
+            }
+            auto error = boost::any_cast<util::config::ErrorType>(value);
+            if (error == 0.0) {
+                throw std::invalid_argument("Typo mining with error 0 is meaningless");
+            }
+            // Assumes if both have an option called `config::ErrorOpt.GetName()`,
+            // then these options share semantics.
+            return TrySetOption(option_name, util::config::ErrorType{0.0}, value);
+        }
+        return TrySetOption(option_name, value, value);
+    };
+    auto unset_external_opt = [this](std::string_view option_name) {
+        if (option_name == kPliRelation) {
+            throw std::logic_error("You do not manage this option.");
+        }
+        precise_algo_->UnsetOption(option_name);
+        approx_algo_->UnsetOption(option_name);
+    };
+    auto get_external_type_index = [this](std::string_view option_name) {
+        if (option_name == kPliRelation) {
+            throw std::logic_error("You do not manage this option.");
+        }
+        std::type_index precise_index = precise_algo_->GetTypeIndex(option_name);
+        std::type_index approx_index = approx_algo_->GetTypeIndex(option_name);
+        if (precise_index != void_index) {
+            if (approx_index != void_index && !precise_algo_->NeedsOption(option_name))
+                return approx_index;
+            return precise_index;
+        }
+        return approx_index;
+    };
+    auto reset_external_config = [this]() {
+        precise_algo_->ResetConfiguration();
+        approx_algo_->ResetConfiguration();
+    };
+
+    return {add_external_needed_opts, set_external_opt, unset_external_opt, get_external_type_index,
+            reset_external_config};
+}
+
 TypoMiner::TypoMiner(AlgorithmType precise, AlgorithmType approx)
-    : TypoMiner(CreateAlgorithmInstance<FDAlgorithm>(precise),
-                CreateAlgorithmInstance<FDAlgorithm>(approx)) {}
+    : TypoMiner(GetAlgorithm(precise), GetAlgorithm(approx)) {}
 
 TypoMiner::TypoMiner(std::unique_ptr<FDAlgorithm> precise_algo,
                      std::unique_ptr<FDAlgorithm> approx_algo)
         : Algorithm({/*"Precise fd algorithm execution", "Approximate fd algoritm execution",
-                     "Extracting fds with non-zero error"*/}),
+                     "Extracting fds with non-zero error"*/}, MakeConfigFunctions()),
           precise_algo_(std::move(precise_algo)),
           approx_algo_(std::move(approx_algo)) {
+    ValidateAlgorithms();
     RegisterOptions();
-    MakeOptionsAvailable({util::config::TableOpt.GetName(), util::config::EqualNullsOpt.GetName()});
 }
 
 void TypoMiner::RegisterOptions() {
@@ -39,54 +122,60 @@ void TypoMiner::RegisterOptions() {
         }
     };
 
-    RegisterOption(util::config::TableOpt(&input_table_));
-    RegisterOption(util::config::EqualNullsOpt(&is_null_equal_null_));
-    RegisterOption(Option{&radius_, kRadius, kDRadius, -1.0}.SetValueCheck(radius_check));
-    RegisterOption(Option{&ratio_, kRatio, kDRatio, {ratio_default}}.SetValueCheck(ratio_check));
+    RegisterInitialLoadOption(util::config::TableOpt(&input_table_));
+    RegisterInitialLoadOption(util::config::EqualNullsOpt(&is_null_equal_null_));
+    RegisterInitialExecOption(
+            Option{&radius_, kRadius, kDRadius, -1.0}.SetValueCheck(radius_check));
+    RegisterInitialExecOption(
+            Option{&ratio_, kRatio, kDRatio, {ratio_default}}.SetValueCheck(ratio_check));
 }
 
-void TypoMiner::MakeExecuteOptsAvailable() {
-    using namespace util::config::names;
-    MakeOptionsAvailable({kRadius, kRatio});
+void TypoMiner::ValidateAlgorithms() {
+    using util::config::ErrorType;
+    using util::config::names::kError;
+
+    if (!approx_algo_->IsInitialAtStage(kError, util::config::ConfigurationStage::execute)) {
+        throw std::logic_error("Approximate algorithm must have an error option.");
+    }
+
+    std::type_index approx_error_index = approx_algo_->GetTypeIndex(kError);
+    std::type_index precise_error_index = precise_algo_->GetTypeIndex(kError);
+    if (approx_error_index != error_type) {
+        throw std::logic_error("Unexpected error option type in the approximate algorithm.");
+    }
+    if (precise_error_index != void_index && precise_error_index != error_type) {
+        throw std::logic_error("Unexpected error option type in the precise algorithm.");
+    }
 }
 
 void TypoMiner::ResetState() {
     approx_fds_.clear();
 }
 
-bool TypoMiner::SetExternalOption(std::string_view option_name, boost::any const& value) {
-    if (option_name == util::config::ErrorOpt.GetName()) {
-        if (value.empty()) {
-            throw std::invalid_argument("Must specify error value when mining typos.");
-        }
-        auto error = boost::any_cast<util::config::ErrorType>(value);
-        if (error == 0.0) {
-            throw std::invalid_argument("Typo mining with error 0 is meaningless");
-        }
-        return TrySetOption(option_name, util::config::ErrorType{0.0}, value) != 0;
+std::pair<bool, std::string> TypoMiner::TrySetOption(std::string_view option_name,
+                                                     boost::any const& value_precise,
+                                                     boost::any const& value_approx) {
+    int successes = 0;
+    std::string error_text;
+    for (auto [algo, value] : {std::make_pair(precise_algo_.get(), value_precise),
+                               std::make_pair(approx_algo_.get(), value_approx)}) {
+        if (!algo->OptionSettable(option_name)) continue;
+        auto [success_algo, error_text_algo] = algo->SetOptionNoThrow(option_name, value);
+        if (success_algo) ++successes;
+        if (successes) continue;
+        error_text = error_text_algo;
     }
-    return TrySetOption(option_name, value, value) != 0;
-}
-
-int TypoMiner::TrySetOption(std::string_view option_name, boost::any const& value_precise,
-                            boost::any const& value_approx) {
-    int successes{};
-    try {
-        precise_algo_->SetOption(option_name, value_precise);
-        ++successes;
-    } catch (std::invalid_argument&) {}
-    try {
-        approx_algo_->SetOption(option_name, value_approx);
-        ++successes;
-    } catch (std::invalid_argument&) {}
-    return successes;
-}
-
-void TypoMiner::AddSpecificNeededOptions(std::unordered_set<std::string_view>& previous_options) const {
-    auto precise_options = precise_algo_->GetNeededOptions();
-    auto approx_options = approx_algo_->GetNeededOptions();
-    previous_options.insert(precise_options.begin(), precise_options.end());
-    previous_options.insert(approx_options.begin(), approx_options.end());
+    if (successes) error_text = "";
+    // Options with the same names must have certain semantics. The
+    // situation where both algorithms have options with the same name but
+    // one throws an exception for the pair of values while the other does
+    // not is undefined behaviour. The situation where both algorithms may
+    // need options with the same name, but the name is returned in one of
+    // the GetNeededOptions calls and then in another is undefined behaviour
+    // likewise.
+    assert(!(successes == 1 && (precise_algo_->OptionSettable(option_name) ==
+                                approx_algo_->OptionSettable(option_name))));
+    return {successes, error_text};
 }
 
 void TypoMiner::LoadDataInternal() {
@@ -94,15 +183,13 @@ void TypoMiner::LoadDataInternal() {
     input_table_->Reset();
     typed_relation_ =
             model::ColumnLayoutTypedRelationData::CreateFrom(*input_table_, is_null_equal_null_);
-
     for (Algorithm* algo : {precise_algo_.get(), approx_algo_.get()}) {
-        auto pli_algo = dynamic_cast<PliBasedFDAlgorithm*>(algo);
-        if (pli_algo == nullptr) {
+        if (dynamic_cast<PliBasedFDAlgorithm*>(algo) == nullptr) {
             input_table_->Reset();
-            algo->LoadData();
         } else {
-            pli_algo->LoadData(relation_);
+            algo->SetOption(util::config::names::kPliRelation, relation_);
         }
+        algo->LoadData();
     }
 }
 

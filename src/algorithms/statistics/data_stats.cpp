@@ -15,17 +15,12 @@ namespace mo = model;
 
 DataStats::DataStats() : Algorithm({"Calculating statistics"}) {
     RegisterOptions();
-    MakeOptionsAvailable({util::config::TableOpt.GetName(), util::config::EqualNullsOpt.GetName()});
 }
 
 void DataStats::RegisterOptions() {
-    RegisterOption(util::config::TableOpt(&input_table_));
-    RegisterOption(util::config::EqualNullsOpt(&is_null_equal_null_));
-    RegisterOption(util::config::ThreadNumberOpt(&threads_num_));
-}
-
-void DataStats::MakeExecuteOptsAvailable() {
-    MakeOptionsAvailable({util::config::ThreadNumberOpt.GetName()});
+    RegisterInitialLoadOption(util::config::TableOpt(&input_table_));
+    RegisterInitialLoadOption(util::config::EqualNullsOpt(&is_null_equal_null_));
+    RegisterInitialExecOption(util::config::ThreadNumberOpt(&threads_num_));
 }
 
 void DataStats::ResetState() {

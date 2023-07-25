@@ -7,15 +7,15 @@
 
 namespace algos {
 
-FDAlgorithm::FDAlgorithm(std::vector<std::string_view> phase_names)
-    : Algorithm(std::move(phase_names)) {
+FDAlgorithm::FDAlgorithm(std::vector<std::string_view> phase_names,
+                         util::config::ConfigurationStage initial_stage)
+    : Algorithm(std::move(phase_names), initial_stage) {
     RegisterOptions();
-    MakeOptionsAvailable({util::config::TableOpt.GetName(), util::config::EqualNullsOpt.GetName()});
 }
 
 void FDAlgorithm::RegisterOptions() {
-    RegisterOption(util::config::TableOpt(&input_table_));
-    RegisterOption(util::config::EqualNullsOpt(&is_null_equal_null_));
+    RegisterInitialLoadOption(util::config::TableOpt(&input_table_));
+    RegisterInitialLoadOption(util::config::EqualNullsOpt(&is_null_equal_null_));
 }
 
 void FDAlgorithm::ResetState() {

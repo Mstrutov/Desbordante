@@ -16,9 +16,7 @@ namespace algos::cfd {
 
 CFDDiscovery::CFDDiscovery(std::vector<std::string_view> phase_names)
     : Algorithm(std::move(phase_names)) {
-    using namespace util::config::names;
     RegisterOptions();
-    MakeOptionsAvailable({kTable, kEqualNulls, kCfdColumnsNumber, kCfdTuplesNumber});
 }
 
 CFDDiscovery::CFDDiscovery() : CFDDiscovery({kDefaultPhaseName}) {}
@@ -40,10 +38,10 @@ void CFDDiscovery::ResetState() {
 void CFDDiscovery::RegisterOptions() {
     DESBORDANTE_OPTION_USING;
 
-    RegisterOption(util::config::TableOpt(&input_table_));
-    RegisterOption(Option{&columns_number_, kCfdColumnsNumber, kDCfdColumnsNumber, 0u});
-    RegisterOption(Option{&tuples_number_, kCfdTuplesNumber, kDCfdTuplesNumber, 0u});
-    RegisterOption(util::config::EqualNullsOpt(&is_null_equal_null_));
+    RegisterInitialLoadOption(util::config::TableOpt(&input_table_));
+    RegisterInitialLoadOption(util::config::EqualNullsOpt(&is_null_equal_null_));
+    RegisterInitialLoadOption(Option{&columns_number_, kCfdColumnsNumber, kDCfdColumnsNumber, 0u});
+    RegisterInitialLoadOption(Option{&tuples_number_, kCfdTuplesNumber, kDCfdTuplesNumber, 0u});
 }
 
 int CFDDiscovery::NrCfds() const {

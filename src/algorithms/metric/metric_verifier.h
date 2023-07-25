@@ -85,7 +85,6 @@ private:
 
 protected:
     void LoadDataInternal() final;
-    void MakeExecuteOptsAvailable() override;
     unsigned long long ExecuteInternal() override;
 
 public:

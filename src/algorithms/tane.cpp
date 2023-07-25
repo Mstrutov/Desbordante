@@ -18,17 +18,14 @@
 
 namespace algos {
 
-Tane::Tane() : PliBasedFDAlgorithm({kDefaultPhaseName})  {
+Tane::Tane(bool request_prepared_data)
+    : PliBasedFDAlgorithm({kDefaultPhaseName}, request_prepared_data) {
     RegisterOptions();
 }
 
 void Tane::RegisterOptions() {
-    RegisterOption(util::config::ErrorOpt(&max_ucc_error_));
-    RegisterOption(util::config::MaxLhsOpt(&max_lhs_));
-}
-
-void Tane::MakeExecuteOptsAvailable() {
-    MakeOptionsAvailable({util::config::MaxLhsOpt.GetName(), util::config::ErrorOpt.GetName()});
+    RegisterInitialExecOption(util::config::ErrorOpt(&max_ucc_error_));
+    RegisterInitialExecOption(util::config::MaxLhsOpt(&max_lhs_));
 }
 
 void Tane::ResetStateFd() {

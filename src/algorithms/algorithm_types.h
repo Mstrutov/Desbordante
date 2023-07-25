@@ -54,4 +54,6 @@ BETTER_ENUM(AlgorithmType, char,
 )
 // clang-format on
 
+static_assert(std::tuple_size_v<AlgorithmTypes> == AlgorithmType::_size());
+
 }  // namespace algos

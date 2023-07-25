@@ -23,7 +23,7 @@ private:
     unsigned long long ExecuteInternal() final;
 
 public:
-    Depminer();
+    Depminer(bool request_prepared_data = false);
 };
 
 }  // namespace algos

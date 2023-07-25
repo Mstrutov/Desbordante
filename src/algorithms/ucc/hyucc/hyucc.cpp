@@ -8,9 +8,18 @@
 #include "inductor.h"
 #include "preprocessor.h"
 #include "sampler.h"
+#include "util/config/thread_number/option.h"
 #include "validator.h"
 
 namespace algos {
+
+HyUCC::HyUCC() : UCCAlgorithm({}) {
+    RegisterOptions();
+}
+
+void HyUCC::RegisterOptions() {
+    RegisterInitialExecOption(util::config::ThreadNumberOpt(&threads_num_));
+}
 
 void HyUCC::LoadDataInternal() {
     relation_ = ColumnLayoutRelationData::CreateFrom(*input_table_, is_null_equal_null_);

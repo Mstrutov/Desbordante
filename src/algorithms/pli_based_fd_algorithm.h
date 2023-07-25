@@ -6,6 +6,9 @@
 namespace algos {
 
 class PliBasedFDAlgorithm : public FDAlgorithm {
+private:
+    void RegisterOptions();
+
 protected:
     std::shared_ptr<ColumnLayoutRelationData> relation_;
 
@@ -19,12 +22,10 @@ protected:
     }
 
 public:
-    explicit PliBasedFDAlgorithm(std::vector<std::string_view> phase_names);
+    explicit PliBasedFDAlgorithm(std::vector<std::string_view> phase_names,
+                                 bool request_prepared_data = false);
 
     std::vector<Column const*> GetKeys() const override;
-
-    using Algorithm::LoadData;
-    void LoadData(std::shared_ptr<ColumnLayoutRelationData> data);
 };
 
 }  // namespace algos

@@ -34,7 +34,7 @@ protected:
         return {
                 {kTable, MakeCsvParser(path, separator, has_header)},
                 {kError, util::config::ErrorType{0.0}},
-                {kSeed, decltype(Configuration::seed){0}},
+                {kSeed, decltype(Parameters::seed){0}},
         };
     }
 

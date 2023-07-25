@@ -48,7 +48,7 @@ public:
         return name_;
     }
 
-    [[nodiscard]] std::string_view GetDescription() const {
+    [[nodiscard]] std::string_view GetDescription() const override {
         return description_;
     }
 
@@ -60,10 +60,14 @@ public:
         return is_set_;
     }
 
-    Option &SetValueCheck(ValueCheckFunc value_check) {
+    std::unique_ptr<IOption> MoveToHeap() override {
+        return std::make_unique<Option>(std::move(*this));
+    }
+
+    Option &&SetValueCheck(ValueCheckFunc value_check) {
         assert(!value_check_);
         value_check_ = std::move(value_check);
-        return *this;
+        return std::move(*this);
     }
 
     // Some options may become required depending on this option's value and/or
@@ -76,17 +80,17 @@ public:
     // only the names of the first pair where the predicate holds. An empty
     // predicate is equivalent to an always-true predicate, and thus must
     // always be last.
-    Option &SetConditionalOpts(OptCondVector opt_cond) {
+    Option &&SetConditionalOpts(OptCondVector opt_cond) {
         assert(opt_cond_.empty());
         assert(!opt_cond.empty());
         opt_cond_ = std::move(opt_cond);
-        return *this;
+        return std::move(*this);
     }
 
-    Option &SetNormalizeFunc(NormalizeFunc normalize_func) {
+    Option &&SetNormalizeFunc(NormalizeFunc normalize_func) {
         assert(!normalize_func_);
         normalize_func_ = std::move(normalize_func);
-        return *this;
+        return std::move(*this);
     }
 
 private:
@@ -128,9 +132,10 @@ T Option<T>::ConvertValue(boost::any const &value) const {
             std::string("No value was provided to an option without a default value (") +
             GetName().data() + ")";
     if (value.empty()) {
-        if (!default_func_) throw std::logic_error(no_value_no_default);
+        if (!default_func_) throw std::invalid_argument(no_value_no_default);
         return default_func_();
     } else {
+        if (value.type() != typeid(T)) throw std::invalid_argument("Incorrect option value type");
         return boost::any_cast<T>(value);
     }
 }

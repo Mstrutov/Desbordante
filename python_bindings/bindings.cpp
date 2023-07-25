@@ -134,6 +134,10 @@ PYBIND11_MODULE(desbordante, module) {
                  "Load data after all options have been set by SetOption calls")
             .def("get_needed_options", &PyAlgorithmBase::GetNeededOptions,
                  "Get names of options the algorithm needs")
+            .def("get_possible_options", &PyAlgorithmBase::GetPossibleOptions,
+                 "Get names of options the algorithm may request")
+            .def("get_description", &PyAlgorithmBase::GetDescription,
+                 "Get description of an option of this algorithm")
             .def("set_option", &PyAlgorithmBase::SetOption, "option_name"_a,
                  "option_value"_a = pybind11::none(), "Set option value")
             .def("get_option_type", &PyAlgorithmBase::GetOptionType, "option_name"_a,

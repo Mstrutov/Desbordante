@@ -11,36 +11,25 @@
 #include "algorithms/cfd/util/tidlist_util.h"
 #include "util/config/equal_nulls/option.h"
 #include "util/config/names_and_descriptions.h"
+#include "util/config/option_using.h"
 
 // see algorithms/cfd/LICENSE
 
 namespace algos::cfd {
 
-FDFirstAlgorithm::FDFirstAlgorithm(std::vector<std::string_view> phase_names)
-    : CFDDiscovery(std::move(phase_names)) {
-    using namespace util::config::names;
-
-    RegisterOptions();
-    MakeOptionsAvailable({kEqualNulls, kCfdTuplesNumber, kCfdColumnsNumber});
-}
-
 FDFirstAlgorithm::FDFirstAlgorithm() : CFDDiscovery({kDefaultPhaseName}) {
-    using namespace util::config::names;
-
     RegisterOptions();
-    MakeOptionsAvailable({kEqualNulls, kCfdTuplesNumber, kCfdColumnsNumber});
 }
 
 void FDFirstAlgorithm::RegisterOptions() {
-    using namespace util::config::names;
-    using namespace util::config::descriptions;
-    using util::config::Option;
+    DESBORDANTE_OPTION_USING;
 
-    Substrategy default_val = Substrategy::dfs;
-    RegisterOption(Option{&min_supp_, kCfdMinimumSupport, kDCfdMinimumSupport, 0u});
-    RegisterOption(Option{&min_conf_, kCfdMinimumConfidence, kDCfdMinimumConfidence, 0.0});
-    RegisterOption(Option{&max_lhs_, kCfdMaximumLhs, kDCfdMaximumLhs, 0u});
-    RegisterOption(Option{&substrategy_, kCfdSubstrategy, kDCfdSubstrategy, default_val});
+    RegisterInitialExecOption(Option{&min_supp_, kCfdMinimumSupport, kDCfdMinimumSupport, 0u});
+    RegisterInitialExecOption(
+            Option{&min_conf_, kCfdMinimumConfidence, kDCfdMinimumConfidence, 0.0});
+    RegisterInitialExecOption(Option{&max_lhs_, kCfdMaximumLhs, kDCfdMaximumLhs, 0u});
+    RegisterInitialExecOption(
+            Option{&substrategy_, kCfdSubstrategy, kDCfdSubstrategy, +Substrategy::dfs});
 }
 
 void FDFirstAlgorithm::ResetStateCFD() {
@@ -97,13 +86,6 @@ void FDFirstAlgorithm::CheckForIncorrectInput() const {
         throw std::invalid_argument("[ERROR] Illegal Support value : " + std::to_string(min_supp_) +
                                     " is not in [1, " + std::to_string(tuples_number_) + "]");
     }
-}
-
-void FDFirstAlgorithm::MakeExecuteOptsAvailable() {
-    using namespace util::config::names;
-
-    MakeOptionsAvailable(
-            {kCfdMinimumSupport, kCfdMinimumConfidence, kCfdMaximumLhs, kCfdSubstrategy});
 }
 
 bool FDFirstAlgorithm::Precedes(const Itemset& a, const Itemset& b) {

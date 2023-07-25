@@ -12,6 +12,7 @@
 
 #include "model/idataset_stream.h"
 #include "parser/csv_parser.h"
+#include "util/config/configuration.h"
 #include "util/config/ioption.h"
 #include "util/config/option.h"
 #include "util/progress.h"
@@ -21,21 +22,12 @@ namespace algos {
 class Algorithm {
 private:
     util::Progress progress_;
-    // All options the algorithm may use
-    std::unordered_map<std::string_view, std::unique_ptr<util::config::IOption>> possible_options_;
-    // All options that can be set at the moment
-    std::unordered_set<std::string_view> available_options_;
-    // Maps a parameter that added other parameters to their names.
-    std::unordered_map<std::string_view, std::vector<std::string_view>> opt_parents_;
-
-    bool data_loaded_ = false;
+    util::config::Configuration configuration_;
 
     // Clear the necessary fields for Execute to run repeatedly with different
     // configuration parameters on the same dataset.
     virtual void ResetState() = 0;
 
-    void ExcludeOptions(std::string_view parent_option) noexcept;
-    void ClearOptions() noexcept;
     virtual void LoadDataInternal() = 0;
     virtual unsigned long long ExecuteInternal() = 0;
 
@@ -50,25 +42,37 @@ protected:
         progress_.ToNextProgressPhase();
     }
 
-    void MakeOptionsAvailable(std::vector<std::string_view> const& option_names);
-
-    template <typename T>
-    void RegisterOption(util::config::Option<T> option) {
-        auto name = option.GetName();
-        assert(possible_options_.find(name) == possible_options_.end());
-        possible_options_[name] = std::make_unique<util::config::Option<T>>(std::move(option));
+    util::config::ConfigurationStage GetCurrentStage() {
+        return configuration_.GetCurrentStage();
     }
 
-    // Overload this if you want to work with options outside of
-    // possible_options_ map. Useful for pipelines.
-    virtual bool SetExternalOption(std::string_view option_name, boost::any const& value);
-    virtual void AddSpecificNeededOptions(
-            std::unordered_set<std::string_view>& previous_options) const;
-    void ExecutePrepare();
+    void RegisterOption(util::config::IOption&& option) {
+        configuration_.RegisterOption(std::move(option));
+    }
 
-    // Overload this to add options after your algorithm has processed the data
-    // given through LoadData
-    virtual void MakeExecuteOptsAvailable();
+    void RegisterPrepLoadOption(util::config::IOption&& option) {
+        configuration_.RegisterOption(std::move(option),
+                                      +util::config::ConfigurationStage::load_prepared_data);
+    }
+
+    void RegisterInitialLoadOption(util::config::IOption&& option) {
+        configuration_.RegisterOption(std::move(option),
+                                      +util::config::ConfigurationStage::load_data);
+    }
+
+    void RegisterInitialExecOption(util::config::IOption&& option) {
+        configuration_.RegisterOption(std::move(option),
+                                      +util::config::ConfigurationStage::execute);
+    }
+
+    // The constructor accepts vector of names of the mining algorithm phases.
+    // NOTE: Pass an empty vector here if your algorithm does not have an implemented progress bar.
+    explicit Algorithm(std::vector<std::string_view> phase_names,
+                       util::config::ConfigurationStage starting_stage =
+                               util::config::ConfigurationStage::load_data);
+
+    explicit Algorithm(std::vector<std::string_view> phase_names,
+                       util::config::Configuration::FuncTuple funcTuple);
 
 public:
     constexpr static double kTotalProgressPercent = util::Progress::kTotalProgressPercent;
@@ -79,19 +83,55 @@ public:
     Algorithm& operator=(Algorithm&& other) = delete;
     virtual ~Algorithm() = default;
 
-    // The constructor accepts vector of names of the mining algorithm phases.
-    // NOTE: Pass an empty vector here if your algorithm does not have an implemented progress bar.
-    explicit Algorithm(std::vector<std::string_view> phase_names);
-
     void LoadData();
 
     unsigned long long Execute();
 
-    void SetOption(std::string_view option_name, boost::any const& value = {});
+    void SetOption(std::string_view option_name, boost::any const& value = {}) {
+        configuration_.SetOption(option_name, value);
+    }
 
-    [[nodiscard]] std::unordered_set<std::string_view> GetNeededOptions() const;
+    std::pair<bool, std::string> SetOptionNoThrow(std::string_view option_name,
+                                                  boost::any const& value = {}) {
+        return configuration_.SetOptionNoThrow(option_name, value);
+    }
 
-    void UnsetOption(std::string_view option_name) noexcept;
+    [[nodiscard]] std::unordered_set<std::string_view> GetNeededOptions() const {
+        return configuration_.GetNeededOptions();
+    }
+
+    [[nodiscard]] std::unordered_set<std::string_view> GetPossibleOptions() const {
+        return configuration_.GetPossibleOptions();
+    }
+
+    [[nodiscard]] std::string_view GetDescription(std::string_view option_name) const {
+        return configuration_.GetDescription(option_name);
+    }
+
+    void UnsetOption(std::string_view option_name) noexcept {
+        configuration_.UnsetOption(option_name);
+    }
+
+    [[nodiscard]] std::type_index GetTypeIndex(std::string_view option_name) const {
+        return configuration_.GetTypeIndex(option_name);
+    }
+
+    [[nodiscard]] bool NeedsOption(std::string_view option_name) const {
+        return configuration_.NeedsOption(option_name);
+    }
+
+    [[nodiscard]] bool OptionSettable(std::string_view option_name) const {
+        return configuration_.OptionSettable(option_name);
+    }
+
+    [[nodiscard]] bool IsInitialAtStage(std::string_view option_name,
+                                        util::config::ConfigurationStage stage) const {
+        return configuration_.IsInitialAtStage(option_name, stage);
+    }
+
+    void ResetConfiguration() {
+        configuration_.Reset();
+    }
 
     // See util::Progress::GetProgress description
     std::pair<uint8_t, double> GetProgress() const noexcept {
@@ -100,8 +140,6 @@ public:
     std::vector<std::string_view> const& GetPhaseNames() const noexcept {
         return progress_.GetPhaseNames();
     }
-
-    std::type_index GetTypeIndex(std::string_view option_name) const;
 };
 
 }  // namespace algos

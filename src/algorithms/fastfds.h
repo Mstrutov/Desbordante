@@ -15,14 +15,13 @@ namespace algos {
 
 class FastFDs : public PliBasedFDAlgorithm {
 public:
-    FastFDs();
+    FastFDs(bool request_prepared_data = false);
 
 private:
     using OrderingComparator = std::function<bool(Column const&, Column const&)>;
     using DiffSet = Vertical;
 
     void RegisterOptions();
-    void MakeExecuteOptsAvailable() final;
 
     void ResetStateFd() final;
     unsigned long long ExecuteInternal() final;

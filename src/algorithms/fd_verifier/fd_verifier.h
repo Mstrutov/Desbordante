@@ -37,7 +37,6 @@ private:
 
 protected:
     void LoadDataInternal() override;
-    void MakeExecuteOptsAvailable() override;
     unsigned long long ExecuteInternal() override;
 
 public:

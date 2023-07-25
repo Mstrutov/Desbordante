@@ -59,7 +59,6 @@ protected:
     virtual unsigned long long GenerateAllRules() = 0;
     virtual unsigned long long FindFrequent() = 0;
     void LoadDataInternal() final;
-    void MakeExecuteOptsAvailable() final;
     unsigned long long ExecuteInternal() final;
 
 public:

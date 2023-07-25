@@ -37,15 +37,15 @@ PLICache::PLICache(ColumnLayoutRelationData* relation_data, CachingMethod cachin
 
 PLICache::~PLICache() {
     for (auto& column_ptr : relation_data_->GetSchema()->GetColumns()) {
-        //auto PLI =
+        // auto PLI =
         index_->Remove(static_cast<Vertical>(*column_ptr));
-        //relation_data_->GetColumnData(column_ptr->getIndex()).getPLI(std::move(PLI));
+        // relation_data_->GetColumnData(column_ptr->getIndex()).getPLI(std::move(PLI));
     }
 }
 
 // obtains or calculates a PositionListIndex using cache
 std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> PLICache::GetOrCreateFor(
-    Vertical const& vertical, ProfilingContext* profiling_context) {
+        Vertical const& vertical, ProfilingContext* profiling_context) {
     std::scoped_lock lock(getting_pli_mutex_);
     LOG(DEBUG) << boost::format{"PLI for %1% requested: "} % vertical.ToString();
 
@@ -54,7 +54,7 @@ std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> PLICache::G
     if (pli != nullptr) {
         pli->IncFreq();
         LOG(DEBUG) << boost::format{"Served from PLI cache."};
-        //addToUsageCounter
+        // addToUsageCounter
         return pli;
     }
     // look for cached PLIs to construct the requested one
@@ -74,7 +74,7 @@ std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> PLICache::G
             smallest_pli_rank = pli_rank;
         }
     }
-    assert(smallest_pli_rank);            // check if smallest_pli_rank is initialized
+    assert(smallest_pli_rank);  // check if smallest_pli_rank is initialized
 
     std::vector<PositionListIndexRank> operands;
     boost::dynamic_bitset<> cover(relation_data_->GetNumColumns());
@@ -86,7 +86,7 @@ std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> PLICache::G
 
         while (cover.count() < vertical.GetArity() && !ranks.empty()) {
             boost::optional<PositionListIndexRank> best_rank;
-            //erase ranks with low added_arity_
+            // erase ranks with low added_arity_
             ranks.erase(std::remove_if(ranks.begin(), ranks.end(),
                                        [&cover_tester, &cover](auto& rank) {
                                            cover_tester.reset();
@@ -139,12 +139,12 @@ std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> PLICache::G
     //  поэтому приходится через variant разбирать. Проверить, насколько много платим за обёртку.
     // Intersect and cache
     std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> variant_intersection_pli;
-    if (operands.size() >= profiling_context->GetConfiguration().nary_intersection_size) {
+    if (operands.size() >= profiling_context->GetParameters().nary_intersection_size) {
         PositionListIndexRank base_pli_rank = operands[0];
         auto intersection_pli = base_pli_rank.pli_->ProbeAll(
-            vertical.Without(*base_pli_rank.vertical_), *relation_data_);
+                vertical.Without(*base_pli_rank.vertical_), *relation_data_);
         variant_intersection_pli =
-            CachingProcess(vertical, std::move(intersection_pli), profiling_context);
+                CachingProcess(vertical, std::move(intersection_pli), profiling_context);
     } else {
         Vertical current_vertical = *operands.begin()->vertical_;
         variant_intersection_pli = operands.begin()->pli_.get();
@@ -152,20 +152,21 @@ std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> PLICache::G
         for (size_t i = 1; i < operands.size(); i++) {
             current_vertical = current_vertical.Union(*operands[i].vertical_);
             variant_intersection_pli =
-                std::holds_alternative<PositionListIndex*>(variant_intersection_pli)
-                    ? std::get<PositionListIndex*>(variant_intersection_pli)
-                          ->Intersect(operands[i].pli_.get())
-                    : std::get<std::unique_ptr<PositionListIndex>>(variant_intersection_pli)
-                          ->Intersect(operands[i].pli_.get());
+                    std::holds_alternative<PositionListIndex*>(variant_intersection_pli)
+                            ? std::get<PositionListIndex*>(variant_intersection_pli)
+                                      ->Intersect(operands[i].pli_.get())
+                            : std::get<std::unique_ptr<PositionListIndex>>(variant_intersection_pli)
+                                      ->Intersect(operands[i].pli_.get());
             variant_intersection_pli = CachingProcess(
-                current_vertical,
-                std::move(std::get<std::unique_ptr<PositionListIndex>>(variant_intersection_pli)),
-                profiling_context);
+                    current_vertical,
+                    std::move(
+                            std::get<std::unique_ptr<PositionListIndex>>(variant_intersection_pli)),
+                    profiling_context);
         }
     }
 
     LOG(DEBUG) << boost::format{"Calculated from %1% sub-PLIs (saved %2% intersections)."} %
-                      operands.size() % (vertical.GetArity() - operands.size());
+                          operands.size() % (vertical.GetArity() - operands.size());
 
     return variant_intersection_pli;
 }
@@ -175,28 +176,27 @@ size_t PLICache::Size() const {
 }
 
 std::variant<PositionListIndex*, std::unique_ptr<PositionListIndex>> PLICache::CachingProcess(
-    Vertical const& vertical, std::unique_ptr<PositionListIndex> pli,
-    ProfilingContext* profiling_context) {
+        Vertical const& vertical, std::unique_ptr<PositionListIndex> pli,
+        ProfilingContext* profiling_context) {
     auto pli_pointer = pli.get();
     switch (caching_method_) {
-    case CachingMethod::kCoin:
-        if (profiling_context->NextDouble() <
-            profiling_context->GetConfiguration().caching_probability) {
+        case CachingMethod::kCoin:
+            if (profiling_context->NextDouble() <
+                profiling_context->GetParameters().caching_probability) {
+                index_->Put(vertical, std::move(pli));
+                return pli_pointer;
+            } else {
+                return pli;
+            }
+        case CachingMethod::kNoCaching:
+            return pli;
+        case CachingMethod::kAllCaching:
             index_->Put(vertical, std::move(pli));
             return pli_pointer;
-        } else {
-            return pli;
-        }
-    case CachingMethod::kNoCaching:
-        return pli;
-    case CachingMethod::kAllCaching:
-        index_->Put(vertical, std::move(pli));
-        return pli_pointer;
-    default:
-        throw std::runtime_error(
-            "Only kNoCaching and kAllCaching strategies are currently available");
+        default:
+            throw std::runtime_error(
+                    "Only kNoCaching and kAllCaching strategies are currently available");
     }
 }
 
-} // namespace util
-
+}  // namespace util

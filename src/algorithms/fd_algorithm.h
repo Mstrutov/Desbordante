@@ -54,7 +54,9 @@ protected:
 public:
     constexpr static std::string_view kDefaultPhaseName = "FD mining";
 
-    explicit FDAlgorithm(std::vector<std::string_view> phase_names);
+    explicit FDAlgorithm(std::vector<std::string_view> phase_names,
+                         util::config::ConfigurationStage initial_stage =
+                                 util::config::ConfigurationStage::load_data);
 
     /* Returns the list of discovered FDs */
     std::list<FD> const& FdList() const noexcept {

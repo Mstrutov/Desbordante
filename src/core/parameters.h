@@ -7,7 +7,7 @@
 #include "util/config/max_lhs/type.h"
 #include "util/config/thread_number/type.h"
 
-struct Configuration {
+struct Parameters {
     bool is_find_keys = true;
     bool is_find_fds = true;
     util::config::EqNullsType is_null_equal_null = true;

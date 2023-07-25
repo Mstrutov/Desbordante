@@ -8,12 +8,11 @@ namespace algos {
 UCCAlgorithm::UCCAlgorithm(std::vector<std::string_view> phase_names)
     : Algorithm(std::move(phase_names)) {
     RegisterOptions();
-    MakeOptionsAvailable({util::config::TableOpt.GetName(), util::config::EqualNullsOpt.GetName()});
 }
 
 void UCCAlgorithm::RegisterOptions() {
-    RegisterOption(util::config::TableOpt(&input_table_));
-    RegisterOption(util::config::EqualNullsOpt(&is_null_equal_null_));
+    RegisterInitialLoadOption(util::config::TableOpt(&input_table_));
+    RegisterInitialLoadOption(util::config::EqualNullsOpt(&is_null_equal_null_));
 }
 
 }  // namespace algos

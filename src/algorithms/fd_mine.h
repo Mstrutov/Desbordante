@@ -37,7 +37,7 @@ private:
     unsigned long long ExecuteInternal() override;
 
 public:
-    Fd_mine();
+    Fd_mine(bool request_prepared_data = false);
 };
 
 }  // namespace algos

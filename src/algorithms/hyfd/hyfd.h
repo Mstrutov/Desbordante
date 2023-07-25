@@ -43,7 +43,7 @@ private:
     void RegisterFDs(std::vector<RawFD>&& fds, std::vector<algos::hy::ClusterId> const& og_mapping);
 
 public:
-    HyFD();
+    HyFD(bool request_prepared_data = false);
 };
 
 }  // namespace algos::hyfd

@@ -60,9 +60,10 @@ DependencyCandidate KeyG1Strategy::CreateDependencyCandidate(Vertical const& ver
     }
 
     auto agree_set_sample = context_->GetAgreeSetSample(vertical);
-    util::ConfidenceInterval estimated_equality_pairs = agree_set_sample
-        ->EstimateAgreements(vertical, context_->GetConfiguration().estimate_confidence)
-        .Multiply(context_->GetColumnLayoutRelationData()->GetNumTuplePairs());
+    util::ConfidenceInterval estimated_equality_pairs =
+            agree_set_sample
+                    ->EstimateAgreements(vertical, context_->GetParameters().estimate_confidence)
+                    .Multiply(context_->GetColumnLayoutRelationData()->GetNumTuplePairs());
     util::ConfidenceInterval key_error = CalculateKeyError(estimated_equality_pairs);
     return DependencyCandidate(vertical, key_error, false);
 }

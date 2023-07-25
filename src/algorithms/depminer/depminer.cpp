@@ -12,8 +12,9 @@
 
 namespace algos {
 
-Depminer::Depminer() : PliBasedFDAlgorithm(
-        {"AgreeSets generation", "Finding CMAXSets", "Finding LHS"}) {}
+Depminer::Depminer(bool request_prepared_data)
+    : PliBasedFDAlgorithm({"AgreeSets generation", "Finding CMAXSets", "Finding LHS"},
+                          request_prepared_data) {}
 
 using boost::dynamic_bitset, std::make_shared, std::shared_ptr, std::setw, std::vector, std::list,
         std::dynamic_pointer_cast;

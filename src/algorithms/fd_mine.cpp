@@ -8,7 +8,8 @@
 
 namespace algos {
 
-Fd_mine::Fd_mine() : PliBasedFDAlgorithm({kDefaultPhaseName}) {}
+Fd_mine::Fd_mine(bool request_prepared_data)
+    : PliBasedFDAlgorithm({kDefaultPhaseName}, request_prepared_data) {}
 
 void Fd_mine::ResetStateFd() {
     candidate_set_.clear();
