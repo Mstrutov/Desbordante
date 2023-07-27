@@ -9,6 +9,7 @@
 #include "model/table/column_layout_typed_relation_data.h"
 #include "config/tabular_data/input_table_type.h"
 #include "sorted_partitions.h"
+#include "order_enums.h"
 
 namespace algos::order {
 
@@ -26,6 +27,7 @@ private:
     void LoadDataInternal() override;
     void ResetState() override;
     void CreateSortedPartitions();
+    ValidityType CheckForSwap(SortedPartition const& l, SortedPartition const& r);
     unsigned long long ExecuteInternal() final;
 
 public:
