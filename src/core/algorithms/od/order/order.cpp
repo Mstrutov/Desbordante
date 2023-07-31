@@ -114,6 +114,42 @@ ValidityType Order::CheckForSwap(SortedPartition const& l, SortedPartition const
     return res;
 }
 
+std::vector<Order::AttributeList> GetPrefixes(Order::Node const& node) {
+    std::vector<Order::AttributeList> res;
+    res.reserve(node.size() - 1);
+    for (size_t i = 1; i < node.size(); ++i) {
+        res.emplace_back(node.begin(), node.begin() + i);
+    }
+    return res;
+}
+
+void Order::Prune(LatticeLevel& lattice_level) {
+    for (auto node_it = lattice_level.begin(); node_it != lattice_level.end();) {
+        bool all_candidates_empty = false;
+        std::vector<AttributeList> prefixes = GetPrefixes(*node_it);
+        for (AttributeList const& lhs : prefixes) {
+            if (!candidate_sets_[lhs].empty()) {
+                all_candidates_empty = false;
+                break;
+            } else {
+                all_candidates_empty = true;
+            }
+        }
+        if (all_candidates_empty) {
+            node_it = lattice_level.erase(node_it);
+        } else {
+            ++node_it;
+        }
+    }
+    for (auto candidate_it = candidate_sets_.begin(); candidate_it != candidate_sets_.end();) {
+        if (candidate_it->second.empty()) {
+            candidate_it = candidate_sets_.erase(candidate_it);
+        } else {
+            ++candidate_it;
+        }
+    }
+}
+
 std::vector<unsigned int> MaxPrefix(std::vector<unsigned int> const& attribute_list) {
     return std::vector<unsigned int>(attribute_list.begin(), attribute_list.end() - 1);
 }

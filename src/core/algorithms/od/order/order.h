@@ -35,6 +35,7 @@ public:
     void ResetState() override;
     void CreateSortedPartitions();
     ValidityType CheckForSwap(SortedPartition const& l, SortedPartition const& r);
+    void Prune(LatticeLevel& lattice_level);
     LatticeLevel GenerateNextLevel(LatticeLevel const& l);
     unsigned long long ExecuteInternal() final;
 
