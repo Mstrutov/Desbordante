@@ -114,6 +114,53 @@ ValidityType Order::CheckForSwap(SortedPartition const& l, SortedPartition const
     return res;
 }
 
+std::vector<unsigned int> MaxPrefix(std::vector<unsigned int> const& attribute_list) {
+    return std::vector<unsigned int>(attribute_list.begin(), attribute_list.end() - 1);
+}
+
+using PrefixBlocks = std::unordered_map<Order::AttributeList, std::vector<Order::Node>,
+                                        boost::hash<std::vector<unsigned int>>>;
+
+PrefixBlocks GetPrefixBlocks(Order::LatticeLevel const& l) {
+    PrefixBlocks res;
+    for (Order::Node const& node : l) {
+        std::vector<unsigned int> node_prefix = MaxPrefix(node);
+        if (res.find(node_prefix) == res.end()) {
+            res[node_prefix] = {};
+        }
+        res[node_prefix].push_back(node);
+    }
+    return res;
+}
+
+Order::Node JoinNodes(Order::Node const& l, Order::Node const& r) {
+    Order::Node res(l);
+    res.push_back(r.back());
+    return res;
+}
+
+Order::LatticeLevel Order::GenerateNextLevel(LatticeLevel const& l) {
+    LatticeLevel next;
+    PrefixBlocks prefix_blocks = GetPrefixBlocks(l);
+    for (auto const& [prefix, prefix_block] : prefix_blocks) {
+        for (Node const& node : prefix_block) {
+            for (Node const& join_node : prefix_block) {
+                if (node == join_node) {
+                    continue;
+                }
+                Node joined = JoinNodes(node, join_node);
+                sorted_partitions_[joined] =
+                        sorted_partitions_[prefix] * sorted_partitions_[{join_node.back()}];
+                next.insert(joined);
+            }
+        }
+    }
+    for (Node const& node : l) {
+        candidate_sets_[node] = {};
+    }
+    return next;
+}
+
 unsigned long long Order::ExecuteInternal() {}
 
 }  // namespace algos::order
