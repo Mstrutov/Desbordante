@@ -1,6 +1,7 @@
 #include "order.h"
 
 #include <algorithm>
+#include <utility>
 
 #include "config/names_and_descriptions.h"
 #include "config/tabular_data/input_table/option.h"
@@ -123,6 +124,86 @@ std::vector<Order::AttributeList> GetPrefixes(Order::Node const& node) {
     return res;
 }
 
+std::vector<unsigned int> MaxPrefix(std::vector<unsigned int> const& attribute_list) {
+    return std::vector<unsigned int>(attribute_list.begin(), attribute_list.end() - 1);
+}
+
+using CandidatePairs = std::vector<std::pair<Order::AttributeList, Order::AttributeList>>;
+
+CandidatePairs ObtainCandidates(Order::Node const& node) {
+    CandidatePairs res;
+    res.reserve(node.size() - 1);
+    for (size_t i = 1; i < node.size(); ++i) {
+        Order::AttributeList lhs(node.begin(), node.begin() + i);
+        Order::AttributeList rhs(node.begin() + i, node.end());
+        res.emplace_back(lhs, rhs);
+    }
+    return res;
+}
+
+bool InUnorderedMap(Order::OrderDependencies const& map, Order::AttributeList const& lhs,
+                    Order::AttributeList const& rhs) {
+    if (map.find(lhs) == map.end()) {
+        return false;
+    }
+    if (map.at(lhs).find(rhs) == map.at(lhs).end()) {
+        return false;
+    }
+    return true;
+}
+
+void Order::ComputeDependencies(LatticeLevel const& lattice_level) {
+    for (Node const& node : lattice_level) {
+        CandidatePairs candidate_pairs = ObtainCandidates(node);
+        for (auto const& [lhs, rhs] : candidate_pairs) {
+            if (candidate_sets_[lhs].find(rhs) == candidate_sets_[lhs].end()) {
+                continue;
+            }
+            ValidityType candidate_validity =
+                    CheckForSwap(sorted_partitions_[lhs], sorted_partitions_[rhs]);
+            if (candidate_validity == +ValidityType::valid) {
+                if (valid_.find(lhs) == valid_.end()) {
+                    valid_[lhs] = {};
+                }
+                valid_[lhs].insert(rhs);
+                bool lhs_unique = typed_relation_->GetNumRows() ==
+                                  sorted_partitions_[lhs].sorted_partition.size();
+                if (lhs_unique) {
+                    candidate_sets_[lhs].erase(rhs);
+                }
+            } else if (candidate_validity == +ValidityType::swap) {
+                candidate_sets_[lhs].erase(rhs);
+            } else if (candidate_validity == +ValidityType::merge) {
+                if (merge_invalidated_.find(lhs) == merge_invalidated_.end()) {
+                    merge_invalidated_[lhs] = {};
+                }
+                merge_invalidated_[lhs].insert(rhs);
+            }
+        }
+    }
+    for (auto const& [lhs, rhs_list] : candidate_sets_) {
+        if (lhs.size() <= 1) {
+            continue;
+        }
+        for (AttributeList const& rhs : rhs_list) {
+            AttributeList lhs_max_prefix = MaxPrefix(lhs);
+            if (InUnorderedMap(merge_invalidated_, lhs_max_prefix, rhs)) {
+                auto rhs_is_prefix = [&rhs](AttributeList const& other_rhs) {
+                    if (MaxPrefix(other_rhs) == rhs) {
+                        return true;
+                    }
+                    return false;
+                };
+                if (std::find_if(candidate_sets_[lhs_max_prefix].begin(),
+                                 candidate_sets_[lhs_max_prefix].end(),
+                                 rhs_is_prefix) == candidate_sets_[lhs_max_prefix].end()) {
+                    candidate_sets_[lhs].erase(rhs);
+                }
+            }
+        }
+    }
+}
+
 void Order::Prune(LatticeLevel& lattice_level) {
     for (auto node_it = lattice_level.begin(); node_it != lattice_level.end();) {
         bool all_candidates_empty = false;
@@ -148,10 +229,6 @@ void Order::Prune(LatticeLevel& lattice_level) {
             ++candidate_it;
         }
     }
-}
-
-std::vector<unsigned int> MaxPrefix(std::vector<unsigned int> const& attribute_list) {
-    return std::vector<unsigned int>(attribute_list.begin(), attribute_list.end() - 1);
 }
 
 using PrefixBlocks = std::unordered_map<Order::AttributeList, std::vector<Order::Node>,
