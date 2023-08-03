@@ -34,6 +34,7 @@ void Order::CreateSortedPartitions() {
         if (!model::Type::IsOrdered(data[i].GetTypeId())) {
             continue;
         }
+        single_attributes_.push_back({i});
         std::vector<std::pair<unsigned long, std::byte const*>> indexed_byte_data;
         indexed_byte_data.reserve(data[i].GetNumRows());
         std::vector<std::byte const*> const& byte_data = data[i].GetData();
@@ -202,6 +203,94 @@ void Order::ComputeDependencies(LatticeLevel const& lattice_level) {
             }
         }
     }
+}
+
+bool AreDisjoint(Order::AttributeList const& a, Order::AttributeList const& b) {
+    for (auto const& a_atr : a) {
+        for (auto const& b_atr : b) {
+            if (a_atr == b_atr) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+std::vector<Order::AttributeList> Order::Extend(AttributeList const& lhs,
+                                                AttributeList const& rhs) {
+    std::vector<AttributeList> extended_rhss;
+    for (auto const& single_attribute : single_attributes_) {
+        if (AreDisjoint(single_attribute, lhs) && AreDisjoint(single_attribute, rhs)) {
+            AttributeList extended(rhs);
+            extended.push_back(single_attribute[0]);
+            extended_rhss.push_back(extended);
+        }
+    }
+    return extended_rhss;
+}
+
+bool Order::IsMinimal(AttributeList const& a) {
+    for (auto const& [lhs, rhs_list] : valid_) {
+        for (AttributeList const& rhs : rhs_list) {
+            auto it_rhs = std::search(a.begin(), a.end(), rhs.begin(), rhs.end());
+            if (it_rhs == a.end()) {
+                continue;
+            }
+            if (std::search(it_rhs + rhs.size(), a.end(), lhs.begin(), lhs.end()) != a.end()) {
+                return false;
+            }
+            auto it_lhs = std::search(a.begin(), it_rhs, lhs.begin(), lhs.end());
+            if (it_lhs + lhs.size() == it_rhs) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+void Order::UpdateCandidateSets(unsigned int level) {
+    CandidateSets next_candidates;
+    for (auto const& [lhs, rhs_list] : candidate_sets_) {
+        next_candidates[lhs] = {};
+        if (lhs.size() != level - 1) {
+            for (AttributeList const& rhs : rhs_list) {
+                if (InUnorderedMap(valid_, lhs, rhs)) {
+                    continue;
+                }
+                std::vector<AttributeList> extended_rhss = Extend(lhs, rhs);
+                for (AttributeList const& extended : extended_rhss) {
+                    if (lhs.size() > 1) {
+                        AttributeList lhs_max_prefix = MaxPrefix(lhs);
+                        std::vector<AttributeList> extended_prefixes = GetPrefixes(extended);
+                        auto prefix_is_valid = [&](AttributeList const& extended_prefix) {
+                            return InUnorderedMap(valid_, lhs_max_prefix, extended_prefix);
+                        };
+                        if (candidate_sets_[lhs_max_prefix].find(extended) ==
+                                    candidate_sets_[lhs_max_prefix].end() &&
+                            std::find_if(extended_prefixes.begin(), extended_prefixes.end(),
+                                         prefix_is_valid) == extended_prefixes.end()) {
+                            continue;
+                        }
+                    }
+                    if (!IsMinimal(extended)) {
+                        continue;
+                    }
+                    next_candidates[lhs].insert(extended);
+                }
+            }
+        } else if (IsMinimal(lhs)) {
+            AttributeList lhs_max_prefix = MaxPrefix(lhs);
+            for (AttributeList const& rhs : candidate_sets_[lhs_max_prefix]) {
+                if (AreDisjoint(lhs, rhs)) {
+                    next_candidates[lhs].insert(rhs);
+                }
+            }
+        }
+        if (next_candidates[lhs].empty()) {
+            next_candidates.erase(lhs);
+        }
+    }
+    candidate_sets_ = std::move(next_candidates);
 }
 
 void Order::Prune(LatticeLevel& lattice_level) {
