@@ -31,19 +31,23 @@ public:
     std::unique_ptr<TypedRelation> typed_relation_;
     SortedPartitions sorted_partitions_;
     std::vector<AttributeList> single_attributes_;
+    CandidateSets previous_candidate_sets_;
     CandidateSets candidate_sets_;
     OrderDependencies valid_;
     OrderDependencies merge_invalidated_;
+    unsigned int level_;
 
     void RegisterOptions();
     void LoadDataInternal() override;
     void ResetState() override;
     void CreateSortedPartitions();
+    void CreateSortedPartitionsFromSingletons(AttributeList const& attr_list);
     ValidityType CheckForSwap(SortedPartition const& l, SortedPartition const& r);
     void ComputeDependencies(LatticeLevel const& lattice_level);
     std::vector<AttributeList> Extend(AttributeList const& lhs, AttributeList const& rhs);
     bool IsMinimal(AttributeList const& a);
-    void UpdateCandidateSets(unsigned int level);
+    void UpdateCandidateSets();
+    void MergePrune();
     void Prune(LatticeLevel& lattice_level);
     LatticeLevel GenerateNextLevel(LatticeLevel const& l);
     unsigned long long ExecuteInternal() final;

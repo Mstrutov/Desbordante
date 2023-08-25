@@ -64,6 +64,17 @@ void Order::CreateSortedPartitions() {
     }
 }
 
+void Order::CreateSortedPartitionsFromSingletons(AttributeList const& attr_list) {
+    if (sorted_partitions_.find(attr_list) != sorted_partitions_.end()) {
+        return;
+    }
+    SortedPartition res = sorted_partitions_[{attr_list[0]}];
+    for (size_t i = 1; i < attr_list.size(); ++i) {
+        res = res * sorted_partitions_[{attr_list[i]}];
+    }
+    sorted_partitions_[attr_list] = res;
+}
+
 bool SubsetSetDifference(std::unordered_set<unsigned long>& a,
                                                         std::unordered_set<unsigned long>& b) {
     auto const not_found = b.end();
@@ -154,15 +165,41 @@ bool InUnorderedMap(Order::OrderDependencies const& map, Order::AttributeList co
 }
 
 void Order::ComputeDependencies(LatticeLevel const& lattice_level) {
+    if (level_ < 2) {
+        return;
+    }
+    UpdateCandidateSets();
     for (Node const& node : lattice_level) {
         CandidatePairs candidate_pairs = ObtainCandidates(node);
         for (auto const& [lhs, rhs] : candidate_pairs) {
-            if (candidate_sets_[lhs].find(rhs) == candidate_sets_[lhs].end()) {
+            if (!InUnorderedMap(candidate_sets_, lhs, rhs)) {
                 continue;
             }
+            bool prefix_valid = false;
+            for (AttributeList const& rhs_prefix : GetPrefixes(rhs)) {
+                if (InUnorderedMap(valid_, lhs, rhs_prefix)) {
+                    prefix_valid = true;
+                    break;
+                }
+            }
+            if (prefix_valid) {
+                continue;
+            }
+            CreateSortedPartitionsFromSingletons(lhs);
+            CreateSortedPartitionsFromSingletons(rhs);
             ValidityType candidate_validity =
                     CheckForSwap(sorted_partitions_[lhs], sorted_partitions_[rhs]);
             if (candidate_validity == +ValidityType::valid) {
+                bool non_minimal_by_merge = false;
+                for (AttributeList const& merge_lhs : GetPrefixes(lhs)) {
+                    if (InUnorderedMap(merge_invalidated_, merge_lhs, rhs)) {
+                        non_minimal_by_merge = true;
+                        break;
+                    }
+                }
+                if (non_minimal_by_merge) {
+                    continue;
+                }
                 if (valid_.find(lhs) == valid_.end()) {
                     valid_[lhs] = {};
                 }
@@ -182,27 +219,7 @@ void Order::ComputeDependencies(LatticeLevel const& lattice_level) {
             }
         }
     }
-    for (auto const& [lhs, rhs_list] : candidate_sets_) {
-        if (lhs.size() <= 1) {
-            continue;
-        }
-        for (AttributeList const& rhs : rhs_list) {
-            AttributeList lhs_max_prefix = MaxPrefix(lhs);
-            if (InUnorderedMap(merge_invalidated_, lhs_max_prefix, rhs)) {
-                auto rhs_is_prefix = [&rhs](AttributeList const& other_rhs) {
-                    if (MaxPrefix(other_rhs) == rhs) {
-                        return true;
-                    }
-                    return false;
-                };
-                if (std::find_if(candidate_sets_[lhs_max_prefix].begin(),
-                                 candidate_sets_[lhs_max_prefix].end(),
-                                 rhs_is_prefix) == candidate_sets_[lhs_max_prefix].end()) {
-                    candidate_sets_[lhs].erase(rhs);
-                }
-            }
-        }
-    }
+    MergePrune();
 }
 
 bool AreDisjoint(Order::AttributeList const& a, Order::AttributeList const& b) {
@@ -248,11 +265,14 @@ bool Order::IsMinimal(AttributeList const& a) {
     return true;
 }
 
-void Order::UpdateCandidateSets(unsigned int level) {
+void Order::UpdateCandidateSets() {
+    if (level_ < 3) {
+        return;
+    }
     CandidateSets next_candidates;
     for (auto const& [lhs, rhs_list] : candidate_sets_) {
         next_candidates[lhs] = {};
-        if (lhs.size() != level - 1) {
+        if (lhs.size() != level_ - 1) {
             for (AttributeList const& rhs : rhs_list) {
                 if (InUnorderedMap(valid_, lhs, rhs)) {
                     continue;
@@ -265,10 +285,9 @@ void Order::UpdateCandidateSets(unsigned int level) {
                         auto prefix_is_valid = [&](AttributeList const& extended_prefix) {
                             return InUnorderedMap(valid_, lhs_max_prefix, extended_prefix);
                         };
-                        if (candidate_sets_[lhs_max_prefix].find(extended) ==
-                                    candidate_sets_[lhs_max_prefix].end() &&
-                            std::find_if(extended_prefixes.begin(), extended_prefixes.end(),
-                                         prefix_is_valid) == extended_prefixes.end()) {
+                        if ((std::find_if(extended_prefixes.begin(), extended_prefixes.end(),
+                                          prefix_is_valid) == extended_prefixes.end()) &&
+                            !InUnorderedMap(candidate_sets_, lhs_max_prefix, extended)) {
                             continue;
                         }
                     }
@@ -290,10 +309,53 @@ void Order::UpdateCandidateSets(unsigned int level) {
             next_candidates.erase(lhs);
         }
     }
+    previous_candidate_sets_ = std::move(candidate_sets_);
     candidate_sets_ = std::move(next_candidates);
 }
 
+bool StartsWith(Order::AttributeList const& rhs_candidate, Order::AttributeList const& rhs) {
+    for (size_t i = 0; i < rhs.size(); ++i) {
+        if (rhs[i] != rhs_candidate[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void Order::MergePrune() {
+    if (level_ < 3) {
+        return;
+    }
+    for (auto const& [lhs, rhs_list] : candidate_sets_) {
+        if (lhs.size() <= 1) {
+            continue;
+        }
+        for (auto rhs_it = rhs_list.begin(); rhs_it != rhs_list.end();) {
+            AttributeList lhs_max_prefix = MaxPrefix(lhs);
+            if (InUnorderedMap(merge_invalidated_, lhs_max_prefix, *rhs_it)) {
+                bool prunable = true;
+                for (auto const& other_rhs : candidate_sets_[lhs_max_prefix]) {
+                    if (MaxPrefix(other_rhs) == *rhs_it) {
+                        prunable = false;
+                        break;
+                    }
+                }
+                if (prunable) {
+                    rhs_it = candidate_sets_[lhs].erase(rhs_it);
+                } else {
+                    ++rhs_it;
+                }
+            } else {
+                ++rhs_it;
+            }
+        }
+    }
+}
+
 void Order::Prune(LatticeLevel& lattice_level) {
+    if (level_ < 2) {
+        return;
+    }
     for (auto node_it = lattice_level.begin(); node_it != lattice_level.end();) {
         bool all_candidates_empty = false;
         std::vector<AttributeList> prefixes = GetPrefixes(*node_it);
@@ -311,6 +373,7 @@ void Order::Prune(LatticeLevel& lattice_level) {
             ++node_it;
         }
     }
+    /* TODO: Make iteration from metanome */
     for (auto candidate_it = candidate_sets_.begin(); candidate_it != candidate_sets_.end();) {
         if (candidate_it->second.empty()) {
             candidate_it = candidate_sets_.erase(candidate_it);
@@ -351,18 +414,42 @@ Order::LatticeLevel Order::GenerateNextLevel(LatticeLevel const& l) {
                     continue;
                 }
                 Node joined = JoinNodes(node, join_node);
-                sorted_partitions_[joined] =
-                        sorted_partitions_[prefix] * sorted_partitions_[{join_node.back()}];
                 next.insert(joined);
             }
         }
     }
-    for (Node const& node : l) {
-        candidate_sets_[node] = {};
+    if (level_ > 1 && !candidate_sets_.empty()) {
+        for (Node const& node : l) {
+            candidate_sets_[node] = {};
+        }
     }
     return next;
 }
 
-unsigned long long Order::ExecuteInternal() {}
+unsigned long long Order::ExecuteInternal() {
+    auto start_time = std::chrono::system_clock::now();
+    CreateSortedPartitions();
+    LatticeLevel lattice_level = {};
+    for (AttributeList const& single_attribute : single_attributes_) {
+        lattice_level.insert(single_attribute);
+        candidate_sets_[single_attribute] = {};
+        for (AttributeList const& rhs_single_attribute : single_attributes_) {
+            if (single_attribute != rhs_single_attribute) {
+                candidate_sets_[single_attribute].insert(rhs_single_attribute);
+            }
+        }
+    }
+    level_ = 1;
+    while (!lattice_level.empty()) {
+        ComputeDependencies(lattice_level);
+        Prune(lattice_level);
+        lattice_level = GenerateNextLevel(lattice_level);
+        ++level_;
+    }
+    auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now() - start_time);
+    return elapsed_milliseconds.count();
+    
+}
 
 }  // namespace algos::order
