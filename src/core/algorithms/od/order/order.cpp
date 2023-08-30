@@ -1,6 +1,8 @@
 #include "order.h"
 
 #include <algorithm>
+#include <iostream>
+#include <memory>
 #include <utility>
 
 #include "config/names_and_descriptions.h"
@@ -30,6 +32,17 @@ void Order::ResetState() {}
 
 void Order::CreateSortedPartitions() {
     std::vector<model::TypedColumnData> const& data = typed_relation_->GetColumnData();
+    std::unordered_set<unsigned long> null_rows;
+    for (unsigned int i = 0; i < data.size(); ++i) {
+        if (!model::Type::IsOrdered(data[i].GetTypeId())) {
+            continue;
+        }
+        for (size_t k = 0; k < data[i].GetNumRows(); ++k) {
+            if (data[i].IsNullOrEmpty(k)) {
+                null_rows.insert(k);
+            }
+        }
+    }
     for (unsigned int i = 0; i < data.size(); ++i) {
         if (!model::Type::IsOrdered(data[i].GetTypeId())) {
             continue;
@@ -39,20 +52,33 @@ void Order::CreateSortedPartitions() {
         indexed_byte_data.reserve(data[i].GetNumRows());
         std::vector<std::byte const*> const& byte_data = data[i].GetData();
         for (size_t k = 0; k < byte_data.size(); ++k) {
+            if (null_rows.find(k) != null_rows.end()) {
+                continue;
+            }
             indexed_byte_data.emplace_back(k, byte_data[k]);
         }
-        model::Type const& type = data[i].GetType();
-        auto less = [&type](std::pair<unsigned long, std::byte const*> l,
-                            std::pair<unsigned long, std::byte const*> r) {
-            return type.Compare(l.second, r.second) == model::CompareResult::kLess;
+        std::unique_ptr<model::Type> type = model::CreateType(data[i].GetTypeId(), true);
+        std::unique_ptr<model::MixedType> mixed_type =
+                model::CreateSpecificType<model::MixedType>(model::TypeId::kMixed, true);
+        auto less = [&type, &mixed_type](std::pair<unsigned long, std::byte const*> l,
+                                         std::pair<unsigned long, std::byte const*> r) {
+            if (type->GetTypeId() == +(model::TypeId::kMixed)) {
+                return mixed_type->CompareAsStrings(l.second, r.second) ==
+                       model::CompareResult::kLess;
+            }
+            return type->Compare(l.second, r.second) == model::CompareResult::kLess;
+        };
+        auto equal = [&type, &mixed_type](std::pair<unsigned long, std::byte const*> l,
+                                          std::pair<unsigned long, std::byte const*> r) {
+            if (type->GetTypeId() == +(model::TypeId::kMixed)) {
+                return mixed_type->CompareAsStrings(l.second, r.second) ==
+                       model::CompareResult::kEqual;
+            }
+            return type->Compare(l.second, r.second) == model::CompareResult::kEqual;
         };
         std::sort(indexed_byte_data.begin(), indexed_byte_data.end(), less);
         std::vector<std::unordered_set<unsigned long>> equivalence_classes;
         equivalence_classes.push_back({indexed_byte_data.front().first});
-        auto equal = [&type](std::pair<unsigned long, std::byte const*> l,
-                             std::pair<unsigned long, std::byte const*> r) {
-            return type.Compare(l.second, r.second) == model::CompareResult::kEqual;
-        };
         for (size_t k = 1; k < indexed_byte_data.size(); ++k) {
             if (equal(indexed_byte_data[k - 1], indexed_byte_data[k])) {
                 equivalence_classes.back().insert(indexed_byte_data[k].first);
@@ -164,11 +190,22 @@ bool InUnorderedMap(Order::OrderDependencies const& map, Order::AttributeList co
     return true;
 }
 
+void PrintOD(Order::AttributeList const& lhs, Order::AttributeList const& rhs) {
+    for (auto const& attr : lhs) {
+        std::cout << attr << " ";
+    }
+    std::cout << "-> ";
+    for (auto const& attr : rhs) {
+        std::cout << attr << " ";
+    }
+}
+
 void Order::ComputeDependencies(LatticeLevel const& lattice_level) {
     if (level_ < 2) {
         return;
     }
     UpdateCandidateSets();
+    PrintValidOD();
     for (Node const& node : lattice_level) {
         CandidatePairs candidate_pairs = ObtainCandidates(node);
         for (auto const& [lhs, rhs] : candidate_pairs) {
@@ -211,11 +248,17 @@ void Order::ComputeDependencies(LatticeLevel const& lattice_level) {
                 }
             } else if (candidate_validity == +ValidityType::swap) {
                 candidate_sets_[lhs].erase(rhs);
+                std::cout << "SWAP: ";
+                PrintOD(lhs, rhs);
+                std::cout << '\n';
             } else if (candidate_validity == +ValidityType::merge) {
                 if (merge_invalidated_.find(lhs) == merge_invalidated_.end()) {
                     merge_invalidated_[lhs] = {};
                 }
                 merge_invalidated_[lhs].insert(rhs);
+                std::cout << "MERGE: ";
+                PrintOD(lhs, rhs);
+                std::cout << '\n';
             }
         }
     }
@@ -426,6 +469,26 @@ Order::LatticeLevel Order::GenerateNextLevel(LatticeLevel const& l) {
     return next;
 }
 
+void Order::PrintValidOD() {
+    std::cout << "***VALID ORDER DEPENDENCIES***" << '\n';
+    unsigned int cnt = 0;
+    for (auto const& [lhs, rhs_list] : valid_) {
+        for (AttributeList const& rhs : rhs_list) {
+            ++cnt;
+            for (auto const& attr : lhs) {
+                std::cout << attr + 1 << ",";
+            }
+            std::cout << "->";
+            for (auto const& attr : rhs) {
+                std::cout << attr + 1 << ",";
+            }
+            std::cout << '\n';
+        }
+    }
+    std::cout << "OD amount: " << cnt;
+    std::cout << '\n' << '\n';
+}
+
 unsigned long long Order::ExecuteInternal() {
     auto start_time = std::chrono::system_clock::now();
     CreateSortedPartitions();
@@ -446,8 +509,10 @@ unsigned long long Order::ExecuteInternal() {
         lattice_level = GenerateNextLevel(lattice_level);
         ++level_;
     }
+    PrintValidOD();
     auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now() - start_time);
+    std::cout << "ms: " << elapsed_milliseconds.count() << '\n';
     return elapsed_milliseconds.count();
     
 }

@@ -59,6 +59,13 @@ public:
         return type->Compare(RetrieveValue(l), RetrieveValue(r));
     }
 
+    [[nodiscard]] CompareResult CompareAsStrings(std::byte const* l, std::byte const* r) const {
+        String l_str = this->ValueToString(l);
+        String r_str = this->ValueToString(r);
+
+        return StringType::Compare(l_str, r_str);
+    }
+
     void Free(std::byte const* value) const noexcept override {
         TypeId const type_id = RetrieveTypeId(value);
         if (type_id == +TypeId::kString || type_id == +TypeId::kBigInt) {
