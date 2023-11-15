@@ -76,4 +76,8 @@ CSVConfig const kTest1 = CreateCsvConfig("Test1.csv", ',', true);
 CSVConfig const kProbeTest1 = CreateCsvConfig("ProbeTest1.csv", ',', true);
 CSVConfig const kProbeTest2 = CreateCsvConfig("ProbeTest2.csv", ',', true);
 CSVConfig const kTestParse = CreateCsvConfig("TestParse.csv", ',', false);
+CSVConfig const kTestDD = CreateCsvConfig("TestDD.csv", ',', true);
+CSVConfig const kTestDD1 = CreateCsvConfig("TestDD1.csv", ',', true);
+CSVConfig const kTestDD2 = CreateCsvConfig("TestDD2.csv", ',', true);
+CSVConfig const kTestDD3 = CreateCsvConfig("TestDD3.csv", ',', true);
 }  // namespace tests
