@@ -89,4 +89,7 @@ constexpr auto kDIgnoreConstantCols =
 constexpr auto kDGraphData = "Path to dot-file with graph";
 constexpr auto kDGfdData = "Path to file with GFD";
 constexpr auto kDMemLimitMB = "memory limit im MBs";
+constexpr auto kDDifferenceTable = "CSV table containing difference limits for each column";
+constexpr auto kDNumRows = "Use only first N rows of the table";
+constexpr auto kDNUmColumns = "Use only first N columns of the table";
 }  // namespace config::descriptions

@@ -54,4 +54,7 @@ constexpr auto kIgnoreConstantCols = "ignore_constant_cols";
 constexpr auto kGraphData = "graph";
 constexpr auto kGfdData = "gfd";
 constexpr auto kMemLimitMB = "mem_limit";
+constexpr auto kDifferenceTable = "difference_table";
+constexpr auto kNumRows = "num_rows";
+constexpr auto kNumColumns = "num_columns";
 }  // namespace config::names
