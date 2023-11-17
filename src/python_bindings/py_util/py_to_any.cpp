@@ -36,10 +36,12 @@ config::InputTable CreateCsvParser(std::string_view option_name, py::tuple const
         throw config::ConfigurationError("Cannot create a CSV parser from passed tuple.");
     }
 
-    return std::make_shared<CSVParser>(
+    auto csv_parser = std::make_shared<CSVParser>(
             CastAndReplaceCastError<std::string>(option_name, arguments[0]),
             CastAndReplaceCastError<char>(option_name, arguments[1]),
             CastAndReplaceCastError<bool>(option_name, arguments[2]));
+    csv_parser->ValidateSeparator();
+    return csv_parser;
 }
 
 template <typename Type>
