@@ -5,9 +5,14 @@
 #include <memory>
 #include <utility>
 
+#include <easylogging++.h>
+
 #include "config/names_and_descriptions.h"
 #include "config/tabular_data/input_table/option.h"
+#include "dependency_checker.h"
+#include "list_lattice.h"
 #include "model/types/types.h"
+#include "order_utility.h"
 
 namespace algos::order {
 
@@ -30,7 +35,7 @@ void Order::LoadDataInternal() {
 
 void Order::ResetState() {}
 
-void Order::CreateSortedPartitions() {
+void Order::CreateSingletonSortedPartitions() {
     std::vector<model::TypedColumnData> const& data = typed_relation_->GetColumnData();
     std::unordered_set<unsigned long> null_rows;
     for (unsigned int i = 0; i < data.size(); ++i) {
@@ -104,113 +109,13 @@ void Order::CreateSortedPartitionsFromSingletons(AttributeList const& attr_list)
     sorted_partitions_[attr_list] = res;
 }
 
-bool SubsetSetDifference(std::unordered_set<unsigned long>& a,
-                                                        std::unordered_set<unsigned long>& b) {
-    auto const not_found = b.end();
-    for (auto const& element: a)
-        if (b.find(element) == not_found) {
-            return false;
-        } else {
-            b.erase(element);
-        }
-    return true;
-}
-
-ValidityType Order::CheckForSwap(SortedPartition const& l, SortedPartition const& r) {
-    ValidityType res = ValidityType::valid;
-    size_t l_i = 0, r_i = 0;
-    bool next_l = true, next_r = true;
-    std::unordered_set<unsigned long> l_eq_class;
-    std::unordered_set<unsigned long> r_eq_class;
-    while (l_i < l.sorted_partition.size() && r_i < r.sorted_partition.size()) {
-        if (next_l) {
-            l_eq_class = l.sorted_partition[l_i];
-        }    
-        if (next_r) {
-            r_eq_class = r.sorted_partition[r_i];
-        }
-        if (l_eq_class.size() < r_eq_class.size()) {
-            if(!SubsetSetDifference(l_eq_class, r_eq_class)) {
-                return ValidityType::swap;
-            } else {
-                res = ValidityType::merge;
-                ++l_i;
-                next_l = true;
-                next_r = false;
-            }
-        } else {
-            if (!SubsetSetDifference(r_eq_class, l_eq_class)) {
-                return ValidityType::swap;
-            } else {
-                ++r_i;
-                next_r = true;
-                if (l_eq_class.empty()) {
-                    ++l_i;
-                    next_l = true;
-                } else {
-                    next_l = false;
-                }
-            }
-        }
-    }
-    return res;
-}
-
-std::vector<Order::AttributeList> GetPrefixes(Order::Node const& node) {
-    std::vector<Order::AttributeList> res;
-    res.reserve(node.size() - 1);
-    for (size_t i = 1; i < node.size(); ++i) {
-        res.emplace_back(node.begin(), node.begin() + i);
-    }
-    return res;
-}
-
-std::vector<unsigned int> MaxPrefix(std::vector<unsigned int> const& attribute_list) {
-    return std::vector<unsigned int>(attribute_list.begin(), attribute_list.end() - 1);
-}
-
-using CandidatePairs = std::vector<std::pair<Order::AttributeList, Order::AttributeList>>;
-
-CandidatePairs ObtainCandidates(Order::Node const& node) {
-    CandidatePairs res;
-    res.reserve(node.size() - 1);
-    for (size_t i = 1; i < node.size(); ++i) {
-        Order::AttributeList lhs(node.begin(), node.begin() + i);
-        Order::AttributeList rhs(node.begin() + i, node.end());
-        res.emplace_back(lhs, rhs);
-    }
-    return res;
-}
-
-bool InUnorderedMap(Order::OrderDependencies const& map, Order::AttributeList const& lhs,
-                    Order::AttributeList const& rhs) {
-    if (map.find(lhs) == map.end()) {
-        return false;
-    }
-    if (map.at(lhs).find(rhs) == map.at(lhs).end()) {
-        return false;
-    }
-    return true;
-}
-
-void PrintOD(Order::AttributeList const& lhs, Order::AttributeList const& rhs) {
-    for (auto const& attr : lhs) {
-        std::cout << attr << " ";
-    }
-    std::cout << "-> ";
-    for (auto const& attr : rhs) {
-        std::cout << attr << " ";
-    }
-}
-
-void Order::ComputeDependencies(LatticeLevel const& lattice_level) {
-    if (level_ < 2) {
+void Order::ComputeDependencies(ListLattice::LatticeLevel const& lattice_level) {
+    if (lattice_->GetLevelNumber() < 2) {
         return;
     }
     UpdateCandidateSets();
-    PrintValidOD();
     for (Node const& node : lattice_level) {
-        CandidatePairs candidate_pairs = ObtainCandidates(node);
+        CandidatePairs candidate_pairs = lattice_->ObtainCandidates(node);
         for (auto const& [lhs, rhs] : candidate_pairs) {
             if (!InUnorderedMap(candidate_sets_, lhs, rhs)) {
                 continue;
@@ -260,36 +165,18 @@ void Order::ComputeDependencies(LatticeLevel const& lattice_level) {
                 }
             } else if (candidate_validity == +ValidityType::swap) {
                 candidate_sets_[lhs].erase(rhs);
-                std::cout << "SWAP: ";
-                PrintOD(lhs, rhs);
-                std::cout << '\n';
             } else if (candidate_validity == +ValidityType::merge) {
                 if (merge_invalidated_.find(lhs) == merge_invalidated_.end()) {
                     merge_invalidated_[lhs] = {};
                 }
                 merge_invalidated_[lhs].insert(rhs);
-                std::cout << "MERGE: ";
-                PrintOD(lhs, rhs);
-                std::cout << '\n';
             }
         }
     }
     MergePrune();
 }
 
-bool AreDisjoint(Order::AttributeList const& a, Order::AttributeList const& b) {
-    for (auto const& a_atr : a) {
-        for (auto const& b_atr : b) {
-            if (a_atr == b_atr) {
-                return false;
-            }
-        }
-    }
-    return true;
-}
-
-std::vector<Order::AttributeList> Order::Extend(AttributeList const& lhs,
-                                                AttributeList const& rhs) {
+std::vector<AttributeList> Order::Extend(AttributeList const& lhs, AttributeList const& rhs) const {
     std::vector<AttributeList> extended_rhss;
     for (auto const& single_attribute : single_attributes_) {
         if (AreDisjoint(single_attribute, lhs) && AreDisjoint(single_attribute, rhs)) {
@@ -301,7 +188,7 @@ std::vector<Order::AttributeList> Order::Extend(AttributeList const& lhs,
     return extended_rhss;
 }
 
-bool Order::IsMinimal(AttributeList const& a) {
+bool Order::IsMinimal(AttributeList const& a) const {
     for (auto const& [lhs, rhs_list] : valid_) {
         for (AttributeList const& rhs : rhs_list) {
             auto it_rhs = std::search(a.begin(), a.end(), rhs.begin(), rhs.end());
@@ -321,13 +208,14 @@ bool Order::IsMinimal(AttributeList const& a) {
 }
 
 void Order::UpdateCandidateSets() {
-    if (level_ < 3) {
+    unsigned int level_num = lattice_->GetLevelNumber();
+    if (level_num < 3) {
         return;
     }
     CandidateSets next_candidates;
     for (auto const& [lhs, rhs_list] : candidate_sets_) {
         next_candidates[lhs] = {};
-        if (lhs.size() != level_ - 1) {
+        if (lhs.size() != level_num - 1) {
             for (AttributeList const& rhs : rhs_list) {
                 if (InUnorderedMap(valid_, lhs, rhs)) {
                     continue;
@@ -337,9 +225,10 @@ void Order::UpdateCandidateSets() {
                     if (lhs.size() > 1) {
                         AttributeList lhs_max_prefix = MaxPrefix(lhs);
                         std::vector<AttributeList> extended_prefixes = GetPrefixes(extended);
-                        auto prefix_is_valid = [&](AttributeList const& extended_prefix) {
-                            return InUnorderedMap(valid_, lhs_max_prefix, extended_prefix);
-                        };
+                        auto prefix_is_valid =
+                                [this, &lhs_max_prefix](AttributeList const& extended_prefix) {
+                                    return InUnorderedMap(valid_, lhs_max_prefix, extended_prefix);
+                                };
                         if ((std::find_if(extended_prefixes.begin(), extended_prefixes.end(),
                                           prefix_is_valid) == extended_prefixes.end()) &&
                             !InUnorderedMap(candidate_sets_, lhs_max_prefix, extended)) {
@@ -368,17 +257,8 @@ void Order::UpdateCandidateSets() {
     candidate_sets_ = std::move(next_candidates);
 }
 
-bool StartsWith(Order::AttributeList const& rhs_candidate, Order::AttributeList const& rhs) {
-    for (size_t i = 0; i < rhs.size(); ++i) {
-        if (rhs[i] != rhs_candidate[i]) {
-            return false;
-        }
-    }
-    return true;
-}
-
 void Order::MergePrune() {
-    if (level_ < 3) {
+    if (lattice_->GetLevelNumber() < 3) {
         return;
     }
     for (auto const& [lhs, rhs_list] : candidate_sets_) {
@@ -407,166 +287,80 @@ void Order::MergePrune() {
     }
 }
 
-void Order::Prune(LatticeLevel& lattice_level) {
-    if (level_ < 2) {
-        return;
-    }
-    for (auto node_it = lattice_level.begin(); node_it != lattice_level.end();) {
-        bool all_candidates_empty = false;
-        std::vector<AttributeList> prefixes = GetPrefixes(*node_it);
-        for (AttributeList const& lhs : prefixes) {
-            if (!candidate_sets_[lhs].empty()) {
-                all_candidates_empty = false;
-                break;
-            } else {
-                all_candidates_empty = true;
-            }
-        }
-        if (all_candidates_empty) {
-            node_it = lattice_level.erase(node_it);
-        } else {
-            ++node_it;
-        }
-    }
-    /* TODO: Make iteration from metanome */
-    for (auto candidate_it = candidate_sets_.begin(); candidate_it != candidate_sets_.end();) {
-        if (candidate_it->second.empty()) {
-            candidate_it = candidate_sets_.erase(candidate_it);
-        } else {
-            ++candidate_it;
-        }
-    }
-}
-
-using PrefixBlocks = std::unordered_map<Order::AttributeList, std::vector<Order::Node>,
-                                        boost::hash<std::vector<unsigned int>>>;
-
-PrefixBlocks GetPrefixBlocks(Order::LatticeLevel const& l) {
-    PrefixBlocks res;
-    for (Order::Node const& node : l) {
-        std::vector<unsigned int> node_prefix = MaxPrefix(node);
-        if (res.find(node_prefix) == res.end()) {
-            res[node_prefix] = {};
-        }
-        res[node_prefix].push_back(node);
-    }
-    return res;
-}
-
-Order::Node JoinNodes(Order::Node const& l, Order::Node const& r) {
-    Order::Node res(l);
-    res.push_back(r.back());
-    return res;
-}
-
-Order::LatticeLevel Order::GenerateNextLevel(LatticeLevel const& l) {
-    LatticeLevel next;
-    PrefixBlocks prefix_blocks = GetPrefixBlocks(l);
-    for (auto const& [prefix, prefix_block] : prefix_blocks) {
-        for (Node const& node : prefix_block) {
-            for (Node const& join_node : prefix_block) {
-                if (node == join_node) {
-                    continue;
-                }
-                Node joined = JoinNodes(node, join_node);
-                next.insert(joined);
-            }
-        }
-    }
-    if (level_ > 1 && !candidate_sets_.empty()) {
-        for (Node const& node : l) {
-            candidate_sets_[node] = {};
-        }
-    }
-    return next;
-}
-
 void Order::PrintValidOD() {
-    std::cout << "***PREVIOUS CANDIDATE SETS***" << '\n';
+    LOG(DEBUG) << "***PREVIOUS CANDIDATE SETS***" << '\n';
     for (auto const& [lhs, rhs_list] : previous_candidate_sets_) {
         if (rhs_list.empty()) {
             for (auto const& attr : lhs) {
-                std::cout << attr + 1 << ",";
+                LOG(DEBUG) << attr + 1 << ",";
             }
-            std::cout << "-> empty";
-            std::cout << '\n';
+            LOG(DEBUG) << "-> empty";
+            LOG(DEBUG) << '\n';
         }
         for (AttributeList const& rhs : rhs_list) {
             for (auto const& attr : lhs) {
-                std::cout << attr + 1 << ",";
+                LOG(DEBUG) << attr + 1 << ",";
             }
-            std::cout << "->";
+            LOG(DEBUG) << "->";
             for (auto const& attr : rhs) {
-                std::cout << attr + 1 << ",";
+                LOG(DEBUG) << attr + 1 << ",";
             }
-            std::cout << '\n';
+            LOG(DEBUG) << '\n';
         }
     }
-    std::cout << "***CANDIDATE SETS***" << '\n';
+    LOG(DEBUG) << "***CANDIDATE SETS***" << '\n';
     for (auto const& [lhs, rhs_list] : candidate_sets_) {
         if (rhs_list.empty()) {
             for (auto const& attr : lhs) {
-                std::cout << attr + 1 << ",";
+                LOG(DEBUG) << attr + 1 << ",";
             }
-            std::cout << "-> empty";
-            std::cout << '\n';
+            LOG(DEBUG) << "-> empty";
+            LOG(DEBUG) << '\n';
         }
         for (AttributeList const& rhs : rhs_list) {
             for (auto const& attr : lhs) {
-                std::cout << attr + 1 << ",";
+                LOG(DEBUG) << attr + 1 << ",";
             }
-            std::cout << "->";
+            LOG(DEBUG) << "->";
             for (auto const& attr : rhs) {
-                std::cout << attr + 1 << ",";
+                LOG(DEBUG) << attr + 1 << ",";
             }
-            std::cout << '\n';
+            LOG(DEBUG) << '\n';
         }
     }
-    std::cout << "***VALID ORDER DEPENDENCIES***" << '\n';
+    LOG(DEBUG) << "***VALID ORDER DEPENDENCIES***" << '\n';
     unsigned int cnt = 0;
     for (auto const& [lhs, rhs_list] : valid_) {
         for (AttributeList const& rhs : rhs_list) {
             ++cnt;
             for (auto const& attr : lhs) {
-                std::cout << attr + 1 << ",";
+                LOG(DEBUG) << attr + 1 << ",";
             }
-            std::cout << "->";
+            LOG(DEBUG) << "->";
             for (auto const& attr : rhs) {
-                std::cout << attr + 1 << ",";
+                LOG(DEBUG) << attr + 1 << ",";
             }
-            std::cout << '\n';
+            LOG(DEBUG) << '\n';
         }
     }
-    std::cout << "OD amount: " << cnt;
-    std::cout << '\n' << '\n';
+    LOG(DEBUG) << "OD amount: " << cnt;
+    LOG(DEBUG) << '\n' << '\n';
 }
 
 unsigned long long Order::ExecuteInternal() {
     auto start_time = std::chrono::system_clock::now();
-    CreateSortedPartitions();
-    LatticeLevel lattice_level = {};
-    for (AttributeList const& single_attribute : single_attributes_) {
-        lattice_level.insert(single_attribute);
-        candidate_sets_[single_attribute] = {};
-        for (AttributeList const& rhs_single_attribute : single_attributes_) {
-            if (single_attribute != rhs_single_attribute) {
-                candidate_sets_[single_attribute].insert(rhs_single_attribute);
-            }
-        }
-    }
-    level_ = 1;
-    while (!lattice_level.empty()) {
-        ComputeDependencies(lattice_level);
-        Prune(lattice_level);
-        lattice_level = GenerateNextLevel(lattice_level);
-        ++level_;
+    CreateSingletonSortedPartitions();
+    lattice_ = std::make_unique<ListLattice>(candidate_sets_, single_attributes_);
+    while (!lattice_->IsEmpty()) {
+        ComputeDependencies(lattice_->GetLatticeLevel());
+        lattice_->Prune(candidate_sets_);
+        lattice_->GenerateNextLevel(candidate_sets_);
     }
     PrintValidOD();
     auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now() - start_time);
-    std::cout << "ms: " << elapsed_milliseconds.count() << '\n';
+    LOG(DEBUG) << "ms: " << elapsed_milliseconds.count() << '\n';
     return elapsed_milliseconds.count();
-    
 }
 
 }  // namespace algos::order
