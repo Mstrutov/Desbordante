@@ -158,8 +158,7 @@ void Order::ComputeDependencies(ListLattice::LatticeLevel const& lattice_level) 
                     valid_[lhs] = {};
                 }
                 valid_[lhs].insert(rhs);
-                bool lhs_unique = typed_relation_->GetNumRows() ==
-                                  sorted_partitions_[lhs].sorted_partition.size();
+                bool lhs_unique = typed_relation_->GetNumRows() == sorted_partitions_[lhs].Size();
                 if (lhs_unique) {
                     candidate_sets_[lhs].erase(rhs);
                 }

@@ -28,12 +28,14 @@ ValidityType CheckForSwap(SortedPartition const& l, SortedPartition const& r) {
     bool next_l = true, next_r = true;
     std::unordered_set<model::TupleIndex> l_eq_class;
     std::unordered_set<model::TupleIndex> r_eq_class;
-    while (l_i < l.sorted_partition.size() && r_i < r.sorted_partition.size()) {
+    SortedPartition::EquivalenceClasses const& l_classes = l.GetEqClasses();
+    SortedPartition::EquivalenceClasses const& r_classes = r.GetEqClasses();
+    while (l_i < l_classes.size() && r_i < r_classes.size()) {
         if (next_l) {
-            l_eq_class = l.sorted_partition[l_i];
+            l_eq_class = l_classes[l_i];
         }
         if (next_r) {
-            r_eq_class = r.sorted_partition[r_i];
+            r_eq_class = r_classes[r_i];
         }
         if (l_eq_class.size() < r_eq_class.size()) {
             if (!SubsetSetDifference(l_eq_class, r_eq_class)) {

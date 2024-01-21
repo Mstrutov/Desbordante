@@ -8,21 +8,34 @@
 
 namespace algos::order {
 
-struct SortedPartition {
+class SortedPartition {
+public:
     using EquivalenceClasses = std::vector<std::unordered_set<model::TupleIndex>>;
     using PartitionIndex = unsigned long;
+    using HashProduct = std::unordered_map<PartitionIndex, SortedPartition::EquivalenceClasses>;
 
-    EquivalenceClasses sorted_partition;
-    std::unordered_map<unsigned long int, unsigned long int> hash_partition;
-    unsigned long num_rows = 0;
-
-    SortedPartition() = default;
-    SortedPartition(unsigned long num_rows) : num_rows(num_rows){};
-    SortedPartition(EquivalenceClasses&& eq_classes, unsigned long num_rows)
-        : sorted_partition(std::move(eq_classes)), num_rows(num_rows){};
+private:
+    EquivalenceClasses sorted_partition_;
+    std::unordered_map<unsigned long int, unsigned long int> hash_partition_;
+    unsigned long num_rows_ = 0;
 
     void BuildHashTable();
+    HashProduct BuildHashProduct(SortedPartition const& other);
+
+public:
+    SortedPartition() = default;
+    SortedPartition(unsigned long num_rows) : num_rows_(num_rows){};
+    SortedPartition(EquivalenceClasses&& eq_classes, unsigned long num_rows)
+        : sorted_partition_(std::move(eq_classes)), num_rows_(num_rows){};
     void Intersect(SortedPartition const& other);
+
+    EquivalenceClasses const& GetEqClasses() const {
+        return sorted_partition_;
+    }
+
+    std::size_t Size() const {
+        return sorted_partition_.size();
+    }
 };
 
 }  // namespace algos::order
