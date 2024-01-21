@@ -55,7 +55,7 @@ bool AreDisjoint(AttributeList const& a, AttributeList const& b) {
 }
 
 bool StartsWith(AttributeList const& rhs_candidate, AttributeList const& rhs) {
-    for (size_t i = 0; i < rhs.size(); ++i) {
+    for (model::ColumnIndex i = 0; i < rhs.size(); ++i) {
         if (rhs[i] != rhs_candidate[i]) {
             return false;
         }

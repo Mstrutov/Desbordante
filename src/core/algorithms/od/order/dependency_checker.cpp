@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <unordered_set>
 
+#include "model/table/tuple_index.h"
+
 namespace algos::order {
 
 namespace {
@@ -24,8 +26,8 @@ ValidityType CheckForSwap(SortedPartition const& l, SortedPartition const& r) {
     ValidityType res = ValidityType::valid;
     size_t l_i = 0, r_i = 0;
     bool next_l = true, next_r = true;
-    std::unordered_set<unsigned long> l_eq_class;
-    std::unordered_set<unsigned long> r_eq_class;
+    std::unordered_set<model::TupleIndex> l_eq_class;
+    std::unordered_set<model::TupleIndex> r_eq_class;
     while (l_i < l.sorted_partition.size() && r_i < r.sorted_partition.size()) {
         if (next_l) {
             l_eq_class = l.sorted_partition[l_i];

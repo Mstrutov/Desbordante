@@ -4,10 +4,13 @@
 #include <unordered_set>
 #include <vector>
 
+#include "model/table/tuple_index.h"
+
 namespace algos::order {
 
 struct SortedPartition {
-    using EquivalenceClasses = std::vector<std::unordered_set<unsigned long>>;
+    using EquivalenceClasses = std::vector<std::unordered_set<model::TupleIndex>>;
+    using PartitionIndex = unsigned long;
 
     EquivalenceClasses sorted_partition;
     std::unordered_map<unsigned long int, unsigned long int> hash_partition;

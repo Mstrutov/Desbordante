@@ -3,15 +3,17 @@
 #include <unordered_map>
 #include <vector>
 
+#include "model/table/tuple_index.h"
+
 namespace algos::order {
 
 void SortedPartition::BuildHashTable() {
     hash_partition.reserve(num_rows);
-    for (std::size_t i = 0; i < sorted_partition.size(); ++i) {
+    for (PartitionIndex i = 0; i < sorted_partition.size(); ++i) {
         if (sorted_partition[i].size() == 1) {
             continue;
         }
-        for (unsigned long const& tuple_index : sorted_partition[i]) {
+        for (model::TupleIndex tuple_index : sorted_partition[i]) {
             hash_partition[tuple_index] = i;
         }
     }
@@ -19,25 +21,25 @@ void SortedPartition::BuildHashTable() {
 
 void SortedPartition::Intersect(SortedPartition const& other) {
     BuildHashTable();
-    std::unordered_map<unsigned long, SortedPartition::EquivalenceClasses> hash_product;
+    std::unordered_map<PartitionIndex, SortedPartition::EquivalenceClasses> hash_product;
     hash_product.reserve(hash_partition.size());
-    for (std::unordered_set<unsigned long> const& eq_class : other.sorted_partition) {
+    for (std::unordered_set<model::TupleIndex> const& eq_class : other.sorted_partition) {
         if (other.sorted_partition.size() <= 1) {
             break;
         }
-        std::unordered_set<unsigned long> visited_positions;
-        for (unsigned long const& tuple_index : eq_class) {
+        std::unordered_set<PartitionIndex> visited_positions;
+        for (model::TupleIndex tuple_index : eq_class) {
             if (hash_partition.find(tuple_index) == hash_partition.end()) {
                 continue;
             }
-            unsigned long position = hash_partition[tuple_index];
+            PartitionIndex position = hash_partition[tuple_index];
             visited_positions.insert(position);
             if (hash_product.find(position) == hash_product.end()) {
                 hash_product[position] = {{}};
             }
             hash_product[position].back().insert(tuple_index);
         }
-        for (unsigned long const& position : visited_positions) {
+        for (PartitionIndex position : visited_positions) {
             hash_product[position].push_back({});
         }
     }
@@ -47,7 +49,7 @@ void SortedPartition::Intersect(SortedPartition const& other) {
         if (sorted_partition[i].size() == 1) {
             res.sorted_partition.push_back(sorted_partition[i]);
         } else {
-            for (std::unordered_set<unsigned long> const& eq_class : hash_product[i]) {
+            for (std::unordered_set<model::TupleIndex> const& eq_class : hash_product[i]) {
                 if (!eq_class.empty()) {
                     res.sorted_partition.push_back(std::move(eq_class));
                 }
