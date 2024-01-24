@@ -82,7 +82,7 @@ void Order::CreateSingletonSortedPartitions() {
             return type->Compare(l.second, r.second) == model::CompareResult::kEqual;
         };
         std::sort(indexed_byte_data.begin(), indexed_byte_data.end(), less);
-        std::vector<std::unordered_set<unsigned long>> equivalence_classes;
+        SortedPartition::EquivalenceClasses equivalence_classes;
         equivalence_classes.reserve(typed_relation_->GetNumRows());
         equivalence_classes.push_back({indexed_byte_data.front().first});
         for (size_t k = 1; k < indexed_byte_data.size(); ++k) {

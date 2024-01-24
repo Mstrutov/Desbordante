@@ -10,7 +10,8 @@ namespace algos::order {
 
 class SortedPartition {
 public:
-    using EquivalenceClasses = std::vector<std::unordered_set<model::TupleIndex>>;
+    using EquivalenceClass = std::unordered_set<model::TupleIndex>;
+    using EquivalenceClasses = std::vector<EquivalenceClass>;
     using PartitionIndex = unsigned long;
     using HashProduct = std::unordered_map<PartitionIndex, SortedPartition::EquivalenceClasses>;
 

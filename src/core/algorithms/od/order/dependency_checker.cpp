@@ -8,8 +8,8 @@
 namespace algos::order {
 
 namespace {
-bool SubsetSetDifference(std::unordered_set<unsigned long> const& a,
-                         std::unordered_set<unsigned long>& b) {
+bool SubsetSetDifference(SortedPartition::EquivalenceClass const& a,
+                         SortedPartition::EquivalenceClass& b) {
     auto const not_found = b.end();
     for (unsigned long element : a) {
         if (b.find(element) == not_found) {
@@ -26,8 +26,8 @@ ValidityType CheckForSwap(SortedPartition const& l, SortedPartition const& r) {
     ValidityType res = ValidityType::valid;
     size_t l_i = 0, r_i = 0;
     bool next_l = true, next_r = true;
-    std::unordered_set<model::TupleIndex> l_eq_class;
-    std::unordered_set<model::TupleIndex> r_eq_class;
+    SortedPartition::EquivalenceClass l_eq_class;
+    SortedPartition::EquivalenceClass r_eq_class;
     SortedPartition::EquivalenceClasses const& l_classes = l.GetEqClasses();
     SortedPartition::EquivalenceClasses const& r_classes = r.GetEqClasses();
     while (l_i < l_classes.size() && r_i < r_classes.size()) {

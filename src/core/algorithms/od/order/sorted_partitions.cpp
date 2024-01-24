@@ -22,7 +22,7 @@ void SortedPartition::BuildHashTable() {
 SortedPartition::HashProduct SortedPartition::BuildHashProduct(SortedPartition const& other) {
     HashProduct hash_product;
     hash_product.reserve(hash_partition_.size());
-    for (std::unordered_set<model::TupleIndex> const& eq_class : other.sorted_partition_) {
+    for (EquivalenceClass const& eq_class : other.sorted_partition_) {
         if (other.sorted_partition_.size() <= 1) {
             break;
         }
@@ -51,10 +51,10 @@ void SortedPartition::Intersect(SortedPartition const& other) {
     SortedPartition res(num_rows_);
     res.sorted_partition_.reserve(num_rows_);
     for (std::size_t i = 0; i < sorted_partition_.size(); ++i) {
-        if (sorted_partition_[i].size() == 1) {
-            res.sorted_partition_.push_back(sorted_partition_[i]);
+        if (EquivalenceClass const& eq_class = sorted_partition_[i]; eq_class.size() == 1) {
+            res.sorted_partition_.push_back(eq_class);
         } else {
-            for (std::unordered_set<model::TupleIndex> const& eq_class : hash_product[i]) {
+            for (EquivalenceClass const& eq_class : hash_product[i]) {
                 if (!eq_class.empty()) {
                     res.sorted_partition_.push_back(std::move(eq_class));
                 }
