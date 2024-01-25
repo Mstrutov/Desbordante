@@ -93,8 +93,20 @@ void Order::CreateSingletonSortedPartitions() {
             }
         }
         equivalence_classes.shrink_to_fit();
-        sorted_partitions_.emplace(Node{i}, SortedPartition(std::move(equivalence_classes),
-                                                            typed_relation_->GetNumRows()));
+        sorted_partitions_.emplace(
+                AttributeList{i},
+                SortedPartition(std::move(equivalence_classes), typed_relation_->GetNumRows()));
+    }
+    for (auto& [attr, partition] : sorted_partitions_) {
+        if (partition.Size() == 1) {
+            for (AttributeList other_attr : single_attributes_) {
+                if (other_attr != attr) {
+                    valid_[attr].insert(other_attr);
+                }
+            }
+            single_attributes_.erase(
+                    std::find(single_attributes_.begin(), single_attributes_.end(), attr));
+        }
     }
 }
 
@@ -140,9 +152,14 @@ void Order::ComputeDependencies(ListLattice::LatticeLevel const& lattice_level) 
             ValidityType candidate_validity = +ValidityType::merge;
             if (!is_merge_immediately) {
                 CreateSortedPartitionsFromSingletons(lhs);
-                CreateSortedPartitionsFromSingletons(rhs);
-                candidate_validity =
-                        CheckForSwap(sorted_partitions_.at(lhs), sorted_partitions_.at(rhs));
+                if (sorted_partitions_[lhs].Size() == 1) {
+                    candidate_validity = +ValidityType::valid;
+                    candidate_sets_[lhs].erase(rhs);
+                } else {
+                    CreateSortedPartitionsFromSingletons(rhs);
+                    candidate_validity =
+                            CheckForSwap(sorted_partitions_[lhs], sorted_partitions_[rhs]);
+                }
             }
             if (candidate_validity == +ValidityType::valid) {
                 bool non_minimal_by_merge = false;
