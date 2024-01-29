@@ -16,10 +16,8 @@
 #include <boost/optional.hpp>
 
 #include "bitset_utils.h"
-
-class Column;
-
-class Vertical;
+#include "model/table/column.h"
+#include "model/table/vertical.h"
 
 class RelationalSchema {
 private:

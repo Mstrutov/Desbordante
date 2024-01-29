@@ -13,6 +13,8 @@
 
 #include "column.h"
 
+class RelationalSchema;
+
 class Vertical {
 private:
     // Vertical(shared_ptr<RelationalSchema>& relSchema, int indices);

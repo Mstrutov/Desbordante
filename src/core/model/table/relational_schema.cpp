@@ -3,7 +3,6 @@
 #include <memory>
 #include <utility>
 
-#include "vertical.h"
 #include "vertical_map.h"
 
 RelationalSchema::RelationalSchema(std::string name)
