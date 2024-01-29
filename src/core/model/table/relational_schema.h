@@ -21,7 +21,7 @@
 
 class RelationalSchema {
 private:
-    std::vector<std::unique_ptr<Column>> columns_;
+    std::vector<Column> columns_;
     std::string name_;
 
 public:
@@ -34,7 +34,7 @@ public:
         return name_;
     }
 
-    std::vector<std::unique_ptr<Column>> const& GetColumns() const {
+    std::vector<Column> const& GetColumns() const {
         return columns_;
     };
 

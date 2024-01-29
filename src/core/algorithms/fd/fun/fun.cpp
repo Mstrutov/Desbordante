@@ -160,16 +160,16 @@ unsigned long long FUN::ExecuteInternal() {
     r_prime_ = empty_vertical;
     Level l_k_minus_1{FunQuadruple(empty_vertical)};
     Level l_k;
-    for (std::unique_ptr<Column> const& A : schema_->GetColumns()) {
-        FunQuadruple attribute(*A);
+    for (Column const& A : schema_->GetColumns()) {
+        FunQuadruple attribute(A);
         attribute.SetCount(Count(attribute.GetCandidate()));
         l_k.push_back(attribute);
-        r_ = r_.Union(*A);
+        r_ = r_.Union(A);
         if (!IsKey(attribute)) {
-            r_prime_ = r_prime_.Union(*A);
+            r_prime_ = r_prime_.Union(A);
         }
         if (attribute.GetCount() == 1) {
-            fds_.emplace(*A, std::set<Vertical>{empty_vertical});
+            fds_.emplace(A, std::set<Vertical>{empty_vertical});
         }
     }
 

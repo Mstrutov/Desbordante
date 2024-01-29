@@ -13,7 +13,7 @@ private:
             std::unordered_set<Vertical> const& prev_level);
     static bool CheckJoin(Vertical const& _p, Vertical const& _q);
 
-    void LhsForColumn(std::unique_ptr<Column> const& column, std::vector<CMAXSet> const& cmax_sets);
+    void LhsForColumn(Column const& column, std::vector<CMAXSet> const& cmax_sets);
     std::vector<CMAXSet> GenerateCmaxSets(std::unordered_set<Vertical> const& agree_sets);
 
     double progress_step_ = 0;

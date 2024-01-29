@@ -56,19 +56,19 @@ unsigned long long FastFDs::ExecuteInternal() {
         return elapsed_milliseconds.count();
     }
 
-    auto task = [this](std::unique_ptr<Column> const& column) {
-        if (ColumnContainsOnlyEqualValues(*column)) {
+    auto task = [this](Column const& column) {
+        if (ColumnContainsOnlyEqualValues(column)) {
             LOG(DEBUG) << "Registered FD: " << schema_->empty_vertical_->ToString() << "->"
-                       << column->ToString();
-            RegisterFd(Vertical(), *column);
+                       << column.ToString();
+            RegisterFd(Vertical(), column);
             return;
         }
 
-        vector<DiffSet> diff_sets_mod = GetDiffSetsMod(*column);
+        vector<DiffSet> diff_sets_mod = GetDiffSetsMod(column);
         assert(!diff_sets_mod.empty());
         if (!(diff_sets_mod.size() == 1 && diff_sets_mod.back() == *schema_->empty_vertical_)) {
-            set<Column, OrderingComparator> init_ordering = GetInitOrdering(diff_sets_mod, *column);
-            FindCovers(*column, diff_sets_mod, diff_sets_mod, *schema_->empty_vertical_,
+            set<Column, OrderingComparator> init_ordering = GetInitOrdering(diff_sets_mod, column);
+            FindCovers(column, diff_sets_mod, diff_sets_mod, *schema_->empty_vertical_,
                        init_ordering);
         } else {
             AddProgress(percent_per_col_);
@@ -78,13 +78,13 @@ unsigned long long FastFDs::ExecuteInternal() {
     if (threads_num_ > 1) {
         boost::asio::thread_pool pool(threads_num_);
 
-        for (std::unique_ptr<Column> const& column : schema_->GetColumns()) {
+        for (Column const& column : schema_->GetColumns()) {
             boost::asio::post(pool, [&column, task]() { return task(column); });
         }
 
         pool.join();
     } else {
-        for (std::unique_ptr<Column> const& column : schema_->GetColumns()) {
+        for (Column const& column : schema_->GetColumns()) {
             task(column);
         }
     }
@@ -195,8 +195,8 @@ set<Column, FastFDs::OrderingComparator> FastFDs::GetInitOrdering(vector<DiffSet
     set<Column, OrderingComparator> ordering(ordering_comp);
 
     for (auto const& col : schema_->GetColumns()) {
-        if (*col != attribute) {
-            ordering.insert(*col);
+        if (col != attribute) {
+            ordering.insert(col);
         }
     }
 

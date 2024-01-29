@@ -80,7 +80,7 @@ std::vector<Column const*> Vertical::GetColumns() const {
     std::vector<Column const*> columns;
     for (size_t index = column_indices_.find_first(); index != boost::dynamic_bitset<>::npos;
          index = column_indices_.find_next(index)) {
-        columns.push_back(schema_->GetColumns()[index].get());
+        columns.push_back(&schema_->GetColumns()[index]);
     }
     return columns;
 }
@@ -89,7 +89,7 @@ std::vector<unsigned> Vertical::GetColumnIndicesAsVector() const {
     std::vector<unsigned> columns;
     for (size_t index = column_indices_.find_first(); index != boost::dynamic_bitset<>::npos;
          index = column_indices_.find_next(index)) {
-        columns.push_back(schema_->GetColumns()[index].get()->GetIndex());
+        columns.push_back(schema_->GetColumns()[index].GetIndex());
     }
     return columns;
 }

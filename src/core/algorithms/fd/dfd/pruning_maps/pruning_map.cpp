@@ -2,7 +2,7 @@
 
 PruningMap::PruningMap(RelationalSchema const* schema) {
     for (auto const& column : schema->GetColumns()) {
-        this->insert(std::make_pair(Vertical(*column), std::unordered_set<Vertical>()));
+        this->insert(std::make_pair(Vertical(column), std::unordered_set<Vertical>()));
     }
 }
 

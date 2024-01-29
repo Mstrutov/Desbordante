@@ -28,23 +28,23 @@ Vertical RelationalSchema::GetVertical(boost::dynamic_bitset<> indices) const {
 Column const* RelationalSchema::GetColumn(std::string const& col_name) const {
     auto found_entry_iterator =
             std::find_if(columns_.begin(), columns_.end(),
-                         [&col_name](auto& column) { return column->name_ == col_name; });
-    if (found_entry_iterator != columns_.end()) return found_entry_iterator->get();
+                         [&col_name](auto& column) { return column.name_ == col_name; });
+    if (found_entry_iterator != columns_.end()) return &*found_entry_iterator;
 
     throw std::invalid_argument("Couldn't match column name \'" + col_name +
                                 "\' to any of the schema's column names");
 }
 
 Column const* RelationalSchema::GetColumn(size_t index) const {
-    return columns_.at(index).get();
+    return &columns_.at(index);
 }
 
 void RelationalSchema::AppendColumn(std::string const& col_name) {
-    columns_.push_back(std::make_unique<Column>(this, col_name, columns_.size()));
+    columns_.emplace_back(this, col_name, columns_.size());
 }
 
 void RelationalSchema::AppendColumn(Column column) {
-    columns_.push_back(std::make_unique<Column>(std::move(column)));
+    columns_.push_back(std::move(column));
 }
 
 size_t RelationalSchema::GetNumColumns() const {

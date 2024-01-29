@@ -82,12 +82,12 @@ unsigned long long Tane::ExecuteInternal() {
               << relation_->GetNumRows() << " rows, and a maximum NIP of " << std::setw(2)
               << relation_->GetMaximumNip() << ".";
 
-    for (auto& column : schema->GetColumns()) {
-        double avg_partners = relation_->GetColumnData(column->GetIndex())
+    for (auto const& column : schema->GetColumns()) {
+        double avg_partners = relation_->GetColumnData(column.GetIndex())
                                       .GetPositionListIndex()
                                       ->GetNepAsLong() *
                               2.0 / relation_->GetNumRows();
-        LOG(INFO) << "* " << column->ToString() << ": every tuple has " << std::setw(2)
+        LOG(INFO) << "* " << column.ToString() << ": every tuple has " << std::setw(2)
                   << avg_partners << " partners on average.";
     }
     auto start_time = std::chrono::system_clock::now();
@@ -105,10 +105,10 @@ unsigned long long Tane::ExecuteInternal() {
     // Initialize level1
     dynamic_bitset<> zeroary_fd_rhs(schema->GetNumColumns());
     auto level1 = std::make_unique<model::LatticeLevel>(1);
-    for (auto& column : schema->GetColumns()) {
+    for (auto const& column : schema->GetColumns()) {
         // for each attribute set vertex
-        ColumnData const& column_data = relation_->GetColumnData(column->GetIndex());
-        auto vertex = std::make_unique<model::LatticeVertex>(static_cast<Vertical>(*column));
+        ColumnData const& column_data = relation_->GetColumnData(column.GetIndex());
+        auto vertex = std::make_unique<model::LatticeVertex>(static_cast<Vertical>(column));
 
         vertex->AddRhsCandidates(schema->GetColumns());
         vertex->GetParents().push_back(empty_vertex);
@@ -118,10 +118,10 @@ unsigned long long Tane::ExecuteInternal() {
         // check FDs: 0->A
         double fd_error = CalculateZeroAryFdError(&column_data, relation_.get());
         if (fd_error <= max_fd_error_) {  // TODO: max_error
-            zeroary_fd_rhs.set(column->GetIndex());
-            RegisterAndCountFd(*schema->empty_vertical_, column.get(), fd_error, schema);
+            zeroary_fd_rhs.set(column.GetIndex());
+            RegisterAndCountFd(*schema->empty_vertical_, &column, fd_error, schema);
 
-            vertex->GetRhsCandidates().set(column->GetIndex(), false);
+            vertex->GetRhsCandidates().set(column.GetIndex(), false);
             if (fd_error == 0) {
                 vertex->GetRhsCandidates().reset();
             }
@@ -213,11 +213,11 @@ unsigned long long Tane::ExecuteInternal() {
                 double error = CalculateFdError(x_vertex->GetPositionListIndex(),
                                                 xa_vertex->GetPositionListIndex(), relation_.get());
                 if (error <= max_fd_error_) {
-                    Column const* rhs = schema->GetColumns()[a_index].get();
+                    Column const& rhs = schema->GetColumns()[a_index];
 
                     // TODO: register FD to a file or something
-                    RegisterAndCountFd(lhs, rhs, error, schema);
-                    xa_vertex->GetRhsCandidates().set(rhs->GetIndex(), false);
+                    RegisterAndCountFd(lhs, &rhs, error, schema);
+                    xa_vertex->GetRhsCandidates().set(rhs.GetIndex(), false);
                     if (error == 0) {
                         xa_vertex->GetRhsCandidates() &= lhs.GetColumnIndices();
                     }
