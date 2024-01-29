@@ -76,7 +76,7 @@ std::unique_ptr<CFDRelationData> CFDRelationData::CreateFrom(model::IDatasetStre
     for (AttributeIndex i = 0; static_cast<size_t>(i) < num_columns; ++i) {
         auto column = Column(schema.get(), parser.GetColumnName(i), i);
         schema->AppendColumn(std::move(column));
-        column_data.emplace_back(schema->GetColumn(i), columns_values_dict[i]);
+        column_data.emplace_back(&schema->GetColumn(i), columns_values_dict[i]);
     }
     schema->Init();
 
@@ -151,7 +151,7 @@ std::unique_ptr<CFDRelationData> CFDRelationData::CreateFrom(model::IDatasetStre
     for (AttributeIndex i = 0; i < num_columns; ++i) {
         auto column = Column(schema.get(), file_input.GetColumnName(i), i);
         schema->AppendColumn(std::move(column));
-        column_data.emplace_back(schema->GetColumn(i), columns_values_dict[i]);
+        column_data.emplace_back(&schema->GetColumn(i), columns_values_dict[i]);
     }
     schema->Init();
     return std::make_unique<CFDRelationData>(std::move(schema), std::move(column_data),
@@ -194,7 +194,7 @@ std::vector<int> const& CFDRelationData::GetDomain(unsigned attr) const {
 }
 
 std::string CFDRelationData::GetAttrName(int index) const {
-    return GetSchema()->GetColumn(index)->GetName();
+    return GetSchema()->GetColumn(index).GetName();
 }
 
 int CFDRelationData::GetAttr(std::string const& s) const {

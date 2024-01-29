@@ -38,8 +38,8 @@ public:
         return columns_;
     };
 
-    Column const* GetColumn(std::string const& col_name) const;
-    Column const* GetColumn(size_t index) const;
+    Column const& GetColumn(std::string const& col_name) const;
+    Column const& GetColumn(size_t index) const;
     size_t GetNumColumns() const;
     Vertical GetVertical(boost::dynamic_bitset<> indices) const;
 

@@ -35,7 +35,7 @@ std::unique_ptr<ColumnLayoutTypedRelationData> ColumnLayoutTypedRelationData::Cr
         Column column(schema.get(), data_stream.GetColumnName(i), i);
         schema->AppendColumn(std::move(column));
         TypedColumnData typed_column_data = model::TypedColumnDataFactory::CreateFrom(
-                schema->GetColumn(i), std::move(columns[i]), is_null_eq_null);
+                &schema->GetColumn(i), std::move(columns[i]), is_null_eq_null);
         column_data.emplace_back(std::move(typed_column_data));
     }
 

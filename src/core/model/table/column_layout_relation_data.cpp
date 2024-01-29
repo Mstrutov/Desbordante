@@ -62,7 +62,7 @@ std::unique_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::CreateFrom(
         auto column = Column(schema.get(), data_stream.GetColumnName(i), i);
         schema->AppendColumn(std::move(column));
         auto pli = model::PositionListIndex::CreateFor(column_vectors[i], is_null_eq_null);
-        column_data.emplace_back(schema->GetColumn(i), std::move(pli));
+        column_data.emplace_back(&schema->GetColumn(i), std::move(pli));
     }
 
     schema->Init();

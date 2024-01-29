@@ -25,18 +25,18 @@ Vertical RelationalSchema::GetVertical(boost::dynamic_bitset<> indices) const {
     return Vertical(this, std::move(indices));
 }
 
-Column const* RelationalSchema::GetColumn(std::string const& col_name) const {
+Column const& RelationalSchema::GetColumn(std::string const& col_name) const {
     auto found_entry_iterator =
             std::find_if(columns_.begin(), columns_.end(),
                          [&col_name](auto& column) { return column.name_ == col_name; });
-    if (found_entry_iterator != columns_.end()) return &*found_entry_iterator;
+    if (found_entry_iterator != columns_.end()) return *found_entry_iterator;
 
     throw std::invalid_argument("Couldn't match column name \'" + col_name +
                                 "\' to any of the schema's column names");
 }
 
-Column const* RelationalSchema::GetColumn(size_t index) const {
-    return &columns_.at(index);
+Column const& RelationalSchema::GetColumn(size_t index) const {
+    return columns_.at(index);
 }
 
 void RelationalSchema::AppendColumn(std::string const& col_name) {
@@ -86,7 +86,7 @@ std::unordered_set<Vertical> RelationalSchema::CalculateHittingSet(
                  corrective_column_index != boost::dynamic_bitset<>::npos;
                  corrective_column_index =
                          vertical.GetColumnIndices().find_next(corrective_column_index)) {
-                auto corrective_column = *GetColumn(corrective_column_index);
+                auto corrective_column = GetColumn(corrective_column_index);
                 auto corrected_member =
                         invalid_member.Union(static_cast<Vertical>(corrective_column));
 

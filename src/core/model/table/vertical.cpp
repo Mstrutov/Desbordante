@@ -101,7 +101,7 @@ std::string Vertical::ToString() const {
 
     for (size_t index = column_indices_.find_first(); index != boost::dynamic_bitset<>::npos;
          index = column_indices_.find_next(index)) {
-        result += schema_->GetColumn(index)->GetName();
+        result += schema_->GetColumn(index).GetName();
         if (column_indices_.find_next(index) != boost::dynamic_bitset<>::npos) {
             result += ' ';
         }

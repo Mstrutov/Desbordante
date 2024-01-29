@@ -56,10 +56,10 @@ double Tane::CalculateUccError(model::PositionListIndex const* pli,
     return pli->GetNepAsLong() / static_cast<double>(relation_data->GetNumTuplePairs());
 }
 
-void Tane::RegisterAndCountFd(Vertical const& lhs, Column const* rhs, [[maybe_unused]] double error,
+void Tane::RegisterAndCountFd(Vertical const& lhs, Column const& rhs, [[maybe_unused]] double error,
                               [[maybe_unused]] RelationalSchema const* schema) {
     dynamic_bitset<> lhs_bitset = lhs.GetColumnIndices();
-    PliBasedFDAlgorithm::RegisterFd(lhs, *rhs);
+    PliBasedFDAlgorithm::RegisterFd(lhs, rhs);
     count_of_fd_++;
 }
 
@@ -119,7 +119,7 @@ unsigned long long Tane::ExecuteInternal() {
         double fd_error = CalculateZeroAryFdError(&column_data, relation_.get());
         if (fd_error <= max_fd_error_) {  // TODO: max_error
             zeroary_fd_rhs.set(column.GetIndex());
-            RegisterAndCountFd(*schema->empty_vertical_, &column, fd_error, schema);
+            RegisterAndCountFd(*schema->empty_vertical_, column, fd_error, schema);
 
             vertex->GetRhsCandidates().set(column.GetIndex(), false);
             if (fd_error == 0) {
@@ -216,7 +216,7 @@ unsigned long long Tane::ExecuteInternal() {
                     Column const& rhs = schema->GetColumns()[a_index];
 
                     // TODO: register FD to a file or something
-                    RegisterAndCountFd(lhs, &rhs, error, schema);
+                    RegisterAndCountFd(lhs, rhs, error, schema);
                     xa_vertex->GetRhsCandidates().set(rhs.GetIndex(), false);
                     if (error == 0) {
                         xa_vertex->GetRhsCandidates() &= lhs.GetColumnIndices();
@@ -248,8 +248,7 @@ unsigned long long Tane::ExecuteInternal() {
                         for (size_t rhs_index = vertex->GetRhsCandidates().find_first();
                              rhs_index != boost::dynamic_bitset<>::npos;
                              rhs_index = vertex->GetRhsCandidates().find_next(rhs_index)) {
-                            Vertical rhs =
-                                    static_cast<Vertical>(*schema->GetColumn((int)rhs_index));
+                            auto rhs = static_cast<Vertical>(schema->GetColumn(rhs_index));
                             if (!columns.Contains(rhs)) {
                                 bool is_rhs_candidate = true;
                                 for (auto const& column : columns.GetColumns()) {

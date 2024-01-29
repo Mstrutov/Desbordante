@@ -151,7 +151,7 @@ void Aid::HandleConstantColumns(boost::dynamic_bitset<>& attributes) {
          attr_num != boost::dynamic_bitset<>::npos;
          attr_num = constant_columns_.find_next(attr_num)) {
         attributes[attr_num] = false;
-        Column rhs = *schema_->GetColumn(attr_num);
+        Column rhs = schema_->GetColumn(attr_num);
         RegisterFd(lhs, rhs);
     }
 }
@@ -234,7 +234,7 @@ void Aid::InvertNegativeCover() {
 
 void Aid::RegisterFDs(size_t rhs_attribute,
                       std::vector<boost::dynamic_bitset<>> const& list_of_lhs_attributes) {
-    Column rhs = *schema_->GetColumn(rhs_attribute);
+    Column rhs = schema_->GetColumn(rhs_attribute);
     for (auto const& lhs_attributes : list_of_lhs_attributes) {
         Vertical lhs = schema_->GetVertical(lhs_attributes);
         RegisterFd(lhs, rhs);
