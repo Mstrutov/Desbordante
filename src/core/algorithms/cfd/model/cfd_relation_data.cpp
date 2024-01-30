@@ -49,17 +49,23 @@ std::unique_ptr<CFDRelationData> CFDRelationData::CreateFrom(model::IDatasetStre
         return CFDRelationData::CreateFrom(parser, c_sample, r_sample);
     }
 
+    unsigned num_columns = parser.GetNumberOfColumns();
+    num_columns = std::min(num_columns, columns_number);
+    std::vector<std::string> column_names;
+    column_names.reserve(num_columns);
+    for (AttributeIndex i = 0; static_cast<size_t>(i) < num_columns; ++i) {
+        column_names.push_back(parser.GetColumnName(i));
+    }
     // Fields of CFDRelationData class
-    auto schema = std::make_unique<RelationalSchema>(parser.GetRelationName());
+    auto schema =
+            std::make_unique<RelationalSchema>(parser.GetRelationName(), std::move(column_names));
     std::vector<Transaction> data_rows;
     ItemDictionary item_dictionary;
     std::vector<ItemInfo> items;
     ColumnesValuesDict columns_values_dict;
     int unique_elems_number = 1;
 
-    unsigned num_columns = parser.GetNumberOfColumns();
     std::vector<std::string> line;
-    num_columns = std::min(num_columns, columns_number);
     std::vector<std::string> string_row(num_columns);
     while (parser.HasNextRow() && data_rows.size() < tuples_number) {
         line = parser.GetNextRow();
@@ -74,11 +80,8 @@ std::unique_ptr<CFDRelationData> CFDRelationData::CreateFrom(model::IDatasetStre
 
     std::vector<CFDColumnData> column_data;
     for (AttributeIndex i = 0; static_cast<size_t>(i) < num_columns; ++i) {
-        auto column = Column(schema.get(), parser.GetColumnName(i), i);
-        schema->AppendColumn(std::move(column));
         column_data.emplace_back(&schema->GetColumn(i), columns_values_dict[i]);
     }
-    schema->Init();
 
     return std::make_unique<CFDRelationData>(std::move(schema), std::move(column_data),
                                              std::move(data_rows), std::move(item_dictionary),
@@ -120,7 +123,7 @@ void CFDRelationData::AddNewItemsInPartialTable(ItemDictionary& item_dictionary,
 std::unique_ptr<CFDRelationData> CFDRelationData::CreateFrom(model::IDatasetStream& file_input,
                                                              double c_sample, double r_sample) {
     // Fields of CFDRelationData class
-    auto schema = std::make_unique<RelationalSchema>(file_input.GetRelationName());
+    auto schema = RelationalSchema::CreateFrom(file_input);
     std::vector<Transaction> data_rows;
     ItemDictionary item_dictionary;
     std::vector<ItemInfo> items;
@@ -149,11 +152,8 @@ std::unique_ptr<CFDRelationData> CFDRelationData::CreateFrom(model::IDatasetStre
 
     std::vector<CFDColumnData> column_data;
     for (AttributeIndex i = 0; i < num_columns; ++i) {
-        auto column = Column(schema.get(), file_input.GetColumnName(i), i);
-        schema->AppendColumn(std::move(column));
         column_data.emplace_back(&schema->GetColumn(i), columns_values_dict[i]);
     }
-    schema->Init();
     return std::make_unique<CFDRelationData>(std::move(schema), std::move(column_data),
                                              std::move(data_rows), std::move(item_dictionary),
                                              std::move(items));

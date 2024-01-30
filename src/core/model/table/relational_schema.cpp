@@ -5,13 +5,31 @@
 
 #include "vertical_map.h"
 
-RelationalSchema::RelationalSchema(std::string name)
-    : columns_(), name_(std::move(name)), empty_vertical_() {
-    Init();
+namespace {
+auto MakeColumns(RelationalSchema* schema, std::vector<std::string> column_names) {
+    std::vector<Column> columns;
+    std::size_t const number_of_columns = column_names.size();
+    columns.reserve(number_of_columns);
+    for (model::ColumnIndex i = 0; i < number_of_columns; ++i) {
+        columns.emplace_back(schema, column_names[i], i);
+    }
+    return columns;
 }
+}  // namespace
 
-void RelationalSchema::Init() {
-    empty_vertical_ = Vertical::EmptyVertical(this);
+RelationalSchema::RelationalSchema(std::string name, std::vector<std::string> column_names)
+    : columns_(MakeColumns(this, std::move(column_names))),
+      name_(std::move(name)),
+      empty_vertical_(std::make_unique<Vertical>(this, boost::dynamic_bitset<>(columns_.size()))) {}
+
+std::unique_ptr<RelationalSchema> RelationalSchema::CreateFrom(model::IDatasetStream& table) {
+    std::vector<std::string> column_names;
+    std::size_t const number_of_columns = table.GetNumberOfColumns();
+    column_names.reserve(number_of_columns);
+    for (model::ColumnIndex i = 0; i < number_of_columns; ++i) {
+        column_names.push_back(table.GetColumnName(i));
+    }
+    return std::make_unique<RelationalSchema>(table.GetRelationName(), std::move(column_names));
 }
 
 // TODO: В оригинале тут что-то непонятное + приходится пересоздавать empty_vertical_ -- тут
@@ -37,14 +55,6 @@ Column const& RelationalSchema::GetColumn(std::string const& col_name) const {
 
 Column const& RelationalSchema::GetColumn(size_t index) const {
     return columns_.at(index);
-}
-
-void RelationalSchema::AppendColumn(std::string const& col_name) {
-    columns_.emplace_back(this, col_name, columns_.size());
-}
-
-void RelationalSchema::AppendColumn(Column column) {
-    columns_.push_back(std::move(column));
 }
 
 size_t RelationalSchema::GetNumColumns() const {
