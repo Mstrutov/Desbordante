@@ -5,8 +5,6 @@
 
 #pragma once
 
-#include <functional>
-#include <list>
 #include <memory>
 #include <string>
 #include <unordered_set>
@@ -15,9 +13,9 @@
 #include <boost/dynamic_bitset.hpp>
 #include <boost/optional.hpp>
 
-#include "bitset_utils.h"
 #include "model/table/column.h"
 #include "model/table/vertical.h"
+#include "util/bitset_utils.h"
 
 class RelationalSchema {
 private:
