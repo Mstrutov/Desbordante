@@ -83,10 +83,9 @@ unsigned long long Tane::ExecuteInternal() {
               << relation_->GetMaximumNip() << ".";
 
     for (auto const& column : schema->GetColumns()) {
-        double avg_partners = relation_->GetColumnData(column.GetIndex())
-                                      .GetPositionListIndex()
-                                      ->GetNepAsLong() *
-                              2.0 / relation_->GetNumRows();
+        double avg_partners =
+                relation_->GetColumnData(column.GetIndex()).GetPositionListIndex()->GetNepAsLong() *
+                2.0 / relation_->GetNumRows();
         LOG(INFO) << "* " << column.ToString() << ": every tuple has " << std::setw(2)
                   << avg_partners << " partners on average.";
     }
