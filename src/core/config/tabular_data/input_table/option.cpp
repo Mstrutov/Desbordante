@@ -4,5 +4,9 @@
 
 namespace config {
 using names::kTable, descriptions::kDTable;
-extern CommonOption<InputTable> const TableOpt{kTable, kDTable};
+extern CommonOption<InputTable> const TableOpt = {
+        kTable, kDTable, std::nullopt, nullptr, [](InputTable const& table) {
+            // Shouldn't happen normally.
+            if (table == nullptr) throw ConfigurationError("Table must be a valid pointer!");
+        }};
 }  // namespace config
