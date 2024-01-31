@@ -1,11 +1,19 @@
 #pragma once
 
+#include "config/equal_nulls/type.h"
+#include "config/tabular_data/input_table_type.h"
 #include "fd_algorithm.h"
 #include "model/table/column_layout_relation_data.h"
 
 namespace algos {
 
 class PliBasedFDAlgorithm : public FDAlgorithm {
+private:
+    config::InputTable input_table_;
+    config::EqNullsType is_null_equal_null_;
+
+    void RegisterOptions();
+
 protected:
     std::shared_ptr<ColumnLayoutRelationData> relation_;
 

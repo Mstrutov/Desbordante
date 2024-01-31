@@ -2,6 +2,8 @@
 
 #include <chrono>
 
+#include "config/equal_nulls/option.h"
+#include "config/tabular_data/input_table/option.h"
 #include "model/table/column_layout_relation_data.h"
 
 // #ifndef PRINT_FDS
@@ -10,7 +12,14 @@
 
 namespace algos {
 
-FDep::FDep() : FDAlgorithm({kDefaultPhaseName}) {}
+FDep::FDep() : FDAlgorithm({kDefaultPhaseName}) {
+    RegisterOptions();
+    MakeOptionsAvailable({config::TableOpt.GetName()});
+}
+
+void FDep::RegisterOptions() {
+    RegisterOption(config::TableOpt(&input_table_));
+}
 
 void FDep::LoadDataInternal() {
     number_attributes_ = input_table_->GetNumberOfColumns();
