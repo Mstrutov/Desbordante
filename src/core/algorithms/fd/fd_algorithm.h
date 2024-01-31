@@ -7,8 +7,7 @@
 #include <boost/any.hpp>
 
 #include "algorithms/algorithm.h"
-#include "fd.h"
-#include "model/table/column_layout_typed_relation_data.h"
+#include "algorithms/fd/fd.h"
 #include "util/primitive_collection.h"
 
 namespace model {
