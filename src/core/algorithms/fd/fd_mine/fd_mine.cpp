@@ -10,7 +10,8 @@ namespace algos {
 
 using boost::dynamic_bitset;
 
-Fd_mine::Fd_mine() : PliBasedFDAlgorithm({kDefaultPhaseName}) {}
+Fd_mine::Fd_mine(std::optional<ColumnLayoutRelationDataManager> relation_manager)
+    : PliBasedFDAlgorithm({kDefaultPhaseName}, relation_manager) {}
 
 void Fd_mine::ResetStateFd() {
     candidate_set_.clear();

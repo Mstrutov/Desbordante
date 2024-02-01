@@ -5,19 +5,26 @@
 
 namespace algos {
 
-PliBasedFDAlgorithm::PliBasedFDAlgorithm(std::vector<std::string_view> phase_names)
-    : FDAlgorithm(std::move(phase_names)) {
-    RegisterOptions();
+PliBasedFDAlgorithm::PliBasedFDAlgorithm(
+        std::vector<std::string_view> phase_names,
+        std::optional<ColumnLayoutRelationDataManager> relation_manager)
+    : FDAlgorithm(std::move(phase_names)),
+      relation_manager_(relation_manager.has_value()
+                                ? *relation_manager
+                                : ColumnLayoutRelationDataManager{
+                                          &input_table_, &is_null_equal_null_, &relation_}) {
+    if (relation_manager.has_value()) return;
+    RegisterRelationManagerOptions();
     MakeOptionsAvailable({config::TableOpt.GetName(), config::EqualNullsOpt.GetName()});
 }
 
-void PliBasedFDAlgorithm::RegisterOptions() {
+void PliBasedFDAlgorithm::RegisterRelationManagerOptions() {
     RegisterOption(config::TableOpt(&input_table_));
     RegisterOption(config::EqualNullsOpt(&is_null_equal_null_));
 }
 
 void PliBasedFDAlgorithm::LoadDataInternal() {
-    relation_ = ColumnLayoutRelationData::CreateFrom(*input_table_, is_null_equal_null_);
+    relation_ = relation_manager_.GetRelation();
 
     if (relation_->GetColumnData().empty()) {
         throw std::runtime_error("Got an empty dataset: FD mining is meaningless.");
@@ -35,14 +42,6 @@ std::vector<Column const*> PliBasedFDAlgorithm::GetKeys() const {
     }
 
     return keys;
-}
-
-void PliBasedFDAlgorithm::LoadData(std::shared_ptr<ColumnLayoutRelationData> data) {
-    if (data->GetColumnData().empty()) {
-        throw std::runtime_error("Got an empty dataset: FD mining is meaningless.");
-    }  // TODO: this has to be repeated for every "alternative" data load
-    relation_ = std::move(data);
-    ExecutePrepare();  // TODO: this has to be repeated for every "alternative" data load
 }
 
 }  // namespace algos

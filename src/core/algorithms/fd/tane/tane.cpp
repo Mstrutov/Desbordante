@@ -19,7 +19,8 @@ namespace algos {
 
 using boost::dynamic_bitset;
 
-Tane::Tane() : PliBasedFDAlgorithm({kDefaultPhaseName}) {
+Tane::Tane(std::optional<ColumnLayoutRelationDataManager> relation_manager)
+    : PliBasedFDAlgorithm({kDefaultPhaseName}, relation_manager) {
     RegisterOptions();
 }
 
