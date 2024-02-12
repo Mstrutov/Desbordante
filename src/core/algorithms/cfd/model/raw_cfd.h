@@ -11,6 +11,14 @@ using AttributeIndex = int;
 class RawCFD {
 public:
     struct RawItem {
+    public:
+        AttributeIndex GetAttribute() const {
+            return attribute;
+        }
+
+        std::optional<std::string> GetValue() const {
+            return value;
+        }
         AttributeIndex attribute;         /* attribute column index */
         std::optional<std::string> value; /* pattern value is optional */
     };
@@ -25,6 +33,8 @@ public:
     explicit RawCFD(RawItems lhs, RawItem rhs) : lhs_(std::move(lhs)), rhs_(std::move(rhs)) {}
 
     std::string ToJSON() const;
+
+    std::string ToString() const;
 
     RawItems const& GetLhs() const {
         return lhs_;
