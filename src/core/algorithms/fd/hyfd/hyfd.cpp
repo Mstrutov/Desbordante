@@ -18,7 +18,8 @@
 
 namespace algos::hyfd {
 
-HyFD::HyFD() : PliBasedFDAlgorithm({}) {}
+HyFD::HyFD(std::optional<ColumnLayoutRelationDataManager> relation_manager)
+    : PliBasedFDAlgorithm({}, relation_manager) {}
 
 unsigned long long HyFD::ExecuteInternal() {
     using namespace hy;

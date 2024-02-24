@@ -1,8 +1,17 @@
 #include "aid.h"
 
+#include "config/tabular_data/input_table/option.h"
+
 namespace algos {
 
-Aid::Aid() : FDAlgorithm({kDefaultPhaseName}) {}
+Aid::Aid() : FDAlgorithm({kDefaultPhaseName}) {
+    RegisterOptions();
+    MakeOptionsAvailable({config::TableOpt.GetName()});
+}
+
+void Aid::RegisterOptions() {
+    RegisterOption(config::TableOpt(&input_table_));
+}
 
 void Aid::LoadDataInternal() {
     number_of_attributes_ = input_table_->GetNumberOfColumns();

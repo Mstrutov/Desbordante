@@ -5,6 +5,8 @@
 
 #include "algorithms/fd/fd_algorithm.h"
 #include "algorithms/fd/fdep/fd_tree_element.h"
+#include "config/equal_nulls/type.h"
+#include "config/tabular_data/input_table_type.h"
 #include "model/table/relation_data.h"
 #include "model/table/relational_schema.h"
 
@@ -17,6 +19,8 @@ public:
     ~FDep() override = default;
 
 private:
+    config::InputTable input_table_;
+
     std::unique_ptr<RelationalSchema> schema_{};
 
     std::vector<std::string> column_names_;
@@ -26,6 +30,8 @@ private:
     std::unique_ptr<FDTreeElement> pos_cover_tree_{};
 
     std::vector<std::vector<size_t>> tuples_;
+
+    void RegisterOptions();
 
     void LoadDataInternal() final;
 

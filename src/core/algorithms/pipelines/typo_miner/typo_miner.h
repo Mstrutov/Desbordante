@@ -15,18 +15,24 @@ namespace algos {
 
 class TypoMiner : public Algorithm {
 private:
-    config::InputTable input_table_;
-
     std::unique_ptr<FDAlgorithm> precise_algo_;
     std::unique_ptr<FDAlgorithm> approx_algo_;
     std::vector<FD> approx_fds_;
-    std::shared_ptr<ColumnLayoutRelationData> relation_;
     std::unique_ptr<model::ColumnLayoutTypedRelationData> typed_relation_;
     /* Config members */
     double radius_; /* Maximal distance between two values to consider one of them a typo */
     double ratio_;  /* Maximal fraction of deviations per cluster to flag the cluster as
                      * containing typos */
+
+    config::InputTable input_table_;
     config::EqNullsType is_null_equal_null_;
+    std::shared_ptr<ColumnLayoutRelationData> relation_;
+
+    PliBasedFDAlgorithm::ColumnLayoutRelationDataManager const relation_manager_;
+
+    PliBasedFDAlgorithm::ColumnLayoutRelationDataManager MakeRelationManager() {
+        return {&input_table_, &is_null_equal_null_, &relation_};
+    }
 
     void ResetState() final;
 
@@ -46,8 +52,9 @@ private:
         return static_cast<model::IMetrizableType const&>(type).Dist(l, r) < radius_;
     }
 
-    explicit TypoMiner(std::unique_ptr<FDAlgorithm> precise_algo,
-                       std::unique_ptr<FDAlgorithm> approx_algo);
+    template <typename GetPrecise, typename GetApprox>
+    TypoMiner(GetPrecise get_precise, GetApprox get_approx);
+
     void RegisterOptions();
     void MakeExecuteOptsAvailable() final;
     void AddSpecificNeededOptions(

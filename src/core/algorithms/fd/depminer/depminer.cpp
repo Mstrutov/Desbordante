@@ -11,8 +11,9 @@
 
 namespace algos {
 
-Depminer::Depminer()
-    : PliBasedFDAlgorithm({"AgreeSets generation", "Finding CMAXSets", "Finding LHS"}) {}
+Depminer::Depminer(std::optional<ColumnLayoutRelationDataManager> relation_manager)
+    : PliBasedFDAlgorithm({"AgreeSets generation", "Finding CMAXSets", "Finding LHS"},
+                          relation_manager) {}
 
 using boost::dynamic_bitset, std::make_shared, std::shared_ptr, std::setw, std::vector, std::list,
         std::dynamic_pointer_cast;

@@ -44,7 +44,7 @@ private:
     void RegisterFDs(std::vector<RawFD>&& fds, std::vector<algos::hy::ClusterId> const& og_mapping);
 
 public:
-    HyFD();
+    HyFD(std::optional<ColumnLayoutRelationDataManager> relation_manager = std::nullopt);
 };
 
 }  // namespace algos::hyfd

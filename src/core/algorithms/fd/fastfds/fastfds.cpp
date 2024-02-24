@@ -19,7 +19,8 @@ namespace algos {
 
 using std::vector, std::set;
 
-FastFDs::FastFDs() : PliBasedFDAlgorithm({"Agree sets generation", "Finding minimal covers"}) {
+FastFDs::FastFDs(std::optional<ColumnLayoutRelationDataManager> relation_manager)
+    : PliBasedFDAlgorithm({"Agree sets generation", "Finding minimal covers"}, relation_manager) {
     RegisterOptions();
 }
 

@@ -7,10 +7,7 @@
 #include <boost/any.hpp>
 
 #include "algorithms/algorithm.h"
-#include "config/equal_nulls/type.h"
-#include "config/tabular_data/input_table_type.h"
-#include "fd.h"
-#include "model/table/column_layout_typed_relation_data.h"
+#include "algorithms/fd/fd.h"
 #include "util/primitive_collection.h"
 
 namespace model {
@@ -26,20 +23,15 @@ class FDAlgorithm : public Algorithm {
 private:
     friend model::AgreeSetFactory;
 
-    void RegisterOptions();
-
     void ResetState() final;
     virtual void ResetStateFd() = 0;
 
 protected:
-    config::InputTable input_table_;
-
     /* Collection of all discovered FDs
      * Every FD mining algorithm should place discovered dependecies here. Don't add new FDs by
      * accessing this field directly, use RegisterFd methods instead
      */
     util::PrimitiveCollection<FD> fd_collection_;
-    config::EqNullsType is_null_equal_null_;
 
     /* Registers new FD.
      * Should be overrided if custom behavior is needed

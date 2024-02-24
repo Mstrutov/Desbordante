@@ -6,6 +6,7 @@
 
 #include <boost/dynamic_bitset.hpp>
 
+#include "config/tabular_data/input_table_type.h"
 #include "fd/fd_algorithm.h"
 #include "model/table/column.h"
 #include "model/table/relational_schema.h"
@@ -17,6 +18,8 @@ namespace algos {
 class Aid : public FDAlgorithm {
 private:
     using Cluster = std::vector<size_t>;
+
+    config::InputTable input_table_;
 
     std::unique_ptr<RelationalSchema> schema_{};
     std::vector<std::vector<size_t>> tuples_;
@@ -37,6 +40,8 @@ private:
     std::vector<std::vector<size_t>> indices_in_clusters_;
 
     boost::dynamic_bitset<> constant_columns_;
+
+    void RegisterOptions();
 
     void ResetStateFd() final;
 
