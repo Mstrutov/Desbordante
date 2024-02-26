@@ -4,9 +4,9 @@ namespace model {
 
 using boost::dynamic_bitset, std::vector, std::shared_ptr, std::make_shared, std::string;
 
-void LatticeVertex::AddRhsCandidates(vector<std::unique_ptr<Column>> const& candidates) {
-    for (auto& cand_ptr : candidates) {
-        rhs_candidates_.set(cand_ptr->GetIndex());
+void LatticeVertex::AddRhsCandidates(vector<Column> const& candidates) {
+    for (auto& cand : candidates) {
+        rhs_candidates_.set(cand.GetIndex());
     }
 }
 

@@ -21,7 +21,7 @@ std::vector<int> ColumnLayoutRelationData::GetTuple(int tuple_index) const {
 
 std::unique_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::CreateFrom(
         model::IDatasetStream& data_stream, bool is_null_eq_null) {
-    auto schema = std::make_unique<RelationalSchema>(data_stream.GetRelationName());
+    auto schema = RelationalSchema::CreateFrom(data_stream);
     std::unordered_map<std::string, int> value_dictionary;
     int next_value_id = 1;
     int const null_value_id = kNullValueId;
@@ -59,13 +59,9 @@ std::unique_ptr<ColumnLayoutRelationData> ColumnLayoutRelationData::CreateFrom(
 
     std::vector<ColumnData> column_data;
     for (size_t i = 0; i < num_columns; ++i) {
-        auto column = Column(schema.get(), data_stream.GetColumnName(i), i);
-        schema->AppendColumn(std::move(column));
         auto pli = model::PositionListIndex::CreateFor(column_vectors[i], is_null_eq_null);
-        column_data.emplace_back(schema->GetColumn(i), std::move(pli));
+        column_data.emplace_back(&schema->GetColumn(i), std::move(pli));
     }
-
-    schema->Init();
 
     return std::make_unique<ColumnLayoutRelationData>(std::move(schema), std::move(column_data));
 }

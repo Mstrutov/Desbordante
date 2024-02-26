@@ -2,7 +2,7 @@
 
 PruningMap::PruningMap(RelationalSchema const* schema) {
     for (auto const& column : schema->GetColumns()) {
-        this->insert(std::make_pair(Vertical(*column), std::unordered_set<Vertical>()));
+        this->insert(std::make_pair(Vertical(column), std::unordered_set<Vertical>()));
     }
 }
 
@@ -32,7 +32,7 @@ void PruningMap::RebalanceGroup(Vertical const& key) {
     for (size_t column_index = inverted_columns.find_first();
          column_index < inverted_columns.size();
          column_index = inverted_columns.find_next(column_index)) {
-        Vertical new_key = key.Union(*key.GetSchema()->GetColumn(column_index));
+        Vertical new_key = key.Union(key.GetSchema()->GetColumn(column_index));
         std::unordered_set<Vertical> new_group;
 
         for (auto const& dep_of_group : deps_of_group) {
