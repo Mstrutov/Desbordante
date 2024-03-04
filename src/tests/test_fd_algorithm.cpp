@@ -9,6 +9,7 @@
 #include "algorithms/fd/fdep/fdep.h"
 #include "algorithms/fd/fun/fun.h"
 #include "algorithms/fd/hyfd/hyfd.h"
+#include "algorithms/fd/pfdtane/pfdtane.h"
 #include "algorithms/fd/pyro/pyro.h"
 #include "algorithms/fd/tane/tane.h"
 #include "model/table/relational_schema.h"
@@ -124,8 +125,9 @@ REGISTER_TYPED_TEST_SUITE_P(AlgorithmTest, ThrowsOnEmpty, ReturnsEmptyOnSingleNo
                             WorksOnLongDataset, WorksOnWideDataset, LightDatasetsConsistentHash,
                             HeavyDatasetsConsistentHash, ConsistentRepeatedExecution);
 
-using Algorithms = ::testing::Types<algos::Tane, algos::Pyro, algos::FastFDs, algos::DFD,
-                                    algos::Depminer, algos::FDep, algos::FUN, algos::hyfd::HyFD>;
+using Algorithms =
+        ::testing::Types<algos::Tane, algos::Pyro, algos::FastFDs, algos::DFD, algos::Depminer,
+                         algos::FDep, algos::FUN, algos::hyfd::HyFD, algos::PFDTane>;
 INSTANTIATE_TYPED_TEST_SUITE_P(AlgorithmTest, AlgorithmTest, Algorithms);
 
 }  // namespace tests

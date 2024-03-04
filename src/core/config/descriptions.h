@@ -4,6 +4,7 @@
 #include <string>
 
 #include "algorithms/cfd/enums.h"
+#include "algorithms/fd/pfdtane/enums.h"
 #include "algorithms/metric/enums.h"
 #include "util/enum_to_available_values.h"
 
@@ -19,6 +20,9 @@ constexpr auto kDThreads =
         "number of threads to use. If 0, then as many threads are used as the "
         "hardware can handle concurrently.";
 constexpr auto kDError = "error threshold value for Approximate FD algorithms";
+std::string const _kDErrorMeasure =
+        "PFD error measure to use\n" + util::EnumToAvailableValues<algos::ErrorMeasure>();
+auto const kDErrorMeasure = _kDErrorMeasure.c_str();
 constexpr auto kDMaximumLhs = "max considered LHS size";
 constexpr auto kDSeed = "RNG seed";
 constexpr auto kDMinimumSupport = "minimum support value (between 0 and 1)";

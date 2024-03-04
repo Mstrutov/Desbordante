@@ -13,6 +13,7 @@ import desbordante
 class Task(StrEnum):
     fd = auto()
     afd = auto()
+    pfd = auto()
     fd_verification = auto()
     afd_verification = auto()
     mfd_verification = auto()
@@ -21,6 +22,7 @@ class Task(StrEnum):
 class Algorithm(StrEnum):
     pyro = auto()
     tane = auto()
+    pfdtane = auto()
     hyfd = auto()
     fd_mine = auto()
     dfd = auto()
@@ -41,6 +43,7 @@ ALGORITHM = 'algorithm'
 FILENAME = 'filename'
 VERBOSE = 'verbose'
 ERROR = 'error'
+ERROR_MEASURE = 'error_measure'
 
 PRIMARY_HELP = '''The Desbordante data profiler is designed to help users
 discover or verify various types of patterns in data. These patterns are
@@ -94,9 +97,10 @@ output file or to console, if none is specified.
 Currently, the console version of Desbordante supports:
 1) Discovery of exact functional dependencies
 2) Discovery of approximate functional dependencies
-3) Verification of exact functional dependencies
-4) Verification of approximate functional dependencies
-5) Verification of metric dependencies
+3) Discovery of probabilistic functional dependencies
+4) Verification of exact functional dependencies
+5) Verification of approximate functional dependencies
+6) Verification of metric dependencies
 
 If you need other types, you should look into the C++ code, the Python
 bindings or the Web version.
@@ -142,6 +146,13 @@ F. Naumann.
 Algorithms: PYRO, TANE
 Default: PYRO
 '''
+PFD_HELP = '''Discover minimal non-trivial probabilistic functional
+dependencies. Probabilitistic functional dependencies are defined in the
+“Functional Dependency Generation and Applications in pay-as-you-go 
+data integration systems” paper by Daisy Zhe Wang et al.
+Algorithms: PFDTANE
+Default: PFDTANE
+'''
 FD_VERIFICATION_HELP = '''Verify whether a given exact functional dependency
 holds on the specified dataset. For more information about the primitive and
 algorithms, refer to the “Functional dependency discovery: an experimental
@@ -175,6 +186,11 @@ TANE_HELP = '''A classic algorithm for discovery of exact and approximate
 functional dependencies. For more information, refer to “TANE : An Efficient
 Algorithm for Discovering Functional and Approximate Dependencies” by
 Y. Huntala et al.
+'''
+PFDTANE_HELP = '''A TANE-based algorithm for discovery of probabilistic
+functional dependencies. For more information, refer to “Functional Dependency
+Generation and Applications in pay-as-you-go data integration systems” by
+Daisy Zhe Wang et al.
 '''
 HYFD_HELP = '''A modern algorithm for discovery of exact functional
 dependencies. One of the most high-performance algorithms for this task. For
@@ -244,6 +260,7 @@ OPTION_TYPES = {
 TASK_HELP_PAGES = {
     Task.fd: FD_HELP,
     Task.afd: AFD_HELP,
+    Task.pfd: PFD_HELP,
     Task.fd_verification: FD_VERIFICATION_HELP,
     Task.afd_verification: AFD_VERIFICATION_HELP,
     Task.mfd_verification: MFD_VERIFICATION_HELP
@@ -252,6 +269,7 @@ TASK_HELP_PAGES = {
 ALGO_HELP_PAGES = {
     Algorithm.pyro: PYRO_HELP,
     Algorithm.tane: TANE_HELP,
+    Algorithm.pfdtane: PFDTANE_HELP,
     Algorithm.hyfd: HYFD_HELP,
     Algorithm.fd_mine: FD_MINE_HELP,
     Algorithm.dfd: DFD_HELP,
@@ -271,10 +289,11 @@ TASK_INFO = {
     Task.fd: TaskInfo([Algorithm.pyro, Algorithm.tane, Algorithm.hyfd,
                        Algorithm.fd_mine, Algorithm.dfd, Algorithm.dep_miner,
                        Algorithm.fdep, Algorithm.fun, Algorithm.fastfds,
-                       Algorithm.aid],
+                       Algorithm.aid, Algorithm.pfdtane],
                       Algorithm.hyfd),
     Task.afd: TaskInfo([Algorithm.pyro, Algorithm.tane],
                        Algorithm.pyro),
+    Task.pfd: TaskInfo([Algorithm.pfdtane], Algorithm.pfdtane),
     Task.fd_verification: TaskInfo([Algorithm.naive_fd_verifier],
                                    Algorithm.naive_fd_verifier),
     Task.afd_verification: TaskInfo([Algorithm.naive_afd_verifier],
@@ -286,6 +305,7 @@ TASK_INFO = {
 ALGOS = {
     Algorithm.pyro: desbordante.fd.algorithms.Pyro,
     Algorithm.tane: desbordante.fd.algorithms.Tane,
+    Algorithm.pfdtane: desbordante.pfd.algorithms.PFDTane,
     Algorithm.hyfd: desbordante.fd.algorithms.HyFD,
     Algorithm.fd_mine: desbordante.fd.algorithms.FdMine,
     Algorithm.dfd: desbordante.fd.algorithms.DFD,
@@ -334,6 +354,12 @@ def check_error_option_presence(task: str | None, error: str | None) -> None:
         sys.exit(1)
     if task in (Task.fd, Task.fd_verification) and error is not None:
         click.echo(f"ERROR: Invalid option: '{ERROR}'.")
+        sys.exit(1)
+
+
+def check_error_measure_option_presence(task: str | None, error_measure: str | None) -> None:
+    if task == Task.pfd and error_measure is None:
+        click.echo(f"ERROR: Missing option '{ERROR_MEASURE}'.")
         sys.exit(1)
 
 
@@ -517,11 +543,13 @@ def desbordante_cli(**kwargs: Any) -> None:
     curr_algo_name = kwargs[ALGO]
     curr_algo = ALGOS[curr_algo_name]()
     error_opt = kwargs[ERROR]
+    error_measure_opt = kwargs[ERROR_MEASURE]
     verbose = kwargs[VERBOSE]
     filename = kwargs[FILENAME]
 
     check_mismatch(curr_algo_name, curr_task)
     check_error_option_presence(curr_task, error_opt)
+    check_error_measure_option_presence(curr_task, error_measure_opt)
 
     start_point = process_time()
     used_opts = set_algo_options(curr_algo, kwargs)
