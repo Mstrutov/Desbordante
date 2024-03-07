@@ -20,6 +20,7 @@ void BindUccVerification(pybind11::module_& main_module) {
             .def("ucc_holds", &UCCVerifier::UCCHolds)
             .def("get_num_clusters_violating_ucc", &UCCVerifier::GetNumClustersViolatingUCC)
             .def("get_num_rows_violating_ucc", &UCCVerifier::GetNumRowsViolatingUCC)
-            .def("get_clusters_violating_ucc", &UCCVerifier::GetClustersViolatingUCC);
+            .def("get_clusters_violating_ucc", &UCCVerifier::GetClustersViolatingUCC)
+            .def("get_error", &UCCVerifier::GetError);
 }
 }  // namespace python_bindings
