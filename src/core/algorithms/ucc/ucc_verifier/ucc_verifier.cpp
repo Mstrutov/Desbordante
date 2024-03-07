@@ -52,23 +52,21 @@ unsigned long long UCCVerifier::ExecuteInternal() {
     return elapsed_milliseconds.count();
 }
 
-void UCCVerifier::VerifyUCC() {
+std::shared_ptr<model::PLI const> UCCVerifier::CalculatePLI() {
     std::shared_ptr<model::PLI const> pli =
-            relation_->GetColumnData(column_indices_[0]).GetPliOwnership();
+        relation_->GetColumnData(column_indices_[0]).GetPliOwnership();
     for (size_t i = 1; i < column_indices_.size(); ++i) {
-        pli = pli->Intersect(relation_->GetColumnData(column_indices_[i]).GetPositionListIndex());
-        if (pli->GetNumCluster() == 0) {
-            return;
-        }
+        pli = pli->Intersect(relation_->GetColumnData(column_indices_[i])
+                                 .GetPositionListIndex());
     }
-    CalculateStatistics(pli->GetIndex());
+    return pli;
 }
 
-void UCCVerifier::CalculateStatistics(std::deque<model::PLI::Cluster> const& clusters) {
-    for (auto const& cluster : clusters) {
-        num_rows_violating_ucc_ += cluster.size();
-        clusters_violating_ucc_.push_back(cluster);
-    }
+void UCCVerifier::VerifyUCC() {
+    std::shared_ptr<model::PLI const> pli = CalculatePLI();
+    stats_calculator_ =
+        std::make_unique<UCCStatsCalculator>(column_indices_, relation_);
+    stats_calculator_->CalculateStatistics(pli->GetIndex());
 }
 
 }  // namespace algos
