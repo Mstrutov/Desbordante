@@ -16,6 +16,7 @@ class Task(StrEnum):
     fd_verification = auto()
     afd_verification = auto()
     mfd_verification = auto()
+    ucc_verification = auto()
 
 
 class Algorithm(StrEnum):
@@ -32,6 +33,7 @@ class Algorithm(StrEnum):
     naive_fd_verifier = auto()
     naive_afd_verifier = auto()
     icde09_mfd_verifier = auto()
+    naive_ucc_verifier = auto()
 
 
 HELP = 'help'
@@ -166,6 +168,13 @@ N. Koudas et al.
 Algorithms: ICDE09_MFD_VERIFIER
 Default: ICDE09_MFD_VERIFIER
 '''
+UCC_VERIFICATION_HELP = '''Verify whether a given unique columns combination
+holds on the specified dataset. For more information about the primitive and 
+the algorithms, refer to "Efficient Discovery of Approximate Dependencies"
+
+Algorithms: NAIVE_UCC_VERIFIER
+Default: NAIVE_UCC_VERIFIER
+'''
 PYRO_HELP = '''A modern algorithm for discovery of approximate functional
 dependencies. Approximate functional dependencies are defined in the
 “Efficient Discovery of Approximate Dependencies” paper by S.Kruse and
@@ -234,6 +243,10 @@ verification algorithms. For more information about the primitive and the
 algorithms, refer to “Metric Functional Dependencies” by N. Koudas et al.
 '''
 
+NAIVE_UCC_VERIFIER_HELP = '''A straightforward algorithm for
+verifying whether a given unique column combination holds. For more
+information, refer to "Efficient Discovery of Approximate Dependencies"'''
+
 OPTION_TYPES = {
     str: 'STRING',
     int: 'INTEGER',
@@ -246,7 +259,8 @@ TASK_HELP_PAGES = {
     Task.afd: AFD_HELP,
     Task.fd_verification: FD_VERIFICATION_HELP,
     Task.afd_verification: AFD_VERIFICATION_HELP,
-    Task.mfd_verification: MFD_VERIFICATION_HELP
+    Task.mfd_verification: MFD_VERIFICATION_HELP,
+    Task.ucc_verification: UCC_VERIFICATION_HELP
 }
 
 ALGO_HELP_PAGES = {
@@ -262,7 +276,8 @@ ALGO_HELP_PAGES = {
     Algorithm.aid: AID_HELP,
     Algorithm.naive_fd_verifier: NAIVE_FD_VERIFIER_HELP,
     Algorithm.naive_afd_verifier: NAIVE_AFD_VERIFIER_HELP,
-    Algorithm.icde09_mfd_verifier: ICDE09_MFD_VERIFIER_HELP
+    Algorithm.icde09_mfd_verifier: ICDE09_MFD_VERIFIER_HELP,
+    Algorithm.naive_ucc_verifier: NAIVE_UCC_VERIFIER_HELP
 }
 
 TaskInfo = namedtuple('TaskInfo', ['algos', 'default'])
@@ -280,7 +295,9 @@ TASK_INFO = {
     Task.afd_verification: TaskInfo([Algorithm.naive_afd_verifier],
                                     Algorithm.naive_afd_verifier),
     Task.mfd_verification: TaskInfo([Algorithm.icde09_mfd_verifier],
-                                    Algorithm.icde09_mfd_verifier)
+                                    Algorithm.icde09_mfd_verifier),
+    Task.ucc_verification: TaskInfo([Algorithm.naive_ucc_verifier],
+                                    Algorithm.naive_ucc_verifier)
 }
 
 ALGOS = {
@@ -296,7 +313,8 @@ ALGOS = {
     Algorithm.aid: desbordante.fd.algorithms.Aid,
     Algorithm.naive_fd_verifier: desbordante.fd_verification.algorithms.FDVerifier,
     Algorithm.naive_afd_verifier: desbordante.afd_verification.algorithms.FDVerifier,
-    Algorithm.icde09_mfd_verifier: desbordante.mfd_verification.algorithms.MetricVerifier
+    Algorithm.icde09_mfd_verifier: desbordante.mfd_verification.algorithms.MetricVerifier,
+    Algorithm.naive_ucc_verifier: desbordante.ucc_verification.algorithms.UccVerifier
 }
 
 
@@ -376,6 +394,14 @@ def get_algo_result(algo: desbordante.Algorithm, algo_name: str) -> Any:
                 else:
                     result = (f'Exact functional dependency does not hold, but '
                               f'instead approximate functional dependency '
+                              f'holds with error = {error}')
+            case Algorithm.naive_ucc_verifierk:
+                error = algo.get_error()
+                if error == 0.0:
+                    result = 'Exact unique column combination holds'
+                else:
+                    result = (f'Exact unique column combination does not hold, but '
+                              f'instead approximate unique column combination '
                               f'holds with error = {error}')
             case Algorithm.icde09_mfd_verifier:
                 result = algo.mfd_holds()
