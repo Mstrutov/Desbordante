@@ -22,8 +22,7 @@ private:
 public:
     UCCVerifierSimpleParams(CSVConfig const& csv_config, config::IndicesType column_indices,
                             size_t const num_clusters_violating_ucc,
-                            size_t const num_rows_violating_ucc,
-                            double const expected_error,
+                            size_t const num_rows_violating_ucc, double const expected_error,
                             std::vector<model::PLI::Cluster> clusters_violating_ucc)
         : params_map_({{onam::kCsvConfig, csv_config}, {onam::kEqualNulls, true}}),
           num_clusters_violating_ucc_(num_clusters_violating_ucc),
@@ -77,18 +76,20 @@ TEST_P(TestUCCVerifierSimple, DefaultTest) {
 
 INSTANTIATE_TEST_SUITE_P(
         UCCVerifierSimpleTestSuite, TestUCCVerifierSimple,
-        ::testing::Values(UCCVerifierSimpleParams(kTestFD, {0}, 1, 12, 1.0,
-                                                  {{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}}),
-                          UCCVerifierSimpleParams(kTestFD, {0, 1}, 4, 12, 4.0*3.0*2.0/12.0/11.0,
-                                                  {{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}}),
-                          UCCVerifierSimpleParams(kTestFD, {0, 1, 2}, 4, 8, 4.0*2.0*1.0/12.0/11.0,
-                                                  {{0, 1}, {3, 4}, {6, 7}, {9, 10}}),
-                          UCCVerifierSimpleParams(kTestFD, {0, 1, 2, 3, 4, 5}, 3, 6, 3.0*2.0*1.0/12.0/11.0,
-                                                  {{3, 4}, {6, 7}, {9, 10}}),
-                          UCCVerifierSimpleParams(kTestWide, {0}, 0, 0, 0.0, {}),
-                          UCCVerifierSimpleParams(kTestWide, {0, 1, 2, 3, 4}, 0, 0, 0.0, {}),
-                          UCCVerifierSimpleParams(kTestFD, {}, 3, 6, 3*2.0*1.0/11.0/12.0, {{3, 4}, {6, 7}, {9, 10}}),
-                          UCCVerifierSimpleParams(kTestWide, {}, 0, 0, 0.0, {})));
+        ::testing::Values(
+                UCCVerifierSimpleParams(kTestFD, {0}, 1, 12, 1.0,
+                                        {{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}}),
+                UCCVerifierSimpleParams(kTestFD, {0, 1}, 4, 12, 4.0 * 3.0 * 2.0 / 12.0 / 11.0,
+                                        {{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}}),
+                UCCVerifierSimpleParams(kTestFD, {0, 1, 2}, 4, 8, 4.0 * 2.0 * 1.0 / 12.0 / 11.0,
+                                        {{0, 1}, {3, 4}, {6, 7}, {9, 10}}),
+                UCCVerifierSimpleParams(kTestFD, {0, 1, 2, 3, 4, 5}, 3, 6,
+                                        3.0 * 2.0 * 1.0 / 12.0 / 11.0, {{3, 4}, {6, 7}, {9, 10}}),
+                UCCVerifierSimpleParams(kTestWide, {0}, 0, 0, 0.0, {}),
+                UCCVerifierSimpleParams(kTestWide, {0, 1, 2, 3, 4}, 0, 0, 0.0, {}),
+                UCCVerifierSimpleParams(kTestFD, {}, 3, 6, 3 * 2.0 * 1.0 / 11.0 / 12.0,
+                                        {{3, 4}, {6, 7}, {9, 10}}),
+                UCCVerifierSimpleParams(kTestWide, {}, 0, 0, 0.0, {})));
 
 namespace {
 

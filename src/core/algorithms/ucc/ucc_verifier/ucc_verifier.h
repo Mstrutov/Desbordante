@@ -3,11 +3,11 @@
 #include <vector>
 
 #include "algorithms/algorithm.h"
+#include "algorithms/ucc/ucc_verifier/ucc_stats_calculator.h"
 #include "config/equal_nulls/type.h"
 #include "config/indices/type.h"
 #include "config/tabular_data/input_table_type.h"
 #include "model/table/column_layout_relation_data.h"
-#include "algorithms/ucc/ucc_verifier/ucc_stats_calculator.h"
 
 namespace algos {
 
@@ -33,8 +33,9 @@ private:
     void MakeExecuteOptsAvailable() override;
     unsigned long long ExecuteInternal() override;
     std::shared_ptr<model::PLI const> CalculatePLI();
+
     void ResetState() override {
-        if(stats_calculator_){
+        if (stats_calculator_) {
             stats_calculator_->ResetState();
         }
     }
@@ -66,10 +67,11 @@ public:
         return stats_calculator_->GetClustersViolatingUCC();
     }
 
-    double GetError(){
+    double GetError() {
         assert(stats_calculator_);
         return stats_calculator_->GetAUCCError();
     }
+
     UCCVerifier();
 };
 

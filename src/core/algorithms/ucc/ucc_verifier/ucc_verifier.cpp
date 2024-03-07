@@ -54,18 +54,16 @@ unsigned long long UCCVerifier::ExecuteInternal() {
 
 std::shared_ptr<model::PLI const> UCCVerifier::CalculatePLI() {
     std::shared_ptr<model::PLI const> pli =
-        relation_->GetColumnData(column_indices_[0]).GetPliOwnership();
+            relation_->GetColumnData(column_indices_[0]).GetPliOwnership();
     for (size_t i = 1; i < column_indices_.size(); ++i) {
-        pli = pli->Intersect(relation_->GetColumnData(column_indices_[i])
-                                 .GetPositionListIndex());
+        pli = pli->Intersect(relation_->GetColumnData(column_indices_[i]).GetPositionListIndex());
     }
     return pli;
 }
 
 void UCCVerifier::VerifyUCC() {
     std::shared_ptr<model::PLI const> pli = CalculatePLI();
-    stats_calculator_ =
-        std::make_unique<UCCStatsCalculator>(column_indices_, relation_);
+    stats_calculator_ = std::make_unique<UCCStatsCalculator>(column_indices_, relation_);
     stats_calculator_->CalculateStatistics(pli->GetIndex());
 }
 
