@@ -17,6 +17,7 @@ class Task(StrEnum):
     afd_verification = auto()
     mfd_verification = auto()
     ucc_verification = auto()
+    aucc_verification = auto()
 
 
 class Algorithm(StrEnum):
@@ -34,6 +35,7 @@ class Algorithm(StrEnum):
     naive_afd_verifier = auto()
     icde09_mfd_verifier = auto()
     naive_ucc_verifier = auto()
+    naive_aucc_verifier = auto()
 
 
 HELP = 'help'
@@ -98,7 +100,9 @@ Currently, the console version of Desbordante supports:
 2) Discovery of approximate functional dependencies
 3) Verification of exact functional dependencies
 4) Verification of approximate functional dependencies
-5) Verification of metric dependencies
+5) Verification of unique column combinations
+6) Verification of approximate unique column combinations
+7) Verification of metric dependencies
 
 If you need other types, you should look into the C++ code, the Python
 bindings or the Web version.
@@ -168,12 +172,21 @@ N. Koudas et al.
 Algorithms: ICDE09_MFD_VERIFIER
 Default: ICDE09_MFD_VERIFIER
 '''
-UCC_VERIFICATION_HELP = '''Verify whether a given unique columns combination
+UCC_VERIFICATION_HELP = '''Verify whether a given unique column combination
 holds on the specified dataset. For more information about the primitive and 
-the algorithms, refer to "Efficient Discovery of Approximate Dependencies"
+the algorithms, refer to "Efficient Discovery of Approximate Dependencies" by 
+S. Kruse and F. Naumann
 
 Algorithms: NAIVE_UCC_VERIFIER
 Default: NAIVE_UCC_VERIFIER
+'''
+AUCC_VERIFICATION_HELP = '''Verify whether a given approximate unique column combination
+holds on the specified dataset. For more information about the primitive and 
+the algorithms, refer to "Efficient Discovery of Approximate Dependencies" by 
+S. Kruse and F. Naumann
+
+Algorithms: NAIVE_AUCC_VERIFIER
+Default: NAIVE_AUCC_VERIFIER
 '''
 PYRO_HELP = '''A modern algorithm for discovery of approximate functional
 dependencies. Approximate functional dependencies are defined in the
@@ -243,9 +256,19 @@ verification algorithms. For more information about the primitive and the
 algorithms, refer to “Metric Functional Dependencies” by N. Koudas et al.
 '''
 
-NAIVE_UCC_VERIFIER_HELP = '''A straightforward algorithm for
-verifying whether a given unique column combination holds. For more
-information, refer to "Efficient Discovery of Approximate Dependencies"'''
+NAIVE_UCC_VERIFIER_HELP = '''A straightforward partition-based algorithm for
+verifying whether a given unique column combination holds.
+For more information on partitions refer to Section 2 of “TANE : An 
+Efficient Algorithm for Discovering Functional and Approximate Dependencies”
+by Y.Huntala et al. For more information on AUCC, refer to "Efficient Discovery
+of Approximate Dependencies" by S. Kruse and F. Naumann '''
+
+NAIVE_AUCC_VERIFIER_HELP = '''A straightforward partition-based algorithm for
+verifying whether a given approximate unique column combination holds.
+For more information on partitions refer to Section 2 of “TANE : An 
+Efficient Algorithm for Discovering Functional and Approximate Dependencies”
+by Y.Huntala et al. For more information on AUCC, refer to "Efficient Discovery
+of Approximate Dependencies" by S. Kruse and F. Naumann'''
 
 OPTION_TYPES = {
     str: 'STRING',
@@ -260,7 +283,8 @@ TASK_HELP_PAGES = {
     Task.fd_verification: FD_VERIFICATION_HELP,
     Task.afd_verification: AFD_VERIFICATION_HELP,
     Task.mfd_verification: MFD_VERIFICATION_HELP,
-    Task.ucc_verification: UCC_VERIFICATION_HELP
+    Task.ucc_verification: UCC_VERIFICATION_HELP,
+    Task.aucc_verification: AUCC_VERIFICATION_HELP
 }
 
 ALGO_HELP_PAGES = {
@@ -277,7 +301,8 @@ ALGO_HELP_PAGES = {
     Algorithm.naive_fd_verifier: NAIVE_FD_VERIFIER_HELP,
     Algorithm.naive_afd_verifier: NAIVE_AFD_VERIFIER_HELP,
     Algorithm.icde09_mfd_verifier: ICDE09_MFD_VERIFIER_HELP,
-    Algorithm.naive_ucc_verifier: NAIVE_UCC_VERIFIER_HELP
+    Algorithm.naive_ucc_verifier: NAIVE_UCC_VERIFIER_HELP,
+    Algorithm.naive_aucc_verifier: NAIVE_AUCC_VERIFIER_HELP
 }
 
 TaskInfo = namedtuple('TaskInfo', ['algos', 'default'])
@@ -297,7 +322,9 @@ TASK_INFO = {
     Task.mfd_verification: TaskInfo([Algorithm.icde09_mfd_verifier],
                                     Algorithm.icde09_mfd_verifier),
     Task.ucc_verification: TaskInfo([Algorithm.naive_ucc_verifier],
-                                    Algorithm.naive_ucc_verifier)
+                                    Algorithm.naive_ucc_verifier),
+    Task.aucc_verification: TaskInfo([Algorithm.naive_aucc_verifier],
+                                     Algorithm.naive_aucc_verifier)
 }
 
 ALGOS = {
@@ -314,7 +341,8 @@ ALGOS = {
     Algorithm.naive_fd_verifier: desbordante.fd_verification.algorithms.FDVerifier,
     Algorithm.naive_afd_verifier: desbordante.afd_verification.algorithms.FDVerifier,
     Algorithm.icde09_mfd_verifier: desbordante.mfd_verification.algorithms.MetricVerifier,
-    Algorithm.naive_ucc_verifier: desbordante.ucc_verification.algorithms.UccVerifier
+    Algorithm.naive_ucc_verifier: desbordante.ucc_verification.algorithms.UccVerifier,
+    Algorithm.naive_aucc_verifier: desbordante.aucc_verification.algorithms.UccVerifier
 }
 
 
@@ -395,7 +423,9 @@ def get_algo_result(algo: desbordante.Algorithm, algo_name: str) -> Any:
                     result = (f'Exact functional dependency does not hold, but '
                               f'instead approximate functional dependency '
                               f'holds with error = {error}')
-            case Algorithm.naive_ucc_verifierk:
+            case Algorithm.naive_ucc_verifier:
+                result = algo.ucc_holds()
+            case Algorithm.naive_aucc_verifier:
                 error = algo.get_error()
                 if error == 0.0:
                     result = 'Exact unique column combination holds'
