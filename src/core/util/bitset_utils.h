@@ -18,15 +18,22 @@ boost::dynamic_bitset<> IndicesToBitset(Container const& indices, size_t num_col
     return IndicesToBitset(indices.cbegin(), indices.cend(), num_columns);
 }
 
+template <typename UnaryFunction>
+void ForEachIndex(boost::dynamic_bitset<> const& bitset, UnaryFunction func) {
+    for (auto index = bitset.find_first(); index != boost::dynamic_bitset<>::npos;
+         index = bitset.find_next(index)) {
+        func(index);
+    }
+}
+
 template <typename Index>
 std::vector<Index> BitsetToIndices(boost::dynamic_bitset<> const& bitset) {
     std::vector<Index> indices;
     indices.reserve(bitset.count());
-    for (size_t i = bitset.find_first(); i != boost::dynamic_bitset<>::npos;
-         i = bitset.find_next(i)) {
+    ForEachIndex(bitset, [&](auto i) {
         assert(i <= std::numeric_limits<Index>::max());
         indices.push_back(static_cast<Index>(i));
-    }
+    });
     return indices;
 }
 
