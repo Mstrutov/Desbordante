@@ -17,10 +17,16 @@
 #include "algorithms/md/hymd/recommendation.h"
 #include "algorithms/md/hymd/similarity_vector.h"
 #include "model/index.h"
+#include "util/worker_thread_pool.h"
 
 namespace algos::hymd {
 
 class SimilarityData {
+public:
+    using ColMatchesInfo = std::vector<
+            std::tuple<std::unique_ptr<preprocessing::similarity_measure::SimilarityMeasure>,
+                       model::Index, model::Index>>;
+
 private:
     indexes::RecordsInfo const* const records_info_;
     bool const single_table_;
@@ -42,12 +48,9 @@ public:
           single_table_(records_info_->OneTableGiven()),
           column_matches_info_(std::move(column_matches_info)) {}
 
-    static SimilarityData CreateFrom(
-            indexes::RecordsInfo* records_info,
-            std::vector<std::tuple<
-                    std::unique_ptr<preprocessing::similarity_measure::SimilarityMeasure>,
-                    model::Index, model::Index>>
-                    column_matches_info);
+    static SimilarityData CreateFrom(indexes::RecordsInfo* records_info,
+                                     ColMatchesInfo column_matches_info,
+                                     util::WorkerThreadPool& pool);
 
     [[nodiscard]] std::size_t GetColumnMatchNumber() const noexcept {
         return column_matches_info_.size();

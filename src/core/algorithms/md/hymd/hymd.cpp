@@ -14,6 +14,7 @@
 #include "config/option_using.h"
 #include "model/index.h"
 #include "model/table/column.h"
+#include "util/worker_thread_pool.h"
 
 namespace algos::hymd {
 
@@ -126,9 +127,7 @@ void HyMD::LoadDataInternal() {
 
 unsigned long long HyMD::ExecuteInternal() {
     auto const start_time = std::chrono::system_clock::now();
-    std::vector<std::tuple<std::unique_ptr<preprocessing::similarity_measure::SimilarityMeasure>,
-                           model::Index, model::Index>>
-            column_matches_info;
+    SimilarityData::ColMatchesInfo column_matches_info;
     for (auto const& [left_column_name, right_column_name, creator] : column_matches_option_) {
         column_matches_info.emplace_back(creator->MakeMeasure(),
                                          left_schema_->GetColumn(left_column_name)->GetIndex(),
@@ -137,16 +136,19 @@ unsigned long long HyMD::ExecuteInternal() {
     std::size_t const column_match_number = column_matches_info.size();
     assert(column_match_number != 0);
     // TODO: make infrastructure for depth level
+    auto threads = std::max(std::thread::hardware_concurrency(), 2u);
+    util::WorkerThreadPool pool{threads};
     SimilarityData similarity_data =
-            SimilarityData::CreateFrom(records_info_.get(), std::move(column_matches_info));
+            SimilarityData::CreateFrom(records_info_.get(), std::move(column_matches_info), pool);
     lattice::FullLattice lattice{column_match_number, [](...) { return 1; }};
     Specializer specializer{similarity_data.GetColumnMatchesInfo(), &lattice, prune_nondisjoint_};
     LatticeTraverser lattice_traverser{
             &lattice,
             std::make_unique<lattice::cardinality::MinPickingLevelGetter>(&lattice),
             {records_info_.get(), similarity_data.GetColumnMatchesInfo(), min_support_, &lattice},
-            &specializer};
-    RecordPairInferrer record_pair_inferrer{&similarity_data, &lattice, &specializer};
+            &specializer,
+            &pool};
+    RecordPairInferrer record_pair_inferrer{&similarity_data, &lattice, &specializer, &pool};
 
     bool done = false;
     do {

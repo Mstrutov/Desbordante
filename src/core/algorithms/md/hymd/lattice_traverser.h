@@ -7,6 +7,7 @@
 #include "algorithms/md/hymd/similarity_data.h"
 #include "algorithms/md/hymd/specializer.h"
 #include "algorithms/md/hymd/validator.h"
+#include "util/worker_thread_pool.h"
 
 namespace algos::hymd {
 
@@ -20,17 +21,20 @@ private:
 
     Specializer* const specializer_;
 
+    util::WorkerThreadPool* pool_;
+
     void LowerAndSpecialize(Validator::Result& validation_result,
                             lattice::ValidationInfo& validation_info);
 
 public:
     LatticeTraverser(lattice::FullLattice* lattice,
                      std::unique_ptr<lattice::LevelGetter> level_getter, Validator validator,
-                     Specializer* specializer) noexcept
+                     Specializer* specializer, util::WorkerThreadPool* pool) noexcept
         : lattice_(lattice),
           level_getter_(std::move(level_getter)),
           validator_(validator),
-          specializer_(specializer) {}
+          specializer_(specializer),
+          pool_(pool) {}
 
     bool TraverseLattice(bool traverse_all);
 

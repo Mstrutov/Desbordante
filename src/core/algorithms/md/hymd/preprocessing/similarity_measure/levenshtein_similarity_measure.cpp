@@ -1,10 +1,9 @@
 #include "algorithms/md/hymd/preprocessing/similarity_measure/levenshtein_similarity_measure.h"
 
+#include <atomic>
 #include <cstddef>
 #include <numeric>
 #include <set>
-
-#include <boost/asio.hpp>
 
 #include "algorithms/md/hymd/lowest_bound.h"
 #include "algorithms/md/hymd/utility/make_unique_for_overwrite.h"
@@ -87,7 +86,8 @@ namespace algos::hymd::preprocessing::similarity_measure {
 indexes::ColumnMatchSimilarityInfo LevenshteinSimilarityMeasure::MakeIndexes(
         std::shared_ptr<DataInfo const> data_info_left,
         std::shared_ptr<DataInfo const> data_info_right,
-        std::vector<indexes::PliCluster> const& clusters_right) const {
+        std::vector<indexes::PliCluster> const& clusters_right,
+        util::WorkerThreadPool& thread_pool) const {
     std::set<model::md::DecisionBoundary> decision_bounds_set;
     indexes::SimilarityMatrix similarity_matrix;
     indexes::SimilarityIndex similarity_index;
@@ -205,13 +205,8 @@ indexes::ColumnMatchSimilarityInfo LevenshteinSimilarityMeasure::MakeIndexes(
             last_rec_set.insert(val_rec_begin, valid_records.end());
         }
     };
-    // TODO: add reusable thread pool
-    boost::asio::thread_pool pool;
-    for (ValueIdentifier left_value_id = 0; left_value_id < data_left_size; ++left_value_id) {
-        boost::asio::post(
-                pool, [left_value_id, &process_value_id]() { process_value_id(left_value_id); });
-    }
-    pool.join();
+    thread_pool.ExecIndex(process_value_id, data_left_size);
+    thread_pool.WorkUntilComplete();
     for (SimTaskData& task : task_info) {
         similarity_index.push_back(std::move(task.matching_recs_mapping));
         similarity_matrix.push_back(std::move(task.sim_matrix_row));

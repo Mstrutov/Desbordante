@@ -32,7 +32,8 @@ public:
     [[nodiscard]] indexes::ColumnMatchSimilarityInfo MakeIndexes(
             std::shared_ptr<DataInfo const> data_info_left,
             std::shared_ptr<DataInfo const> data_info_right,
-            std::vector<indexes::PliCluster> const& clusters_right) const final;
+            std::vector<indexes::PliCluster> const& clusters_right,
+            util::WorkerThreadPool& thread_pool) const final;
 
     LevenshteinSimilarityMeasure(model::md::DecisionBoundary min_sim, bool is_null_equal_null,
                                  std::size_t size_limit);

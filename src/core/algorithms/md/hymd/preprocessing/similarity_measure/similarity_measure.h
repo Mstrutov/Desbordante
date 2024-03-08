@@ -11,6 +11,7 @@
 #include "algorithms/md/hymd/preprocessing/data_info.h"
 #include "model/types/numeric_type.h"
 #include "model/types/type.h"
+#include "util/worker_thread_pool.h"
 
 namespace algos::hymd::preprocessing::similarity_measure {
 
@@ -43,7 +44,8 @@ public:
     [[nodiscard]] virtual indexes::ColumnMatchSimilarityInfo MakeIndexes(
             std::shared_ptr<DataInfo const> data_info_left,
             std::shared_ptr<DataInfo const> data_info_right,
-            std::vector<indexes::PliCluster> const& clusters_right) const = 0;
+            std::vector<indexes::PliCluster> const& clusters_right,
+            util::WorkerThreadPool& thread_pool) const = 0;
 };
 
 }  // namespace algos::hymd::preprocessing::similarity_measure

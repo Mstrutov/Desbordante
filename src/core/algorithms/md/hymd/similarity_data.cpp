@@ -13,7 +13,8 @@ SimilarityData SimilarityData::CreateFrom(
         indexes::RecordsInfo* const records_info,
         std::vector<
                 std::tuple<std::unique_ptr<preprocessing::similarity_measure::SimilarityMeasure>,
-                           model::Index, model::Index>> const column_matches_info_initial) {
+                           model::Index, model::Index>> const column_matches_info_initial,
+        util::WorkerThreadPool& pool) {
     bool const one_table_given = records_info->OneTableGiven();
     std::size_t const col_match_number = column_matches_info_initial.size();
     std::vector<ColumnMatchInfo> column_matches_info;
@@ -34,7 +35,7 @@ SimilarityData SimilarityData::CreateFrom(
         }
         column_matches_info.emplace_back(
                 measure->MakeIndexes(std::move(data_info_left), std::move(data_info_right),
-                                     right_pli.GetClusters()),
+                                     right_pli.GetClusters(), pool),
                 left_col_index, right_col_index);
     }
     return {records_info, std::move(column_matches_info)};

@@ -24,6 +24,8 @@ private:
     std::unordered_set<SimilarityVector> sim_vecs_to_check_;
     std::unordered_set<SimilarityVector> checked_sim_vecs_;
 
+    util::WorkerThreadPool* pool_;
+
     RecordIdentifier next_left_record_ = 0;
 
     // std::size_t efficiency_reciprocal_ = 100;
@@ -35,8 +37,11 @@ private:
 
 public:
     RecordPairInferrer(SimilarityData* similarity_data, lattice::FullLattice* lattice,
-                       Specializer* specializer) noexcept
-        : similarity_data_(similarity_data), lattice_(lattice), specializer_(specializer) {}
+                       Specializer* specializer, util::WorkerThreadPool* pool) noexcept
+        : similarity_data_(similarity_data),
+          lattice_(lattice),
+          specializer_(specializer),
+          pool_(pool) {}
 
     bool InferFromRecordPairs(Recommendations recommendations);
 };

@@ -1,7 +1,5 @@
 #include "algorithms/md/hymd/lattice_traverser.h"
 
-#include <boost/asio.hpp>
-
 #include "algorithms/md/hymd/invalidated_rhs.h"
 #include "algorithms/md/hymd/lowest_bound.h"
 #include "algorithms/md/hymd/utility/set_for_scope.h"
@@ -41,25 +39,21 @@ bool LatticeTraverser::TraverseLattice(bool const traverse_all) {
 
         std::size_t const mds_size = mds.size();
         std::vector<Validator::Result> results(mds_size);
-        // TODO: add reusable thread pool
-        boost::asio::thread_pool thread_pool;
-        for (model::Index i = 0; i < mds_size; ++i) {
-            boost::asio::post(thread_pool, [this, &result = results[i], &info = mds[i]]() {
-                result = validator_.Validate(info);
-            });
-        }
-        thread_pool.join();
-        auto viol_future = std::async(std::launch::async, [this, &results]() {
+        auto validate_at_index = [&](model::Index i) { results[i] = validator_.Validate(mds[i]); };
+        pool_->ExecIndex(validate_at_index, mds_size);
+        pool_->WorkUntilComplete();
+        auto viol_func = [this, &results]() {
             for (Validator::Result& result : results) {
                 for (std::vector<Recommendation> const& rhs_violations : result.recommendations) {
                     recommendations_.insert(rhs_violations.begin(), rhs_violations.end());
                 };
             }
-        });
+        };
+        pool_->ExecSingle(viol_func);
         for (model::Index i = 0; i < mds_size; ++i) {
             LowerAndSpecialize(results[i], mds[i]);
         }
-        viol_future.get();
+        pool_->WorkUntilComplete();
         if (!traverse_all) return false;
     }
     return true;
