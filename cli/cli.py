@@ -14,6 +14,7 @@ class Task(StrEnum):
     fd = auto()
     afd = auto()
     pfd = auto()
+    ind = auto()
     fd_verification = auto()
     afd_verification = auto()
     mfd_verification = auto()
@@ -31,6 +32,8 @@ class Algorithm(StrEnum):
     fun = auto()
     fastfds = auto()
     aid = auto()
+    spider = auto()
+    faida = auto()
     naive_fd_verifier = auto()
     naive_afd_verifier = auto()
     icde09_mfd_verifier = auto()
@@ -153,6 +156,7 @@ data integration systems” paper by Daisy Zhe Wang et al.
 Algorithms: PFDTANE
 Default: PFDTANE
 '''
+IND_HELP = ''''''
 FD_VERIFICATION_HELP = '''Verify whether a given exact functional dependency
 holds on the specified dataset. For more information about the primitive and
 algorithms, refer to the “Functional dependency discovery: an experimental
@@ -232,6 +236,8 @@ it is significantly faster (10x-100x). For more information, refer to the
 “Approximate Discovery of Functional Dependencies for Large Datasets” paper
 by T.Bleifus et al.
 '''
+SPIDER_HELP = ''''''
+FAIDA_HELP = ''''''
 NAIVE_FD_VERIFIER_HELP = '''A straightforward partition-based algorithm for
 verifying whether a given exact functional dependency holds on the specified
 dataset. For more information, refer to Lemma 2.2 from “TANE: An Efficient
@@ -261,6 +267,7 @@ TASK_HELP_PAGES = {
     Task.fd: FD_HELP,
     Task.afd: AFD_HELP,
     Task.pfd: PFD_HELP,
+    Task.ind: IND_HELP,
     Task.fd_verification: FD_VERIFICATION_HELP,
     Task.afd_verification: AFD_VERIFICATION_HELP,
     Task.mfd_verification: MFD_VERIFICATION_HELP
@@ -278,6 +285,8 @@ ALGO_HELP_PAGES = {
     Algorithm.fun: FUN_HELP,
     Algorithm.fastfds: FASTFDS_HELP,
     Algorithm.aid: AID_HELP,
+    Algorithm.spider: SPIDER_HELP,
+    Algorithm.faida: FAIDA_HELP,
     Algorithm.naive_fd_verifier: NAIVE_FD_VERIFIER_HELP,
     Algorithm.naive_afd_verifier: NAIVE_AFD_VERIFIER_HELP,
     Algorithm.icde09_mfd_verifier: ICDE09_MFD_VERIFIER_HELP
@@ -294,6 +303,8 @@ TASK_INFO = {
     Task.afd: TaskInfo([Algorithm.pyro, Algorithm.tane],
                        Algorithm.pyro),
     Task.pfd: TaskInfo([Algorithm.pfdtane], Algorithm.pfdtane),
+    Task.ind: TaskInfo([Algorithm.spider, Algorithm.faida],
+                       Algorithm.spider),
     Task.fd_verification: TaskInfo([Algorithm.naive_fd_verifier],
                                    Algorithm.naive_fd_verifier),
     Task.afd_verification: TaskInfo([Algorithm.naive_afd_verifier],
@@ -314,6 +325,8 @@ ALGOS = {
     Algorithm.fun: desbordante.fd.algorithms.FUN,
     Algorithm.fastfds: desbordante.fd.algorithms.FastFDs,
     Algorithm.aid: desbordante.fd.algorithms.Aid,
+    Algorithm.spider: desbordante.ind.algorithms.Spider,
+    Algorithm.faida: desbordante.ind.algorithms.Faida,
     Algorithm.naive_fd_verifier: desbordante.fd_verification.algorithms.FDVerifier,
     Algorithm.naive_afd_verifier: desbordante.afd_verification.algorithms.FDVerifier,
     Algorithm.icde09_mfd_verifier: desbordante.mfd_verification.algorithms.MetricVerifier
@@ -407,6 +420,8 @@ def get_algo_result(algo: desbordante.Algorithm, algo_name: str) -> Any:
                 result = algo.mfd_holds()
             case algo_name if algo_name in TASK_INFO[Task.fd].algos:
                 result = algo.get_fds()
+            case algo_name if algo_name in TASK_INFO[Task.ind].algos:
+                result = algo.get_inds()
             case _:
                 assert False, 'No matching get_result function.'
         return result
@@ -462,7 +477,7 @@ def print_algo_help_page(algo_name: str) -> None:
     algo = ALGOS[Algorithm(algo_name)]()
     help_info = ''
     for opt in algo.get_possible_options():
-        if opt not in ('table', 'is_null_equal_null'):
+        if opt not in ('table', 'tables', 'is_null_equal_null'):
             help_info += get_option_help_info(opt, algo)
     click.echo(f'{ALGO_HELP_PAGES[Algorithm(algo_name)]}{help_info}')
 
@@ -508,11 +523,14 @@ def algos_options() -> Callable:
                 in option_type_info.items():
             arg = f'--{opt_name}'
             if opt_main_type == list:
-                click.option(arg, multiple=True,
+                if opt_additional_types[0] == desbordante.data_types.Table:
+                    click.option(arg, type=(str, str, bool),
+                                 multiple=True)(func)
+                else:
+                    click.option(arg, multiple=True,
                              type=opt_additional_types[0])(func)
             elif opt_main_type == desbordante.data_types.Table:
-                click.option(arg, type=(str, str, bool),
-                             required=True)(func)
+                click.option(arg, type=(str, str, bool))(func)
             else:
                 click.option(arg, type=opt_main_type)(func)
         return func
