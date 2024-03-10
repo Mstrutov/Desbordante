@@ -10,7 +10,6 @@
 #include "algorithms/md/hymd/indexes/records_info.h"
 #include "algorithms/md/hymd/indexes/similarity_index.h"
 #include "algorithms/md/hymd/indexes/similarity_matrix.h"
-#include "algorithms/md/hymd/lattice/full_lattice.h"
 #include "algorithms/md/hymd/lattice/validation_info.h"
 #include "algorithms/md/hymd/preprocessing/similarity.h"
 #include "algorithms/md/hymd/preprocessing/similarity_measure/similarity_measure.h"

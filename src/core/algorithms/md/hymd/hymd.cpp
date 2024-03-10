@@ -4,6 +4,7 @@
 #include <cstddef>
 
 #include "algorithms/md/hymd/lattice/cardinality/min_picking_level_getter.h"
+#include "algorithms/md/hymd/lattice/md_lattice.h"
 #include "algorithms/md/hymd/lattice_traverser.h"
 #include "algorithms/md/hymd/lowest_bound.h"
 #include "algorithms/md/hymd/preprocessing/similarity_measure/levenshtein_similarity_measure.h"
@@ -140,7 +141,7 @@ unsigned long long HyMD::ExecuteInternal() {
     util::WorkerThreadPool pool{threads};
     SimilarityData similarity_data =
             SimilarityData::CreateFrom(records_info_.get(), std::move(column_matches_info), pool);
-    lattice::FullLattice lattice{column_match_number, [](...) { return 1; }};
+    lattice::MdLattice lattice{column_match_number, [](...) { return 1; }};
     Specializer specializer{similarity_data.GetColumnMatchesInfo(), &lattice, prune_nondisjoint_};
     LatticeTraverser lattice_traverser{
             &lattice,

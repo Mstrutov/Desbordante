@@ -3,6 +3,7 @@
 #include "algorithms/md/hymd/lattice/cardinality/min_picker_lattice.h"
 #include "algorithms/md/hymd/lattice/cardinality/one_by_one_min_picker.h"
 #include "algorithms/md/hymd/lattice/level_getter.h"
+#include "algorithms/md/hymd/lattice/md_lattice.h"
 
 namespace algos::hymd::lattice::cardinality {
 
@@ -20,7 +21,7 @@ private:
     static constexpr bool kEraseEmptyKeepOrder = false;
 
 public:
-    MinPickingLevelGetter(FullLattice* lattice) : LevelGetter(lattice), min_picker_() {}
+    MinPickingLevelGetter(MdLattice* lattice) : LevelGetter(lattice), min_picker_() {}
 };
 
 }  // namespace algos::hymd::lattice::cardinality

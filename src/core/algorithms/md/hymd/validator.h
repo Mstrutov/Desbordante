@@ -8,7 +8,7 @@
 #include "algorithms/md/hymd/column_match_info.h"
 #include "algorithms/md/hymd/indexes/records_info.h"
 #include "algorithms/md/hymd/invalidated_rhs.h"
-#include "algorithms/md/hymd/lattice/full_lattice.h"
+#include "algorithms/md/hymd/lattice/md_lattice.h"
 #include "algorithms/md/hymd/lattice/validation_info.h"
 #include "algorithms/md/hymd/recommendation.h"
 #include "algorithms/md/hymd/table_identifiers.h"
@@ -33,7 +33,7 @@ private:
     indexes::RecordsInfo const* const records_info_;
     std::vector<ColumnMatchInfo> const* const column_matches_info_;
     std::size_t const min_support_;
-    lattice::FullLattice* const lattice_;
+    lattice::MdLattice* const lattice_;
 
     [[nodiscard]] bool Supported(std::size_t support) const noexcept {
         return support >= min_support_;
@@ -68,7 +68,7 @@ private:
 public:
     Validator(indexes::RecordsInfo const* records_info,
               std::vector<ColumnMatchInfo> const& column_matches_info, std::size_t min_support,
-              lattice::FullLattice* lattice)
+              lattice::MdLattice* lattice)
         : records_info_(records_info),
           column_matches_info_(&column_matches_info),
           min_support_(min_support),

@@ -4,7 +4,7 @@
 #include <unordered_set>
 
 #include "algorithms/md/hymd/decision_boundary_vector.h"
-#include "algorithms/md/hymd/lattice/full_lattice.h"
+#include "algorithms/md/hymd/lattice/md_lattice.h"
 #include "algorithms/md/hymd/recommendation.h"
 #include "algorithms/md/hymd/similarity_data.h"
 #include "algorithms/md/hymd/similarity_vector.h"
@@ -17,7 +17,7 @@ private:
     struct Statistics;
 
     SimilarityData* const similarity_data_;
-    lattice::FullLattice* const lattice_;
+    lattice::MdLattice* const lattice_;
     Specializer* const specializer_;
 
     // Metanome uses a linked list for some reason.
@@ -36,7 +36,7 @@ private:
     bool ShouldStopInferring(Statistics const& statistics) const noexcept;
 
 public:
-    RecordPairInferrer(SimilarityData* similarity_data, lattice::FullLattice* lattice,
+    RecordPairInferrer(SimilarityData* similarity_data, lattice::MdLattice* lattice,
                        Specializer* specializer, util::WorkerThreadPool* pool) noexcept
         : similarity_data_(similarity_data),
           lattice_(lattice),

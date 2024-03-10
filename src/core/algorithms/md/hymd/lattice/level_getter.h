@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <vector>
 
-#include "algorithms/md/hymd/lattice/full_lattice.h"
+#include "algorithms/md/hymd/lattice/md_lattice.h"
 #include "algorithms/md/hymd/lattice/validation_info.h"
 
 namespace algos::hymd::lattice {
@@ -11,7 +11,7 @@ namespace algos::hymd::lattice {
 class LevelGetter {
 protected:
     std::size_t cur_level_ = 0;
-    FullLattice* const lattice_;
+    MdLattice* const lattice_;
     // Prevent lifetime issues.
     std::vector<lattice::MdLatticeNodeInfo> lattice_level_info_;
 
@@ -19,7 +19,7 @@ protected:
             std::vector<lattice::MdLatticeNodeInfo>& level_mds) = 0;
 
 public:
-    LevelGetter(FullLattice* lattice) : lattice_(lattice) {}
+    LevelGetter(MdLattice* lattice) : lattice_(lattice) {}
 
     bool AreLevelsLeft() const noexcept {
         return cur_level_ <= lattice_->GetMaxLevel();
