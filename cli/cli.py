@@ -160,14 +160,7 @@ data integration systems” paper by Daisy Zhe Wang et al.
 Algorithms: PFDTANE
 Default: PFDTANE
 '''
-PFD_HELP = '''Discover minimal non-trivial probabilistic functional
-dependencies. Probabilitistic functional dependencies are defined in the
-“Functional Dependency Generation and Applications in pay-as-you-go 
-data integration systems” paper by Daisy Zhe Wang et al.
-Algorithms: PFDTANE
-Default: PFDTANE
-'''
-IND_HELP = ''''''   # TODO
+IND_HELP = ''''''   # TODO: add help for IND
 FD_VERIFICATION_HELP = '''Verify whether a given exact functional dependency
 holds on the specified dataset. For more information about the primitive and
 algorithms, refer to the “Functional dependency discovery: an experimental
@@ -247,8 +240,8 @@ it is significantly faster (10x-100x). For more information, refer to the
 “Approximate Discovery of Functional Dependencies for Large Datasets” paper
 by T.Bleifus et al.
 '''
-SPIDER_HELP = ''''''    # TODO
-FAIDA_HELP = ''''''     # TODO
+SPIDER_HELP = ''''''    # TODO: add help for Spider
+FAIDA_HELP = ''''''     # TODO: add help for Faida
 NAIVE_FD_VERIFIER_HELP = '''A straightforward partition-based algorithm for
 verifying whether a given exact functional dependency holds on the specified
 dataset. For more information, refer to Lemma 2.2 from “TANE: An Efficient
@@ -394,10 +387,11 @@ def parse_table_list(table_tuples: list[tuple[str, str, Any]]) -> list[tuple[str
     return result
 
 
-def parse_table_list_filename(file: click.File) -> list[tuple[str, str, bool]]:   # FIXME
+def parse_table_list_filename(file: click.File) \
+        -> list[tuple[str, str, bool]]:
     try:
         table_tuples = map(str.split, file.readlines())
-        for table_tuple in table_tuples:    # FIXME
+        for table_tuple in table_tuples:    # FIXME: don't iterate over the entire map
             if len(table_tuple) != 3:
                 click.echo(f"ERROR: Invalid format of table description: {' '.join(table_tuple)}")
                 sys.exit(1)
@@ -407,7 +401,8 @@ def parse_table_list_filename(file: click.File) -> list[tuple[str, str, bool]]: 
         sys.exit(1)
 
 
-def parse_table_directory(tp: tuple[click.Path, str, bool]) -> list[tuple[str, str, bool]]:   # FIXME
+def parse_table_directory(tp: tuple[click.Path, str, bool]) \
+        -> list[tuple[str, str, bool]]:
     dir_name, separator, has_header = tp
     try:
         entries = scandir(dir_name)
