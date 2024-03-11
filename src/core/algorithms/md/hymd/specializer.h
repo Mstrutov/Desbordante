@@ -8,6 +8,7 @@
 #include "algorithms/md/hymd/decision_boundary_vector.h"
 #include "algorithms/md/hymd/invalidated_rhs.h"
 #include "algorithms/md/hymd/lattice/md_lattice.h"
+#include "algorithms/md/hymd/rhs.h"
 #include "algorithms/md/hymd/similarity_vector.h"
 #include "model/index.h"
 
@@ -29,11 +30,8 @@ public:
           lattice_(lattice),
           prune_nondisjoint_(prune_nondisjoint) {}
 
-    void SpecializeFor(SimilarityVector const& sim, DecisionBoundaryVector& lhs_bounds,
-                       model::Index rhs_index, model::md::DecisionBoundary old_rhs_bound);
-
-    void SpecializeInvalidated(DecisionBoundaryVector& lhs_bounds,
-                               InvalidatedRhss const& invalidated);
+    void Specialize(DecisionBoundaryVector& lhs_bounds,
+                    DecisionBoundaryVector const& specialize_past, Rhss const& rhss);
 };
 
 }  // namespace algos::hymd

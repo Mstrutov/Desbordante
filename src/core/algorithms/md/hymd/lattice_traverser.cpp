@@ -24,10 +24,13 @@ void LatticeTraverser::LowerAndSpecialize(Validator::Result& validation_result,
     }
 
     InvalidatedRhss const& invalidated = validation_result.invalidated;
-    for (auto const& [index, _, actual_bound] : invalidated) {
+    Rhss rhss;
+    rhss.reserve(invalidated.size());
+    for (auto const& [index, old_bound, actual_bound] : invalidated) {
         rhs_bounds[index] = actual_bound;
+        rhss.emplace_back(index, old_bound);
     }
-    specializer_->SpecializeInvalidated(lhs_bounds, invalidated);
+    specializer_->Specialize(lhs_bounds, lhs_bounds, rhss);
 }
 
 bool LatticeTraverser::TraverseLattice(bool const traverse_all) {

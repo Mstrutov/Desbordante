@@ -4,6 +4,7 @@
 
 #include "algorithms/md/hymd/lattice/md_lattice_node_info.h"
 #include "algorithms/md/hymd/lowest_bound.h"
+#include "algorithms/md/hymd/rhs.h"
 #include "algorithms/md/hymd/utility/set_for_scope.h"
 #include "model/index.h"
 
@@ -29,6 +30,7 @@ void RecordPairInferrer::ProcessSimVec(SimilarityVector const& sim) {
     for (lattice::MdLatticeNodeInfo& md : violated_in_lattice) {
         DecisionBoundaryVector& rhs_bounds = *md.rhs_bounds;
         DecisionBoundaryVector& lhs_bounds = md.lhs_bounds;
+        Rhss specialization_rhss;
         for (Index rhs_index = 0; rhs_index < col_match_number; ++rhs_index) {
             preprocessing::Similarity const pair_rhs_bound = sim[rhs_index];
             DecisionBoundary const old_md_rhs_bound = rhs_bounds[rhs_index];
@@ -42,8 +44,9 @@ void RecordPairInferrer::ProcessSimVec(SimilarityVector const& sim) {
                 if (lattice_->HasGeneralization(lhs_bounds, pair_rhs_bound, rhs_index)) break;
                 md_rhs_bound_ref = pair_rhs_bound;
             } while (false);
-            specializer_->SpecializeFor(sim, lhs_bounds, rhs_index, old_md_rhs_bound);
+            specialization_rhss.emplace_back(rhs_index, old_md_rhs_bound);
         }
+        specializer_->Specialize(lhs_bounds, sim, specialization_rhss);
     }
 }
 
