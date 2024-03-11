@@ -5,6 +5,7 @@ from collections import namedtuple
 from enum import StrEnum, auto
 from time import process_time
 from typing import Any, Callable
+from os import scandir
 
 import click
 import desbordante
@@ -47,6 +48,9 @@ FILENAME = 'filename'
 VERBOSE = 'verbose'
 ERROR = 'error'
 ERROR_MEASURE = 'error_measure'
+TABLES = 'tables'
+TABLES_LIST = 'tables_list'
+TABLES_DIRECTORY = 'tables_directory'
 
 PRIMARY_HELP = '''The Desbordante data profiler is designed to help users
 discover or verify various types of patterns in data. These patterns are
@@ -99,7 +103,7 @@ output file or to console, if none is specified.
 
 Currently, the console version of Desbordante supports:
 1) Discovery of exact functional dependencies
-2) Discovery of approximate functional dependencies
+2) Discovery of approximate functional dependencies        # TODO: add an item about INDs
 3) Discovery of probabilistic functional dependencies
 4) Verification of exact functional dependencies
 5) Verification of approximate functional dependencies
@@ -116,7 +120,7 @@ bindings or the Web version.
     specify the algorithm to run, e.g., PYRO
 
 --table=TABLE
-    specify the input file to be processed by the algorithm
+    specify the input file to be processed by the algorithm     # TODO: add an item about --tables, --tables_list, --tables_directory
 
 --is_null_equal_null=BOOLEAN
     specify whether two NULLs should be considered equal
@@ -156,7 +160,14 @@ data integration systems” paper by Daisy Zhe Wang et al.
 Algorithms: PFDTANE
 Default: PFDTANE
 '''
-IND_HELP = ''''''
+PFD_HELP = '''Discover minimal non-trivial probabilistic functional
+dependencies. Probabilitistic functional dependencies are defined in the
+“Functional Dependency Generation and Applications in pay-as-you-go 
+data integration systems” paper by Daisy Zhe Wang et al.
+Algorithms: PFDTANE
+Default: PFDTANE
+'''
+IND_HELP = ''''''   # TODO
 FD_VERIFICATION_HELP = '''Verify whether a given exact functional dependency
 holds on the specified dataset. For more information about the primitive and
 algorithms, refer to the “Functional dependency discovery: an experimental
@@ -236,8 +247,8 @@ it is significantly faster (10x-100x). For more information, refer to the
 “Approximate Discovery of Functional Dependencies for Large Datasets” paper
 by T.Bleifus et al.
 '''
-SPIDER_HELP = ''''''
-FAIDA_HELP = ''''''
+SPIDER_HELP = ''''''    # TODO
+FAIDA_HELP = ''''''     # TODO
 NAIVE_FD_VERIFIER_HELP = '''A straightforward partition-based algorithm for
 verifying whether a given exact functional dependency holds on the specified
 dataset. For more information, refer to Lemma 2.2 from “TANE: An Efficient
@@ -376,6 +387,36 @@ def check_error_measure_option_presence(task: str | None, error_measure: str | N
         sys.exit(1)
 
 
+def parse_table_list(table_tuples: list[tuple[str, str, Any]]) -> list[tuple[str, str, bool]]:
+    result = []
+    for table_tuple in table_tuples:
+        result.append((table_tuple[0], table_tuple[1], bool(table_tuple[2])))
+    return result
+
+
+def parse_table_list_filename(file: click.File) -> list[tuple[str, str, bool]]:   # FIXME
+    try:
+        table_tuples = map(str.split, file.readlines())
+        for table_tuple in table_tuples:    # FIXME
+            if len(table_tuple) != 3:
+                click.echo(f"ERROR: Invalid format of table description: {' '.join(table_tuple)}")
+                sys.exit(1)
+        return parse_table_list(table_tuples)
+    except OSError as exc:
+        click.echo(exc)
+        sys.exit(1)
+
+
+def parse_table_directory(tp: tuple[click.Path, str, bool]) -> list[tuple[str, str, bool]]:   # FIXME
+    dir_name, separator, has_header = tp
+    try:
+        entries = scandir(dir_name)
+        return parse_table_list(map(lambda dir_entry: (dir_entry.path, separator, has_header), entries)) # FIXME
+    except OSError as exc:
+        click.echo(exc)
+        sys.exit(1)
+
+
 def is_omitted(value: Any) -> bool:
     return value is None or value == ()
 
@@ -383,7 +424,16 @@ def is_omitted(value: Any) -> bool:
 def set_option(algo: desbordante.Algorithm, opt_name: str, opt_value: Any) \
         -> None:
     try:
-        algo.set_option(opt_name, opt_value)
+        if opt_name == TABLES_LIST:             # FIXME
+            if opt_value is not None:
+                tables = parse_table_list_filename(opt_value)
+                algo.set_option(TABLES, tables)
+        elif opt_name == TABLES_DIRECTORY:      # FIXME
+            if opt_value is not None:
+                tables = parse_table_directory(opt_value)
+                algo.set_option(TABLES, tables)
+        else:
+            algo.set_option(opt_name, opt_value)
     except Exception as exc:
         click.echo(exc)
         sys.exit(1)
@@ -392,10 +442,13 @@ def set_option(algo: desbordante.Algorithm, opt_name: str, opt_value: Any) \
 def set_algo_options(algo: desbordante.Algorithm, args: dict[str, Any]) -> set:
     used_options = set()
     while opts := algo.get_needed_options():
+        if (TABLES in opts):
+            opts |= {TABLES_LIST, TABLES_DIRECTORY} # FIXME
         for option_name in opts:
             value = args[option_name]
             if is_omitted(value):
-                set_option(algo, option_name, None)
+                if option_name != TABLES:
+                    set_option(algo, option_name, None)
             else:
                 set_option(algo, option_name, value)
                 used_options.add(option_name)
@@ -477,7 +530,7 @@ def print_algo_help_page(algo_name: str) -> None:
     algo = ALGOS[Algorithm(algo_name)]()
     help_info = ''
     for opt in algo.get_possible_options():
-        if opt not in ('table', 'tables', 'is_null_equal_null'):
+        if opt not in ('table', TABLES, TABLES_LIST, TABLES_DIRECTORY, 'is_null_equal_null'):
             help_info += get_option_help_info(opt, algo)
     click.echo(f'{ALGO_HELP_PAGES[Algorithm(algo_name)]}{help_info}')
 
@@ -552,6 +605,9 @@ def algos_options() -> Callable:
               callback=get_algorithm, is_eager=True)
 @click.option(f'--{FILENAME}', type=str)
 @click.option(f'--{VERBOSE}', is_flag=True)
+@click.option(f'--{TABLES_LIST}', type=click.File('r'))
+@click.option(f'--{TABLES_DIRECTORY}', type=(click.Path(exists=True, file_okay=False,
+               dir_okay=True, resolve_path=True, allow_dash=False), str, bool))
 @algos_options()
 def desbordante_cli(**kwargs: Any) -> None:
     """Takes in options from console as a dictionary, sets these options
