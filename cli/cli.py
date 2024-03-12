@@ -105,9 +105,10 @@ Currently, the console version of Desbordante supports:
 1) Discovery of exact functional dependencies
 2) Discovery of approximate functional dependencies        # TODO: add an item about INDs
 3) Discovery of probabilistic functional dependencies
-4) Verification of exact functional dependencies
-5) Verification of approximate functional dependencies
-6) Verification of metric dependencies
+4) Discovery of inclusion dependencies
+5) Verification of exact functional dependencies
+6) Verification of approximate functional dependencies
+7) Verification of metric dependencies
 
 If you need other types, you should look into the C++ code, the Python
 bindings or the Web version.
@@ -160,7 +161,10 @@ data integration systems” paper by Daisy Zhe Wang et al.
 Algorithms: PFDTANE
 Default: PFDTANE
 '''
-IND_HELP = ''''''   # TODO: add help for IND
+IND_HELP = '''
+
+Algorithms: SPIDER, FAIDA
+Default: SPIDER'''   # TODO: add description for IND
 FD_VERIFICATION_HELP = '''Verify whether a given exact functional dependency
 holds on the specified dataset. For more information about the primitive and
 algorithms, refer to the “Functional dependency discovery: an experimental
@@ -240,8 +244,8 @@ it is significantly faster (10x-100x). For more information, refer to the
 “Approximate Discovery of Functional Dependencies for Large Datasets” paper
 by T.Bleifus et al.
 '''
-SPIDER_HELP = ''''''    # TODO: add help for Spider
-FAIDA_HELP = ''''''     # TODO: add help for Faida
+SPIDER_HELP = ''''''    # TODO: add description for Spider
+FAIDA_HELP = ''''''     # TODO: add description for Faida
 NAIVE_FD_VERIFIER_HELP = '''A straightforward partition-based algorithm for
 verifying whether a given exact functional dependency holds on the specified
 dataset. For more information, refer to Lemma 2.2 from “TANE: An Efficient
@@ -380,33 +384,29 @@ def check_error_measure_option_presence(task: str | None, error_measure: str | N
         sys.exit(1)
 
 
-def parse_table_list(table_tuples: list[tuple[str, str, Any]]) -> list[tuple[str, str, bool]]:
-    result = []
-    for table_tuple in table_tuples:
-        result.append((table_tuple[0], table_tuple[1], bool(table_tuple[2])))
-    return result
-
-
-def parse_table_list_filename(file: click.File) \
+def parse_tables_list_file(file: click.File) \
         -> list[tuple[str, str, bool]]:
     try:
         table_tuples = map(str.split, file.readlines())
-        for table_tuple in table_tuples:    # FIXME: don't iterate over the entire map
+        result = []
+        for table_tuple in table_tuples:
             if len(table_tuple) != 3:
-                click.echo(f"ERROR: Invalid format of table description: {' '.join(table_tuple)}")
-                sys.exit(1)
-        return parse_table_list(table_tuples)
+                    click.echo(
+                        f"ERROR: Invalid format of table description: {' '.join(table_tuple)}")
+                    sys.exit(1)
+            result.append((table_tuple[0], table_tuple[1], bool(table_tuple[2])))
+        return result
     except OSError as exc:
         click.echo(exc)
         sys.exit(1)
 
 
-def parse_table_directory(tp: tuple[click.Path, str, bool]) \
+def parse_tables_directory(tp: tuple[click.Path, str, bool]) \
         -> list[tuple[str, str, bool]]:
     dir_name, separator, has_header = tp
     try:
         entries = scandir(dir_name)
-        return parse_table_list(map(lambda dir_entry: (dir_entry.path, separator, has_header), entries)) # FIXME
+        return [(dir_entry.path, separator, has_header) for dir_entry in entries]
     except OSError as exc:
         click.echo(exc)
         sys.exit(1)
@@ -419,13 +419,13 @@ def is_omitted(value: Any) -> bool:
 def set_option(algo: desbordante.Algorithm, opt_name: str, opt_value: Any) \
         -> None:
     try:
-        if opt_name == TABLES_LIST:             # FIXME
-            if opt_value is not None:
-                tables = parse_table_list_filename(opt_value)
+        if opt_name == TABLES_LIST:
+            if opt_value is not None:           # FIXME: don't check None here
+                tables = parse_tables_list_file(opt_value)
                 algo.set_option(TABLES, tables)
-        elif opt_name == TABLES_DIRECTORY:      # FIXME
+        elif opt_name == TABLES_DIRECTORY:
             if opt_value is not None:
-                tables = parse_table_directory(opt_value)
+                tables = parse_tables_directory(opt_value)
                 algo.set_option(TABLES, tables)
         else:
             algo.set_option(opt_name, opt_value)
@@ -437,12 +437,12 @@ def set_option(algo: desbordante.Algorithm, opt_name: str, opt_value: Any) \
 def set_algo_options(algo: desbordante.Algorithm, args: dict[str, Any]) -> set:
     used_options = set()
     while opts := algo.get_needed_options():
-        if (TABLES in opts):
-            opts |= {TABLES_LIST, TABLES_DIRECTORY} # FIXME
+        if TABLES in opts:
+            opts |= {TABLES_LIST, TABLES_DIRECTORY} # FIXME: get rid of this
         for option_name in opts:
             value = args[option_name]
             if is_omitted(value):
-                if option_name != TABLES:
+                if option_name != TABLES:       # FIXME: maybe change bindings so that TABLES would accept None
                     set_option(algo, option_name, None)
             else:
                 set_option(algo, option_name, value)
