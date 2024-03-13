@@ -24,29 +24,10 @@ bool RecordPairInferrer::ShouldStopInferring(Statistics const& statistics) const
 }
 
 void RecordPairInferrer::ProcessSimVec(SimilarityVector const& sim) {
-    using model::md::DecisionBoundary, model::Index;
-    std::vector<lattice::MdLatticeNodeInfo> violated_in_lattice = lattice_->FindViolated(sim);
-    std::size_t const col_match_number = similarity_data_->GetColumnMatchNumber();
-    for (lattice::MdLatticeNodeInfo& md : violated_in_lattice) {
-        DecisionBoundaryVector& rhs_bounds = *md.rhs_bounds;
-        DecisionBoundaryVector& lhs_bounds = md.lhs_bounds;
-        Rhss specialization_rhss;
-        for (Index rhs_index = 0; rhs_index < col_match_number; ++rhs_index) {
-            preprocessing::Similarity const pair_rhs_bound = sim[rhs_index];
-            DecisionBoundary const old_md_rhs_bound = rhs_bounds[rhs_index];
-            if (pair_rhs_bound >= old_md_rhs_bound) continue;
-            do {
-                DecisionBoundary& md_rhs_bound_ref = rhs_bounds[rhs_index];
-                md_rhs_bound_ref = kLowestBound;
-                // trivial
-                if (pair_rhs_bound <= lhs_bounds[rhs_index]) break;
-                // not minimal
-                if (lattice_->HasGeneralization(lhs_bounds, pair_rhs_bound, rhs_index)) break;
-                md_rhs_bound_ref = pair_rhs_bound;
-            } while (false);
-            specialization_rhss.emplace_back(rhs_index, old_md_rhs_bound);
-        }
-        lattice_->Specialize(lhs_bounds, sim, specialization_rhss);
+    using MdRefiner = lattice::MdLattice::MdRefiner;
+    std::vector<MdRefiner> refiners = lattice_->CollectRefinersForViolated(sim);
+    for (MdRefiner& refiner : refiners) {
+        refiner.Refine();
     }
 }
 

@@ -83,6 +83,74 @@ void MdLattice::Specialize(DecisionBoundaryVector& lhs_bounds,
     }
 }
 
+void MdLattice::MdRefiner::Refine() {
+    for (auto upd_iter = invalidated_.UpdateIterBegin(), upd_end = invalidated_.UpdateIterEnd();
+         upd_iter != upd_end; ++upd_iter) {
+        auto const& [rhs_index, new_bound] = *upd_iter;
+        DecisionBoundary& md_rhs_bound_ref = (*rhs_)[rhs_index];
+        md_rhs_bound_ref = kLowestBound;
+        // trivial
+        if (new_bound <= lhs_[rhs_index]) continue;
+        // not minimal
+        if (lattice_->HasGeneralization(lhs_, new_bound, rhs_index)) continue;
+        md_rhs_bound_ref = new_bound;
+    }
+    lattice_->Specialize(lhs_, *sim_, invalidated_.GetInvalidated());
+}
+
+void MdLattice::TryAddRefiner(std::vector<MdRefiner>& found, DecisionBoundaryVector& rhs,
+                              SimilarityVector const& similarity_vector,
+                              DecisionBoundaryVector const& cur_node_lhs_bounds) {
+    utility::InvalidatedRhss invalidated;
+    for (Index i = 0; i != column_matches_size_; ++i) {
+        DecisionBoundary sim_bound = similarity_vector[i];
+        DecisionBoundary rhs_bound = rhs[i];
+        if (sim_bound >= rhs_bound) continue;
+        invalidated.PushBack(i, rhs_bound, sim_bound);
+        for (++i; i != column_matches_size_; ++i) {
+            DecisionBoundary sim_bound = similarity_vector[i];
+            DecisionBoundary rhs_bound = rhs[i];
+            if (sim_bound >= rhs_bound) continue;
+            invalidated.PushBack(i, rhs_bound, sim_bound);
+        }
+        found.emplace_back(this, &similarity_vector, cur_node_lhs_bounds, &rhs,
+                           std::move(invalidated));
+        break;
+    }
+}
+
+void MdLattice::CollectRefinersForViolated(MdNode& cur_node, std::vector<MdRefiner>& found,
+                                           DecisionBoundaryVector& cur_node_lhs_bounds,
+                                           SimilarityVector const& similarity_vector,
+                                           model::Index cur_node_index) {
+    TryAddRefiner(found, cur_node.rhs_bounds, similarity_vector, cur_node_lhs_bounds);
+
+    MdNodeChildren& children = cur_node.children;
+    std::size_t const child_array_size = children.size();
+    for (Index child_array_index = FindFirstNonEmptyIndex(children, 0);
+         child_array_index != child_array_size;
+         child_array_index = FindFirstNonEmptyIndex(children, child_array_index + 1)) {
+        Index const next_node_index = cur_node_index + child_array_index;
+        DecisionBoundary& cur_lhs_bound = cur_node_lhs_bounds[next_node_index];
+        DecisionBoundary const sim_vec_sim = similarity_vector[next_node_index];
+        for (auto& [generalization_bound, node] : *children[child_array_index]) {
+            if (generalization_bound > sim_vec_sim) break;
+            cur_lhs_bound = generalization_bound;
+            CollectRefinersForViolated(node, found, cur_node_lhs_bounds, similarity_vector,
+                                       next_node_index + 1);
+        }
+        cur_lhs_bound = kLowestBound;
+    }
+}
+
+auto MdLattice::CollectRefinersForViolated(SimilarityVector const& similarity_vector)
+        -> std::vector<MdRefiner> {
+    std::vector<MdRefiner> found;
+    DecisionBoundaryVector current_lhs(column_matches_size_, kLowestBound);
+    CollectRefinersForViolated(md_root_, found, current_lhs, similarity_vector, 0);
+    return found;
+}
+
 void MdLattice::AddNewMinimal(MdNode& cur_node, DecisionBoundaryVector const& lhs_bounds,
                               DecisionBoundary const rhs_bound, Index const rhs_index,
                               Index cur_node_index) {
@@ -256,48 +324,6 @@ bool MdLattice::HasGeneralization(MdNode const& node, DecisionBoundaryVector con
 bool MdLattice::HasGeneralization(DecisionBoundaryVector const& lhs_bounds,
                                   DecisionBoundary const rhs_bound, Index const rhs_index) const {
     return HasGeneralization(md_root_, lhs_bounds, rhs_bound, rhs_index, 0);
-}
-
-void MdLattice::FindViolatedInternal(MdNode& cur_node, std::vector<MdLatticeNodeInfo>& found,
-                                     DecisionBoundaryVector& cur_node_lhs_bounds,
-                                     SimilarityVector const& similarity_vector,
-                                     Index const this_node_index) {
-    DecisionBoundaryVector& rhs_bounds = cur_node.rhs_bounds;
-    MdNodeChildren& children = cur_node.children;
-    {
-        assert(rhs_bounds.size() == similarity_vector.size());
-        auto it_rhs = rhs_bounds.begin();
-        auto it_sim = similarity_vector.begin();
-        auto end_rhs = rhs_bounds.end();
-        for (; it_rhs != end_rhs; ++it_rhs, ++it_sim) {
-            if (*it_sim < *it_rhs) {
-                found.emplace_back(cur_node_lhs_bounds, &rhs_bounds);
-                break;
-            }
-        }
-    }
-    std::size_t const child_array_size = children.size();
-    for (Index child_array_index = FindFirstNonEmptyIndex(children, 0);
-         child_array_index != child_array_size;
-         child_array_index = FindFirstNonEmptyIndex(children, child_array_index + 1)) {
-        Index const next_node_index = this_node_index + child_array_index;
-        DecisionBoundary& cur_lhs_bound = cur_node_lhs_bounds[next_node_index];
-        DecisionBoundary const sim_vec_sim = similarity_vector[next_node_index];
-        for (auto& [generalization_bound, node] : *children[child_array_index]) {
-            if (generalization_bound > sim_vec_sim) break;
-            cur_lhs_bound = generalization_bound;
-            FindViolatedInternal(node, found, cur_node_lhs_bounds, similarity_vector,
-                                 next_node_index + 1);
-        }
-        cur_lhs_bound = kLowestBound;
-    }
-}
-
-std::vector<MdLatticeNodeInfo> MdLattice::FindViolated(SimilarityVector const& similarity_vector) {
-    std::vector<MdLatticeNodeInfo> found;
-    DecisionBoundaryVector current_lhs(similarity_vector.size(), kLowestBound);
-    FindViolatedInternal(md_root_, found, current_lhs, similarity_vector, 0);
-    return found;
 }
 
 void MdLattice::RaiseInterestingnessBounds(

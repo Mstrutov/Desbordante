@@ -14,6 +14,7 @@
 #include "algorithms/md/hymd/lattice/single_level_func.h"
 #include "algorithms/md/hymd/rhs.h"
 #include "algorithms/md/hymd/similarity_vector.h"
+#include "algorithms/md/hymd/utility/invalidated_rhss.h"
 #include "model/index.h"
 
 namespace algos::hymd::lattice {
@@ -46,6 +47,27 @@ private:
 
     using SupportNodeChildren = LatticeChildArray<SupportNode>;
 
+public:
+    class MdRefiner {
+        MdLattice* lattice_;
+        SimilarityVector const* sim_;
+        DecisionBoundaryVector lhs_;
+        DecisionBoundaryVector* rhs_;
+        utility::InvalidatedRhss invalidated_;
+
+    public:
+        MdRefiner(MdLattice* lattice, SimilarityVector const* sim, DecisionBoundaryVector lhs,
+                  DecisionBoundaryVector* rhs, utility::InvalidatedRhss invalidated)
+            : lattice_(lattice),
+              sim_(sim),
+              lhs_(std::move(lhs)),
+              rhs_(rhs),
+              invalidated_(std::move(invalidated)) {}
+
+        void Refine();
+    };
+
+private:
     std::size_t max_level_ = 0;
     std::size_t const column_matches_size_;
     MdNode md_root_;
@@ -74,10 +96,13 @@ private:
             std::vector<model::md::DecisionBoundary>& cur_interestingness_bounds,
             model::Index this_node_index, std::vector<model::Index> const& indices) const;
 
-    void FindViolatedInternal(MdNode& cur_node, std::vector<MdLatticeNodeInfo>& found,
-                              DecisionBoundaryVector& cur_node_lhs_bounds,
-                              SimilarityVector const& similarity_vector,
-                              model::Index this_node_index);
+    void TryAddRefiner(std::vector<MdRefiner>& found, DecisionBoundaryVector& rhs,
+                       SimilarityVector const& similarity_vector,
+                       DecisionBoundaryVector const& cur_node_lhs_bounds);
+    void CollectRefinersForViolated(MdNode& cur_node, std::vector<MdRefiner>& found,
+                                    DecisionBoundaryVector& cur_node_lhs_bounds,
+                                    SimilarityVector const& similarity_vector,
+                                    model::Index cur_node_index);
 
     void GetAll(MdNode& cur_node, std::vector<MdLatticeNodeInfo>& collected,
                 DecisionBoundaryVector& cur_node_lhs_bounds, model::Index this_node_index);
@@ -122,7 +147,7 @@ public:
     std::vector<model::md::DecisionBoundary> GetRhsInterestingnessBounds(
             DecisionBoundaryVector const& lhs_bounds,
             std::vector<model::Index> const& indices) const;
-    std::vector<MdLatticeNodeInfo> FindViolated(SimilarityVector const& similarity_vector);
+    std::vector<MdRefiner> CollectRefinersForViolated(SimilarityVector const& similarity_vector);
     std::vector<MdLatticeNodeInfo> GetAll();
 
     void Specialize(DecisionBoundaryVector& lhs_bounds,
