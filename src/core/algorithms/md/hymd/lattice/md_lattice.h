@@ -7,10 +7,12 @@
 #include <vector>
 
 #include "algorithms/md/decision_boundary.h"
+#include "algorithms/md/hymd/column_match_info.h"
 #include "algorithms/md/hymd/decision_boundary_vector.h"
 #include "algorithms/md/hymd/lattice/lattice_child_array.h"
 #include "algorithms/md/hymd/lattice/md_lattice_node_info.h"
 #include "algorithms/md/hymd/lattice/single_level_func.h"
+#include "algorithms/md/hymd/rhs.h"
 #include "algorithms/md/hymd/similarity_vector.h"
 #include "model/index.h"
 
@@ -51,6 +53,8 @@ private:
     // Is there a way to define a level in such a way that one cannot use each decision boundary
     // independently to determine an MD's level but the lattice traversal algorithms still works?
     SingleLevelFunc const get_single_level_;
+    std::vector<ColumnMatchInfo> const* const column_matches_info_;
+    bool const prune_nondisjoint_;
 
     bool HasLhsGeneralization(MdNode const& node, DecisionBoundaryVector const& lhs_bounds,
                               model::md::DecisionBoundary rhs_bound, model::Index rhs_index,
@@ -92,9 +96,15 @@ private:
     void MarkNewLhs(SupportNode& cur_node, DecisionBoundaryVector const& lhs_bounds,
                     model::Index cur_node_index);
 
+    [[nodiscard]] std::optional<model::md::DecisionBoundary> SpecializeOneLhs(
+            model::Index col_match_index, model::md::DecisionBoundary lhs_bound) const;
+
+    void AddIfMinimal(DecisionBoundaryVector const& lhs_bounds,
+                      model::md::DecisionBoundary rhs_bound, model::Index rhs_index);
+    bool IsUnsupported(DecisionBoundaryVector const& lhs_bounds) const;
+
 public:
     void MarkUnsupported(DecisionBoundaryVector const& lhs_bounds);
-    bool IsUnsupported(DecisionBoundaryVector const& lhs_bounds) const;
 
     std::size_t GetColMatchNumber() const noexcept {
         return column_matches_size_;
@@ -112,15 +122,15 @@ public:
     std::vector<model::md::DecisionBoundary> GetRhsInterestingnessBounds(
             DecisionBoundaryVector const& lhs_bounds,
             std::vector<model::Index> const& indices) const;
-    void AddIfMinimal(DecisionBoundaryVector const& lhs_bounds,
-                      model::md::DecisionBoundary rhs_bound, model::Index rhs_index);
-    void AddIfMinimalAndNotUnsupported(DecisionBoundaryVector const& lhs_bounds,
-                                       model::md::DecisionBoundary const rhs_bound,
-                                       model::Index const rhs_index);
     std::vector<MdLatticeNodeInfo> FindViolated(SimilarityVector const& similarity_vector);
     std::vector<MdLatticeNodeInfo> GetAll();
 
-    explicit MdLattice(std::size_t column_matches_size, SingleLevelFunc single_level_func);
+    void Specialize(DecisionBoundaryVector& lhs_bounds,
+                    DecisionBoundaryVector const& specialize_past, Rhss const& rhss);
+
+    explicit MdLattice(std::size_t column_matches_size, SingleLevelFunc single_level_func,
+                       std::vector<ColumnMatchInfo> const& column_matches_info,
+                       bool prune_nondisjoint);
 };
 
 }  // namespace algos::hymd::lattice

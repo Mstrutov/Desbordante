@@ -141,15 +141,14 @@ unsigned long long HyMD::ExecuteInternal() {
     util::WorkerThreadPool pool{threads};
     SimilarityData similarity_data =
             SimilarityData::CreateFrom(records_info_.get(), std::move(column_matches_info), pool);
-    lattice::MdLattice lattice{column_match_number, [](...) { return 1; }};
-    Specializer specializer{similarity_data.GetColumnMatchesInfo(), &lattice, prune_nondisjoint_};
+    lattice::MdLattice lattice{column_match_number, [](...) { return 1; },
+                               similarity_data.GetColumnMatchesInfo(), prune_nondisjoint_};
     LatticeTraverser lattice_traverser{
             &lattice,
             std::make_unique<lattice::cardinality::MinPickingLevelGetter>(&lattice),
             {records_info_.get(), similarity_data.GetColumnMatchesInfo(), min_support_, &lattice},
-            &specializer,
             &pool};
-    RecordPairInferrer record_pair_inferrer{&similarity_data, &lattice, &specializer, &pool};
+    RecordPairInferrer record_pair_inferrer{&similarity_data, &lattice, &pool};
 
     bool done = false;
     do {

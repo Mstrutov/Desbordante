@@ -30,7 +30,7 @@ void LatticeTraverser::LowerAndSpecialize(Validator::Result& validation_result,
         rhs_bounds[index] = actual_bound;
         rhss.emplace_back(index, old_bound);
     }
-    specializer_->Specialize(lhs_bounds, lhs_bounds, rhss);
+    lattice_->Specialize(lhs_bounds, lhs_bounds, rhss);
 }
 
 bool LatticeTraverser::TraverseLattice(bool const traverse_all) {

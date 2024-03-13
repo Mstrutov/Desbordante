@@ -46,7 +46,7 @@ void RecordPairInferrer::ProcessSimVec(SimilarityVector const& sim) {
             } while (false);
             specialization_rhss.emplace_back(rhs_index, old_md_rhs_bound);
         }
-        specializer_->Specialize(lhs_bounds, sim, specialization_rhss);
+        lattice_->Specialize(lhs_bounds, sim, specialization_rhss);
     }
 }
 

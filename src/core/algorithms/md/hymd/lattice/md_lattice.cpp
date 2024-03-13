@@ -5,6 +5,7 @@
 
 #include "algorithms/md/hymd/lowest_bound.h"
 #include "algorithms/md/hymd/utility/get_first_non_zero_index.h"
+#include "algorithms/md/hymd/utility/set_for_scope.h"
 #include "util/erase_if_replace.h"
 
 namespace {
@@ -22,11 +23,65 @@ bool NotEmpty(DecisionBoundaryVector const& rhs_bounds) {
 namespace algos::hymd::lattice {
 
 // TODO: remove recursion
-MdLattice::MdLattice(std::size_t column_matches_size, SingleLevelFunc single_level_func)
+MdLattice::MdLattice(std::size_t column_matches_size, SingleLevelFunc single_level_func,
+                     std::vector<ColumnMatchInfo> const& column_matches_info,
+                     bool prune_nondisjoint)
     : column_matches_size_(column_matches_size),
       md_root_(DecisionBoundaryVector(column_matches_size_, 1.0)),
       support_root_(column_matches_size_),
-      get_single_level_(std::move(single_level_func)) {}
+      get_single_level_(std::move(single_level_func)),
+      column_matches_info_(&column_matches_info),
+      prune_nondisjoint_(prune_nondisjoint) {}
+
+std::optional<model::md::DecisionBoundary> MdLattice::SpecializeOneLhs(
+        model::Index col_match_index, model::md::DecisionBoundary lhs_bound) const {
+    std::vector<model::md::DecisionBoundary> const& decision_bounds =
+            (*column_matches_info_)[col_match_index].similarity_info.lhs_bounds;
+    auto end_bounds = decision_bounds.end();
+    auto upper = std::upper_bound(decision_bounds.begin(), end_bounds, lhs_bound);
+    if (upper == end_bounds) return std::nullopt;
+    return *upper;
+}
+
+void MdLattice::Specialize(DecisionBoundaryVector& lhs_bounds,
+                           DecisionBoundaryVector const& specialize_past, Rhss const& rhss) {
+    using model::md::DecisionBoundary, model::Index;
+    auto specialize_all_lhs = [this, col_matches_num = lhs_bounds.size(), &lhs_bounds,
+                               it_begin = rhss.begin(), it_end = rhss.end(),
+                               &specialize_past](auto handle_same_lhs_as_rhs) {
+        for (Index lhs_spec_index = 0; lhs_spec_index < col_matches_num; ++lhs_spec_index) {
+            std::optional<DecisionBoundary> const specialized_lhs_bound =
+                    SpecializeOneLhs(lhs_spec_index, specialize_past[lhs_spec_index]);
+            if (!specialized_lhs_bound.has_value()) continue;
+            auto context = utility::SetForScope(lhs_bounds[lhs_spec_index], *specialized_lhs_bound);
+            if (IsUnsupported(lhs_bounds)) continue;
+
+            for (auto it = it_begin; it != it_end; ++it) {
+                auto const& [rhs_index, old_rhs_bound] = *it;
+                if (rhs_index == lhs_spec_index) {
+                    handle_same_lhs_as_rhs(old_rhs_bound, *specialized_lhs_bound, rhs_index);
+                    for (++it; it != it_end; ++it) {
+                        auto const& [rhs_index, old_rhs_bound] = *it;
+                        AddIfMinimal(lhs_bounds, old_rhs_bound, rhs_index);
+                    }
+                    break;
+                }
+                AddIfMinimal(lhs_bounds, old_rhs_bound, rhs_index);
+            }
+        }
+    };
+    if (prune_nondisjoint_) {
+        specialize_all_lhs([](...) {});
+    } else {
+        specialize_all_lhs([this, &lhs_bounds](DecisionBoundary old_rhs_bound,
+                                               DecisionBoundary specialized_lhs_bound,
+                                               Index rhs_index) {
+            if (old_rhs_bound > specialized_lhs_bound) {
+                AddIfMinimal(lhs_bounds, old_rhs_bound, rhs_index);
+            }
+        });
+    }
+}
 
 void MdLattice::AddNewMinimal(MdNode& cur_node, DecisionBoundaryVector const& lhs_bounds,
                               DecisionBoundary const rhs_bound, Index const rhs_index,
@@ -186,14 +241,6 @@ void MdLattice::AddIfMinimal(DecisionBoundaryVector const& lhs_bounds,
     // value could be not equal to 1.0 at the start of validation is if it was lowered by some
     // record pair.
     checker.SetBoundOnCurrent();
-}
-
-void MdLattice::AddIfMinimalAndNotUnsupported(DecisionBoundaryVector const& lhs_bounds,
-                                              DecisionBoundary const rhs_bound,
-                                              Index const rhs_index) {
-    // TODO: traverse both simultaneously.
-    if (IsUnsupported(lhs_bounds)) return;
-    AddIfMinimal(lhs_bounds, rhs_bound, rhs_index);
 }
 
 bool MdLattice::HasGeneralization(MdNode const& node, DecisionBoundaryVector const& lhs_bounds,
