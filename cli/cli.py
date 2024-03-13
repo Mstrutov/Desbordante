@@ -10,6 +10,8 @@ from os import scandir
 import click
 import desbordante
 
+from table_param_type import TableParamType
+
 
 class Task(StrEnum):
     fd = auto()
@@ -103,7 +105,7 @@ output file or to console, if none is specified.
 
 Currently, the console version of Desbordante supports:
 1) Discovery of exact functional dependencies
-2) Discovery of approximate functional dependencies        # TODO: add an item about INDs
+2) Discovery of approximate functional dependencies
 3) Discovery of probabilistic functional dependencies
 4) Discovery of inclusion dependencies
 5) Verification of exact functional dependencies
@@ -121,7 +123,9 @@ bindings or the Web version.
     specify the algorithm to run, e.g., PYRO
 
 --table=TABLE
-    specify the input file to be processed by the algorithm     # TODO: add an item about --tables, --tables_list, --tables_directory
+    specify the input file to be processed by the algorithm.
+    Algorithms for some tasks (currently, only IND) accept multiple
+    input files; see --task=TASK for more information
 
 --is_null_equal_null=BOOLEAN
     specify whether two NULLs should be considered equal
@@ -161,10 +165,28 @@ data integration systems” paper by Daisy Zhe Wang et al.
 Algorithms: PFDTANE
 Default: PFDTANE
 '''
-IND_HELP = '''
+IND_HELP = '''Discover inclusion dependecies. For more information about
+inclusion dependecies, refer to the "Inclusion Dependency Discovery: An
+Experimental Evaluation of Thirteen Algorithms" by Falco Dürsch et al.
+Algorithms for this task accept multiple input files. You can use one of the
+following options:
+
+--tables=TABLE
+    specify input files to be processed by the algorithm.
+    For multiple values, specify multiple times
+    (e.g., --tables=TABLE_1 --tables=TABLE_2)
+
+--tables_list=FILENAME
+    specify file with list of input files (one on a line).
+    You can type --tables_list=- to use stdin
+
+--tables_directory=FILENAME, STRING, BOOLEAN
+    specify directory with input files.
+    separator and has_header are applied to all tables
 
 Algorithms: SPIDER, FAIDA
-Default: SPIDER'''   # TODO: add description for IND
+Default: SPIDER
+'''
 FD_VERIFICATION_HELP = '''Verify whether a given exact functional dependency
 holds on the specified dataset. For more information about the primitive and
 algorithms, refer to the “Functional dependency discovery: an experimental
@@ -244,8 +266,16 @@ it is significantly faster (10x-100x). For more information, refer to the
 “Approximate Discovery of Functional Dependencies for Large Datasets” paper
 by T.Bleifus et al.
 '''
-SPIDER_HELP = ''''''    # TODO: add description for Spider
-FAIDA_HELP = ''''''     # TODO: add description for Faida
+SPIDER_HELP = '''A disk-backed unary inclusion dependency mining algorithm.
+For more information, refer to "Efficiently detecting inclusion dependencies"
+by J. Bauckmann et al.
+'''
+FAIDA_HELP = '''Both unary and n-ary inclusion dependency mining algorithm.
+Unlike all other algorithms, it is approximate, i.e. it can
+miss some dependencies or produce non-valid ones. In exchange,
+it is significantly faster. For more information, refer to "Fast approximate
+discovery of inclusion dependencies" by S. Kruse et al.
+'''
 NAIVE_FD_VERIFIER_HELP = '''A straightforward partition-based algorithm for
 verifying whether a given exact functional dependency holds on the specified
 dataset. For more information, refer to Lemma 2.2 from “TANE: An Efficient
@@ -420,7 +450,7 @@ def set_option(algo: desbordante.Algorithm, opt_name: str, opt_value: Any) \
         -> None:
     try:
         if opt_name == TABLES_LIST:
-            if opt_value is not None:           # FIXME: don't check None here
+            if opt_value is not None:
                 tables = parse_tables_list_file(opt_value)
                 algo.set_option(TABLES, tables)
         elif opt_name == TABLES_DIRECTORY:
@@ -442,7 +472,7 @@ def set_algo_options(algo: desbordante.Algorithm, args: dict[str, Any]) -> set:
         for option_name in opts:
             value = args[option_name]
             if is_omitted(value):
-                if option_name != TABLES:       # FIXME: maybe change bindings so that TABLES would accept None
+                if option_name != TABLES:
                     set_option(algo, option_name, None)
             else:
                 set_option(algo, option_name, value)
@@ -572,13 +602,13 @@ def algos_options() -> Callable:
             arg = f'--{opt_name}'
             if opt_main_type == list:
                 if opt_additional_types[0] == desbordante.data_types.Table:
-                    click.option(arg, type=(str, str, bool),
+                    click.option(arg, type=TableParamType(),
                                  multiple=True)(func)
                 else:
                     click.option(arg, multiple=True,
                              type=opt_additional_types[0])(func)
             elif opt_main_type == desbordante.data_types.Table:
-                click.option(arg, type=(str, str, bool))(func)
+                click.option(arg, type=TableParamType())(func)
             else:
                 click.option(arg, type=opt_main_type)(func)
         return func
