@@ -4,7 +4,8 @@
 #include <vector>
 
 #include "algorithms/md/decision_boundary.h"
-#include "algorithms/md/hymd/rhs.h"
+#include "algorithms/md/hymd/md_element.h"
+#include "algorithms/md/hymd/rhss.h"
 #include "model/index.h"
 
 namespace algos::hymd::utility {
@@ -28,7 +29,7 @@ public:
     public:
         using iterator_category = std::forward_iterator_tag;
         using difference_type = std::ptrdiff_t;
-        using value_type = std::pair<model::Index, NewBoundsIterator::value_type>;
+        using value_type = MdElement;
         using pointer = void;
         using reference = void;
 
@@ -59,9 +60,8 @@ public:
         friend InvalidatedRhss;
     };
 
-    void PushBack(model::Index index, model::md::DecisionBoundary old_bound,
-                  model::md::DecisionBoundary new_bound) {
-        invalidated_.emplace_back(index, old_bound);
+    void PushBack(MdElement old_rhs, model::md::DecisionBoundary new_bound) {
+        invalidated_.push_back(old_rhs);
         new_bounds_.push_back(new_bound);
     }
 

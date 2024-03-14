@@ -6,10 +6,8 @@
 #include "model/index.h"
 
 namespace algos::hymd {
-struct Rhs {
+struct MdElement {
     model::Index index;
     model::md::DecisionBoundary decision_boundary;
 };
-
-using Rhss = std::vector<Rhs>;
 }  // namespace algos::hymd

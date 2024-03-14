@@ -4,7 +4,7 @@
 
 #include "algorithms/md/hymd/lattice/md_lattice_node_info.h"
 #include "algorithms/md/hymd/lowest_bound.h"
-#include "algorithms/md/hymd/rhs.h"
+#include "algorithms/md/hymd/md_element.h"
 #include "algorithms/md/hymd/utility/set_for_scope.h"
 #include "model/index.h"
 
