@@ -10,13 +10,13 @@ void OneByOnePicker::NewBatch(std::size_t elements) {
     currently_picked_.reserve(elements);
 }
 
-void OneByOnePicker::AddGeneralizations(MdLatticeNodeInfo& node_info,
+void OneByOnePicker::AddGeneralizations(MdLattice::MdVerificationMessenger& messenger,
                                         boost::dynamic_bitset<>& considered_indices) {
-    DecisionBoundaryVector const& lhs_bounds_cur = node_info.lhs_bounds;
+    DecisionBoundaryVector const& lhs_bounds_cur = messenger.GetLhs();
     auto cur_begin = lhs_bounds_cur.begin();
     auto cur_end = lhs_bounds_cur.end();
     for (ValidationInfo& prev_info : currently_picked_) {
-        DecisionBoundaryVector const& lhs_bounds_prev = prev_info.node_info->lhs_bounds;
+        DecisionBoundaryVector const& lhs_bounds_prev = prev_info.messenger->GetLhs();
         boost::dynamic_bitset<>& indices_prev = prev_info.rhs_indices;
         auto cur_it = cur_begin;
         auto prev_it = lhs_bounds_prev.begin();
@@ -52,7 +52,7 @@ void OneByOnePicker::AddGeneralizations(MdLatticeNodeInfo& node_info,
     incomparable:;
     }
     assert(!considered_indices.none());
-    currently_picked_.emplace_back(&node_info, std::move(considered_indices));
+    currently_picked_.emplace_back(&messenger, std::move(considered_indices));
 }
 
 std::vector<ValidationInfo> OneByOnePicker::GetAll() noexcept {

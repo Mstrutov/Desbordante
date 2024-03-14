@@ -20,9 +20,6 @@ private:
 
     util::WorkerThreadPool* pool_;
 
-    void LowerAndSpecialize(Validator::Result& validation_result,
-                            lattice::ValidationInfo& validation_info);
-
 public:
     LatticeTraverser(lattice::MdLattice* lattice,
                      std::unique_ptr<lattice::LevelGetter> level_getter, Validator validator,

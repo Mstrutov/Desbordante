@@ -4,13 +4,13 @@
 
 #include <boost/dynamic_bitset.hpp>
 
-#include "algorithms/md/hymd/lattice/md_lattice_node_info.h"
+#include "algorithms/md/hymd/lattice/md_lattice.h"
 #include "model/index.h"
 
 namespace algos::hymd::lattice {
 
 struct ValidationInfo {
-    MdLatticeNodeInfo* node_info;
+    MdLattice::MdVerificationMessenger* messenger;
     boost::dynamic_bitset<> rhs_indices;
 };
 

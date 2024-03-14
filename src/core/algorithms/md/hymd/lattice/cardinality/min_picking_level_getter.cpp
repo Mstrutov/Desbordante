@@ -6,15 +6,15 @@
 namespace algos::hymd::lattice::cardinality {
 
 std::vector<ValidationInfo> MinPickingLevelGetter::GetCurrentMdsInternal(
-        std::vector<MdLatticeNodeInfo>& level_lattice_info) {
+        std::vector<MdLattice::MdVerificationMessenger>& level_lattice_info) {
     min_picker_.NewBatch(level_lattice_info.size());
-    for (MdLatticeNodeInfo& node_info : level_lattice_info) {
-        DecisionBoundaryVector const& lhs_bounds = node_info.lhs_bounds;
+    for (MdLattice::MdVerificationMessenger& messenger : level_lattice_info) {
+        DecisionBoundaryVector const& lhs_bounds = messenger.GetLhs();
         std::size_t const column_match_number = lhs_bounds.size();
         boost::dynamic_bitset<> const& previously_picked_rhs =
                 picked_.try_emplace(lhs_bounds, column_match_number).first->second;
         boost::dynamic_bitset<> indices(column_match_number);
-        DecisionBoundaryVector const& rhs = *node_info.rhs_bounds;
+        DecisionBoundaryVector const& rhs = messenger.GetRhs();
         for (model::Index i = 0; i < column_match_number; ++i) {
             if (rhs[i] != kLowestBound) {
                 indices.set(i);
@@ -22,7 +22,7 @@ std::vector<ValidationInfo> MinPickingLevelGetter::GetCurrentMdsInternal(
         }
         indices -= previously_picked_rhs;
         if (indices.none()) continue;
-        min_picker_.AddGeneralizations(node_info, indices);
+        min_picker_.AddGeneralizations(messenger, indices);
     }
     std::vector<ValidationInfo> collected = min_picker_.GetAll();
     if constexpr (MinPickerType::kNeedsEmptyRemoval) {
@@ -37,7 +37,7 @@ std::vector<ValidationInfo> MinPickingLevelGetter::GetCurrentMdsInternal(
         }
     }
     for (ValidationInfo const& validation_info : collected) {
-        DecisionBoundaryVector const& lhs_bounds = validation_info.node_info->lhs_bounds;
+        DecisionBoundaryVector const& lhs_bounds = validation_info.messenger->GetLhs();
         std::size_t const column_match_number = lhs_bounds.size();
         boost::dynamic_bitset<>& validated_indices =
                 picked_.try_emplace(lhs_bounds, column_match_number).first->second;

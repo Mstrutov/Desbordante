@@ -7,43 +7,18 @@
 
 namespace algos::hymd {
 
-void LatticeTraverser::LowerAndSpecialize(Validator::Result& validation_result,
-                                          lattice::ValidationInfo& validation_info) {
-    DecisionBoundaryVector& lhs_bounds = validation_info.node_info->lhs_bounds;
-    DecisionBoundaryVector& rhs_bounds = *validation_info.node_info->rhs_bounds;
-
-    bool const is_unsupported = validation_result.is_unsupported;
-    // TODO: move the below to another class.
-    if (is_unsupported) {
-        // Does practically nothing, just repeating what is in the article.
-        std::fill(rhs_bounds.begin(), rhs_bounds.end(), kLowestBound);
-        // TODO: specializations can be removed from the MD lattice. If not worth it, removing just
-        // this node and its children should be cheap. Though, destructors also take time.
-        lattice_->MarkUnsupported(lhs_bounds);
-        return;
-    }
-
-    InvalidatedRhss const& invalidated = validation_result.invalidated;
-    Rhss rhss;
-    rhss.reserve(invalidated.size());
-    for (auto const& [index, old_bound, actual_bound] : invalidated) {
-        rhs_bounds[index] = actual_bound;
-        rhss.emplace_back(index, old_bound);
-    }
-    lattice_->Specialize(lhs_bounds, lhs_bounds, rhss);
-}
-
 bool LatticeTraverser::TraverseLattice(bool const traverse_all) {
+    using model::Index;
     while (level_getter_->AreLevelsLeft()) {
-        std::vector<lattice::ValidationInfo> mds = level_getter_->GetCurrentMds();
-        if (mds.empty()) {
+        std::vector<lattice::ValidationInfo> validations = level_getter_->GetCurrentMds();
+        if (validations.empty()) {
             continue;
         }
 
-        std::size_t const mds_size = mds.size();
-        std::vector<Validator::Result> results(mds_size);
-        auto validate_at_index = [&](model::Index i) { results[i] = validator_.Validate(mds[i]); };
-        pool_->ExecIndex(validate_at_index, mds_size);
+        std::size_t const validations_size = validations.size();
+        std::vector<Validator::Result> results(validations_size);
+        auto validate_at_index = [&](Index i) { results[i] = validator_.Validate(validations[i]); };
+        pool_->ExecIndex(validate_at_index, validations_size);
         pool_->WorkUntilComplete();
         auto viol_func = [this, &results]() {
             for (Validator::Result& result : results) {
@@ -53,8 +28,14 @@ bool LatticeTraverser::TraverseLattice(bool const traverse_all) {
             }
         };
         pool_->ExecSingle(viol_func);
-        for (model::Index i = 0; i < mds_size; ++i) {
-            LowerAndSpecialize(results[i], mds[i]);
+        for (Index i = 0; i < validations_size; ++i) {
+            Validator::Result const& result = results[i];
+            lattice::MdLattice::MdVerificationMessenger& messenger = *validations[i].messenger;
+            if (result.is_unsupported) {
+                messenger.MarkUnsupported();
+            } else {
+                messenger.LowerAndSpecialize(result.invalidated);
+            }
         }
         pool_->WorkUntilComplete();
         if (!traverse_all) return false;

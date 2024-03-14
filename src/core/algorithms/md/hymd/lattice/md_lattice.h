@@ -67,6 +67,29 @@ public:
         void Refine();
     };
 
+    class MdVerificationMessenger {
+        MdLattice* lattice_;
+        DecisionBoundaryVector lhs_;
+        DecisionBoundaryVector* rhs_;
+
+    public:
+        MdVerificationMessenger(MdLattice* lattice, DecisionBoundaryVector lhs,
+                                DecisionBoundaryVector* rhs)
+            : lattice_(lattice), lhs_(std::move(lhs)), rhs_(rhs) {}
+
+        DecisionBoundaryVector const& GetLhs() const {
+            return lhs_;
+        }
+
+        DecisionBoundaryVector& GetRhs() {
+            return *rhs_;
+        }
+
+        void MarkUnsupported();
+
+        void LowerAndSpecialize(utility::InvalidatedRhss const& invalidated);
+    };
+
 private:
     std::size_t max_level_ = 0;
     std::size_t const column_matches_size_;
@@ -82,7 +105,7 @@ private:
                               model::md::DecisionBoundary rhs_bound, model::Index rhs_index,
                               model::Index node_index, model::Index start_index) const;
 
-    void GetLevel(MdNode& cur_node, std::vector<MdLatticeNodeInfo>& collected,
+    void GetLevel(MdNode& cur_node, std::vector<MdVerificationMessenger>& collected,
                   DecisionBoundaryVector& cur_node_lhs_bounds, model::Index cur_node_index,
                   std::size_t level_left);
 
@@ -128,30 +151,30 @@ private:
                       model::md::DecisionBoundary rhs_bound, model::Index rhs_index);
     bool IsUnsupported(DecisionBoundaryVector const& lhs_bounds) const;
 
-public:
-    void MarkUnsupported(DecisionBoundaryVector const& lhs_bounds);
-
-    std::size_t GetColMatchNumber() const noexcept {
-        return column_matches_size_;
-    }
-
     [[nodiscard]] bool HasGeneralization(DecisionBoundaryVector const& lhs_bounds,
                                          model::md::DecisionBoundary rhs_bound,
                                          model::Index rhs_index) const;
+
+    void MarkUnsupported(DecisionBoundaryVector const& lhs_bounds);
+
+    void Specialize(DecisionBoundaryVector& lhs_bounds,
+                    DecisionBoundaryVector const& specialize_past, Rhss const& rhss);
+
+public:
+    std::size_t GetColMatchNumber() const noexcept {
+        return column_matches_size_;
+    }
 
     [[nodiscard]] std::size_t GetMaxLevel() const noexcept {
         return max_level_;
     }
 
-    std::vector<MdLatticeNodeInfo> GetLevel(std::size_t level);
+    std::vector<MdVerificationMessenger> GetLevel(std::size_t level);
     std::vector<model::md::DecisionBoundary> GetRhsInterestingnessBounds(
             DecisionBoundaryVector const& lhs_bounds,
             std::vector<model::Index> const& indices) const;
     std::vector<MdRefiner> CollectRefinersForViolated(SimilarityVector const& similarity_vector);
     std::vector<MdLatticeNodeInfo> GetAll();
-
-    void Specialize(DecisionBoundaryVector& lhs_bounds,
-                    DecisionBoundaryVector const& specialize_past, Rhss const& rhss);
 
     explicit MdLattice(std::size_t column_matches_size, SingleLevelFunc single_level_func,
                        std::vector<ColumnMatchInfo> const& column_matches_info,

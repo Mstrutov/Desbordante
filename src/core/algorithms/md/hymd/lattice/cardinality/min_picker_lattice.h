@@ -6,7 +6,7 @@
 #include <boost/dynamic_bitset.hpp>
 
 #include "algorithms/md/hymd/lattice/lattice_child_array.h"
-#include "algorithms/md/hymd/lattice/md_lattice_node_info.h"
+#include "algorithms/md/hymd/lattice/md_lattice.h"
 #include "algorithms/md/hymd/lattice/validation_info.h"
 #include "model/index.h"
 
@@ -29,10 +29,11 @@ private:
     std::vector<ValidationInfo> info_;
 
     void AddNewLhs(Node& cur_node, ValidationInfo* validation_info, model::Index cur_node_index);
-    void ExcludeGeneralizationRhs(Node const& cur_node, MdLatticeNodeInfo const& lattice_node_info,
+    void ExcludeGeneralizationRhs(Node const& cur_node,
+                                  MdLattice::MdVerificationMessenger const& messenger,
                                   model::Index cur_node_index,
                                   boost::dynamic_bitset<>& considered_indices);
-    void RemoveSpecializations(Node& cur_node, MdLatticeNodeInfo const& lattice_node_info,
+    void RemoveSpecializations(Node& cur_node, MdLattice::MdVerificationMessenger const& messenger,
                                model::Index cur_node_index,
                                boost::dynamic_bitset<> const& picked_indices);
     void GetAll(Node& cur_node, std::vector<ValidationInfo>& collected,
@@ -43,7 +44,7 @@ public:
     static constexpr bool kNeedsEmptyRemoval = false;
 
     void NewBatch(std::size_t max_elements);
-    void AddGeneralizations(MdLatticeNodeInfo& lattice_node_info,
+    void AddGeneralizations(MdLattice::MdVerificationMessenger& messenger,
                             boost::dynamic_bitset<>& considered_indices);
     std::vector<ValidationInfo> GetAll() noexcept(kNeedsEmptyRemoval);
 

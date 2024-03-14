@@ -13,10 +13,10 @@ protected:
     std::size_t cur_level_ = 0;
     MdLattice* const lattice_;
     // Prevent lifetime issues.
-    std::vector<lattice::MdLatticeNodeInfo> lattice_level_info_;
+    std::vector<MdLattice::MdVerificationMessenger> messengers_;
 
     virtual std::vector<ValidationInfo> GetCurrentMdsInternal(
-            std::vector<lattice::MdLatticeNodeInfo>& level_mds) = 0;
+            std::vector<MdLattice::MdVerificationMessenger>& level_mds) = 0;
 
 public:
     LevelGetter(MdLattice* lattice) : lattice_(lattice) {}
@@ -26,8 +26,8 @@ public:
     }
 
     std::vector<ValidationInfo> GetCurrentMds() {
-        lattice_level_info_ = lattice_->GetLevel(cur_level_);
-        return GetCurrentMdsInternal(lattice_level_info_);
+        messengers_ = lattice_->GetLevel(cur_level_);
+        return GetCurrentMdsInternal(messengers_);
     }
 
     virtual ~LevelGetter() = default;

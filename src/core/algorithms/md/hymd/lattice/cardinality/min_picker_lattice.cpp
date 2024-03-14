@@ -15,7 +15,7 @@ namespace algos::hymd::lattice::cardinality {
 void MinPickerLattice::AddNewLhs(Node& cur_node, ValidationInfo* validation_info,
                                  Index cur_node_index) {
     assert(IsEmpty(cur_node.children));
-    DecisionBoundaryVector const& lhs_bounds = validation_info->node_info->lhs_bounds;
+    DecisionBoundaryVector const& lhs_bounds = validation_info->messenger->GetLhs();
     size_t const col_match_number = lhs_bounds.size();
     Node* cur_node_ptr = &cur_node;
     for (Index next_node_index = utility::GetFirstNonZeroIndex(lhs_bounds, cur_node_index);
@@ -32,7 +32,7 @@ void MinPickerLattice::AddNewLhs(Node& cur_node, ValidationInfo* validation_info
 }
 
 void MinPickerLattice::ExcludeGeneralizationRhs(Node const& cur_node,
-                                                MdLatticeNodeInfo const& lattice_node_info,
+                                                MdLattice::MdVerificationMessenger const& messenger,
                                                 model::Index cur_node_index,
                                                 boost::dynamic_bitset<>& considered_indices) {
     if (cur_node.task_info != nullptr) {
@@ -40,7 +40,7 @@ void MinPickerLattice::ExcludeGeneralizationRhs(Node const& cur_node,
         considered_indices -= cur_node_indices;
         if (considered_indices.none()) return;
     }
-    DecisionBoundaryVector const& lhs_bounds = lattice_node_info.lhs_bounds;
+    DecisionBoundaryVector const& lhs_bounds = messenger.GetLhs();
     Index const next_node_index = GetFirstNonZeroIndex(lhs_bounds, cur_node_index);
     Index const child_array_index = next_node_index - cur_node_index;
     OptionalChild const& optional_child = cur_node.children[child_array_index];
@@ -51,17 +51,17 @@ void MinPickerLattice::ExcludeGeneralizationRhs(Node const& cur_node,
     for (auto const& [threshold, node] : threshold_mapping) {
         assert(threshold > kLowestBound);
         if (threshold > next_lhs_bound) break;
-        ExcludeGeneralizationRhs(node, lattice_node_info, next_node_index + 1, considered_indices);
+        ExcludeGeneralizationRhs(node, messenger, next_node_index + 1, considered_indices);
         if (considered_indices.none()) return;
     }
 }
 
 void MinPickerLattice::RemoveSpecializations(Node& cur_node,
-                                             MdLatticeNodeInfo const& lattice_node_info,
+                                             MdLattice::MdVerificationMessenger const& messenger,
                                              model::Index cur_node_index,
                                              boost::dynamic_bitset<> const& picked_indices) {
     // All MDs in the tree are of the same cardinality.
-    DecisionBoundaryVector const& lhs_bounds = lattice_node_info.lhs_bounds;
+    DecisionBoundaryVector const& lhs_bounds = messenger.GetLhs();
     model::Index const next_node_index = GetFirstNonZeroIndex(lhs_bounds, cur_node_index);
     NodeChildren& children = cur_node.children;
     ValidationInfo*& task_info = cur_node.task_info;
@@ -83,7 +83,7 @@ void MinPickerLattice::RemoveSpecializations(Node& cur_node,
     for (auto it_map = threshold_mapping.lower_bound(next_node_bound); it_map != mapping_end;
          ++it_map) {
         auto& node = it_map->second;
-        RemoveSpecializations(node, lattice_node_info, next_node_index + 1, picked_indices);
+        RemoveSpecializations(node, messenger, next_node_index + 1, picked_indices);
     }
 }
 
@@ -106,7 +106,7 @@ void MinPickerLattice::GetAll(Node& cur_node, std::vector<ValidationInfo>& colle
 }
 
 void MinPickerLattice::Add(ValidationInfo* validation_info) {
-    DecisionBoundaryVector const& lhs_bounds = validation_info->node_info->lhs_bounds;
+    DecisionBoundaryVector const& lhs_bounds = validation_info->messenger->GetLhs();
     std::size_t const col_match_number = lhs_bounds.size();
 
     Node* cur_node_ptr = &root_;
@@ -148,13 +148,12 @@ void MinPickerLattice::NewBatch(std::size_t max_elements) {
     root_ = Node{root_.children.size()};
 }
 
-void MinPickerLattice::AddGeneralizations(MdLatticeNodeInfo& lattice_node_info,
+void MinPickerLattice::AddGeneralizations(MdLattice::MdVerificationMessenger& messenger,
                                           boost::dynamic_bitset<>& considered_indices) {
-    ExcludeGeneralizationRhs(root_, lattice_node_info, 0, considered_indices);
+    ExcludeGeneralizationRhs(root_, messenger, 0, considered_indices);
     if (considered_indices.none()) return;
-    RemoveSpecializations(root_, lattice_node_info, 0, considered_indices);
-    ValidationInfo& added_ref =
-            info_.emplace_back(&lattice_node_info, std::move(considered_indices));
+    RemoveSpecializations(root_, messenger, 0, considered_indices);
+    ValidationInfo& added_ref = info_.emplace_back(&messenger, std::move(considered_indices));
     Add(&added_ref);
 }
 

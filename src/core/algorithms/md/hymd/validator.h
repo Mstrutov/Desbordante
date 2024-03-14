@@ -7,11 +7,11 @@
 #include "algorithms/md/decision_boundary.h"
 #include "algorithms/md/hymd/column_match_info.h"
 #include "algorithms/md/hymd/indexes/records_info.h"
-#include "algorithms/md/hymd/invalidated_rhs.h"
 #include "algorithms/md/hymd/lattice/md_lattice.h"
 #include "algorithms/md/hymd/lattice/validation_info.h"
 #include "algorithms/md/hymd/recommendation.h"
 #include "algorithms/md/hymd/table_identifiers.h"
+#include "algorithms/md/hymd/utility/invalidated_rhss.h"
 #include "model/index.h"
 
 namespace algos::hymd {
@@ -20,7 +20,7 @@ class Validator {
 public:
     struct Result {
         std::vector<std::vector<Recommendation>> recommendations;
-        InvalidatedRhss invalidated;
+        utility::InvalidatedRhss invalidated;
         bool is_unsupported;
     };
 
