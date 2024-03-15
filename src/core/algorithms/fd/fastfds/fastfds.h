@@ -6,7 +6,6 @@
 #include <boost/thread/mutex.hpp>
 
 #include "algorithms/fd/pli_based_fd_algorithm.h"
-#include "config/max_lhs/type.h"
 #include "config/thread_number/type.h"
 #include "model/table/column_layout_relation_data.h"
 #include "model/table/vertical.h"
@@ -71,7 +70,6 @@ private:
     RelationalSchema const* schema_;
     std::vector<DiffSet> diff_sets_;
     config::ThreadNumType threads_num_;
-    config::MaxLhsType max_lhs_;
     double percent_per_col_;
 };
 

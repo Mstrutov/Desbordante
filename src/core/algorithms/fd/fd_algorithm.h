@@ -8,6 +8,7 @@
 
 #include "algorithms/algorithm.h"
 #include "config/equal_nulls/type.h"
+#include "config/max_lhs/type.h"
 #include "config/tabular_data/input_table_type.h"
 #include "fd.h"
 #include "model/table/column_layout_typed_relation_data.h"
@@ -33,6 +34,7 @@ private:
 
 protected:
     config::InputTable input_table_;
+    config::MaxLhsType max_lhs_;
 
     /* Collection of all discovered FDs
      * Every FD mining algorithm should place discovered dependecies here. Don't add new FDs by

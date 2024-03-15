@@ -8,7 +8,6 @@
 #include <easylogging++.h>
 
 #include "config/error/option.h"
-#include "config/max_lhs/option.h"
 #include "lattice_level.h"
 #include "lattice_vertex.h"
 #include "model/table/column_data.h"
@@ -25,11 +24,10 @@ Tane::Tane() : PliBasedFDAlgorithm({kDefaultPhaseName}) {
 
 void Tane::RegisterOptions() {
     RegisterOption(config::ErrorOpt(&max_ucc_error_));
-    RegisterOption(config::MaxLhsOpt(&max_lhs_));
 }
 
 void Tane::MakeExecuteOptsAvailable() {
-    MakeOptionsAvailable({config::MaxLhsOpt.GetName(), config::ErrorOpt.GetName()});
+    MakeOptionsAvailable({config::ErrorOpt.GetName()});
 }
 
 void Tane::ResetStateFd() {

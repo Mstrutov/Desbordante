@@ -4,7 +4,6 @@
 
 #include "algorithms/fd/pli_based_fd_algorithm.h"
 #include "config/error/type.h"
-#include "config/max_lhs/type.h"
 #include "model/table/position_list_index.h"
 #include "model/table/relation_data.h"
 
@@ -21,7 +20,6 @@ private:
 public:
     config::ErrorType max_fd_error_;
     config::ErrorType max_ucc_error_;
-    config::MaxLhsType max_lhs_;
 
     int count_of_fd_ = 0;
     int count_of_ucc_ = 0;
