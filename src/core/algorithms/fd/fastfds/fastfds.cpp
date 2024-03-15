@@ -10,6 +10,7 @@
 #include <boost/thread.hpp>
 #include <easylogging++.h>
 
+#include "config/max_lhs/option.h"
 #include "config/thread_number/option.h"
 #include "model/table/agree_set_factory.h"
 #include "util/parallel_for.h"
@@ -27,7 +28,7 @@ void FastFDs::RegisterOptions() {
 }
 
 void FastFDs::MakeExecuteOptsAvailable() {
-    MakeOptionsAvailable({config::ThreadNumberOpt.GetName()});
+    MakeOptionsAvailable({config::MaxLhsOpt.GetName(), config::ThreadNumberOpt.GetName()});
 }
 
 void FastFDs::ResetStateFd() {
