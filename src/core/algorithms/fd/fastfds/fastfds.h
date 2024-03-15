@@ -21,7 +21,7 @@ private:
     using DiffSet = Vertical;
 
     void RegisterOptions();
-    void MakeExecuteOptsAvailable() final;
+    void MakeExecuteOptsAvailableFDInternal() final;
 
     void ResetStateFd() final;
     unsigned long long ExecuteInternal() final;

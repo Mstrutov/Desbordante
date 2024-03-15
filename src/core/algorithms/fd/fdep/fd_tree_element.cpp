@@ -243,17 +243,18 @@ void FDTreeElement::PrintDependencies(std::bitset<kMaxAttrNum>& active_path, std
     }
 }
 
-void FDTreeElement::FillFdCollection(RelationalSchema const& scheme,
-                                     std::list<FD>& fd_collection) const {
+void FDTreeElement::FillFdCollection(RelationalSchema const& scheme, std::list<FD>& fd_collection,
+                                     unsigned int max_lhs_ = -1) const {
     std::bitset<kMaxAttrNum> active_path;
-    this->TransformTreeFdCollection(active_path, fd_collection, scheme);
+    this->TransformTreeFdCollection(active_path, fd_collection, scheme, max_lhs_);
 }
 
 void FDTreeElement::TransformTreeFdCollection(std::bitset<kMaxAttrNum>& active_path,
                                               std::list<FD>& fd_collection,
-                                              RelationalSchema const& scheme) const {
+                                              RelationalSchema const& scheme,
+                                              unsigned int max_lhs_ = -1) const {
     for (size_t attr = 1; attr <= this->max_attribute_number_; ++attr) {
-        if (this->is_fd_[attr - 1]) {
+        if (this->is_fd_[attr - 1] && (attr <= max_lhs_)) {
             boost::dynamic_bitset<> lhs_bitset(this->max_attribute_number_);
             for (size_t i = active_path._Find_first(); i != kMaxAttrNum;
                  i = active_path._Find_next(i)) {
@@ -266,7 +267,7 @@ void FDTreeElement::TransformTreeFdCollection(std::bitset<kMaxAttrNum>& active_p
     }
 
     for (size_t attr = 1; attr <= this->max_attribute_number_; ++attr) {
-        if (this->children_[attr - 1]) {
+        if (this->children_[attr - 1] && (attr <= max_lhs_)) {
             active_path.set(attr);
             this->children_[attr - 1]->TransformTreeFdCollection(active_path, fd_collection,
                                                                  scheme);

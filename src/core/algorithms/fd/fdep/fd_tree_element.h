@@ -43,7 +43,8 @@ public:
     // Printing found dependencies in output file.
     void PrintDep(std::string const& file, std::vector<std::string>& column_names) const;
 
-    void FillFdCollection(RelationalSchema const& scheme, std::list<FD>& fd_collection) const;
+    void FillFdCollection(RelationalSchema const& scheme, std::list<FD>& fd_collection,
+                          unsigned int max_lhs_) const;
 
 private:
     std::vector<std::unique_ptr<FDTreeElement>> children_;
@@ -72,6 +73,6 @@ private:
                            std::vector<std::string>& column_names) const;
 
     void TransformTreeFdCollection(std::bitset<kMaxAttrNum>& active_path,
-                                   std::list<FD>& fd_collection,
-                                   RelationalSchema const& scheme) const;
+                                   std::list<FD>& fd_collection, RelationalSchema const& scheme,
+                                   unsigned int max_lhs_) const;
 };

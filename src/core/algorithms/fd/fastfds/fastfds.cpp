@@ -27,8 +27,8 @@ void FastFDs::RegisterOptions() {
     RegisterOption(config::ThreadNumberOpt(&threads_num_));
 }
 
-void FastFDs::MakeExecuteOptsAvailable() {
-    MakeOptionsAvailable({config::MaxLhsOpt.GetName(), config::ThreadNumberOpt.GetName()});
+void FastFDs::MakeExecuteOptsAvailableFDInternal() {
+    MakeOptionsAvailable({config::ThreadNumberOpt.GetName()});
 }
 
 void FastFDs::ResetStateFd() {

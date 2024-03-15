@@ -20,8 +20,8 @@ void DFD::RegisterOptions() {
     RegisterOption(config::ThreadNumberOpt(&number_of_threads_));
 }
 
-void DFD::MakeExecuteOptsAvailable() {
-    MakeOptionsAvailable({config::MaxLhsOpt.GetName(), config::ThreadNumberOpt.GetName()});
+void DFD::MakeExecuteOptsAvailableFDInternal() {
+    MakeOptionsAvailable({config::ThreadNumberOpt.GetName()});
 }
 
 void DFD::ResetStateFd() {

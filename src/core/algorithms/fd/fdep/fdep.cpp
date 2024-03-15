@@ -56,12 +56,7 @@ unsigned long long FDep::ExecuteInternal() {
     std::bitset<FDTreeElement::kMaxAttrNum> active_path;
     CalculatePositiveCover(*this->neg_cover_tree_, active_path);
 
-    pos_cover_tree_->FillFdCollection(*this->schema_, FdList());
-
-    std::list<FD>& fd_list = FdList();
-    for (auto it = fd_list.begin(); it != fd_list.end(); ++it) {
-        if (it->GetLhs().GetArity() > max_lhs_) it = --(fd_list.erase(it));
-    }
+    pos_cover_tree_->FillFdCollection(*this->schema_, FdList(), max_lhs_);
 
     auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now() - start_time);

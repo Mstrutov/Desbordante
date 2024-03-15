@@ -21,7 +21,7 @@ private:
     pyro::Parameters parameters_;
 
     void RegisterOptions();
-    void MakeExecuteOptsAvailable() final;
+    void MakeExecuteOptsAvailableFDInternal() final;
 
     void ResetStateFd() final;
     unsigned long long ExecuteInternal() final;

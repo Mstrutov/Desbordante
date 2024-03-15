@@ -122,8 +122,8 @@ TYPED_TEST_P(AlgorithmTest, ConsistentRepeatedExecution) {
 
 TYPED_TEST_P(AlgorithmTest, MaxLHSOptionWork) {
     using namespace config::names;
-    unsigned int max_lhs_ = 1;
-    auto algorithm = TestFixture::CreateMaxLHSAlgorithmInstance(kTestFD, max_lhs_);
+    config::MaxLhsType max_lhs_ = 1;
+    auto algorithm = TestFixture::CreateAlgorithmInstance(kTestFD, max_lhs_);
     algorithm->Execute();
     std::list<FD> result_fds_list = algorithm->FdList();
     for (auto& fd : result_fds_list) {

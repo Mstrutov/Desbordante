@@ -34,9 +34,9 @@ void Pyro::RegisterOptions() {
     RegisterOption(Option{&parameters_.seed, kSeed, kDSeed, 0});
 }
 
-void Pyro::MakeExecuteOptsAvailable() {
+void Pyro::MakeExecuteOptsAvailableFDInternal() {
     using namespace config::names;
-    MakeOptionsAvailable({config::MaxLhsOpt.GetName(), config::ErrorOpt.GetName(),
+    MakeOptionsAvailable({config::ErrorOpt.GetName(),
                           config::ThreadNumberOpt.GetName(), kSeed});
 }
 

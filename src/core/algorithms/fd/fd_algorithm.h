@@ -30,7 +30,8 @@ private:
     void RegisterOptions();
 
     void ResetState() final;
-    virtual void MakeExecuteOptsAvailable();
+    virtual void MakeExecuteOptsAvailableFDInternal();
+    void MakeExecuteOptsAvailable() override;
     virtual void ResetStateFd() = 0;
 
 protected:
