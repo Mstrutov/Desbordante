@@ -22,7 +22,8 @@ protected:
         return algorithm;
     }
 
-    static algos::StdParamsMap GetParamMap(CSVConfig const& csv_config, unsigned int max_lhs_ = -1) {
+    static algos::StdParamsMap GetParamMap(CSVConfig const& csv_config,
+                                           unsigned int max_lhs_ = -1) {
         using namespace config::names;
         return {
                 {kCsvConfig, csv_config},
@@ -48,13 +49,9 @@ protected:
     }
 
 public:
-    static std::unique_ptr<algos::FDAlgorithm> CreateAlgorithmInstance(CSVConfig const& config, unsigned int max_lhs_ = -1) {
+    static std::unique_ptr<algos::FDAlgorithm> CreateAlgorithmInstance(CSVConfig const& config,
+                                                                       unsigned int max_lhs_ = -1) {
         return algos::CreateAndLoadAlgorithm<T>(GetParamMap(config, max_lhs_));
-    }
-
-    static std::unique_ptr<algos::FDAlgorithm> CreateMaxLHSAlgorithmInstance(
-            tests::TableConfig const& config, unsigned int max_lhs_) {
-        return algos::CreateAndLoadAlgorithm<T>(MaxLHSParamMap(config, max_lhs_));
     }
 
     inline static std::vector<CSVConfigHash> const light_datasets_ = {

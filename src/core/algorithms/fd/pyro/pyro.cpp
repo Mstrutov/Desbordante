@@ -36,8 +36,7 @@ void Pyro::RegisterOptions() {
 
 void Pyro::MakeExecuteOptsAvailableFDInternal() {
     using namespace config::names;
-    MakeOptionsAvailable({config::ErrorOpt.GetName(),
-                          config::ThreadNumberOpt.GetName(), kSeed});
+    MakeOptionsAvailable({config::ErrorOpt.GetName(), config::ThreadNumberOpt.GetName(), kSeed});
 }
 
 void Pyro::ResetStateFd() {

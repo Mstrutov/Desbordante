@@ -58,7 +58,7 @@ std::vector<Column const*> FDAlgorithm::GetKeys() const {
 
     for (FD const& fd : FdList()) {
         Vertical const& lhs = fd.GetLhs();
-        
+
         if (lhs.GetArity() == 0) {
             /* We separately count columns consisting of only equal values,
              * because they cannot be on the right side of the minimal fd.
