@@ -30,6 +30,7 @@ private:
     void RegisterOptions();
 
     void ResetState() final;
+    virtual void MakeExecuteOptsAvailable();
     virtual void ResetStateFd() = 0;
 
 protected:
@@ -47,11 +48,12 @@ protected:
      * Should be overrided if custom behavior is needed
      */
     virtual void RegisterFd(Vertical lhs, Column rhs) {
-        fd_collection_.Register(std::move(lhs), std::move(rhs));
+        if (lhs.GetArity() <= max_lhs_) fd_collection_.Register(std::move(lhs), std::move(rhs));
     }
 
     virtual void RegisterFd(FD fd_to_register) {
-        fd_collection_.Register(std::move(fd_to_register));
+        if (fd_to_register.GetLhs().GetArity() <= max_lhs_)
+            fd_collection_.Register(std::move(fd_to_register));
     }
 
 public:

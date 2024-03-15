@@ -8,6 +8,7 @@
 
 #include "algorithms/fd/pyrocommon/core/fd_g1_strategy.h"
 #include "config/error/option.h"
+#include "config/max_lhs/option.h"
 #include "config/names_and_descriptions.h"
 #include "config/option_using.h"
 #include "config/thread_number/option.h"
@@ -35,7 +36,7 @@ void Pyro::RegisterOptions() {
 
 void Pyro::MakeExecuteOptsAvailable() {
     using namespace config::names;
-    MakeOptionsAvailable({config::ErrorOpt.GetName(),
+    MakeOptionsAvailable({config::MaxLhsOpt.GetName(), config::ErrorOpt.GetName(),
                           config::ThreadNumberOpt.GetName(), kSeed});
 }
 

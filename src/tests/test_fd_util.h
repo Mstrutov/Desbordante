@@ -31,6 +31,17 @@ protected:
         };
     }
 
+    static algos::StdParamsMap MaxLHSParamMap(tests::TableConfig const& config,
+                                              unsigned int max_lhs_) {
+        using namespace config::names;
+        return {
+                {kTable, config.MakeInputTable()},
+                {kError, config::ErrorType{0.0}},
+                {kSeed, decltype(algos::pyro::Parameters::seed){0}},
+                {kMaximumLhs, max_lhs_},
+        };
+    }
+
     static void PerformConsistentHashTestOn(std::vector<CSVConfigHash> const& config_hashes) {
         try {
             for (auto const& [csv_config, hash] : config_hashes) {
@@ -49,6 +60,11 @@ protected:
 public:
     static std::unique_ptr<algos::FDAlgorithm> CreateAlgorithmInstance(CSVConfig const& config) {
         return algos::CreateAndLoadAlgorithm<T>(GetParamMap(config));
+    }
+
+    static std::unique_ptr<algos::FDAlgorithm> CreateMaxLHSAlgorithmInstance(
+            tests::TableConfig const& config, unsigned int max_lhs_) {
+        return algos::CreateAndLoadAlgorithm<T>(MaxLHSParamMap(config, max_lhs_));
     }
 
     inline static std::vector<CSVConfigHash> const light_datasets_ = {

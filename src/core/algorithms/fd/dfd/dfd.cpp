@@ -3,6 +3,7 @@
 #include <boost/asio.hpp>
 #include <easylogging++.h>
 
+#include "config/max_lhs/option.h"
 #include "config/thread_number/option.h"
 #include "lattice_traversal/lattice_traversal.h"
 #include "model/table/column_layout_relation_data.h"
@@ -20,7 +21,7 @@ void DFD::RegisterOptions() {
 }
 
 void DFD::MakeExecuteOptsAvailable() {
-    MakeOptionsAvailable({config::ThreadNumberOpt.GetName()});
+    MakeOptionsAvailable({config::MaxLhsOpt.GetName(), config::ThreadNumberOpt.GetName()});
 }
 
 void DFD::ResetStateFd() {

@@ -8,6 +8,7 @@
 #include <easylogging++.h>
 
 #include "config/error/option.h"
+#include "config/max_lhs/option.h"
 #include "lattice_level.h"
 #include "lattice_vertex.h"
 #include "model/table/column_data.h"
@@ -27,7 +28,7 @@ void Tane::RegisterOptions() {
 }
 
 void Tane::MakeExecuteOptsAvailable() {
-    MakeOptionsAvailable({config::ErrorOpt.GetName()});
+    MakeOptionsAvailable({config::MaxLhsOpt.GetName(), config::ErrorOpt.GetName()});
 }
 
 void Tane::ResetStateFd() {
