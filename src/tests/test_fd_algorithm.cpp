@@ -133,7 +133,8 @@ TYPED_TEST_P(AlgorithmTest, MaxLHSOptionWork) {
 
 REGISTER_TYPED_TEST_SUITE_P(AlgorithmTest, ThrowsOnEmpty, ReturnsEmptyOnSingleNonKey,
                             WorksOnLongDataset, WorksOnWideDataset, LightDatasetsConsistentHash,
-                            HeavyDatasetsConsistentHash, ConsistentRepeatedExecution, MaxLHSOptionWork);
+                            HeavyDatasetsConsistentHash, ConsistentRepeatedExecution,
+                            MaxLHSOptionWork);
 
 using Algorithms = ::testing::Types<algos::Tane, algos::Pyro, algos::FastFDs, algos::DFD,
                                     algos::Depminer, algos::FDep, algos::FUN, algos::hyfd::HyFD>;
