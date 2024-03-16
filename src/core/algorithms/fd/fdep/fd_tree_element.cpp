@@ -254,7 +254,7 @@ void FDTreeElement::TransformTreeFdCollection(std::bitset<kMaxAttrNum>& active_p
                                               RelationalSchema const& scheme,
                                               unsigned int max_lhs_ = -1) const {
     for (size_t attr = 1; attr <= this->max_attribute_number_; ++attr) {
-        if (this->is_fd_[attr - 1] && (attr <= max_lhs_)) {
+        if (this->is_fd_[attr - 1]) {
             boost::dynamic_bitset<> lhs_bitset(this->max_attribute_number_);
             for (size_t i = active_path._Find_first(); i != kMaxAttrNum;
                  i = active_path._Find_next(i)) {
@@ -262,15 +262,15 @@ void FDTreeElement::TransformTreeFdCollection(std::bitset<kMaxAttrNum>& active_p
             }
             Vertical lhs(&scheme, lhs_bitset);
             Column rhs(&scheme, scheme.GetColumn(attr - 1)->GetName(), attr - 1);
-            fd_collection.emplace_back(FD{lhs, rhs});
+            if (lhs.GetArity() <= max_lhs_) fd_collection.emplace_back(FD{lhs, rhs});
         }
     }
 
     for (size_t attr = 1; attr <= this->max_attribute_number_; ++attr) {
-        if (this->children_[attr - 1] && (attr <= max_lhs_)) {
+        if (this->children_[attr - 1]) {
             active_path.set(attr);
             this->children_[attr - 1]->TransformTreeFdCollection(active_path, fd_collection,
-                                                                 scheme);
+                                                                 scheme, max_lhs_);
             active_path.reset(attr);
         }
     }
