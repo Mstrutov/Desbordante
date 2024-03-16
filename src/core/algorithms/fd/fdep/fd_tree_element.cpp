@@ -269,8 +269,8 @@ void FDTreeElement::TransformTreeFdCollection(std::bitset<kMaxAttrNum>& active_p
     for (size_t attr = 1; attr <= this->max_attribute_number_; ++attr) {
         if (this->children_[attr - 1]) {
             active_path.set(attr);
-            this->children_[attr - 1]->TransformTreeFdCollection(active_path, fd_collection,
-                                                                 scheme, max_lhs_);
+            this->children_[attr - 1]->TransformTreeFdCollection(active_path, fd_collection, scheme,
+                                                                 max_lhs_);
             active_path.reset(attr);
         }
     }
