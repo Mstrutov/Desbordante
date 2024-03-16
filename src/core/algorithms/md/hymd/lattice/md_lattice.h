@@ -105,6 +105,9 @@ private:
     bool HasLhsGeneralization(MdNode const& node, DecisionBoundaryVector const& lhs_bounds,
                               MdElement rhs, model::Index node_index,
                               model::Index start_index) const;
+    bool HasSpecializedLhsGeneralization(MdNode const& node, DecisionBoundaryVector const& old_lhs,
+                                         MdElement specialized_element, MdElement rhs,
+                                         model::Index node_index, model::Index start_index) const;
 
     void GetLevel(MdNode& cur_node, std::vector<MdVerificationMessenger>& collected,
                   DecisionBoundaryVector& cur_node_lhs_bounds, model::Index cur_node_index,
@@ -135,6 +138,9 @@ private:
 
     void UpdateMaxLevel(DecisionBoundaryVector const& lhs_bounds);
 
+    MdNode* ReturnNextNode(DecisionBoundaryVector const& old_lhs, MdElement specialized_element,
+                           GeneralizationChecker& checker, model::Index cur_node_index,
+                           model::Index next_node_index);
     MdNode* ReturnNextNode(DecisionBoundaryVector const& lhs_bounds, GeneralizationChecker& checker,
                            model::Index cur_node_index, model::Index next_node_index);
 
@@ -146,6 +152,8 @@ private:
     [[nodiscard]] std::optional<model::md::DecisionBoundary> SpecializeOneLhs(
             model::Index col_match_index, model::md::DecisionBoundary lhs_bound) const;
 
+    void AddIfMinimal(DecisionBoundaryVector const& old_lhs, MdElement specialized_element,
+                      MdElement rhs);
     void AddIfMinimal(DecisionBoundaryVector const& lhs_bounds, MdElement rhs);
     bool IsUnsupported(DecisionBoundaryVector const& lhs_bounds) const;
 
