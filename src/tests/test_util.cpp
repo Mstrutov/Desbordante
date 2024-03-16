@@ -11,6 +11,7 @@
 #include "model/table/agree_set_factory.h"
 #include "model/table/column_layout_relation_data.h"
 #include "model/table/identifier_set.h"
+#include "separator_validator.h"
 
 namespace tests {
 
@@ -229,5 +230,35 @@ INSTANTIATE_TEST_SUITE_P(TestLevenshteinSuite, TestLevenshtein,
                                            TestLevenshteinParam("book", "", 4),
                                            TestLevenshteinParam("", "book", 4),
                                            TestLevenshteinParam("randomstring", "juststring", 6)));
+
+struct TestSeparatorValidationParam {
+    std::filesystem::path csv_path;
+    char separator;
+    char expected;
+
+    TestSeparatorValidationParam(std::filesystem::path const& path, char sep, char exp)
+        : csv_path(path), separator(sep), expected(exp) {}
+};
+
+class TestSeparatorValidation : public ::testing::TestWithParam<TestSeparatorValidationParam> {};
+
+TEST_P(TestSeparatorValidation, Default) {
+    TestSeparatorValidationParam const& p = GetParam();
+    std::optional<char> actual = util::ValidateSeparator(p.csv_path, p.separator);
+    EXPECT_EQ(actual.value_or('\0'), p.expected);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+        TestSeparatorValidationSuite, TestSeparatorValidation,
+        ::testing::Values(TestSeparatorValidationParam(test_data_dir / "Test1.csv", ',', ','),
+                          TestSeparatorValidationParam(test_data_dir / "Test1.csv", ';', ';'),
+                          TestSeparatorValidationParam(test_data_dir / "Test1.csv", '1', '\0'),
+                          TestSeparatorValidationParam(test_data_dir / "TestFD.csv", ',', ','),
+                          TestSeparatorValidationParam(test_data_dir / "TestFD.csv", ';', ','),
+                          TestSeparatorValidationParam(test_data_dir / "adult.csv", ';', ';'),
+                          TestSeparatorValidationParam(test_data_dir / "adult.csv", ',', ';'),
+                          TestSeparatorValidationParam(test_data_dir / "abalone.csv", ',', ','),
+                          TestSeparatorValidationParam(test_data_dir / "abalone.csv", '.', ','),
+                          TestSeparatorValidationParam(test_data_dir / "TestParse.csv", ',', ',')));
 
 }  // namespace tests

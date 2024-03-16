@@ -10,6 +10,7 @@
 #include "algorithms/pipelines/typo_miner/typo_miner.h"
 #include "config/names.h"
 #include "tabular_data/input_tables_type.h"
+#include "util/separator_validator.h"
 
 namespace algos {
 
@@ -47,7 +48,9 @@ void LoadAlgorithm(Algorithm& algorithm, StdParamsMap const& options) {
     ConfigureFromFunction(algorithm, [&options](std::string_view option_name) {
         using namespace config::names;
         auto create_input_table = [](CSVConfig const& csv_config) -> config::InputTable {
-            return std::make_shared<CSVParser>(csv_config);
+            auto csv_parser = std::make_shared<CSVParser>(csv_config);
+            csv_parser->ValidateSeparator();
+            return csv_parser;
         };
 
         if (option_name == kTable && options.find(std::string{kTable}) == options.end()) {
