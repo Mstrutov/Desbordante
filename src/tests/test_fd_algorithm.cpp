@@ -127,7 +127,6 @@ TYPED_TEST_P(AlgorithmTest, MaxLHSOptionWork) {
     algos::StdParamsMap verify_params = {
             {kCsvConfig, kTestFD},
             {kError, config::ErrorType{0.0}},
-            {kSeed, decltype(algos::pyro::Parameters::seed){0}},
             {kMaximumLhs, max_lhs_},
     };
     auto verify_algo = algos::CreateAndLoadAlgorithm<algos::Pyro>(verify_params);
@@ -148,7 +147,6 @@ TYPED_TEST_P(AlgorithmTest, MaxLHSOptionWorkOnLargerDataset) {
     algos::StdParamsMap verify_params = {
             {kCsvConfig, kTestMetric},
             {kError, config::ErrorType{0.0}},
-            {kSeed, decltype(algos::pyro::Parameters::seed){0}},
             {kMaximumLhs, max_lhs_},
     };
     auto verify_algo = algos::CreateAndLoadAlgorithm<algos::Pyro>(verify_params);
