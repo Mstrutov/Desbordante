@@ -55,8 +55,8 @@ TEST_P(TestPFDTaneValidation, ErrorCalculationTest) {
     for (auto const &[lhs_id, rhs_id, expected_error] : p.fds) {
         auto lhs = relation->GetColumnData(lhs_id).GetPositionListIndex();
         auto rhs = relation->GetColumnData(rhs_id).GetPositionListIndex();
-        config::ErrorType error =
-                algos::PFDTane::CalculateFdError(lhs, lhs->Intersect(rhs).get(), p.error_measure);
+        config::ErrorType error = algos::PFDTane::CalculateFdError(lhs, lhs->Intersect(rhs).get(),
+                                                                   p.error_measure, relation.get());
         EXPECT_NEAR(error, expected_error, eps);
     }
 }
@@ -65,7 +65,11 @@ TEST_P(TestPFDTaneValidation, ErrorCalculationTest) {
 INSTANTIATE_TEST_SUITE_P(
         PFDTaneTestMiningSuite, TestPFDTaneMining,
         ::testing::Values(
-            PFDTaneMiningParams(44381, 0.3, +algos::ErrorMeasure::per_value, kTestFD)
+            PFDTaneMiningParams(44381, 0.3, +algos::ErrorMeasure::per_value, kTestFD),
+            PFDTaneMiningParams(39491, 0.1, +algos::ErrorMeasure::per_value, kiris),
+            PFDTaneMiningParams(10695, 0.01, +algos::ErrorMeasure::per_value, kiris),
+            PFDTaneMiningParams(7893, 0.1, +algos::ErrorMeasure::per_value, kneighbors10k),
+            PFDTaneMiningParams(41837, 0.01, +algos::ErrorMeasure::per_value, kneighbors10k)
         ));
 
 INSTANTIATE_TEST_SUITE_P(

@@ -7,43 +7,25 @@
 #include "config/max_lhs/type.h"
 #include "model/table/position_list_index.h"
 #include "model/table/relation_data.h"
+#include "tane_common.h"
 
 namespace algos {
 
-class Tane : public PliBasedFDAlgorithm {
+class Tane : public TaneCommon {
 private:
     void RegisterOptions();
     void MakeExecuteOptsAvailable() final;
-
-    void ResetStateFd() final;
-    unsigned long long ExecuteInternal() final;
+    config::ErrorType CalculateZeroAryFdError(ColumnData const* rhs) override;
+    config::ErrorType CalculateFdError(model::PositionListIndex const* lhs_pli,
+                                       model::PositionListIndex const* joint_pli) override;
 
 public:
-    config::ErrorType max_fd_error_;
-    config::ErrorType max_ucc_error_;
-    config::MaxLhsType max_lhs_;
-
-    int count_of_fd_ = 0;
-    int count_of_ucc_ = 0;
-    long apriori_millis_ = 0;
-
     Tane();
-
-    static double CalculateZeroAryFdError(ColumnData const* rhs,
-                                          ColumnLayoutRelationData const* relation_data);
-    static double CalculateFdError(model::PositionListIndex const* lhs_pli,
-                                   model::PositionListIndex const* joint_pli,
-                                   ColumnLayoutRelationData const* relation_data);
-    static double CalculateUccError(model::PositionListIndex const* pli,
-                                    ColumnLayoutRelationData const* relation_data);
-
-    // static double round(double error) { return ((int)(error * 32768) + 1)/ 32768.0; }
-
-    void RegisterAndCountFd(Vertical const& lhs, Column const* rhs, double error,
-                            RelationalSchema const* schema);
-    // void RegisterFd(Vertical const* lhs, Column const* rhs, double error, RelationalSchema const*
-    // schema);
-    void RegisterUcc(Vertical const& key, double error, RelationalSchema const* schema);
+    static config::ErrorType CalculateZeroAryFdError(ColumnData const* rhs,
+                                                     ColumnLayoutRelationData const* relation_data);
+    static config::ErrorType CalculateFdError(model::PositionListIndex const* lhs_pli,
+                                              model::PositionListIndex const* joint_pli,
+                                              ColumnLayoutRelationData const* relation_data);
 };
 
 }  // namespace algos
