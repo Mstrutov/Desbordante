@@ -121,7 +121,7 @@ if __name__ == '__main__':
     print("options: \nMINIMUM SUPPORT =", MINIMUM_SUPPORT,
           ", MINIMUM CONFIDENCE =", MINIMUM_CONFIDENCE,
           ", MAXIMUM LHS COUNT =", MAXIMUM_LHS_COUNT)
-    print("displaying the first five discovered CFD's (or less):\n")
+    print("displaying the first five (or fewer) discovered CFDs:\n")
     for cfd in result[:5]:
         visualize_cfd(cfd, tableDF)
         print("\n\n")
