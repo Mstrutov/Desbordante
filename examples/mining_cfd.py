@@ -3,7 +3,7 @@ import pandas
 from collections import defaultdict
 
 # CFD Discovery parameters:
-TABLEPATH = 'examples/datasets/university_fd.csv'
+TABLEPATH = 'examples/datasets/play_tennis.csv'
 MINIMUM_SUPPORT = 8
 MINIMUM_CONFIDENCE = 0.7
 MAXIMUM_LHS_COUNT = 3
@@ -62,20 +62,19 @@ def validate_cfd(lhs, rhs, table):
     rows_satisfying_cfd = []
     lhs_to_row_nums = make_lhs_to_row_nums(cfd_lhs_var_attributes, supported_rows, table)
 
-    # mark rows with identical lhs with green color if they have the most frequent rhs
-    for string_lhs in lhs_to_row_nums:
+    # add rows with identical lhs to rows_satisfying_cfd if they have the most frequent rhs
+    for string_lhs, row_nums_with_lhs in lhs_to_row_nums.items():
         # fill rhs_to_row_nums
         rhs_to_row_nums = defaultdict(list)
-        for row_num in lhs_to_row_nums[string_lhs]:
+        for row_num in row_nums_with_lhs:
             row_dataframe = table.iloc[[row_num], :]
             rhs_to_row_nums[row_dataframe.iloc[0, [rhs.attribute]].to_string()].append(row_num)
 
-
         best_count = 0
         most_frequent_rhs = None
-        for string_rhs in rhs_to_row_nums:
-            if len(rhs_to_row_nums[string_rhs]) > best_count:
-                best_count = len(rhs_to_row_nums[string_rhs])
+        for string_rhs, row_nums_with_rhs in rhs_to_row_nums.items():
+            if len(row_nums_with_rhs) > best_count:
+                best_count = len(row_nums_with_rhs)
                 most_frequent_rhs = string_rhs
         for row_num in rhs_to_row_nums[most_frequent_rhs]:
             rows_satisfying_cfd.append(row_num)
