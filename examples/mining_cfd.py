@@ -1,5 +1,6 @@
 import desbordante
 import pandas
+from collections import defaultdict
 
 # CFD Discovery parameters:
 TABLEPATH = 'examples/datasets/university_fd.csv'
@@ -36,15 +37,12 @@ def row_is_supported(row_dataframe, pattern):
 #   key: a string representation of a dataframe with certain attribute values
 #   value: indices of all rows with those attribute values
 def make_lhs_to_row_nums(cfd_lhs_var_attributes, supported_rows, table):
-    lhs_to_row_nums = {}
+    lhs_to_row_nums = defaultdict(list)
     for row_num in range(0, len(table.index)):
         row_dataframe = table.iloc[[row_num], :]
         if row_num not in supported_rows:
             continue
-        if row_dataframe.iloc[0, cfd_lhs_var_attributes].to_string() in lhs_to_row_nums:
-            lhs_to_row_nums[row_dataframe.iloc[0, cfd_lhs_var_attributes].to_string()].append(row_num)
-        else:
-            lhs_to_row_nums[row_dataframe.iloc[0, cfd_lhs_var_attributes].to_string()] = [row_num]
+        lhs_to_row_nums[row_dataframe.iloc[0, cfd_lhs_var_attributes].to_string()].append(row_num)
     return lhs_to_row_nums
 
 
@@ -67,13 +65,11 @@ def validate_cfd(lhs, rhs, table):
     # mark rows with identical lhs with green color if they have the most frequent rhs
     for string_lhs in lhs_to_row_nums:
         # fill rhs_to_row_nums
-        rhs_to_row_nums = {}
+        rhs_to_row_nums = defaultdict(list)
         for row_num in lhs_to_row_nums[string_lhs]:
             row_dataframe = table.iloc[[row_num], :]
-            if row_dataframe.iloc[0, [rhs.attribute]].to_string() in rhs_to_row_nums:
-                rhs_to_row_nums[row_dataframe.iloc[0, [rhs.attribute]].to_string()].append(row_num)
-            else:
-                rhs_to_row_nums[row_dataframe.iloc[0, [rhs.attribute]].to_string()] = [row_num]
+            rhs_to_row_nums[row_dataframe.iloc[0, [rhs.attribute]].to_string()].append(row_num)
+
 
         best_count = 0
         most_frequent_rhs = None
