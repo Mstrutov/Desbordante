@@ -133,6 +133,10 @@ private:
     std::vector<ColumnMatchInfo> const* const column_matches_info_;
     bool const prune_nondisjoint_;
 
+    bool HasChildGenSpec(MdNode const& node, model::Index node_index, model::Index next_node_index,
+                         model::md::DecisionBoundary bound_limit, auto const& md, auto gen_method,
+                         auto get_b_map_iter) const;
+
     bool HasLhsGeneralizationTotal(MdNode const& node, Md const& md, model::Index node_index,
                                    model::Index start_index) const;
     bool HasLhsGeneralizationSpec(MdNode const& node, MdSpecialization const& md,
@@ -143,7 +147,15 @@ private:
                   std::size_t level_left);
 
     [[nodiscard]] bool HasGeneralizationTotal(MdNode const& node, Md const& md,
-                                              model::Index cur_node_index) const;
+                                              model::Index cur_node_index) const {
+        if (node.rhs_bounds[md.rhs.index] >= md.rhs.decision_boundary) return true;
+        return HasLhsGeneralizationTotal(node, md, cur_node_index, cur_node_index);
+    }
+
+    [[nodiscard]] bool HasGeneralizationSpec(MdNode const& node, MdSpecialization const& md,
+                                             model::Index cur_node_index) const {
+        return HasLhsGeneralizationSpec(node, md, cur_node_index, cur_node_index);
+    }
 
     void RaiseInterestingnessBounds(
             MdNode const& cur_node, DecisionBoundaryVector const& lhs_bounds,
