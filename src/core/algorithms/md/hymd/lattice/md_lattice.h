@@ -65,6 +65,14 @@ public:
               rhs_(rhs),
               invalidated_(std::move(invalidated)) {}
 
+        DecisionBoundaryVector const& GetLhs() const {
+            return lhs_;
+        }
+
+        void ZeroRhs() {
+            rhs_->assign(lattice_->GetColMatchNumber(), 0.0);
+        }
+
         void Refine();
     };
 
@@ -87,6 +95,10 @@ public:
         }
 
         void MarkUnsupported();
+
+        void ZeroRhs() {
+            rhs_->assign(lattice_->GetColMatchNumber(), 0.0);
+        }
 
         void LowerAndSpecialize(utility::InvalidatedRhss const& invalidated);
     };

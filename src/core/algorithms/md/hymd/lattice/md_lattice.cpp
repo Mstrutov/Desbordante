@@ -147,12 +147,24 @@ auto MdLattice::CollectRefinersForViolated(SimilarityVector const& similarity_ve
     std::vector<MdRefiner> found;
     DecisionBoundaryVector current_lhs(column_matches_size_, kLowestBound);
     CollectRefinersForViolated(md_root_, found, current_lhs, similarity_vector, 0);
+    // TODO: traverse support trie simultaneously.
+    util::EraseIfReplace(found, [this](MdRefiner& refiner) {
+        bool const unsupported = IsUnsupported(refiner.GetLhs());
+        if (unsupported) refiner.ZeroRhs();
+        return unsupported;
+    });
     return found;
 }
 
 void MdLattice::MdVerificationMessenger::MarkUnsupported() {
     // TODO: specializations can be removed from the MD lattice. If not worth it, removing just
     // this node and its children should be cheap. Though, destructors also take time.
+
+    // This matters. Violation search can find a node with a specialized LHS but higher RHS bound,
+    // leading to extra work (though no influence on correctness, as MDs with unsupported LHSs are
+    // filtered out).
+    ZeroRhs();
+
     lattice_->MarkUnsupported(lhs_);
 }
 
@@ -536,12 +548,14 @@ void MdLattice::GetLevel(MdNode& cur_node, std::vector<MdVerificationMessenger>&
 }
 
 auto MdLattice::GetLevel(std::size_t const level) -> std::vector<MdVerificationMessenger> {
-    // TODO: traverse both simultaneously.
     std::vector<MdVerificationMessenger> collected;
     DecisionBoundaryVector current_lhs(column_matches_size_, kLowestBound);
     GetLevel(md_root_, collected, current_lhs, 0, level);
-    util::EraseIfReplace(collected, [this](MdVerificationMessenger const& messenger) {
-        return IsUnsupported(messenger.GetLhs());
+    // TODO: traverse support trie simultaneously.
+    util::EraseIfReplace(collected, [this](MdVerificationMessenger& messenger) {
+        bool is_unsupported = IsUnsupported(messenger.GetLhs());
+        if (is_unsupported) messenger.ZeroRhs();
+        return is_unsupported;
     });
     return collected;
 }
