@@ -114,20 +114,20 @@ private:
     std::vector<ColumnMatchInfo> const* const column_matches_info_;
     bool const prune_nondisjoint_;
 
-    bool HasLhsGeneralization(MdNode const& node, DecisionBoundaryVector const& lhs_bounds,
-                              MdElement rhs, model::Index node_index,
-                              model::Index start_index) const;
-    bool HasSpecializedLhsGeneralization(MdNode const& node, DecisionBoundaryVector const& old_lhs,
-                                         MdElement specialized_element, MdElement rhs,
-                                         model::Index node_index, model::Index start_index) const;
+    bool HasLhsGeneralizationTotal(MdNode const& node, DecisionBoundaryVector const& lhs_bounds,
+                                   MdElement rhs, model::Index node_index,
+                                   model::Index start_index) const;
+    bool HasLhsGeneralizationSpec(MdNode const& node, DecisionBoundaryVector const& old_lhs,
+                                  MdElement specialized_element, MdElement rhs,
+                                  model::Index node_index, model::Index start_index) const;
 
     void GetLevel(MdNode& cur_node, std::vector<MdVerificationMessenger>& collected,
                   DecisionBoundaryVector& cur_node_lhs_bounds, model::Index cur_node_index,
                   std::size_t level_left);
 
-    [[nodiscard]] bool HasGeneralization(MdNode const& node,
-                                         DecisionBoundaryVector const& lhs_bounds, MdElement rhs,
-                                         model::Index cur_node_index) const;
+    [[nodiscard]] bool HasGeneralizationTotal(MdNode const& node,
+                                              DecisionBoundaryVector const& lhs_bounds,
+                                              MdElement rhs, model::Index cur_node_index) const;
 
     void RaiseInterestingnessBounds(
             MdNode const& cur_node, DecisionBoundaryVector const& lhs_bounds,
@@ -156,8 +156,8 @@ private:
     MdNode* ReturnNextNode(DecisionBoundaryVector const& lhs_bounds, GeneralizationChecker& checker,
                            model::Index cur_node_index, model::Index next_node_index);
 
-    bool IsUnsupported(SupportNode const& cur_node, DecisionBoundaryVector const& lhs_bounds,
-                       model::Index cur_node_index) const;
+    bool IsUnsupportedTotal(SupportNode const& cur_node, DecisionBoundaryVector const& lhs_bounds,
+                            model::Index cur_node_index) const;
     void MarkNewLhs(SupportNode& cur_node, DecisionBoundaryVector const& lhs_bounds,
                     model::Index cur_node_index);
 
