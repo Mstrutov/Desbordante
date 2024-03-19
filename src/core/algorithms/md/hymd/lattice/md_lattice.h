@@ -22,6 +22,25 @@ namespace algos::hymd::lattice {
 
 class MdLattice {
 private:
+    struct LhsSpecialization {
+        DecisionBoundaryVector const& old_lhs;
+        MdElement specialized;
+    };
+
+    struct Md {
+        DecisionBoundaryVector const& lhs;
+        MdElement rhs;
+    };
+
+    struct MdSpecialization {
+        LhsSpecialization const& lhs_specialization;
+        MdElement rhs;
+
+        Md ToOldMd() const {
+            return {lhs_specialization.old_lhs, rhs};
+        }
+    };
+
     struct MdNode {
         LatticeChildArray<MdNode> children;
         DecisionBoundaryVector rhs_bounds;
@@ -114,20 +133,17 @@ private:
     std::vector<ColumnMatchInfo> const* const column_matches_info_;
     bool const prune_nondisjoint_;
 
-    bool HasLhsGeneralizationTotal(MdNode const& node, DecisionBoundaryVector const& lhs_bounds,
-                                   MdElement rhs, model::Index node_index,
+    bool HasLhsGeneralizationTotal(MdNode const& node, Md const& md, model::Index node_index,
                                    model::Index start_index) const;
-    bool HasLhsGeneralizationSpec(MdNode const& node, DecisionBoundaryVector const& old_lhs,
-                                  MdElement specialized_element, MdElement rhs,
+    bool HasLhsGeneralizationSpec(MdNode const& node, MdSpecialization const& md,
                                   model::Index node_index, model::Index start_index) const;
 
     void GetLevel(MdNode& cur_node, std::vector<MdVerificationMessenger>& collected,
                   DecisionBoundaryVector& cur_node_lhs_bounds, model::Index cur_node_index,
                   std::size_t level_left);
 
-    [[nodiscard]] bool HasGeneralizationTotal(MdNode const& node,
-                                              DecisionBoundaryVector const& lhs_bounds,
-                                              MdElement rhs, model::Index cur_node_index) const;
+    [[nodiscard]] bool HasGeneralizationTotal(MdNode const& node, Md const& md,
+                                              model::Index cur_node_index) const;
 
     void RaiseInterestingnessBounds(
             MdNode const& cur_node, DecisionBoundaryVector const& lhs_bounds,
@@ -145,16 +161,9 @@ private:
     void GetAll(MdNode& cur_node, std::vector<MdLatticeNodeInfo>& collected,
                 DecisionBoundaryVector& cur_node_lhs_bounds, model::Index this_node_index);
 
-    void AddNewMinimal(MdNode& cur_node, DecisionBoundaryVector const& lhs_bounds, MdElement rhs,
-                       model::Index cur_node_index);
+    void AddNewMinimal(MdNode& cur_node, MdSpecialization const& md, model::Index cur_node_index);
 
-    void UpdateMaxLevel(DecisionBoundaryVector const& lhs_bounds);
-
-    MdNode* ReturnNextNode(DecisionBoundaryVector const& old_lhs, MdElement specialized_element,
-                           GeneralizationChecker& checker, model::Index cur_node_index,
-                           model::Index next_node_index);
-    MdNode* ReturnNextNode(DecisionBoundaryVector const& lhs_bounds, GeneralizationChecker& checker,
-                           model::Index cur_node_index, model::Index next_node_index);
+    void UpdateMaxLevel(LhsSpecialization const& lhs_specialization);
 
     bool IsUnsupportedTotal(SupportNode const& cur_node, DecisionBoundaryVector const& lhs_bounds,
                             model::Index cur_node_index) const;
@@ -164,13 +173,10 @@ private:
     [[nodiscard]] std::optional<model::md::DecisionBoundary> SpecializeOneLhs(
             model::Index col_match_index, model::md::DecisionBoundary lhs_bound) const;
 
-    void AddIfMinimal(DecisionBoundaryVector const& old_lhs, MdElement specialized_element,
-                      MdElement rhs);
-    void AddIfMinimal(DecisionBoundaryVector const& lhs_bounds, MdElement rhs);
+    void AddIfMinimal(MdSpecialization const& md);
     bool IsUnsupported(DecisionBoundaryVector const& lhs_bounds) const;
 
-    [[nodiscard]] bool HasGeneralization(DecisionBoundaryVector const& lhs_bounds,
-                                         MdElement rhs) const;
+    [[nodiscard]] bool HasGeneralization(Md const& md) const;
 
     void MarkUnsupported(DecisionBoundaryVector const& lhs_bounds);
 

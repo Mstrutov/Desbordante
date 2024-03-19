@@ -57,26 +57,26 @@ void MdLattice::Specialize(DecisionBoundaryVector& lhs_bounds,
             if (IsUnsupported(lhs_bounds)) continue;
             lhs_bound = old_bound;
 
-            MdElement lhs_element{lhs_spec_index, *specialized_lhs_bound};
+            LhsSpecialization lhs_specialization{lhs_bounds,
+                                                 {lhs_spec_index, *specialized_lhs_bound}};
             for (auto it = it_begin; it != it_end; ++it) {
                 if (it->index == lhs_spec_index) {
-                    handle_same_lhs_as_rhs(*it, lhs_element, *specialized_lhs_bound);
+                    handle_same_lhs_as_rhs(lhs_specialization, *it);
                     for (++it; it != it_end; ++it) {
-                        AddIfMinimal(lhs_bounds, lhs_element, *it);
+                        AddIfMinimal({lhs_specialization, *it});
                     }
                     break;
                 }
-                AddIfMinimal(lhs_bounds, lhs_element, *it);
+                AddIfMinimal({lhs_specialization, *it});
             }
         }
     };
     if (prune_nondisjoint_) {
         specialize_all_lhs([](...) {});
     } else {
-        specialize_all_lhs([this, &lhs_bounds](MdElement old_rhs, MdElement lhs_element,
-                                               DecisionBoundary specialized_lhs_bound) {
-            if (old_rhs.decision_boundary > specialized_lhs_bound) {
-                AddIfMinimal(lhs_bounds, lhs_element, old_rhs);
+        specialize_all_lhs([this](LhsSpecialization const& lhs_spec, MdElement rhs) {
+            if (rhs.decision_boundary > lhs_spec.specialized.decision_boundary) {
+                AddIfMinimal({lhs_spec, rhs});
             }
         });
     }
@@ -91,7 +91,7 @@ void MdLattice::MdRefiner::Refine() {
         // trivial
         if (new_bound <= lhs_[rhs_index]) continue;
         // not minimal
-        if (lattice_->HasGeneralization(lhs_, *upd_iter)) continue;
+        if (lattice_->HasGeneralization({lhs_, *upd_iter})) continue;
         md_rhs_bound_ref = new_bound;
     }
     lattice_->Specialize(lhs_, *sim_, invalidated_.GetInvalidated());
@@ -178,29 +178,31 @@ void MdLattice::MdVerificationMessenger::LowerAndSpecialize(
     lattice_->Specialize(lhs_, lhs_, invalidated.GetInvalidated());
 }
 
-void MdLattice::AddNewMinimal(MdNode& cur_node, DecisionBoundaryVector const& lhs_bounds,
-                              MdElement rhs, Index cur_node_index) {
+void MdLattice::AddNewMinimal(MdNode& cur_node, MdSpecialization const& md, Index cur_node_index) {
     assert(IsEmpty(cur_node.children));
     assert(!NotEmpty(cur_node.rhs_bounds));
+    assert(cur_node_index > md.lhs_specialization.specialized.index);
+    DecisionBoundaryVector const& old_lhs = md.lhs_specialization.old_lhs;
     MdNode* cur_node_ptr = &cur_node;
-    for (Index next_node_index = GetFirstNonZeroIndex(lhs_bounds, cur_node_index);
+    for (Index next_node_index = GetFirstNonZeroIndex(old_lhs, cur_node_index);
          next_node_index != column_matches_size_; cur_node_index = next_node_index + 1,
-               next_node_index = GetFirstNonZeroIndex(lhs_bounds, cur_node_index)) {
+               next_node_index = GetFirstNonZeroIndex(old_lhs, cur_node_index)) {
         std::size_t const child_array_index = next_node_index - cur_node_index;
         std::size_t const next_child_array_size = column_matches_size_ - next_node_index;
         cur_node_ptr = &cur_node_ptr->children[child_array_index]
                                 .emplace()
-                                .try_emplace(lhs_bounds[next_node_index], column_matches_size_,
+                                .try_emplace(old_lhs[next_node_index], column_matches_size_,
                                              next_child_array_size)
                                 .first->second;
     }
-    cur_node_ptr->rhs_bounds[rhs.index] = rhs.decision_boundary;
-    UpdateMaxLevel(lhs_bounds);
+    auto const& [rhs_index, rhs_bound] = md.rhs;
+    cur_node_ptr->rhs_bounds[rhs_index] = rhs_bound;
+    UpdateMaxLevel(md.lhs_specialization);
 }
 
-bool MdLattice::HasLhsGeneralizationTotal(MdNode const& node,
-                                          DecisionBoundaryVector const& lhs_bounds, MdElement rhs,
-                                          Index const node_index, Index const start_index) const {
+bool MdLattice::HasLhsGeneralizationTotal(MdNode const& node, Md const& md, Index const node_index,
+                                          Index const start_index) const {
+    DecisionBoundaryVector const& lhs_bounds = md.lhs;
     for (Index next_node_index = GetFirstNonZeroIndex(lhs_bounds, start_index);
          next_node_index != column_matches_size_;
          next_node_index = GetFirstNonZeroIndex(lhs_bounds, next_node_index + 1)) {
@@ -210,16 +212,16 @@ bool MdLattice::HasLhsGeneralizationTotal(MdNode const& node,
         DecisionBoundary const generalization_bound_limit = lhs_bounds[next_node_index];
         for (auto const& [generalization_bound, node] : *optional_child) {
             if (generalization_bound > generalization_bound_limit) break;
-            if (HasGeneralizationTotal(node, lhs_bounds, rhs, next_node_index + 1)) return true;
+            if (HasGeneralizationTotal(node, md, next_node_index + 1)) return true;
         }
     }
     return false;
 }
 
-bool MdLattice::HasLhsGeneralizationSpec(MdNode const& node, DecisionBoundaryVector const& old_lhs,
-                                         MdElement specialized_element, MdElement rhs,
+bool MdLattice::HasLhsGeneralizationSpec(MdNode const& node, MdSpecialization const& md,
                                          Index node_index, Index start_index) const {
-    Index spec_index = specialized_element.index;
+    auto const& [spec_index, spec_bound] = md.lhs_specialization.specialized;
+    DecisionBoundaryVector const& old_lhs = md.lhs_specialization.old_lhs;
     for (Index next_node_index = GetFirstNonZeroIndex(old_lhs, start_index);
          next_node_index < spec_index;
          next_node_index = GetFirstNonZeroIndex(old_lhs, next_node_index + 1)) {
@@ -230,29 +232,36 @@ bool MdLattice::HasLhsGeneralizationSpec(MdNode const& node, DecisionBoundaryVec
         for (auto const& [generalization_bound, node] : *optional_child) {
             if (generalization_bound > generalization_bound_limit) break;
             Index fol_index = next_node_index + 1;
-            if (HasLhsGeneralizationSpec(node, old_lhs, specialized_element, rhs, fol_index,
-                                         fol_index))
-                return true;
+            if (HasLhsGeneralizationSpec(node, md, fol_index, fol_index)) return true;
         }
     }
     Index const spec_child_array_index = spec_index - node_index;
     MdOptionalChild const& optional_child = node.children[spec_child_array_index];
     if (!optional_child.has_value()) return false;
+    Md unspecialized = md.ToOldMd();
     MdBoundMap const& b_map = *optional_child;
-    DecisionBoundary const generalization_bound_limit = specialized_element.decision_boundary;
     for (auto spec_iter = b_map.upper_bound(old_lhs[spec_index]), end_iter = b_map.end();
          spec_iter != end_iter; ++spec_iter) {
         auto const& [generalization_bound, node] = *spec_iter;
-        if (generalization_bound > generalization_bound_limit) break;
-        if (HasGeneralizationTotal(node, old_lhs, rhs, spec_index + 1)) return true;
+        if (generalization_bound > spec_bound) break;
+        if (HasGeneralizationTotal(node, unspecialized, spec_index + 1)) return true;
     }
     return false;
 }
 
-void MdLattice::UpdateMaxLevel(DecisionBoundaryVector const& lhs_bounds) {
+void MdLattice::UpdateMaxLevel(LhsSpecialization const& lhs) {
     std::size_t level = 0;
-    for (Index i = 0; i != column_matches_size_; ++i) {
-        DecisionBoundary cur_bound = lhs_bounds[i];
+    auto const& [spec_index, spec_bound] = lhs.specialized;
+    DecisionBoundaryVector const& old_lhs = lhs.old_lhs;
+    for (Index i = 0; i != spec_index; ++i) {
+        DecisionBoundary cur_bound = old_lhs[i];
+        if (cur_bound == kLowestBound) continue;
+        level += get_single_level_(cur_bound, i);
+    }
+    assert(spec_bound != kLowestBound);
+    level += get_single_level_(spec_bound, spec_index);
+    for (Index i = spec_index + 1; i != column_matches_size_; ++i) {
+        DecisionBoundary cur_bound = old_lhs[i];
         if (cur_bound == kLowestBound) continue;
         level += get_single_level_(cur_bound, i);
     }
@@ -299,6 +308,7 @@ public:
     }
 };
 
+/*
 auto MdLattice::ReturnNextNode(DecisionBoundaryVector const& lhs_bounds,
                                GeneralizationChecker& checker, Index cur_node_index,
                                Index next_node_index) -> MdNode* {
@@ -312,7 +322,7 @@ auto MdLattice::ReturnNextNode(DecisionBoundaryVector const& lhs_bounds,
                 boundary_mapping
                         .try_emplace(next_lhs_bound, column_matches_size_, next_child_array_size)
                         .first->second;
-        AddNewMinimal(new_node, lhs_bounds, rhs, next_node_index + 1);
+        AddNewMinimal(new_node, {lhs_bounds, rhs}, next_node_index + 1);
         return nullptr;
     }
 
@@ -321,7 +331,7 @@ auto MdLattice::ReturnNextNode(DecisionBoundaryVector const& lhs_bounds,
         auto& [generalization_bound, node] = *it;
         if (generalization_bound > next_lhs_bound) break;
         if (generalization_bound == next_lhs_bound) return &it->second;
-        if (HasGeneralizationTotal(node, lhs_bounds, rhs, next_node_index + 1)) return nullptr;
+        if (HasGeneralizationTotal(node, {lhs_bounds, rhs}, next_node_index + 1)) return nullptr;
     }
     using std::forward_as_tuple;
     MdNode& new_node =
@@ -329,16 +339,17 @@ auto MdLattice::ReturnNextNode(DecisionBoundaryVector const& lhs_bounds,
                     .emplace_hint(it, std::piecewise_construct, forward_as_tuple(next_lhs_bound),
                                   forward_as_tuple(column_matches_size_, next_child_array_size))
                     ->second;
-    AddNewMinimal(new_node, lhs_bounds, rhs, next_node_index + 1);
+    AddNewMinimal(new_node, {lhs_bounds, rhs}, next_node_index + 1);
     return nullptr;
 }
+*/
 
-void MdLattice::AddIfMinimal(DecisionBoundaryVector const& old_lhs, MdElement specialized_element,
-                             MdElement rhs) {
-    if (HasLhsGeneralizationSpec(md_root_, old_lhs, specialized_element, rhs, 0, 0)) {
+void MdLattice::AddIfMinimal(MdSpecialization const& md) {
+    if (HasLhsGeneralizationSpec(md_root_, md, 0, 0)) {
         return;
     }
-    Index const spec_index = specialized_element.index;
+    auto const& [spec_index, spec_bound] = md.lhs_specialization.specialized;
+    DecisionBoundaryVector const& old_lhs = md.lhs_specialization.old_lhs;
     MdNode* cur_node = &md_root_;
     Index cur_node_index = 0;
     for (Index next_node_index = GetFirstNonZeroIndex(old_lhs, cur_node_index);
@@ -355,20 +366,19 @@ void MdLattice::AddIfMinimal(DecisionBoundaryVector const& old_lhs, MdElement sp
     Index const spec_child_array_index = spec_index - cur_node_index;
     MdNodeChildren& spec_children = cur_node->children;
     std::size_t const next_child_array_size = column_matches_size_ - spec_index;
-    DecisionBoundary const spec_bound = specialized_element.decision_boundary;
     auto [boundary_mapping, is_first_arr] = TryEmplaceChild(spec_children, spec_child_array_index);
     if (is_first_arr) {
         MdNode& new_node =
                 boundary_mapping
                         .try_emplace(spec_bound, column_matches_size_, next_child_array_size)
                         .first->second;
-        AddNewMinimal(new_node, old_lhs, rhs, spec_index + 1);
+        AddNewMinimal(new_node, md, spec_index + 1);
         return;
     }
     auto [it, is_first_map] =
             boundary_mapping.try_emplace(spec_bound, column_matches_size_, next_child_array_size);
     if (is_first_map) {
-        AddNewMinimal(it->second, old_lhs, rhs, spec_index + 1);
+        AddNewMinimal(it->second, md, spec_index + 1);
         return;
     }
     cur_node = &it->second;
@@ -386,18 +396,19 @@ void MdLattice::AddIfMinimal(DecisionBoundaryVector const& old_lhs, MdElement sp
                                        .try_emplace(next_lhs_bound, column_matches_size_,
                                                     next_child_array_size)
                                        .first->second;
-            AddNewMinimal(new_node, old_lhs, rhs, next_node_index + 1);
+            AddNewMinimal(new_node, md, next_node_index + 1);
             return;
         }
         auto [it, is_first_map] = boundary_mapping.try_emplace(next_lhs_bound, column_matches_size_,
                                                                next_child_array_size);
         if (is_first_map) {
-            AddNewMinimal(it->second, old_lhs, rhs, next_node_index + 1);
+            AddNewMinimal(it->second, md, next_node_index + 1);
             return;
         }
         cur_node = &it->second;
     }
-    cur_node->rhs_bounds[rhs.index] = rhs.decision_boundary;
+    auto const& [rhs_index, rhs_bound] = md.rhs;
+    cur_node->rhs_bounds[rhs_index] = rhs_bound;
 
     // TODO: add proper AddIfMinimal
     /*
@@ -420,6 +431,7 @@ void MdLattice::AddIfMinimal(DecisionBoundaryVector const& old_lhs, MdElement sp
     */
 }
 
+/*
 void MdLattice::AddIfMinimal(DecisionBoundaryVector const& lhs_bounds, MdElement rhs) {
     // TODO: use info about where the LHS was specialized from to reduce generalization checks.
     // When an MD is inferred from, it is not a specialization of any other MD in the lattice, so
@@ -454,17 +466,16 @@ void MdLattice::AddIfMinimal(DecisionBoundaryVector const& lhs_bounds, MdElement
     // record pair.
     checker.SetBoundOnCurrent();
 }
+*/
 
-bool MdLattice::HasGeneralizationTotal(MdNode const& node, DecisionBoundaryVector const& lhs_bounds,
-                                       MdElement rhs, Index const cur_node_index) const {
-    if (node.rhs_bounds[rhs.index] >= rhs.decision_boundary) return true;
-    if (HasLhsGeneralizationTotal(node, lhs_bounds, rhs, cur_node_index, cur_node_index))
-        return true;
-    return false;
+bool MdLattice::HasGeneralizationTotal(MdNode const& node, Md const& md,
+                                       Index const cur_node_index) const {
+    if (node.rhs_bounds[md.rhs.index] >= md.rhs.decision_boundary) return true;
+    return HasLhsGeneralizationTotal(node, md, cur_node_index, cur_node_index);
 }
 
-bool MdLattice::HasGeneralization(DecisionBoundaryVector const& lhs_bounds, MdElement rhs) const {
-    return HasGeneralizationTotal(md_root_, lhs_bounds, rhs, 0);
+bool MdLattice::HasGeneralization(Md const& md) const {
+    return HasGeneralizationTotal(md_root_, md, 0);
 }
 
 void MdLattice::RaiseInterestingnessBounds(
@@ -490,9 +501,8 @@ void MdLattice::RaiseInterestingnessBounds(
         }
     }
 
-    std::size_t const col_match_number = lhs_bounds.size();
     for (Index next_node_index = GetFirstNonZeroIndex(lhs_bounds, this_node_index);
-         next_node_index != col_match_number;
+         next_node_index != column_matches_size_;
          next_node_index = GetFirstNonZeroIndex(lhs_bounds, next_node_index + 1)) {
         Index const child_array_index = next_node_index - this_node_index;
         MdOptionalChild const& optional_child = cur_node.children[child_array_index];
