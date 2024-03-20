@@ -471,10 +471,6 @@ void MdLattice::AddIfMinimal(DecisionBoundaryVector const& lhs_bounds, MdElement
 }
 */
 
-bool MdLattice::HasGeneralization(Md const& md) const {
-    return HasGeneralizationTotal(md_root_, md, 0);
-}
-
 void MdLattice::RaiseInterestingnessBounds(
         MdNode const& cur_node, DecisionBoundaryVector const& lhs_bounds,
         std::vector<DecisionBoundary>& cur_interestingness_bounds, Index const this_node_index,
@@ -630,10 +626,6 @@ void MdLattice::MarkNewLhs(SupportNode& cur_node, DecisionBoundaryVector const& 
                                 .first->second;
     }
     cur_node_ptr->is_unsupported = true;
-}
-
-bool MdLattice::IsUnsupported(DecisionBoundaryVector const& lhs_bounds) const {
-    return IsUnsupportedTotal(support_root_, lhs_bounds, 0);
 }
 
 void MdLattice::MarkUnsupported(DecisionBoundaryVector const& lhs_bounds) {
