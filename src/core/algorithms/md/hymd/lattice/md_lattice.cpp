@@ -273,15 +273,17 @@ void MdLattice::UpdateMaxLevel(LhsSpecialization const& lhs) {
 
 class MdLattice::GeneralizationChecker {
 private:
-    MdNode* node_ = nullptr;
-    DecisionBoundary* cur_node_rhs_ptr_ = nullptr;
     MdElement const rhs_;
+    MdNode* node_;
+    DecisionBoundary* cur_node_rhs_ptr_;
 
 public:
-    GeneralizationChecker(MdElement rhs) noexcept : rhs_(rhs) {}
+    GeneralizationChecker(MdElement rhs, MdNode& root) noexcept
+        : rhs_(rhs), node_(&root), cur_node_rhs_ptr_(&node_->rhs_bounds[rhs_.index]) {}
 
-    bool SetAndCheck(MdNode& node) noexcept {
-        node_ = &node;
+    bool SetAndCheck(MdNode* node_ptr) noexcept {
+        if (!node_ptr) return true;
+        node_ = node_ptr;
         cur_node_rhs_ptr_ = &node_->rhs_bounds[rhs_.index];
         return *cur_node_rhs_ptr_ >= rhs_.decision_boundary;
     }
@@ -311,30 +313,28 @@ public:
     }
 };
 
-/*
-auto MdLattice::ReturnNextNode(DecisionBoundaryVector const& lhs_bounds,
-                               GeneralizationChecker& checker, Index cur_node_index,
-                               Index next_node_index) -> MdNode* {
-    MdElement const rhs = checker.GetIncomingRhs();
+// Note: writing this in AddIfMinimal with gotos seems to be faster.
+auto MdLattice::TryGetNextNode(MdSpecialization const& md, GeneralizationChecker& checker,
+                               Index cur_node_index, Index const next_node_index,
+                               DecisionBoundary const next_lhs_bound) -> MdNode* {
+    Index const fol_index = next_node_index + 1;
     Index const child_array_index = next_node_index - cur_node_index;
     auto [boundary_mapping, is_first_arr] = TryEmplaceChild(checker.Children(), child_array_index);
-    DecisionBoundary const next_lhs_bound = lhs_bounds[next_node_index];
     std::size_t const next_child_array_size = column_matches_size_ - next_node_index;
     if (is_first_arr) [[unlikely]] {
         MdNode& new_node =
                 boundary_mapping
                         .try_emplace(next_lhs_bound, column_matches_size_, next_child_array_size)
                         .first->second;
-        AddNewMinimal(new_node, {lhs_bounds, rhs}, next_node_index + 1);
+        AddNewMinimal(new_node, md, fol_index);
         return nullptr;
     }
-
     auto it = boundary_mapping.begin();
-    for (auto end = boundary_mapping.end(); it != end; ++it) {
-        auto& [generalization_bound, node] = *it;
+    for (auto end_it = boundary_mapping.end(); it != end_it; ++it) {
+        auto const& [generalization_bound, node] = *it;
         if (generalization_bound > next_lhs_bound) break;
         if (generalization_bound == next_lhs_bound) return &it->second;
-        if (HasGeneralizationTotal(node, {lhs_bounds, rhs}, next_node_index + 1)) return nullptr;
+        if (HasGeneralizationTotal(node, md.ToOldMd(), fol_index)) return nullptr;
     }
     using std::forward_as_tuple;
     MdNode& new_node =
@@ -342,18 +342,18 @@ auto MdLattice::ReturnNextNode(DecisionBoundaryVector const& lhs_bounds,
                     .emplace_hint(it, std::piecewise_construct, forward_as_tuple(next_lhs_bound),
                                   forward_as_tuple(column_matches_size_, next_child_array_size))
                     ->second;
-    AddNewMinimal(new_node, {lhs_bounds, rhs}, next_node_index + 1);
+    AddNewMinimal(new_node, md, fol_index);
     return nullptr;
 }
-*/
 
 void MdLattice::AddIfMinimal(MdSpecialization const& md) {
-    auto checker = GeneralizationChecker(md.rhs);
-    checker.SetAndCheck(md_root_);
-
+    auto checker = GeneralizationChecker(md.rhs, md_root_);
+    Index cur_node_index = 0;
     auto const& [spec_index, spec_bound] = md.lhs_specialization.specialized;
     DecisionBoundaryVector const& old_lhs = md.lhs_specialization.old_lhs;
-    Index cur_node_index = 0;
+    auto try_set_next = [&](auto... args) {
+        return checker.SetAndCheck(TryGetNextNode(md, checker, cur_node_index, args...));
+    };
     for (Index next_node_index = GetFirstNonZeroIndex(old_lhs, cur_node_index),
                fol_index = next_node_index + 1;
          next_node_index < spec_index; cur_node_index = fol_index,
@@ -369,41 +369,10 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md) {
         for (; it->first != next_lhs_bound; ++it) {
             if (HasGeneralizationSpec(it->second, md, fol_index)) return;
         }
-        checker.SetAndCheck(it->second);
+        checker.SetAndCheck(&it->second);
     }
-    Index const spec_child_array_index = spec_index - cur_node_index;
-    auto [boundary_mapping, is_first_arr] =
-            TryEmplaceChild(checker.Children(), spec_child_array_index);
-    std::size_t const next_child_array_size = column_matches_size_ - spec_index;
-    if (is_first_arr) {
-        MdNode& new_node =
-                boundary_mapping
-                        .try_emplace(spec_bound, column_matches_size_, next_child_array_size)
-                        .first->second;
-        AddNewMinimal(new_node, md, spec_index + 1);
-        return;
-    }
-    Md old_md = md.ToOldMd();
-    auto it = boundary_mapping.upper_bound(old_lhs[spec_index]);
-    for (auto end_it = boundary_mapping.end(); it != end_it; ++it) {
-        auto const& [generalization_bound, node] = *it;
-        if (generalization_bound > spec_bound) break;
-        if (generalization_bound == spec_bound) goto next1;
-        if (HasGeneralizationTotal(node, old_md, spec_index + 1)) return;
-    }
-    {
-        using std::forward_as_tuple;
-        MdNode& new_node =
-                boundary_mapping
-                        .emplace_hint(it, std::piecewise_construct, forward_as_tuple(spec_bound),
-                                      forward_as_tuple(column_matches_size_, next_child_array_size))
-                        ->second;
-        AddNewMinimal(new_node, md, spec_index + 1);
-        return;
-    }
-
-next1:
-    if (checker.SetAndCheck(it->second)) return;
+    Md const old_md = md.ToOldMd();
+    if (try_set_next(spec_index, spec_bound)) return;
 
     cur_node_index = spec_index + 1;
     for (Index next_node_index = GetFirstNonZeroIndex(old_lhs, cur_node_index),
@@ -412,39 +381,7 @@ next1:
                next_node_index = GetFirstNonZeroIndex(old_lhs, cur_node_index),
                fol_index = next_node_index + 1) {
         if (HasLhsGeneralizationTotal(checker.CurNode(), old_md, cur_node_index, fol_index)) return;
-        Index const child_array_index = next_node_index - cur_node_index;
-        auto [boundary_mapping, is_first_arr] =
-                TryEmplaceChild(checker.Children(), child_array_index);
-        DecisionBoundary const next_lhs_bound = old_lhs[next_node_index];
-        std::size_t const next_child_array_size = column_matches_size_ - next_node_index;
-        if (is_first_arr) [[unlikely]] {
-            MdNode& new_node = boundary_mapping
-                                       .try_emplace(next_lhs_bound, column_matches_size_,
-                                                    next_child_array_size)
-                                       .first->second;
-            AddNewMinimal(new_node, md, fol_index);
-            return;
-        }
-        auto it = boundary_mapping.begin();
-        for (auto end_it = boundary_mapping.end(); it != end_it; ++it) {
-            auto const& [generalization_bound, node] = *it;
-            if (generalization_bound > next_lhs_bound) break;
-            if (generalization_bound == next_lhs_bound) goto next2;
-            if (HasGeneralizationTotal(node, old_md, fol_index)) return;
-        }
-        {
-            using std::forward_as_tuple;
-            MdNode& new_node =
-                    boundary_mapping
-                            .emplace_hint(
-                                    it, std::piecewise_construct, forward_as_tuple(next_lhs_bound),
-                                    forward_as_tuple(column_matches_size_, next_child_array_size))
-                            ->second;
-            AddNewMinimal(new_node, md, fol_index);
-            return;
-        }
-    next2:
-        if (checker.SetAndCheck(it->second)) return;
+        if (try_set_next(next_node_index, old_lhs[next_node_index])) return;
     }
     // Note: Metanome implemented this incorrectly, potentially missing out on recommendations.
     checker.SetBoundOnCurrent();
