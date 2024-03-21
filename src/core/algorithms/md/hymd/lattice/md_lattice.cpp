@@ -43,7 +43,7 @@ std::optional<DecisionBoundary> MdLattice::SpecializeOneLhs(Index col_match_inde
     return *upper;
 }
 
-void MdLattice::Specialize(DecisionBoundaryVector& lhs_bounds,
+void MdLattice::Specialize(DecisionBoundaryVector const& lhs_bounds,
                            DecisionBoundaryVector const& specialize_past, Rhss const& rhss) {
     auto specialize_all_lhs = [this, &lhs_bounds, it_begin = rhss.begin(), it_end = rhss.end(),
                                &specialize_past](auto handle_same_lhs_as_rhs) {
@@ -51,14 +51,11 @@ void MdLattice::Specialize(DecisionBoundaryVector& lhs_bounds,
             std::optional<DecisionBoundary> const specialized_lhs_bound =
                     SpecializeOneLhs(lhs_spec_index, specialize_past[lhs_spec_index]);
             if (!specialized_lhs_bound.has_value()) continue;
-            DecisionBoundary& lhs_bound = lhs_bounds[lhs_spec_index];
-            DecisionBoundary old_bound = lhs_bound;
-            auto context = utility::SetForScope(lhs_bound, *specialized_lhs_bound);
-            if (IsUnsupported(lhs_bounds)) continue;
-            lhs_bound = old_bound;
 
             LhsSpecialization lhs_specialization{lhs_bounds,
                                                  {lhs_spec_index, *specialized_lhs_bound}};
+            if (IsUnsupported(lhs_specialization)) continue;
+
             for (auto it = it_begin; it != it_end; ++it) {
                 if (it->index == lhs_spec_index) {
                     handle_same_lhs_as_rhs(lhs_specialization, *it);
@@ -218,13 +215,14 @@ bool MdLattice::HasLhsGeneralizationTotal(MdNode const& node, Md const& md, Inde
     return false;
 }
 
-bool MdLattice::HasChildGenSpec(MdNode const& node, Index node_index, Index next_node_index,
+template <typename NodeType>
+bool MdLattice::HasChildGenSpec(NodeType const& node, Index node_index, Index next_node_index,
                                 DecisionBoundary bound_limit, auto const& md, auto gen_method,
                                 auto get_b_map_iter) const {
     Index const child_array_index = next_node_index - node_index;
-    MdOptionalChild const& optional_child = node.children[child_array_index];
+    typename NodeType::OptionalChild const& optional_child = node.children[child_array_index];
     if (!optional_child.has_value()) return false;
-    MdBoundMap const& b_map = *optional_child;
+    typename NodeType::BoundMap const& b_map = *optional_child;
     for (auto spec_iter = get_b_map_iter(b_map), end_iter = b_map.end(); spec_iter != end_iter;
          ++spec_iter) {
         auto const& [generalization_bound, node] = *spec_iter;
@@ -525,6 +523,25 @@ bool MdLattice::IsUnsupportedTotal(SupportNode const& cur_node,
         }
     }
     return false;
+}
+
+bool MdLattice::IsUnsupportedSpec(SupportNode const& node,
+                                  LhsSpecialization const& lhs_specialization,
+                                  Index node_index) const {
+    auto const& [spec_index, spec_bound] = lhs_specialization.specialized;
+    DecisionBoundaryVector const& old_lhs = lhs_specialization.old_lhs;
+    for (Index next_node_index = GetFirstNonZeroIndex(old_lhs, node_index);
+         next_node_index < spec_index;
+         next_node_index = GetFirstNonZeroIndex(old_lhs, next_node_index + 1)) {
+        auto get_first = [](SupportBoundMap const& b_map) { return b_map.begin(); };
+        if (HasChildGenSpec(node, node_index, next_node_index, old_lhs[next_node_index],
+                            lhs_specialization, &MdLattice::IsUnsupportedSpec, get_first))
+            return true;
+    }
+    DecisionBoundary const old_bound = old_lhs[spec_index];
+    auto get_higher = [&](SupportBoundMap const& b_map) { return b_map.upper_bound(old_bound); };
+    return HasChildGenSpec(node, node_index, spec_index, spec_bound, old_lhs,
+                           &MdLattice::IsUnsupportedTotal, get_higher);
 }
 
 void MdLattice::MarkNewLhs(SupportNode& cur_node, DecisionBoundaryVector const& lhs_bounds,

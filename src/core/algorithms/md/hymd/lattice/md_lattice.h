@@ -42,7 +42,12 @@ private:
     };
 
     struct MdNode {
-        LatticeChildArray<MdNode> children;
+        using Specialization = MdSpecialization;
+        using BoundMap = BoundaryMap<MdNode>;
+        using OptionalChild = std::optional<BoundMap>;
+        using Children = LatticeChildArray<MdNode>;
+
+        Children children;
         DecisionBoundaryVector rhs_bounds;
 
         MdNode(std::size_t attributes_num, std::size_t children_number)
@@ -53,7 +58,12 @@ private:
     };
 
     struct SupportNode {
-        LatticeChildArray<SupportNode> children;
+        using Specialization = LhsSpecialization;
+        using BoundMap = BoundaryMap<SupportNode>;
+        using OptionalChild = std::optional<BoundMap>;
+        using Children = LatticeChildArray<SupportNode>;
+
+        Children children;
         bool is_unsupported = false;
 
         SupportNode(std::size_t children_number) : children(children_number) {}
@@ -61,11 +71,12 @@ private:
 
     class GeneralizationChecker;
 
-    using MdBoundMap = BoundaryMap<MdNode>;
-    using MdOptionalChild = std::optional<MdBoundMap>;
-    using MdNodeChildren = LatticeChildArray<MdNode>;
+    using MdBoundMap = MdNode::BoundMap;
+    using MdOptionalChild = MdNode::OptionalChild;
+    using MdNodeChildren = MdNode::Children;
 
-    using SupportNodeChildren = LatticeChildArray<SupportNode>;
+    using SupportBoundMap = SupportNode::BoundMap;
+    using SupportNodeChildren = SupportNode::Children;
 
 public:
     class MdRefiner {
@@ -133,9 +144,10 @@ private:
     std::vector<ColumnMatchInfo> const* const column_matches_info_;
     bool const prune_nondisjoint_;
 
-    bool HasChildGenSpec(MdNode const& node, model::Index node_index, model::Index next_node_index,
-                         model::md::DecisionBoundary bound_limit, auto const& md, auto gen_method,
-                         auto get_b_map_iter) const;
+    template <typename NodeType>
+    bool HasChildGenSpec(NodeType const& node, model::Index node_index,
+                         model::Index next_node_index, model::md::DecisionBoundary bound_limit,
+                         auto const& md, auto gen_method, auto get_b_map_iter) const;
     bool HasLhsGeneralizationSpec(MdNode const& node, MdSpecialization const& md,
                                   model::Index node_index, model::Index start_index) const;
 
@@ -181,6 +193,13 @@ private:
         return IsUnsupportedTotal(support_root_, lhs_bounds, 0);
     }
 
+    bool IsUnsupportedSpec(SupportNode const& node, LhsSpecialization const& lhs_specialization,
+                           model::Index node_index) const;
+
+    bool IsUnsupported(LhsSpecialization const& lhs_specialization) const {
+        return IsUnsupportedSpec(support_root_, lhs_specialization, 0);
+    }
+
     void UpdateMaxLevel(LhsSpecialization const& lhs_specialization);
     void AddNewMinimal(MdNode& cur_node, MdSpecialization const& md, model::Index cur_node_index);
     MdNode* TryGetNextNode(MdSpecialization const& md, GeneralizationChecker& checker,
@@ -194,7 +213,7 @@ private:
 
     [[nodiscard]] std::optional<model::md::DecisionBoundary> SpecializeOneLhs(
             model::Index col_match_index, model::md::DecisionBoundary lhs_bound) const;
-    void Specialize(DecisionBoundaryVector& lhs_bounds,
+    void Specialize(DecisionBoundaryVector const& lhs_bounds,
                     DecisionBoundaryVector const& specialize_past, Rhss const& rhss);
 
     void GetAll(MdNode& cur_node, std::vector<MdLatticeNodeInfo>& collected,
