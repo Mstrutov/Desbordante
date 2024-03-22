@@ -518,19 +518,19 @@ std::vector<MdLatticeNodeInfo> MdLattice::GetAll() {
     return collected;
 }
 
-bool MdLattice::IsUnsupportedTotal(SupportNode const& cur_node,
+bool MdLattice::IsUnsupportedTotal(SupportNode const& node,
                                    DecisionBoundaryVector const& lhs_bounds,
-                                   Index this_node_index) const {
-    if (cur_node.is_unsupported) return true;
-    SupportNodeChildren const& children = cur_node.children;
-    std::size_t const child_array_size = children.size();
-    for (Index child_array_index = FindFirstNonEmptyIndex(children, 0);
-         child_array_index != child_array_size;
-         child_array_index = FindFirstNonEmptyIndex(children, child_array_index + 1)) {
-        Index const next_node_index = this_node_index + child_array_index;
-        DecisionBoundary const generalization_boundary_limit = lhs_bounds[next_node_index];
-        for (auto const& [generalization_boundary, node] : *children[child_array_index]) {
-            if (generalization_boundary > generalization_boundary_limit) break;
+                                   Index const node_index) const {
+    if (node.is_unsupported) return true;
+    for (Index next_node_index = GetFirstNonZeroIndex(lhs_bounds, node_index);
+         next_node_index != column_matches_size_;
+         next_node_index = GetFirstNonZeroIndex(lhs_bounds, next_node_index + 1)) {
+        Index const child_array_index = next_node_index - node_index;
+        SupportOptionalChild const& optional_child = node.children[child_array_index];
+        if (!optional_child.has_value()) continue;
+        DecisionBoundary const generalization_bound_limit = lhs_bounds[next_node_index];
+        for (auto const& [generalization_bound, node] : *optional_child) {
+            if (generalization_bound > generalization_bound_limit) break;
             if (IsUnsupportedTotal(node, lhs_bounds, next_node_index + 1)) return true;
         }
     }

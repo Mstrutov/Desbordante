@@ -88,6 +88,7 @@ private:
     using MdNodeChildren = MdNode::Children;
 
     using SupportBoundMap = SupportNode::BoundMap;
+    using SupportOptionalChild = SupportNode::OptionalChild;
     using SupportNodeChildren = SupportNode::Children;
 
 public:
@@ -205,8 +206,8 @@ private:
                                     SimilarityVector const& similarity_vector,
                                     model::Index cur_node_index);
 
-    bool IsUnsupportedTotal(SupportNode const& cur_node, DecisionBoundaryVector const& lhs_bounds,
-                            model::Index cur_node_index) const;
+    bool IsUnsupportedTotal(SupportNode const& node, DecisionBoundaryVector const& lhs_bounds,
+                            model::Index node_index) const;
 
     bool IsUnsupported(DecisionBoundaryVector const& lhs_bounds) const {
         return IsUnsupportedTotal(support_root_, lhs_bounds, 0);
