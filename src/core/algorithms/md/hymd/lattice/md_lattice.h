@@ -25,6 +25,14 @@ private:
     struct LhsSpecialization {
         DecisionBoundaryVector const& old_lhs;
         MdElement specialized;
+
+        DecisionBoundaryVector const& ToUnspecialized() const {
+            return old_lhs;
+        }
+
+        LhsSpecialization const& GetLhsSpecialization() const {
+            return *this;
+        }
     };
 
     struct Md {
@@ -36,8 +44,12 @@ private:
         LhsSpecialization const& lhs_specialization;
         MdElement rhs;
 
-        Md ToOldMd() const {
-            return {lhs_specialization.old_lhs, rhs};
+        Md ToUnspecialized() const {
+            return {lhs_specialization.ToUnspecialized(), rhs};
+        }
+
+        LhsSpecialization const& GetLhsSpecialization() const {
+            return lhs_specialization;
         }
     };
 
@@ -148,6 +160,13 @@ private:
     bool HasChildGenSpec(NodeType const& node, model::Index node_index,
                          model::Index next_node_index, model::md::DecisionBoundary bound_limit,
                          auto const& md, auto gen_method, auto get_b_map_iter) const;
+
+    template <typename NodeType>
+    bool NodeHasLhsGeneralizationSpec(NodeType const& node,
+                                      NodeType::Specialization const& specialization,
+                                      model::Index node_index, model::Index start_index,
+                                      auto spec_method, auto total_method) const;
+
     bool HasLhsGeneralizationSpec(MdNode const& node, MdSpecialization const& md,
                                   model::Index node_index, model::Index start_index) const;
 
