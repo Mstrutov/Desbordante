@@ -120,9 +120,50 @@ TYPED_TEST_P(AlgorithmTest, ConsistentRepeatedExecution) {
     }
 }
 
+TYPED_TEST_P(AlgorithmTest, MaxLHSOptionWork) {
+    using namespace config::names;
+    config::MaxLhsType max_lhs_ = 2;
+    auto algorithm = TestFixture::CreateAlgorithmInstance(kTestFD, max_lhs_);
+    algos::StdParamsMap verify_params = {
+            {kCsvConfig, kTestFD},
+            {kError, config::ErrorType{0.0}},
+            {kMaximumLhs, max_lhs_},
+    };
+    auto verify_algo = algos::CreateAndLoadAlgorithm<algos::Pyro>(verify_params);
+    algorithm->Execute();
+    verify_algo->Execute();
+    std::list<FD> result_fds_list = algorithm->FdList();
+    auto verify_list = FDsToSet(verify_algo->FdList());
+    ASSERT_TRUE(CheckFdListEquality(verify_list, result_fds_list));
+    for (auto& fd : result_fds_list) {
+        ASSERT_TRUE(fd.GetLhs().GetArity() <= max_lhs_);
+    }
+}
+
+TYPED_TEST_P(AlgorithmTest, MaxLHSOptionWorkOnLargerDataset) {
+    using namespace config::names;
+    config::MaxLhsType max_lhs_ = 2;
+    auto algorithm = TestFixture::CreateAlgorithmInstance(kTestMetric, max_lhs_);
+    algos::StdParamsMap verify_params = {
+            {kCsvConfig, kTestMetric},
+            {kError, config::ErrorType{0.0}},
+            {kMaximumLhs, max_lhs_},
+    };
+    auto verify_algo = algos::CreateAndLoadAlgorithm<algos::Pyro>(verify_params);
+    algorithm->Execute();
+    verify_algo->Execute();
+    std::list<FD> result_fds_list = algorithm->FdList();
+    auto verify_list = FDsToSet(verify_algo->FdList());
+    ASSERT_TRUE(CheckFdListEquality(verify_list, result_fds_list));
+    for (auto& fd : result_fds_list) {
+        ASSERT_TRUE(fd.GetLhs().GetArity() <= max_lhs_);
+    }
+}
+
 REGISTER_TYPED_TEST_SUITE_P(AlgorithmTest, ThrowsOnEmpty, ReturnsEmptyOnSingleNonKey,
                             WorksOnLongDataset, WorksOnWideDataset, LightDatasetsConsistentHash,
-                            HeavyDatasetsConsistentHash, ConsistentRepeatedExecution);
+                            HeavyDatasetsConsistentHash, ConsistentRepeatedExecution,
+                            MaxLHSOptionWork, MaxLHSOptionWorkOnLargerDataset);
 
 using Algorithms = ::testing::Types<algos::Tane, algos::Pyro, algos::FastFDs, algos::DFD,
                                     algos::Depminer, algos::FDep, algos::FUN, algos::hyfd::HyFD>;

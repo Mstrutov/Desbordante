@@ -8,6 +8,7 @@
 
 #include "algorithms/algorithm.h"
 #include "config/equal_nulls/type.h"
+#include "config/max_lhs/type.h"
 #include "config/tabular_data/input_table_type.h"
 #include "fd.h"
 #include "model/table/column_layout_typed_relation_data.h"
@@ -29,10 +30,13 @@ private:
     void RegisterOptions();
 
     void ResetState() final;
+    virtual void MakeExecuteOptsAvailableFDInternal(){};
+    void MakeExecuteOptsAvailable() override;
     virtual void ResetStateFd() = 0;
 
 protected:
     config::InputTable input_table_;
+    config::MaxLhsType max_lhs_;
 
     /* Collection of all discovered FDs
      * Every FD mining algorithm should place discovered dependecies here. Don't add new FDs by
@@ -45,11 +49,12 @@ protected:
      * Should be overrided if custom behavior is needed
      */
     virtual void RegisterFd(Vertical lhs, Column rhs) {
-        fd_collection_.Register(std::move(lhs), std::move(rhs));
+        if (lhs.GetArity() <= max_lhs_) fd_collection_.Register(std::move(lhs), std::move(rhs));
     }
 
     virtual void RegisterFd(FD fd_to_register) {
-        fd_collection_.Register(std::move(fd_to_register));
+        if (fd_to_register.GetLhs().GetArity() <= max_lhs_)
+            fd_collection_.Register(std::move(fd_to_register));
     }
 
 public:

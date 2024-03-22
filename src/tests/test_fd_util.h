@@ -22,12 +22,14 @@ protected:
         return algorithm;
     }
 
-    static algos::StdParamsMap GetParamMap(CSVConfig const& csv_config) {
+    static algos::StdParamsMap GetParamMap(CSVConfig const& csv_config,
+                                           unsigned int max_lhs_ = -1) {
         using namespace config::names;
         return {
                 {kCsvConfig, csv_config},
                 {kError, config::ErrorType{0.0}},
                 {kSeed, decltype(algos::pyro::Parameters::seed){0}},
+                {kMaximumLhs, max_lhs_},
         };
     }
 
@@ -47,8 +49,9 @@ protected:
     }
 
 public:
-    static std::unique_ptr<algos::FDAlgorithm> CreateAlgorithmInstance(CSVConfig const& config) {
-        return algos::CreateAndLoadAlgorithm<T>(GetParamMap(config));
+    static std::unique_ptr<algos::FDAlgorithm> CreateAlgorithmInstance(CSVConfig const& config,
+                                                                       unsigned int max_lhs_ = -1) {
+        return algos::CreateAndLoadAlgorithm<T>(GetParamMap(config, max_lhs_));
     }
 
     inline static std::vector<CSVConfigHash> const light_datasets_ = {

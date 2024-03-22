@@ -25,11 +25,10 @@ Tane::Tane() : PliBasedFDAlgorithm({kDefaultPhaseName}) {
 
 void Tane::RegisterOptions() {
     RegisterOption(config::ErrorOpt(&max_ucc_error_));
-    RegisterOption(config::MaxLhsOpt(&max_lhs_));
 }
 
-void Tane::MakeExecuteOptsAvailable() {
-    MakeOptionsAvailable({config::MaxLhsOpt.GetName(), config::ErrorOpt.GetName()});
+void Tane::MakeExecuteOptsAvailableFDInternal() {
+    MakeOptionsAvailable({config::ErrorOpt.GetName()});
 }
 
 void Tane::ResetStateFd() {

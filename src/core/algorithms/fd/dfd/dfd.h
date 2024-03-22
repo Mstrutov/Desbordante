@@ -16,7 +16,7 @@ private:
 
     config::ThreadNumType number_of_threads_;
 
-    void MakeExecuteOptsAvailable() final;
+    void MakeExecuteOptsAvailableFDInternal() final;
     void RegisterOptions();
 
     void ResetStateFd() final;
