@@ -3,6 +3,7 @@
 #include "algorithms/algebraic_constraints/mining_algorithms.h"
 #include "algorithms/association_rules/mining_algorithms.h"
 #include "algorithms/cfd/mining_algorithms.h"
+#include "algorithms/dd/mining_algorithms.h"
 #include "algorithms/fd/mining_algorithms.h"
 #include "algorithms/fd/verification_algorithms.h"
 #include "algorithms/gfd/mining_algorithms.h"
