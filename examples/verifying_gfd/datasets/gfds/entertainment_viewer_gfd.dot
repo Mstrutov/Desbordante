@@ -1,0 +1,7 @@
+0.topic=entertainment
+1.age_group=kid
+graph G {
+0[label=Channel];
+1[label=User];
+0--1 [label=_];
+}

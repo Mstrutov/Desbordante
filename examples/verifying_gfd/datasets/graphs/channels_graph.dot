@@ -1,0 +1,23 @@
+graph G {
+0[label=Channel topic=entertainment];
+1[label=Channel topic=science];
+2[label=User age_group=kid];
+3[label=User age_group=adult];
+4[label=User age_group=kid];
+5[label=User age_group=teenager];
+6[label=User age_group=kid];
+7[label=Channel topic=science];
+8[label=Channel topic=entertainment];
+9[label=Channel topic=news];
+0--2 [label=_];
+0--4 [label=_];
+1--3 [label=_];
+1--4 [label=_];
+1--6 [label=_];
+7--3 [label=_];
+8--4 [label=_];
+8--5 [label=_];
+8--6 [label=_];
+9--5 [label=_];
+9--6 [label=_];
+}

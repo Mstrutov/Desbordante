@@ -1,0 +1,27 @@
+graph G {
+0[label=blog author=Leonardo];
+1[label=blog author=Raphael];
+2[label=blog author=Raphael];
+3[label=blog author=Michelangelo];
+4[label=blog author=Donatello];
+5[label=blog author=Michelangelo];
+6[label=blog author=Donatello];
+7[label=account name=Leonardo];
+8[label=account name=Donatello];
+9[label=account name=Raphael];
+10[label=account name=Michelangelo];
+7--0 [label=post];
+7--1 [label=like];
+7--2 [label=like];
+8--0 [label=like];
+8--2 [label=post];
+8--4 [label=post];
+8--5 [label=like];
+8--6 [label=post];
+9--1 [label=post];
+9--3 [label=like];
+10--3 [label=post];
+10--4 [label=like];
+10--5 [label=post];
+10--6 [label=like];
+}
