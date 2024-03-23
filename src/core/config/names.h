@@ -12,6 +12,7 @@ constexpr auto kHasHeader = "has_header";
 constexpr auto kEqualNulls = "is_null_equal_null";
 constexpr auto kThreads = "threads";
 constexpr auto kError = "error";
+constexpr auto kErrorMeasure = "error_measure";
 constexpr auto kMaximumLhs = "max_lhs";
 constexpr auto kSeed = "seed";
 constexpr auto kMinimumSupport = "minsup";
