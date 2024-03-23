@@ -60,7 +60,7 @@ public:
                     if (attrs.find(snd_token.second) == attrs.end()) {
                         return false;
                     }
-                    fst = attrs.at(snd_token.second);
+                    snd = attrs.at(snd_token.second);
                 }
                 if (fst != snd) {
                     return false;

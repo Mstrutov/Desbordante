@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <set>
+#include <sstream>
 #include <thread>
 
 #include <boost/graph/eccentricity.hpp>
@@ -17,6 +18,17 @@
 #include "config/thread_number/option.h"
 
 namespace algos {
+
+std::vector<std::string> GfdHandler::StringGfdList() {
+    std::vector<std::string> result;
+    result.reserve(result_.size());
+    for (auto& gfd : result_) {
+        std::stringstream gfd_stream;
+        parser::graph_parser::WriteGfd(gfd_stream, gfd);
+        result.push_back(gfd_stream.str());
+    }
+    return result;
+}
 
 GfdHandler::GfdHandler() : Algorithm({}) {
     RegisterOptions();
@@ -54,7 +66,7 @@ unsigned long long GfdHandler::ExecuteInternal() {
 
     auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now() - start_time);
-    std::cout << "Satisfied GFDs: " << result_.size() << "/" << gfds_.size() << std::endl;
+    // std::cout << "Satisfied GFDs: " << result_.size() << "/" << gfds_.size() << std::endl;
     return elapsed_milliseconds.count();
 }
 
