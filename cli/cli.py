@@ -17,6 +17,7 @@ class Task(StrEnum):
     fd_verification = auto()
     afd_verification = auto()
     mfd_verification = auto()
+    gfd_verification = auto()
 
 
 class Algorithm(StrEnum):
@@ -34,6 +35,10 @@ class Algorithm(StrEnum):
     naive_fd_verifier = auto()
     naive_afd_verifier = auto()
     icde09_mfd_verifier = auto()
+    naive_gfd_verifier = auto()
+    gfd_verifier = auto()
+    egfd_verifier = auto()
+    
 
 
 HELP = 'help'
@@ -177,6 +182,9 @@ N. Koudas et al.
 Algorithms: ICDE09_MFD_VERIFIER
 Default: ICDE09_MFD_VERIFIER
 '''
+GFD_VERIFICATION_HELP = '''
+Algorithms: NAIVE_GFD_VERIFIER, GFD_VERIFIER, EGFD_VERIFIER
+'''
 PYRO_HELP = '''A modern algorithm for discovery of approximate functional
 dependencies. Approximate functional dependencies are defined in the
 “Efficient Discovery of Approximate Dependencies” paper by S.Kruse and
@@ -249,6 +257,10 @@ ICDE09_MFD_VERIFIER_HELP = '''A family of metric functional dependency
 verification algorithms. For more information about the primitive and the
 algorithms, refer to “Metric Functional Dependencies” by N. Koudas et al.
 '''
+GFD_VERIFIER_HELP = '''Algorithm for verifying whether a given
+graph functional dependency holds. For more information about the primitive
+refer to “Functional Dependencies for Graphs” by Wenfei Fan et al.
+'''
 
 OPTION_TYPES = {
     str: 'STRING',
@@ -263,7 +275,8 @@ TASK_HELP_PAGES = {
     Task.pfd: PFD_HELP,
     Task.fd_verification: FD_VERIFICATION_HELP,
     Task.afd_verification: AFD_VERIFICATION_HELP,
-    Task.mfd_verification: MFD_VERIFICATION_HELP
+    Task.mfd_verification: MFD_VERIFICATION_HELP,
+    Task.gfd_verification: GFD_VERIFICATION_HELP
 }
 
 ALGO_HELP_PAGES = {
@@ -280,7 +293,10 @@ ALGO_HELP_PAGES = {
     Algorithm.aid: AID_HELP,
     Algorithm.naive_fd_verifier: NAIVE_FD_VERIFIER_HELP,
     Algorithm.naive_afd_verifier: NAIVE_AFD_VERIFIER_HELP,
-    Algorithm.icde09_mfd_verifier: ICDE09_MFD_VERIFIER_HELP
+    Algorithm.icde09_mfd_verifier: ICDE09_MFD_VERIFIER_HELP,
+    Algorithm.naive_gfd_verifier: GFD_VERIFIER_HELP,
+    Algorithm.gfd_verifier: GFD_VERIFIER_HELP,
+    Algorithm.egfd_verifier: GFD_VERIFIER_HELP
 }
 
 TaskInfo = namedtuple('TaskInfo', ['algos', 'default'])
@@ -299,7 +315,9 @@ TASK_INFO = {
     Task.afd_verification: TaskInfo([Algorithm.naive_afd_verifier],
                                     Algorithm.naive_afd_verifier),
     Task.mfd_verification: TaskInfo([Algorithm.icde09_mfd_verifier],
-                                    Algorithm.icde09_mfd_verifier)
+                                    Algorithm.icde09_mfd_verifier),
+    Task.gfd_verification: TaskInfo([Algorithm.naive_gfd_verifier, Algorithm.gfd_verifier, Algorithm.egfd_verifier],
+                                    Algorithm.naive_gfd_verifier)
 }
 
 ALGOS = {
@@ -316,7 +334,10 @@ ALGOS = {
     Algorithm.aid: desbordante.fd.algorithms.Aid,
     Algorithm.naive_fd_verifier: desbordante.fd_verification.algorithms.FDVerifier,
     Algorithm.naive_afd_verifier: desbordante.afd_verification.algorithms.FDVerifier,
-    Algorithm.icde09_mfd_verifier: desbordante.mfd_verification.algorithms.MetricVerifier
+    Algorithm.icde09_mfd_verifier: desbordante.mfd_verification.algorithms.MetricVerifier,
+    Algorithm.naive_gfd_verifier: desbordante.gfd_verification.algorithms.NaiveGfdValid,
+    Algorithm.gfd_verifier: desbordante.gfd_verification.algorithms.GfdValid,
+    Algorithm.egfd_verifier: desbordante.gfd_verification.algorithms.EGfdValid
 }
 
 
@@ -407,6 +428,12 @@ def get_algo_result(algo: desbordante.Algorithm, algo_name: str) -> Any:
                 result = algo.mfd_holds()
             case algo_name if algo_name in TASK_INFO[Task.fd].algos:
                 result = algo.get_fds()
+            case Algorithm.naive_gfd_verifier:
+                result = algo.get_gfds()
+            case Algorithm.gfd_verifier:
+                result = algo.get_gfds()
+            case Algorithm.egfd_verifier:
+                result = algo.get_gfds()
             case _:
                 assert False, 'No matching get_result function.'
         return result
@@ -512,7 +539,7 @@ def algos_options() -> Callable:
                              type=opt_additional_types[0])(func)
             elif opt_main_type == desbordante.data_types.Table:
                 click.option(arg, type=(str, str, bool),
-                             required=True)(func)
+                             required=False)(func)
             else:
                 click.option(arg, type=opt_main_type)(func)
         return func
