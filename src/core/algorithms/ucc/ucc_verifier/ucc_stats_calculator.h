@@ -10,9 +10,8 @@
 namespace algos {
 class UCCStatsCalculator {
 private:
-    config::IndicesType column_indices_;
-    std::shared_ptr<ColumnLayoutRelationData> relation_;
-    unsigned long long num_pairs_combinations_ = 0;
+    config::IndicesType column_indices_; // To remove
+    std::shared_ptr<ColumnLayoutRelationData> relation_; // store only relation_->GetNumRows()
     double aucc_error_ = 0.0;
     /* results of work */
     size_t num_rows_violating_ucc_ = 0;
@@ -30,13 +29,18 @@ public:
 
     void CalculateStatistics(std::deque<model::PLI::Cluster> const &clusters) {
         size_t num_rows = relation_->GetNumRows();
-        num_pairs_combinations_ = static_cast<unsigned long long>(num_rows) * (num_rows - 1);
+
+        unsigned long long num_pairs_combinations = static_cast<unsigned long long>(num_rows);
+        if(num_rows > 1){
+            num_pairs_combinations *= (num_rows - 1);
+        }
+       
 
         for (auto const &cluster : clusters) {
             num_rows_violating_ucc_ += cluster.size();
             clusters_violating_ucc_.push_back(cluster);
             aucc_error_ += static_cast<double>(cluster.size()) * (cluster.size() - 1) /
-                           num_pairs_combinations_;
+                           num_pairs_combinations;
         }
     }
 

@@ -260,7 +260,7 @@ NAIVE_UCC_VERIFIER_HELP = '''A straightforward partition-based algorithm for
 verifying whether a given unique column combination holds.
 For more information on partitions refer to Section 2 of “TANE : An 
 Efficient Algorithm for Discovering Functional and Approximate Dependencies”
-by Y.Huntala et al. For more information on AUCC, refer to "Efficient Discovery
+by Y.Huntala et al. For more information on UCC, refer to "Efficient Discovery
 of Approximate Dependencies" by S. Kruse and F. Naumann '''
 
 NAIVE_AUCC_VERIFIER_HELP = '''A straightforward partition-based algorithm for
