@@ -1,0 +1,7 @@
+ID,name,card_num,card_active
+1,Alex,665,TRUE
+2,Liam,667,TRUE
+3,Ezra,553,TRUE
+4,Alex,665,FALSE
+5,Kian,667,FALSE
+6,Otis,111,TRUE
