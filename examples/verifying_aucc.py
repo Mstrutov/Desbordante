@@ -4,7 +4,7 @@ import termcolor
 
 def print_results(ucc_verifier):
     if ucc_verifier.ucc_holds():
-        print('UCC holds, showing stats for AUCC is usless')
+        print('UCC holds, showing stats for AUCC is useless')
     else:
         print('UCC does not hold')
         print(f'But AUCC with error = {"{:.4f}".format(algo.get_error())} holds')
@@ -30,6 +30,7 @@ def print_results(ucc_verifier):
                     ), sep="\t"
                 )
         # НАЙДЕНО X кластеров нарушающих UCC, для каждого кластера достать все строки, подсветить красным значения
+        # Печатать только найденные кластера
         clusters_violating_ucc = ucc_verifier.get_clusters_violating_ucc()
         for cluster in clusters_violating_ucc:
             print(cluster)        
