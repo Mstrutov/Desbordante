@@ -63,7 +63,7 @@ std::shared_ptr<model::PLI const> UCCVerifier::CalculatePLI() {
 
 void UCCVerifier::VerifyUCC() {
     std::shared_ptr<model::PLI const> pli = CalculatePLI();
-    stats_calculator_ = std::make_unique<UCCStatsCalculator>(column_indices_, relation_);
+    stats_calculator_ = std::make_unique<UCCStatsCalculator>(relation_);
     stats_calculator_->CalculateStatistics(pli->GetIndex());
 }
 
