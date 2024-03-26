@@ -60,16 +60,16 @@ void Order::CreateSortedPartitions() {
         std::unique_ptr<model::Type> type = model::CreateType(data[i].GetTypeId(), true);
         std::unique_ptr<model::MixedType> mixed_type =
                 model::CreateSpecificType<model::MixedType>(model::TypeId::kMixed, true);
-        auto less = [&type, &mixed_type](std::pair<unsigned long, std::byte const*> l,
-                                         std::pair<unsigned long, std::byte const*> r) {
+        auto less = [&type, &mixed_type](std::pair<unsigned long, std::byte const*> const& l,
+                                         std::pair<unsigned long, std::byte const*> const& r) {
             if (type->GetTypeId() == +(model::TypeId::kMixed)) {
                 return mixed_type->CompareAsStrings(l.second, r.second) ==
                        model::CompareResult::kLess;
             }
             return type->Compare(l.second, r.second) == model::CompareResult::kLess;
         };
-        auto equal = [&type, &mixed_type](std::pair<unsigned long, std::byte const*> l,
-                                          std::pair<unsigned long, std::byte const*> r) {
+        auto equal = [&type, &mixed_type](std::pair<unsigned long, std::byte const*> const& l,
+                                          std::pair<unsigned long, std::byte const*> const& r) {
             if (type->GetTypeId() == +(model::TypeId::kMixed)) {
                 return mixed_type->CompareAsStrings(l.second, r.second) ==
                        model::CompareResult::kEqual;
@@ -78,6 +78,7 @@ void Order::CreateSortedPartitions() {
         };
         std::sort(indexed_byte_data.begin(), indexed_byte_data.end(), less);
         std::vector<std::unordered_set<unsigned long>> equivalence_classes;
+        equivalence_classes.reserve(typed_relation_->GetNumRows());
         equivalence_classes.push_back({indexed_byte_data.front().first});
         for (size_t k = 1; k < indexed_byte_data.size(); ++k) {
             if (equal(indexed_byte_data[k - 1], indexed_byte_data[k])) {
@@ -86,7 +87,9 @@ void Order::CreateSortedPartitions() {
                 equivalence_classes.push_back({indexed_byte_data[k].first});
             }
         }
-        sorted_partitions_[{i}] = SortedPartition(std::move(equivalence_classes));
+        equivalence_classes.shrink_to_fit();
+        sorted_partitions_[{i}] =
+                SortedPartition(std::move(equivalence_classes), typed_relation_->GetNumRows());
     }
 }
 
@@ -96,7 +99,7 @@ void Order::CreateSortedPartitionsFromSingletons(AttributeList const& attr_list)
     }
     SortedPartition res = sorted_partitions_[{attr_list[0]}];
     for (size_t i = 1; i < attr_list.size(); ++i) {
-        res = res * sorted_partitions_[{attr_list[i]}];
+        res.Intersect(sorted_partitions_[{attr_list[i]}]);
     }
     sorted_partitions_[attr_list] = res;
 }
@@ -222,10 +225,19 @@ void Order::ComputeDependencies(LatticeLevel const& lattice_level) {
             if (prefix_valid) {
                 continue;
             }
-            CreateSortedPartitionsFromSingletons(lhs);
-            CreateSortedPartitionsFromSingletons(rhs);
-            ValidityType candidate_validity =
-                    CheckForSwap(sorted_partitions_[lhs], sorted_partitions_[rhs]);
+            bool is_merge_immediately = false;
+            for (AttributeList const& lhs_prefix : GetPrefixes(lhs)) {
+                if (InUnorderedMap(merge_invalidated_, lhs_prefix, rhs)) {
+                    is_merge_immediately = true;
+                    break;
+                }
+            }
+            ValidityType candidate_validity = +ValidityType::merge;
+            if (!is_merge_immediately) {
+                CreateSortedPartitionsFromSingletons(lhs);
+                CreateSortedPartitionsFromSingletons(rhs);
+                candidate_validity = CheckForSwap(sorted_partitions_[lhs], sorted_partitions_[rhs]);
+            }
             if (candidate_validity == +ValidityType::valid) {
                 bool non_minimal_by_merge = false;
                 for (AttributeList const& merge_lhs : GetPrefixes(lhs)) {
@@ -470,6 +482,46 @@ Order::LatticeLevel Order::GenerateNextLevel(LatticeLevel const& l) {
 }
 
 void Order::PrintValidOD() {
+    std::cout << "***PREVIOUS CANDIDATE SETS***" << '\n';
+    for (auto const& [lhs, rhs_list] : previous_candidate_sets_) {
+        if (rhs_list.empty()) {
+            for (auto const& attr : lhs) {
+                std::cout << attr + 1 << ",";
+            }
+            std::cout << "-> empty";
+            std::cout << '\n';
+        }
+        for (AttributeList const& rhs : rhs_list) {
+            for (auto const& attr : lhs) {
+                std::cout << attr + 1 << ",";
+            }
+            std::cout << "->";
+            for (auto const& attr : rhs) {
+                std::cout << attr + 1 << ",";
+            }
+            std::cout << '\n';
+        }
+    }
+    std::cout << "***CANDIDATE SETS***" << '\n';
+    for (auto const& [lhs, rhs_list] : candidate_sets_) {
+        if (rhs_list.empty()) {
+            for (auto const& attr : lhs) {
+                std::cout << attr + 1 << ",";
+            }
+            std::cout << "-> empty";
+            std::cout << '\n';
+        }
+        for (AttributeList const& rhs : rhs_list) {
+            for (auto const& attr : lhs) {
+                std::cout << attr + 1 << ",";
+            }
+            std::cout << "->";
+            for (auto const& attr : rhs) {
+                std::cout << attr + 1 << ",";
+            }
+            std::cout << '\n';
+        }
+    }
     std::cout << "***VALID ORDER DEPENDENCIES***" << '\n';
     unsigned int cnt = 0;
     for (auto const& [lhs, rhs_list] : valid_) {

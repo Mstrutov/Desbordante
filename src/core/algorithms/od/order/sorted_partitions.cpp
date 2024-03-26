@@ -6,7 +6,8 @@
 namespace algos::order {
 
 void SortedPartition::BuildHashTable() {
-    for (size_t i = 0; i < sorted_partition.size(); ++i) {
+    hash_partition.reserve(num_rows);
+    for (std::size_t i = 0; i < sorted_partition.size(); ++i) {
         if (sorted_partition[i].size() == 1) {
             continue;
         }
@@ -16,9 +17,10 @@ void SortedPartition::BuildHashTable() {
     }
 }
 
-SortedPartition SortedPartition::operator*(SortedPartition const& other) {
+void SortedPartition::Intersect(SortedPartition const& other) {
     BuildHashTable();
     std::unordered_map<unsigned long, SortedPartition::EquivalenceClasses> hash_product;
+    hash_product.reserve(hash_partition.size());
     for (std::unordered_set<unsigned long> const& eq_class : other.sorted_partition) {
         if (other.sorted_partition.size() <= 1) {
             break;
@@ -39,19 +41,21 @@ SortedPartition SortedPartition::operator*(SortedPartition const& other) {
             hash_product[position].push_back({});
         }
     }
-    SortedPartition res;
-    for (size_t i = 0; i < sorted_partition.size(); ++i) {
+    SortedPartition res(num_rows);
+    res.sorted_partition.reserve(num_rows);
+    for (std::size_t i = 0; i < sorted_partition.size(); ++i) {
         if (sorted_partition[i].size() == 1) {
             res.sorted_partition.push_back(sorted_partition[i]);
         } else {
             for (std::unordered_set<unsigned long> const& eq_class : hash_product[i]) {
                 if (!eq_class.empty()) {
-                    res.sorted_partition.push_back(eq_class);
+                    res.sorted_partition.push_back(std::move(eq_class));
                 }
             }
         }
     }
-    return res;
+    res.sorted_partition.shrink_to_fit();
+    *this = std::move(res);
 }
 
 }  // namespace algos::order
