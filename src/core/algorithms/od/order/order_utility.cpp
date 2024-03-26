@@ -34,10 +34,11 @@ AttributeList MaxPrefix(AttributeList const& attribute_list) {
 
 bool InUnorderedMap(OrderDependencies const& map, AttributeList const& lhs,
                     AttributeList const& rhs) {
-    if (map.find(lhs) == map.end()) {
+    auto it = map.find(lhs);
+    if (it == map.end()) {
         return false;
     }
-    if (map.at(lhs).find(rhs) == map.at(lhs).end()) {
+    if (it->second.find(rhs) == it->second.end()) {
         return false;
     }
     return true;

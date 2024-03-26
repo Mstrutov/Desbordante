@@ -12,11 +12,11 @@ bool SubsetSetDifference(SortedPartition::EquivalenceClass const& a,
                          SortedPartition::EquivalenceClass& b) {
     auto const not_found = b.end();
     for (unsigned long element : a) {
-        if (b.find(element) == not_found) {
+        auto it = b.find(element);
+        if (it == not_found) {
             return false;
-        } else {
-            b.erase(element);
         }
+        b.erase(it);
     }
     return true;
 }
