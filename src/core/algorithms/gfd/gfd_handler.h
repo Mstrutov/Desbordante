@@ -38,6 +38,8 @@ public:
     std::vector<Gfd> GfdList() {
         return result_;
     }
+
+    std::vector<std::string> StringGfdList();
 };
 
 }  // namespace algos

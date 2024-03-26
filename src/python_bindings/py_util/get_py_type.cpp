@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <Python.h>
+#include <pybind11/stl/filesystem.h>
 
 #include "algorithms/metric/enums.h"
 #include "association_rules/ar_algorithm_enums.h"
@@ -79,6 +80,8 @@ py::tuple GetPyType(std::type_index type_index) {
              []() { return MakeTypeTuple(py::type::of<config::InputTable>()); }},
             {typeid(config::InputTables),
              []() { return MakeTypeTuple(kPyList, py::type::of<config::InputTable>()); }},
+            PyTypePair<std::filesystem::path, kPyStr>,
+            PyTypePair<std::vector<std::filesystem::path>, kPyList, kPyStr>,
     };
     return type_map.at(type_index)();
 }

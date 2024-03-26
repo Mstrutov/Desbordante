@@ -1,0 +1,9 @@
+
+1.name=2.name
+graph G {
+0[label=blog];
+1[label=account];
+2[label=account];
+0--1 [label=post];
+0--2 [label=post];
+}

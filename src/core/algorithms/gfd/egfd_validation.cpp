@@ -395,7 +395,9 @@ void FinalConstruction(std::set<vertex_t> const& lev, CPI& cpi, graph_t const& g
             for (; g_adj_it != g_adj_end; ++g_adj_it) {
                 if (graph[*g_adj_it].attributes.at("label") == query[u].attributes.at("label") &&
                     boost::degree(*g_adj_it, graph) >= boost::degree(u, query) &&
-                    candidates.at(u).find(*g_adj_it) != candidates.at(u).end()) {
+                    candidates.at(u).find(*g_adj_it) != candidates.at(u).end() &&
+                    query[boost::edge(up, u, query).first].label ==
+                            graph[boost::edge(vp, *g_adj_it, graph).first].label) {
                     std::pair<vertex_t, vertex_t> cpi_edge(up, u);
                     if (cpi.find(cpi_edge) != cpi.end()) {
                         if (cpi.at(cpi_edge).find(vp) != cpi.at(cpi_edge).end()) {
@@ -661,7 +663,9 @@ bool ValidateNt(graph_t const& graph, vertex_t const& v, graph_t const& query, v
     int index = std::find(seq.begin(), seq.end(), u) - seq.begin();
     for (int i = 0; i < index; ++i) {
         if ((seq.at(i) != parent.at(u)) && boost::edge(seq.at(i), u, query).second) {
-            if (!boost::edge(*match.at(i).first, v, graph).second) {
+            if (!boost::edge(*match.at(i).first, v, graph).second ||
+                graph[boost::edge(*match.at(i).first, v, graph).first].label !=
+                        query[boost::edge(seq.at(i), u, query).first].label) {
                 return false;
             }
         }
@@ -740,14 +744,14 @@ bool Satisfied(graph_t const& graph, graph_t const& query, std::vector<vertex_t>
             snd = snd_token.second;
         } else {
             vertex_t v;
-            vertex_t u = boost::vertex(fst_token.first, query);
+            vertex_t u = boost::vertex(snd_token.first, query);
             int index = std::find(seq.begin(), seq.end(), u) - seq.begin();
             v = *match.at(index).first;
             auto attrs = graph[v].attributes;
             if (attrs.find(snd_token.second) == attrs.end()) {
                 return false;
             }
-            fst = attrs.at(snd_token.second);
+            snd = attrs.at(snd_token.second);
         }
         if (fst != snd) {
             return false;
@@ -816,7 +820,7 @@ bool FullMatch(CPI& cpi, Match& match, std::set<vertex_t> const& root_candidates
             match.at(i).first++;
         }
         if (match.at(i).first == match.at(i).second) {
-            std::cout << "Trivially satisfied" << std::endl;
+            // std::cout << "Trivially satisfied" << std::endl;
             return true;
         }
     }
@@ -870,7 +874,7 @@ bool CheckTrivially(const CPI& cpi, Match& match, std::map<vertex_t, vertex_t> c
             match.at(k).first++;
         }
         if (match.at(k).first == match.at(k).second) {
-            std::cout << "Trivially satisfied" << std::endl;
+            // std::cout << "Trivially satisfied" << std::endl;
             return true;
         }
     }
@@ -915,7 +919,7 @@ bool CheckMatch(const CPI& cpi, Match& match, std::map<vertex_t, vertex_t> const
             continue;
         }
         if (!Satisfied(graph, query, seq, match, gfd.GetConclusion())) {
-            std::cout << "Checked embeddings: " << amount << std::endl;
+            // std::cout << "Checked embeddings: " << amount << std::endl;
             return false;
         }
     }
@@ -949,7 +953,7 @@ bool Check(CPI& cpi, graph_t const& graph, Gfd const& gfd, std::set<vertex_t> co
     // check
     if (Satisfied(graph, query, seq, match, gfd.GetPremises()) &&
         !Satisfied(graph, query, seq, match, gfd.GetConclusion())) {
-        std::cout << "Checked embeddings: " << amount << std::endl;
+        // std::cout << "Checked embeddings: " << amount << std::endl;
         return false;
     }
 
@@ -967,7 +971,7 @@ bool Check(CPI& cpi, graph_t const& graph, Gfd const& gfd, std::set<vertex_t> co
                 continue;
             }
             if (!Satisfied(graph, query, seq, match, gfd.GetConclusion())) {
-                std::cout << "Checked embeddings: " << amount << std::endl;
+                // std::cout << "Checked embeddings: " << amount << std::endl;
                 return false;
             }
             continue;
@@ -981,7 +985,7 @@ bool Check(CPI& cpi, graph_t const& graph, Gfd const& gfd, std::set<vertex_t> co
             return false;
         }
     }
-    std::cout << "total number of embeddings: " << amount << std::endl;
+    // std::cout << "total number of embeddings: " << amount << std::endl;
     return true;
 }
 
@@ -1021,8 +1025,9 @@ bool Validate(graph_t const& graph, Gfd const& gfd) {
     BottomUpRefinement(cpi, graph, pat, levels, parent, candidates);
     auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now() - start_time);
-    std::cout << "CPI constructed in " << elapsed_milliseconds.count() << ". Matching..."
-              << std::endl;
+
+    // std::cout << "CPI constructed in " << elapsed_milliseconds.count() << ". Matching..."
+    //           << std::endl;
     return Check(cpi, graph, gfd, core, forest, parent, nte);
 }
 

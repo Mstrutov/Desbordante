@@ -187,13 +187,13 @@ public:
                     snd = snd_token.second;
                 } else {
                     vertex_t v;
-                    vertex_t u = boost::vertex(fst_token.first, query_);
+                    vertex_t u = boost::vertex(snd_token.first, query_);
                     v = get(f, u);
                     auto attrs = graph_[v].attributes;
                     if (attrs.find(snd_token.second) == attrs.end()) {
                         return false;
                     }
-                    fst = attrs.at(snd_token.second);
+                    snd = attrs.at(snd_token.second);
                 }
                 if (fst != snd) {
                     return false;

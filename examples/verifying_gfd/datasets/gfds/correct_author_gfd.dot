@@ -1,0 +1,7 @@
+
+0.name=1.author
+graph G {
+0[label=account];
+1[label=blog];
+0--1 [label=post];
+}
