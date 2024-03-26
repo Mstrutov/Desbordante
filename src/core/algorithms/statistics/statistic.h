@@ -13,6 +13,7 @@ class Statistic {
 public:
     Statistic() noexcept = default;
     Statistic(std::byte const *, model::Type const *, bool clone_data);
+    Statistic(std::byte const *, model::TypeId, bool clone_data = false);
     Statistic(Statistic const &);
     Statistic(Statistic &&);
     ~Statistic();
