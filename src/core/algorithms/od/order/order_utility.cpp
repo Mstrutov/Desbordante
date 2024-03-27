@@ -6,6 +6,7 @@
 
 #include "list_lattice.h"
 #include "model/table/column_index.h"
+#include "model/table/typed_column_data.h"
 
 namespace algos::order {
 
@@ -62,6 +63,37 @@ bool StartsWith(AttributeList const& rhs_candidate, AttributeList const& rhs) {
         }
     }
     return true;
+}
+
+std::unordered_set<model::TupleIndex> GetNullIndices(
+        std::vector<model::TypedColumnData> const& data) {
+    std::unordered_set<model::TupleIndex> null_rows;
+    for (unsigned int i = 0; i < data.size(); ++i) {
+        if (!model::Type::IsOrdered(data[i].GetTypeId())) {
+            continue;
+        }
+        for (size_t k = 0; k < data[i].GetNumRows(); ++k) {
+            if (data[i].IsNullOrEmpty(k)) {
+                null_rows.insert(k);
+            }
+        }
+    }
+    return null_rows;
+}
+
+std::vector<IndexedByteData> GetIndexedByteData(
+        model::TypedColumnData const& data,
+        std::unordered_set<model::TupleIndex> const& null_rows) {
+    std::vector<IndexedByteData> indexed_byte_data;
+    indexed_byte_data.reserve(data.GetNumRows());
+    std::vector<std::byte const*> const& byte_data = data.GetData();
+    for (size_t k = 0; k < byte_data.size(); ++k) {
+        if (null_rows.find(k) != null_rows.end()) {
+            continue;
+        }
+        indexed_byte_data.emplace_back(k, byte_data[k]);
+    }
+    return indexed_byte_data;
 }
 
 }  // namespace algos::order

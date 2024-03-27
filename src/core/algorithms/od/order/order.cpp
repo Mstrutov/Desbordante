@@ -11,6 +11,7 @@
 #include "config/tabular_data/input_table/option.h"
 #include "dependency_checker.h"
 #include "list_lattice.h"
+#include "model/table/tuple_index.h"
 #include "model/types/types.h"
 #include "order_utility.h"
 
@@ -35,68 +36,7 @@ void Order::LoadDataInternal() {
 
 void Order::ResetState() {}
 
-void Order::CreateSingletonSortedPartitions() {
-    std::vector<model::TypedColumnData> const& data = typed_relation_->GetColumnData();
-    std::unordered_set<unsigned long> null_rows;
-    for (unsigned int i = 0; i < data.size(); ++i) {
-        if (!model::Type::IsOrdered(data[i].GetTypeId())) {
-            continue;
-        }
-        for (size_t k = 0; k < data[i].GetNumRows(); ++k) {
-            if (data[i].IsNullOrEmpty(k)) {
-                null_rows.insert(k);
-            }
-        }
-    }
-    for (unsigned int i = 0; i < data.size(); ++i) {
-        if (!model::Type::IsOrdered(data[i].GetTypeId())) {
-            continue;
-        }
-        single_attributes_.push_back({i});
-        std::vector<std::pair<unsigned long, std::byte const*>> indexed_byte_data;
-        indexed_byte_data.reserve(data[i].GetNumRows());
-        std::vector<std::byte const*> const& byte_data = data[i].GetData();
-        for (size_t k = 0; k < byte_data.size(); ++k) {
-            if (null_rows.find(k) != null_rows.end()) {
-                continue;
-            }
-            indexed_byte_data.emplace_back(k, byte_data[k]);
-        }
-        std::unique_ptr<model::Type> type = model::CreateType(data[i].GetTypeId(), true);
-        std::unique_ptr<model::MixedType> mixed_type =
-                model::CreateSpecificType<model::MixedType>(model::TypeId::kMixed, true);
-        auto less = [&type, &mixed_type](std::pair<unsigned long, std::byte const*> const& l,
-                                         std::pair<unsigned long, std::byte const*> const& r) {
-            if (type->GetTypeId() == +(model::TypeId::kMixed)) {
-                return mixed_type->CompareAsStrings(l.second, r.second) ==
-                       model::CompareResult::kLess;
-            }
-            return type->Compare(l.second, r.second) == model::CompareResult::kLess;
-        };
-        auto equal = [&type, &mixed_type](std::pair<unsigned long, std::byte const*> const& l,
-                                          std::pair<unsigned long, std::byte const*> const& r) {
-            if (type->GetTypeId() == +(model::TypeId::kMixed)) {
-                return mixed_type->CompareAsStrings(l.second, r.second) ==
-                       model::CompareResult::kEqual;
-            }
-            return type->Compare(l.second, r.second) == model::CompareResult::kEqual;
-        };
-        std::sort(indexed_byte_data.begin(), indexed_byte_data.end(), less);
-        SortedPartition::EquivalenceClasses equivalence_classes;
-        equivalence_classes.reserve(typed_relation_->GetNumRows());
-        equivalence_classes.push_back({indexed_byte_data.front().first});
-        for (size_t k = 1; k < indexed_byte_data.size(); ++k) {
-            if (equal(indexed_byte_data[k - 1], indexed_byte_data[k])) {
-                equivalence_classes.back().insert(indexed_byte_data[k].first);
-            } else {
-                equivalence_classes.push_back({indexed_byte_data[k].first});
-            }
-        }
-        equivalence_classes.shrink_to_fit();
-        sorted_partitions_.emplace(
-                AttributeList{i},
-                SortedPartition(std::move(equivalence_classes), typed_relation_->GetNumRows()));
-    }
+void Order::PruneSingleEqClassPartitions() {
     for (auto& [attr, partition] : sorted_partitions_) {
         if (partition.Size() == 1) {
             for (AttributeList other_attr : single_attributes_) {
@@ -108,6 +48,49 @@ void Order::CreateSingletonSortedPartitions() {
                     std::find(single_attributes_.begin(), single_attributes_.end(), attr));
         }
     }
+}
+
+void Order::CreateSingleColumnSortedPartitions() {
+    std::vector<model::TypedColumnData> const& data = typed_relation_->GetColumnData();
+    std::unordered_set<model::TupleIndex> null_rows = GetNullIndices(data);
+    for (unsigned int i = 0; i < data.size(); ++i) {
+        if (!model::Type::IsOrdered(data[i].GetTypeId())) {
+            continue;
+        }
+        single_attributes_.push_back({i});
+        std::vector<IndexedByteData> indexed_byte_data = GetIndexedByteData(data[i], null_rows);
+        std::unique_ptr<model::Type> type = model::CreateType(data[i].GetTypeId(), true);
+        std::unique_ptr<model::MixedType> mixed_type =
+                model::CreateSpecificType<model::MixedType>(model::TypeId::kMixed, true);
+        auto less = [&type, &mixed_type](IndexedByteData const& l, IndexedByteData const& r) {
+            if (type->GetTypeId() == +(model::TypeId::kMixed)) {
+                return mixed_type->CompareAsStrings(l.data, r.data) == model::CompareResult::kLess;
+            }
+            return type->Compare(l.data, r.data) == model::CompareResult::kLess;
+        };
+        auto equal = [&type, &mixed_type](IndexedByteData const& l, IndexedByteData const& r) {
+            if (type->GetTypeId() == +(model::TypeId::kMixed)) {
+                return mixed_type->CompareAsStrings(l.data, r.data) == model::CompareResult::kEqual;
+            }
+            return type->Compare(l.data, r.data) == model::CompareResult::kEqual;
+        };
+        std::sort(indexed_byte_data.begin(), indexed_byte_data.end(), less);
+        SortedPartition::EquivalenceClasses equivalence_classes;
+        equivalence_classes.reserve(typed_relation_->GetNumRows());
+        equivalence_classes.push_back({indexed_byte_data.front().index});
+        for (size_t k = 1; k < indexed_byte_data.size(); ++k) {
+            if (equal(indexed_byte_data[k - 1], indexed_byte_data[k])) {
+                equivalence_classes.back().insert(indexed_byte_data[k].index);
+            } else {
+                equivalence_classes.push_back({indexed_byte_data[k].index});
+            }
+        }
+        equivalence_classes.shrink_to_fit();
+        sorted_partitions_.emplace(
+                AttributeList{i},
+                SortedPartition(std::move(equivalence_classes), typed_relation_->GetNumRows()));
+    }
+    PruneSingleEqClassPartitions();
 }
 
 void Order::CreateSortedPartitionsFromSingletons(AttributeList const& attr_list) {
@@ -366,7 +349,7 @@ void Order::PrintValidOD() {
 
 unsigned long long Order::ExecuteInternal() {
     auto start_time = std::chrono::system_clock::now();
-    CreateSingletonSortedPartitions();
+    CreateSingleColumnSortedPartitions();
     lattice_ = std::make_unique<ListLattice>(candidate_sets_, single_attributes_);
     while (!lattice_->IsEmpty()) {
         ComputeDependencies(lattice_->GetLatticeLevel());

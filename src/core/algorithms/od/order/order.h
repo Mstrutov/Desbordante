@@ -32,7 +32,8 @@ public:
     void RegisterOptions();
     void LoadDataInternal() override;
     void ResetState() override;
-    void CreateSingletonSortedPartitions();
+    void PruneSingleEqClassPartitions();
+    void CreateSingleColumnSortedPartitions();
     void CreateSortedPartitionsFromSingletons(AttributeList const& attr_list);
     void ComputeDependencies(ListLattice::LatticeLevel const& lattice_level);
     std::vector<AttributeList> Extend(AttributeList const& lhs, AttributeList const& rhs) const;
