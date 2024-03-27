@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <sstream>
 
@@ -12,6 +13,8 @@ private:
     TypeId type_id_;
 
 public:
+    using Destructor = std::function<void(std::byte*)>;
+
     explicit Type(TypeId const type_id) noexcept : type_id_(type_id) {}
 
     virtual ~Type() = default;
@@ -125,6 +128,10 @@ public:
     static bool IsOrdered(TypeId const& type_id) {
         return !(type_id == +TypeId::kEmpty || type_id == +TypeId::kNull ||
                  type_id == +TypeId::kUndefined || type_id == +TypeId::kMixed);
+    }
+
+    virtual Destructor GetDestructor() const {
+        return nullptr;
     }
 };
 

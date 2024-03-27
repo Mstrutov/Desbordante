@@ -97,4 +97,11 @@ constexpr auto kDIgnoreConstantCols =
 constexpr auto kDGraphData = "Path to dot-file with graph";
 constexpr auto kDGfdData = "Path to file with GFD";
 constexpr auto kDMemLimitMB = "memory limit im MBs";
+constexpr auto kDLeftTable = "first table processed by the algorithm";
+constexpr auto kDRightTable = "second table processed by the algorithm";
+constexpr auto kDPruneNonDisjoint =
+        "don't search for dependencies where the LHS decision boundary at the same index as the "
+        "RHS decision boundary limits the number of records matched";
+constexpr auto kDMinSupport = "minimum support for a dependency's LHS";
+constexpr auto kDColumnMatches = "column matches to examine";
 }  // namespace config::descriptions

@@ -10,7 +10,7 @@ using AlgorithmTypes =
         std::tuple<Depminer, DFD, FastFDs, FDep, FdMine, Pyro, Tane, PFDTane, FUN, hyfd::HyFD, Aid,
                    Apriori, metric::MetricVerifier, DataStats, fd_verifier::FDVerifier, HyUCC,
                    PyroUCC, cfd::FDFirstAlgorithm, ACAlgorithm, UCCVerifier, Faida, Spider,
-                   GfdValidation, EGfdValidation, NaiveGfdValidation>;
+                   GfdValidation, EGfdValidation, NaiveGfdValidation, hymd::HyMD>;
 
 // clang-format off
 /* Enumeration of all supported non-pipeline algorithms. If you implement a new
@@ -65,7 +65,10 @@ BETTER_ENUM(AlgorithmType, char,
 /* Graph functional dependency mining algorithms */
     gfdvalid,
     egfdvalid,
-    naivegfdvalid
+    naivegfdvalid,
+
+/* MD mining algorithms */
+    hymd
 )
 // clang-format on
 
