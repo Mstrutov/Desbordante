@@ -104,6 +104,39 @@ void Order::CreateSortedPartitionsFromSingletons(AttributeList const& attr_list)
     sorted_partitions_.emplace(attr_list, res);
 }
 
+bool Order::HasValidPrefix(AttributeList const& lhs, AttributeList const& rhs) const {
+    bool prefix_valid = false;
+    for (AttributeList const& rhs_prefix : GetPrefixes(rhs)) {
+        if (InUnorderedMap(valid_, lhs, rhs_prefix)) {
+            prefix_valid = true;
+            break;
+        }
+    }
+    return prefix_valid;
+}
+
+ValidityType Order::CheckCandidateValidity(AttributeList const& lhs, AttributeList const& rhs) {
+    bool is_merge_immediately = false;
+    for (AttributeList const& lhs_prefix : GetPrefixes(lhs)) {
+        if (InUnorderedMap(merge_invalidated_, lhs_prefix, rhs)) {
+            is_merge_immediately = true;
+            break;
+        }
+    }
+    ValidityType candidate_validity = +ValidityType::merge;
+    if (!is_merge_immediately) {
+        CreateSortedPartitionsFromSingletons(lhs);
+        if (sorted_partitions_[lhs].Size() == 1) {
+            candidate_validity = +ValidityType::valid;
+            candidate_sets_[lhs].erase(rhs);
+        } else {
+            CreateSortedPartitionsFromSingletons(rhs);
+            candidate_validity = CheckForSwap(sorted_partitions_[lhs], sorted_partitions_[rhs]);
+        }
+    }
+    return candidate_validity;
+}
+
 void Order::ComputeDependencies(ListLattice::LatticeLevel const& lattice_level) {
     if (lattice_->GetLevelNumber() < 2) {
         return;
@@ -115,35 +148,10 @@ void Order::ComputeDependencies(ListLattice::LatticeLevel const& lattice_level) 
             if (!InUnorderedMap(candidate_sets_, lhs, rhs)) {
                 continue;
             }
-            bool prefix_valid = false;
-            for (AttributeList const& rhs_prefix : GetPrefixes(rhs)) {
-                if (InUnorderedMap(valid_, lhs, rhs_prefix)) {
-                    prefix_valid = true;
-                    break;
-                }
-            }
-            if (prefix_valid) {
+            if (HasValidPrefix(lhs, rhs)) {
                 continue;
             }
-            bool is_merge_immediately = false;
-            for (AttributeList const& lhs_prefix : GetPrefixes(lhs)) {
-                if (InUnorderedMap(merge_invalidated_, lhs_prefix, rhs)) {
-                    is_merge_immediately = true;
-                    break;
-                }
-            }
-            ValidityType candidate_validity = +ValidityType::merge;
-            if (!is_merge_immediately) {
-                CreateSortedPartitionsFromSingletons(lhs);
-                if (sorted_partitions_[lhs].Size() == 1) {
-                    candidate_validity = +ValidityType::valid;
-                    candidate_sets_[lhs].erase(rhs);
-                } else {
-                    CreateSortedPartitionsFromSingletons(rhs);
-                    candidate_validity =
-                            CheckForSwap(sorted_partitions_[lhs], sorted_partitions_[rhs]);
-                }
-            }
+            ValidityType candidate_validity = CheckCandidateValidity(lhs, rhs);
             if (candidate_validity == +ValidityType::valid) {
                 bool non_minimal_by_merge = false;
                 for (AttributeList const& merge_lhs : GetPrefixes(lhs)) {

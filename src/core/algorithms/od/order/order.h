@@ -35,6 +35,8 @@ public:
     void PruneSingleEqClassPartitions();
     void CreateSingleColumnSortedPartitions();
     void CreateSortedPartitionsFromSingletons(AttributeList const& attr_list);
+    bool HasValidPrefix(AttributeList const& lhs, AttributeList const& rhs) const;
+    ValidityType CheckCandidateValidity(AttributeList const& lhs, AttributeList const& rhs);
     void ComputeDependencies(ListLattice::LatticeLevel const& lattice_level);
     std::vector<AttributeList> Extend(AttributeList const& lhs, AttributeList const& rhs) const;
     bool IsMinimal(AttributeList const& a) const;
