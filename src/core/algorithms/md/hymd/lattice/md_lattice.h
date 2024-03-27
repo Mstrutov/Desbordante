@@ -9,8 +9,8 @@
 #include "algorithms/md/decision_boundary.h"
 #include "algorithms/md/hymd/column_match_info.h"
 #include "algorithms/md/hymd/decision_boundary_vector.h"
-#include "algorithms/md/hymd/lattice/lattice_child_array.h"
 #include "algorithms/md/hymd/lattice/md_lattice_node_info.h"
+#include "algorithms/md/hymd/lattice/node_base.h"
 #include "algorithms/md/hymd/lattice/single_level_func.h"
 #include "algorithms/md/hymd/md_element.h"
 #include "algorithms/md/hymd/rhss.h"
@@ -53,32 +53,33 @@ private:
         }
     };
 
-    struct MdNode {
+    struct MdNode : public NodeBase<MdNode> {
         using Specialization = MdSpecialization;
-        using BoundMap = BoundaryMap<MdNode>;
-        using OptionalChild = std::optional<BoundMap>;
-        using Children = LatticeChildArray<MdNode>;
 
-        Children children;
         DecisionBoundaryVector rhs_bounds;
 
+        MdNode* AddOneUnchecked(model::Index child_array_index, model::md::DecisionBoundary bound) {
+            return AddOneUncheckedBase(child_array_index, bound, rhs_bounds.size());
+        }
+
         MdNode(std::size_t attributes_num, std::size_t children_number)
-            : children(children_number), rhs_bounds(attributes_num) {}
+            : NodeBase<MdNode>(children_number), rhs_bounds(attributes_num) {}
 
         explicit MdNode(DecisionBoundaryVector rhs)
-            : children(rhs.size()), rhs_bounds(std::move(rhs)) {}
+            : NodeBase<MdNode>(rhs.size()), rhs_bounds(std::move(rhs)) {}
     };
 
-    struct SupportNode {
+    struct SupportNode : public NodeBase<SupportNode> {
         using Specialization = LhsSpecialization;
-        using BoundMap = BoundaryMap<SupportNode>;
-        using OptionalChild = std::optional<BoundMap>;
-        using Children = LatticeChildArray<SupportNode>;
 
-        Children children;
         bool is_unsupported = false;
 
-        SupportNode(std::size_t children_number) : children(children_number) {}
+        SupportNode* AddOneUnchecked(model::Index child_array_index,
+                                     model::md::DecisionBoundary bound) {
+            return AddOneUncheckedBase(child_array_index, bound);
+        }
+
+        SupportNode(std::size_t children_number) : NodeBase<SupportNode>(children_number) {}
     };
 
     class GeneralizationChecker;
@@ -227,6 +228,9 @@ private:
                            model::md::DecisionBoundary const next_lhs_bound);
     void AddIfMinimal(MdSpecialization const& md);
 
+    static auto SetUnsupAction() noexcept {
+        return [](SupportNode* node){ node->is_unsupported = true; };
+    }
     void MarkNewLhs(SupportNode& cur_node, DecisionBoundaryVector const& lhs_bounds,
                     model::Index cur_node_index);
     void MarkUnsupported(DecisionBoundaryVector const& lhs_bounds);

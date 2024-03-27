@@ -86,7 +86,7 @@ void MdLattice::MdRefiner::Refine() {
         DecisionBoundary& md_rhs_bound_ref = (*rhs_)[rhs_index];
         md_rhs_bound_ref = kLowestBound;
         // trivial
-        if (new_bound <= lhs_[rhs_index]) continue;
+        if (new_bound == lhs_[rhs_index]) continue;
         // not minimal
         if (lattice_->HasGeneralization({lhs_, *upd_iter})) continue;
         md_rhs_bound_ref = new_bound;
@@ -121,22 +121,19 @@ void MdLattice::CollectRefinersForViolated(MdNode& cur_node, std::vector<MdRefin
                                            Index cur_node_index) {
     TryAddRefiner(found, cur_node.rhs_bounds, similarity_vector, cur_node_lhs_bounds);
 
-    MdNodeChildren& children = cur_node.children;
-    std::size_t const child_array_size = children.size();
-    for (Index child_array_index = FindFirstNonEmptyIndex(children, 0);
-         child_array_index != child_array_size;
-         child_array_index = FindFirstNonEmptyIndex(children, child_array_index + 1)) {
+    auto collect = [&](MdBoundMap& bound_map, model::Index child_array_index) {
         Index const next_node_index = cur_node_index + child_array_index;
         DecisionBoundary& cur_lhs_bound = cur_node_lhs_bounds[next_node_index];
         DecisionBoundary const sim_vec_sim = similarity_vector[next_node_index];
-        for (auto& [generalization_bound, node] : *children[child_array_index]) {
+        for (auto& [generalization_bound, node] : bound_map) {
             if (generalization_bound > sim_vec_sim) break;
             cur_lhs_bound = generalization_bound;
             CollectRefinersForViolated(node, found, cur_node_lhs_bounds, similarity_vector,
                                        next_node_index + 1);
         }
         cur_lhs_bound = kLowestBound;
-    }
+    };
+    cur_node.ForEachNonEmpty(collect);
 }
 
 auto MdLattice::CollectRefinersForViolated(SimilarityVector const& similarity_vector)
@@ -176,24 +173,11 @@ void MdLattice::MdVerificationMessenger::LowerAndSpecialize(
 }
 
 void MdLattice::AddNewMinimal(MdNode& cur_node, MdSpecialization const& md, Index cur_node_index) {
-    assert(IsEmpty(cur_node.children));
     assert(!NotEmpty(cur_node.rhs_bounds));
     assert(cur_node_index > md.lhs_specialization.specialized.index);
-    DecisionBoundaryVector const& old_lhs = md.lhs_specialization.old_lhs;
-    MdNode* cur_node_ptr = &cur_node;
-    for (Index next_node_index = GetFirstNonZeroIndex(old_lhs, cur_node_index);
-         next_node_index != column_matches_size_; cur_node_index = next_node_index + 1,
-               next_node_index = GetFirstNonZeroIndex(old_lhs, cur_node_index)) {
-        std::size_t const child_array_index = next_node_index - cur_node_index;
-        std::size_t const next_child_array_size = column_matches_size_ - next_node_index;
-        cur_node_ptr = &cur_node_ptr->children[child_array_index]
-                                .emplace()
-                                .try_emplace(old_lhs[next_node_index], column_matches_size_,
-                                             next_child_array_size)
-                                .first->second;
-    }
     auto const& [rhs_index, rhs_bound] = md.rhs;
-    cur_node_ptr->rhs_bounds[rhs_index] = rhs_bound;
+    auto set_bound = [&](MdNode* node) { node->rhs_bounds[rhs_index] = rhs_bound; };
+    AddUnchecked(&cur_node, md.lhs_specialization.old_lhs, cur_node_index, set_bound);
     UpdateMaxLevel(md.lhs_specialization);
 }
 
@@ -329,8 +313,9 @@ auto MdLattice::TryGetNextNode(MdSpecialization const& md, GeneralizationChecker
                                DecisionBoundary const next_lhs_bound) -> MdNode* {
     Index const fol_index = next_node_index + 1;
     Index const child_array_index = next_node_index - cur_node_index;
-    auto [boundary_mapping, is_first_arr] = TryEmplaceChild(checker.Children(), child_array_index);
-    std::size_t const next_child_array_size = column_matches_size_ - next_node_index;
+    MdNode& cur_node = checker.CurNode();
+    auto [boundary_mapping, is_first_arr] = cur_node.TryEmplaceChild(child_array_index);
+    std::size_t const next_child_array_size = cur_node.GetChildArraySize(child_array_index);
     if (is_first_arr) [[unlikely]] {
         MdNode& new_node =
                 boundary_mapping
@@ -452,19 +437,14 @@ void MdLattice::GetLevel(MdNode& cur_node, std::vector<MdVerificationMessenger>&
                          DecisionBoundaryVector& cur_node_lhs_bounds, Index const cur_node_index,
                          std::size_t const level_left) {
     DecisionBoundaryVector& rhs_bounds = cur_node.rhs_bounds;
-    MdNodeChildren& children = cur_node.children;
     if (level_left == 0) {
         if (NotEmpty(rhs_bounds)) collected.emplace_back(this, cur_node_lhs_bounds, &rhs_bounds);
         return;
     }
-    std::size_t const child_array_size = children.size();
-    for (Index child_array_index = FindFirstNonEmptyIndex(children, 0);
-         child_array_index != child_array_size;
-         child_array_index = FindFirstNonEmptyIndex(children, child_array_index + 1)) {
+    auto collect = [&](MdBoundMap& bound_map, model::Index child_array_index) {
         Index const next_node_index = cur_node_index + child_array_index;
         DecisionBoundary& next_lhs_bound = cur_node_lhs_bounds[next_node_index];
-        for (auto& [boundary, node] : *children[child_array_index]) {
-            assert(boundary > kLowestBound);
+        for (auto& [boundary, node] : bound_map) {
             std::size_t const single = get_single_level_(next_node_index, boundary);
             if (single > level_left) break;
             next_lhs_bound = boundary;
@@ -472,7 +452,8 @@ void MdLattice::GetLevel(MdNode& cur_node, std::vector<MdVerificationMessenger>&
                      level_left - single);
         }
         next_lhs_bound = kLowestBound;
-    }
+    };
+    cur_node.ForEachNonEmpty(collect);
 }
 
 auto MdLattice::GetLevel(std::size_t const level) -> std::vector<MdVerificationMessenger> {
@@ -490,21 +471,18 @@ auto MdLattice::GetLevel(std::size_t const level) -> std::vector<MdVerificationM
 
 void MdLattice::GetAll(MdNode& cur_node, std::vector<MdLatticeNodeInfo>& collected,
                        DecisionBoundaryVector& this_node_lhs_bounds, Index const this_node_index) {
-    MdNodeChildren& children = cur_node.children;
     DecisionBoundaryVector& rhs_bounds = cur_node.rhs_bounds;
     if (NotEmpty(rhs_bounds)) collected.emplace_back(this_node_lhs_bounds, &rhs_bounds);
-    std::size_t const child_array_size = children.size();
-    for (Index child_array_index = FindFirstNonEmptyIndex(children, 0);
-         child_array_index != child_array_size;
-         child_array_index = FindFirstNonEmptyIndex(children, child_array_index + 1)) {
+    auto collect = [&](MdBoundMap& bound_map, model::Index child_array_index) {
         Index const next_node_index = this_node_index + child_array_index;
         DecisionBoundary& next_lhs_bound = this_node_lhs_bounds[next_node_index];
-        for (auto& [boundary, node] : *children[child_array_index]) {
+        for (auto& [boundary, node] : bound_map) {
             next_lhs_bound = boundary;
             GetAll(node, collected, this_node_lhs_bounds, next_node_index + 1);
         }
         next_lhs_bound = kLowestBound;
-    }
+    };
+    cur_node.ForEachNonEmpty(collect);
 }
 
 std::vector<MdLatticeNodeInfo> MdLattice::GetAll() {
@@ -547,48 +525,12 @@ bool MdLattice::IsUnsupportedSpec(SupportNode const& node,
 
 void MdLattice::MarkNewLhs(SupportNode& cur_node, DecisionBoundaryVector const& lhs_bounds,
                            Index cur_node_index) {
-    assert(IsEmpty(cur_node.children));
-    SupportNode* cur_node_ptr = &cur_node;
-    for (Index next_node_index = GetFirstNonZeroIndex(lhs_bounds, cur_node_index);
-         next_node_index != column_matches_size_; cur_node_index = next_node_index + 1,
-               next_node_index = GetFirstNonZeroIndex(lhs_bounds, cur_node_index)) {
-        std::size_t const child_array_index = next_node_index - cur_node_index;
-        std::size_t const next_child_array_size = column_matches_size_ - next_node_index;
-        cur_node_ptr = &cur_node_ptr->children[child_array_index]
-                                .emplace()
-                                .try_emplace(lhs_bounds[next_node_index], next_child_array_size)
-                                .first->second;
-    }
-    cur_node_ptr->is_unsupported = true;
+    AddUnchecked(&cur_node, lhs_bounds, cur_node_index, SetUnsupAction());
 }
 
 void MdLattice::MarkUnsupported(DecisionBoundaryVector const& lhs_bounds) {
-    SupportNode* cur_node_ptr = &support_root_;
-    for (Index cur_node_index = 0,
-               next_node_index = GetFirstNonZeroIndex(lhs_bounds, cur_node_index);
-         next_node_index != column_matches_size_; cur_node_index = next_node_index + 1,
-               next_node_index = GetFirstNonZeroIndex(lhs_bounds, cur_node_index)) {
-        DecisionBoundary const next_bound = lhs_bounds[next_node_index];
-        Index const child_array_index = next_node_index - cur_node_index;
-        std::size_t const next_child_array_size = column_matches_size_ - next_node_index;
-        auto [boundary_map, is_first_arr] =
-                TryEmplaceChild(cur_node_ptr->children, child_array_index);
-        if (is_first_arr) {
-            SupportNode& new_node =
-                    boundary_map.try_emplace(next_bound, next_child_array_size).first->second;
-            MarkNewLhs(new_node, lhs_bounds, next_node_index + 1);
-            return;
-        }
-        auto [it_map, is_first_map] = boundary_map.try_emplace(next_bound, next_child_array_size);
-        SupportNode& next_node = it_map->second;
-        if (is_first_map) {
-            MarkNewLhs(next_node, lhs_bounds, next_node_index + 1);
-            return;
-        }
-        cur_node_ptr = &next_node;
-    }
-    // Can only happen if the root is unsupported.
-    cur_node_ptr->is_unsupported = true;
+    auto mark_new = [this](auto&&... args) { MarkNewLhs(std::forward<decltype(args)>(args)...); };
+    CheckedAdd(&support_root_, lhs_bounds, lhs_bounds, mark_new, SetUnsupAction());
 }
 
 }  // namespace algos::hymd::lattice

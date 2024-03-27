@@ -19,6 +19,8 @@
 
 namespace algos::hymd {
 
+using model::Index;
+
 HyMD::HyMD() : MdAlgorithm({}) {
     using namespace config::names;
     RegisterOptions();
@@ -47,7 +49,7 @@ void HyMD::RegisterOptions() {
         if (records_info_->OneTableGiven()) {
             std::size_t const num_columns = left_schema_->GetNumColumns();
             column_matches_option.reserve(num_columns);
-            for (model::Index i = 0; i < num_columns; ++i) {
+            for (Index i = 0; i < num_columns; ++i) {
                 std::string const column_name = left_schema_->GetColumn(i)->GetName();
                 column_matches_option.emplace_back(
                         column_name, column_name,
@@ -59,9 +61,9 @@ void HyMD::RegisterOptions() {
             std::size_t const num_columns_left = left_schema_->GetNumColumns();
             std::size_t const num_columns_right = left_schema_->GetNumColumns();
             column_matches_option.reserve(num_columns_left * num_columns_right);
-            for (model::Index i = 0; i < num_columns_left; ++i) {
+            for (Index i = 0; i < num_columns_left; ++i) {
                 std::string const column_name_left = left_schema_->GetColumn(i)->GetName();
-                for (model::Index j = 0; j < num_columns_right; ++j) {
+                for (Index j = 0; j < num_columns_right; ++j) {
                     std::string const column_name_right = right_schema_->GetColumn(j)->GetName();
                     column_matches_option.emplace_back(
                             column_name_left, column_name_right,
@@ -106,7 +108,7 @@ void HyMD::ResetStateMd() {}
 void HyMD::LoadDataInternal() {
     left_schema_ = std::make_shared<RelationalSchema>(left_table_->GetRelationName());
     std::size_t const left_table_cols = left_table_->GetNumberOfColumns();
-    for (model::Index i = 0; i < left_table_cols; ++i) {
+    for (Index i = 0; i < left_table_cols; ++i) {
         left_schema_->AppendColumn(left_table_->GetColumnName(i));
     }
     if (right_table_ == nullptr) {
@@ -115,7 +117,7 @@ void HyMD::LoadDataInternal() {
     } else {
         right_schema_ = std::make_unique<RelationalSchema>(right_table_->GetRelationName());
         std::size_t const right_table_cols = right_table_->GetNumberOfColumns();
-        for (model::Index i = 0; i < right_table_cols; ++i) {
+        for (Index i = 0; i < right_table_cols; ++i) {
             right_schema_->AppendColumn(right_table_->GetColumnName(i));
         }
         records_info_ = indexes::RecordsInfo::CreateFrom(*left_table_, *right_table_);
@@ -168,7 +170,7 @@ void HyMD::RegisterResults(SimilarityData const& similarity_data,
     std::size_t const column_match_number = similarity_data.GetColumnMatchNumber();
     std::vector<model::md::ColumnMatch> column_matches;
     column_matches.reserve(column_match_number);
-    for (model::Index column_match_index = 0; column_match_index < column_match_number;
+    for (Index column_match_index = 0; column_match_index < column_match_number;
          ++column_match_index) {
         auto [left_col_index, right_col_index] =
                 similarity_data.GetColMatchIndices(column_match_index);
@@ -178,12 +180,12 @@ void HyMD::RegisterResults(SimilarityData const& similarity_data,
     }
     std::vector<model::MD> mds;
     for (lattice::MdLatticeNodeInfo const& md : lattice_mds) {
-        DecisionBoundaryVector& rhs_bounds = *md.rhs_bounds;
-        for (model::Index rhs_index = 0; rhs_index < column_match_number; ++rhs_index) {
+        DecisionBoundaryVector const& rhs_bounds = *md.rhs_bounds;
+        for (Index rhs_index = 0; rhs_index < column_match_number; ++rhs_index) {
             model::md::DecisionBoundary const rhs_bound = rhs_bounds[rhs_index];
             if (rhs_bound == kLowestBound) continue;
             std::vector<model::md::LhsColumnSimilarityClassifier> lhs;
-            for (model::Index lhs_index = 0; lhs_index < column_match_number; ++lhs_index) {
+            for (Index lhs_index = 0; lhs_index != column_match_number; ++lhs_index) {
                 model::md::DecisionBoundary const lhs_bound = md.lhs_bounds[lhs_index];
                 lhs.emplace_back(similarity_data.GetPreviousDecisionBound(lhs_bound, lhs_index),
                                  lhs_index, lhs_bound);

@@ -5,8 +5,8 @@
 
 #include <boost/dynamic_bitset.hpp>
 
-#include "algorithms/md/hymd/lattice/lattice_child_array.h"
 #include "algorithms/md/hymd/lattice/md_lattice.h"
+#include "algorithms/md/hymd/lattice/node_base.h"
 #include "algorithms/md/hymd/lattice/validation_info.h"
 #include "model/index.h"
 
@@ -14,20 +14,26 @@ namespace algos::hymd::lattice::cardinality {
 
 class MinPickerLattice {
 private:
-    struct Node {
-        LatticeChildArray<Node> children;
+    struct Node : NodeBase<Node> {
         ValidationInfo* task_info = nullptr;
 
-        Node(std::size_t children_number) : children(children_number) {}
+        Node* AddOneUnchecked(model::Index child_array_index, model::md::DecisionBoundary bound) {
+            return AddOneUncheckedBase(child_array_index, bound);
+        }
+
+        Node(std::size_t children_number) : NodeBase<Node>(children_number) {}
     };
 
-    using BoundMap = BoundaryMap<Node>;
-    using OptionalChild = std::optional<BoundMap>;
-    using NodeChildren = LatticeChildArray<Node>;
+    using BoundMap = Node::BoundMap;
+    using OptionalChild = Node::OptionalChild;
+    using NodeChildren = Node::Children;
 
     Node root_;
     std::vector<ValidationInfo> info_;
 
+    static auto SetInfoAction(ValidationInfo* info) {
+        return [info](Node* node) { node->task_info = info; };
+    }
     void AddNewLhs(Node& cur_node, ValidationInfo* validation_info, model::Index cur_node_index);
     void ExcludeGeneralizationRhs(Node const& cur_node,
                                   MdLattice::MdVerificationMessenger const& messenger,
