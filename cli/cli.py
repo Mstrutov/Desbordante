@@ -556,7 +556,7 @@ def print_algo_help_page(algo_name: str) -> None:
     algo = ALGOS[Algorithm(algo_name)]()
     help_info = ''
     for opt in algo.get_possible_options():
-        if opt not in ('table', TABLES, TABLES_LIST, TABLES_DIRECTORY, 'is_null_equal_null'):
+        if opt not in ('table', TABLES, 'is_null_equal_null'):
             help_info += get_option_help_info(opt, algo)
     click.echo(f'{ALGO_HELP_PAGES[Algorithm(algo_name)]}{help_info}')
 
