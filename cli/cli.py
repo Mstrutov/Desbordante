@@ -417,14 +417,15 @@ def check_error_measure_option_presence(task: str | None, error_measure: str | N
 def parse_tables_list_file(file: click.File) \
         -> list[tuple[str, str, bool]]:
     try:
-        table_tuples = map(str.split, file.readlines())
         result = []
-        for table_tuple in table_tuples:
+        for line_num, line in enumerate(file.readlines()):
+            table_tuple = line.rsplit(maxsplit=2)
             if len(table_tuple) != 3:
-                    click.echo(
-                        f"ERROR: Invalid format of table description: {' '.join(table_tuple)}")
-                    sys.exit(1)
-            result.append((table_tuple[0], table_tuple[1], bool(table_tuple[2])))
+                click.echo(
+                    f'ERROR: Invalid format of table description on line {line_num}: {line}')
+                sys.exit(1)
+            filename, separator, has_header_str = table_tuple
+            result.append((filename, separator, bool(has_header_str)))
         return result
     except OSError as exc:
         click.echo(exc)
@@ -602,13 +603,13 @@ def algos_options() -> Callable:
             arg = f'--{opt_name}'
             if opt_main_type == list:
                 if opt_additional_types[0] == desbordante.data_types.Table:
-                    click.option(arg, type=TableParamType(),
+                    click.option(arg, type=(str, str, bool),
                                  multiple=True)(func)
                 else:
                     click.option(arg, multiple=True,
                              type=opt_additional_types[0])(func)
             elif opt_main_type == desbordante.data_types.Table:
-                click.option(arg, type=TableParamType())(func)
+                click.option(arg, type=(str, str, bool))(func)
             else:
                 click.option(arg, type=opt_main_type)(func)
         return func
