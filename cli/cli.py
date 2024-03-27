@@ -13,6 +13,7 @@ import desbordante
 class Task(StrEnum):
     fd = auto()
     afd = auto()
+    od = auto()
     pfd = auto()
     fd_verification = auto()
     afd_verification = auto()
@@ -31,6 +32,7 @@ class Algorithm(StrEnum):
     fun = auto()
     fastfds = auto()
     aid = auto()
+    fastod = auto()
     naive_fd_verifier = auto()
     naive_afd_verifier = auto()
     icde09_mfd_verifier = auto()
@@ -98,9 +100,10 @@ Currently, the console version of Desbordante supports:
 1) Discovery of exact functional dependencies
 2) Discovery of approximate functional dependencies
 3) Discovery of probabilistic functional dependencies
-4) Verification of exact functional dependencies
-5) Verification of approximate functional dependencies
-6) Verification of metric dependencies
+4) Discovery of exact canonical order dependencies
+5) Verification of exact functional dependencies
+6) Verification of approximate functional dependencies
+7) Verification of metric dependencies
 
 If you need other types, you should look into the C++ code, the Python
 bindings or the Web version.
@@ -145,6 +148,14 @@ F. Naumann.
 
 Algorithms: PYRO, TANE
 Default: PYRO
+'''
+OD_HELP = '''Discover order dependencies. For more information about the 
+primitive and algorithms, refer to the “Effective and complete discovery 
+of order dependencies via set-based axiomatization” paper by J. Szlichta 
+et al.
+
+Algorithms: FASTOD
+Default: FASTOD
 '''
 PFD_HELP = '''Discover minimal non-trivial probabilistic functional
 dependencies. Probabilitistic functional dependencies are defined in the
@@ -232,6 +243,11 @@ it is significantly faster (10x-100x). For more information, refer to the
 “Approximate Discovery of Functional Dependencies for Large Datasets” paper
 by T.Bleifus et al.
 '''
+FASTOD_HELP = '''A modern algorithm for discovery of canonical order 
+dependencies. For more information, refer to the “Effective and complete 
+discovery of order dependencies via set-based axiomatization” paper by 
+J. Szlichta et al.
+'''
 NAIVE_FD_VERIFIER_HELP = '''A straightforward partition-based algorithm for
 verifying whether a given exact functional dependency holds on the specified
 dataset. For more information, refer to Lemma 2.2 from “TANE: An Efficient
@@ -260,6 +276,7 @@ OPTION_TYPES = {
 TASK_HELP_PAGES = {
     Task.fd: FD_HELP,
     Task.afd: AFD_HELP,
+    Task.od: OD_HELP,
     Task.pfd: PFD_HELP,
     Task.fd_verification: FD_VERIFICATION_HELP,
     Task.afd_verification: AFD_VERIFICATION_HELP,
@@ -278,6 +295,7 @@ ALGO_HELP_PAGES = {
     Algorithm.fun: FUN_HELP,
     Algorithm.fastfds: FASTFDS_HELP,
     Algorithm.aid: AID_HELP,
+    Algorithm.fastod: FASTOD_HELP,
     Algorithm.naive_fd_verifier: NAIVE_FD_VERIFIER_HELP,
     Algorithm.naive_afd_verifier: NAIVE_AFD_VERIFIER_HELP,
     Algorithm.icde09_mfd_verifier: ICDE09_MFD_VERIFIER_HELP
@@ -293,6 +311,8 @@ TASK_INFO = {
                       Algorithm.hyfd),
     Task.afd: TaskInfo([Algorithm.pyro, Algorithm.tane],
                        Algorithm.pyro),
+    Task.od: TaskInfo([Algorithm.fastod],
+                      Algorithm.fastod),
     Task.pfd: TaskInfo([Algorithm.pfdtane], Algorithm.pfdtane),
     Task.fd_verification: TaskInfo([Algorithm.naive_fd_verifier],
                                    Algorithm.naive_fd_verifier),
@@ -314,6 +334,7 @@ ALGOS = {
     Algorithm.fun: desbordante.fd.algorithms.FUN,
     Algorithm.fastfds: desbordante.fd.algorithms.FastFDs,
     Algorithm.aid: desbordante.fd.algorithms.Aid,
+    Algorithm.fastod: desbordante.od.algorithms.Fastod,
     Algorithm.naive_fd_verifier: desbordante.fd_verification.algorithms.FDVerifier,
     Algorithm.naive_afd_verifier: desbordante.afd_verification.algorithms.FDVerifier,
     Algorithm.icde09_mfd_verifier: desbordante.mfd_verification.algorithms.MetricVerifier
@@ -407,6 +428,8 @@ def get_algo_result(algo: desbordante.Algorithm, algo_name: str) -> Any:
                 result = algo.mfd_holds()
             case algo_name if algo_name in TASK_INFO[Task.fd].algos:
                 result = algo.get_fds()
+            case Algorithm.fastod:
+                result = algo.get_asc_ods() + algo.get_desc_ods() + algo.get_simple_ods()
             case _:
                 assert False, 'No matching get_result function.'
         return result

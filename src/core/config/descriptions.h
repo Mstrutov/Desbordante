@@ -83,6 +83,7 @@ constexpr auto kDWeight =
         "value lies in (0, 1]. Closer to 0 - many short intervals. "
         "Closer to 1 - small number of long intervals";
 constexpr auto kDBumpsLimit = "max considered intervals amount. Pass 0 to remove limit";
+constexpr auto kDTimeLimitSeconds = "max running time of the algorithm. Pass 0 to remove limit";
 constexpr auto kDIterationsLimit = "limit for iterations of sampling";
 constexpr auto kDACSeed = "seed, needed for choosing a data sample";
 constexpr auto kDHllAccuracy = "HyperLogLog approximation accuracy";

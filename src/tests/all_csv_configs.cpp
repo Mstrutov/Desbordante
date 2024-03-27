@@ -46,6 +46,20 @@ CSVConfig const kTestEmpty = CreateCsvConfig("TestEmpty.csv", ',', true);
 CSVConfig const kTestSingleColumn = CreateCsvConfig("TestSingleColumn.csv", ',', true);
 CSVConfig const kTestLong = CreateCsvConfig("TestLong.csv", ',', true);
 CSVConfig const kTestFD = CreateCsvConfig("TestFD.csv", ',', true);
+CSVConfig const kOdTestNormOd = CreateCsvConfig("od_norm_data/OD_norm.csv", ',', true);
+CSVConfig const kOdTestNormSmall2x3 = CreateCsvConfig("od_norm_data/small_2x3.csv", ',', true);
+CSVConfig const kOdTestNormSmall3x3 = CreateCsvConfig("od_norm_data/small_3x3.csv", ',', true);
+CSVConfig const kOdTestNormAbalone =
+        CreateCsvConfig("od_norm_data/metanome/abalone_norm.csv", ',', true);
+CSVConfig const kOdTestNormBalanceScale =
+        CreateCsvConfig("od_norm_data/metanome/balance-scale_norm.csv", ',', true);
+CSVConfig const kOdTestNormBreastCancerWisconsin =
+        CreateCsvConfig("od_norm_data/metanome/breast-cancer-wisconsin.csv", ',', true);
+CSVConfig const kOdTestNormEchocardiogram =
+        CreateCsvConfig("od_norm_data/metanome/echocardiogram_norm.csv", ',', true);
+CSVConfig const kOdTestNormHorse10c =
+        CreateCsvConfig("od_norm_data/metanome/horse_10c_norm.csv", ',', true);
+CSVConfig const kOdTestNormIris = CreateCsvConfig("od_norm_data/metanome/iris_norm.csv", ',', true);
 CSVConfig const kIndTestWide2 = CreateCsvConfig("ind_data/TestWide2.csv", ',', false);
 CSVConfig const kIndTestEmpty = CreateCsvConfig("ind_data/Empty.csv", ',', true);
 CSVConfig const kIndTestPlanets = CreateCsvConfig("ind_data/Planets.csv", ',', false);
