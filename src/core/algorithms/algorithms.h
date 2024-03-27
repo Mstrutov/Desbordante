@@ -8,6 +8,7 @@
 #include "algorithms/gfd/mining_algorithms.h"
 #include "algorithms/ind/mining_algorithms.h"
 #include "algorithms/metric/verification_algorithms.h"
+#include "algorithms/od/fastod/fastod.h"
 #include "algorithms/statistics/algorithms.h"
 #include "algorithms/ucc/mining_algorithms.h"
 #include "algorithms/ucc/verification_algorithms.h"

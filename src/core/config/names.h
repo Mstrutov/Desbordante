@@ -37,6 +37,7 @@ constexpr auto kFuzziness = "fuzziness";
 constexpr auto kFuzzinessProbability = "p_fuzz";
 constexpr auto kWeight = "weight";
 constexpr auto kBumpsLimit = "bumps_limit";
+constexpr auto kTimeLimitSeconds = "time_limit";
 constexpr auto kIterationsLimit = "iterations_limit";
 constexpr auto kACSeed = "ac_seed";
 constexpr auto kPreciseAlgorithm = "precise_algorithm";
