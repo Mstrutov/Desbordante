@@ -215,6 +215,21 @@ bool Order::IsMinimal(AttributeList const& a) const {
     return true;
 }
 
+bool Order::ExtendedRhsIsPrunable(AttributeList const& lhs,
+                                  AttributeList const& extended_rhs) const {
+    AttributeList lhs_max_prefix = MaxPrefix(lhs);
+    std::vector<AttributeList> extended_prefixes = GetPrefixes(extended_rhs);
+    auto prefix_is_valid = [this, &lhs_max_prefix](AttributeList const& extended_prefix) {
+        return InUnorderedMap(valid_, lhs_max_prefix, extended_prefix);
+    };
+    if ((std::find_if(extended_prefixes.begin(), extended_prefixes.end(), prefix_is_valid) ==
+         extended_prefixes.end()) &&
+        !InUnorderedMap(candidate_sets_, lhs_max_prefix, extended_rhs)) {
+        return true;
+    }
+    return false;
+}
+
 void Order::UpdateCandidateSets() {
     unsigned int level_num = lattice_->GetLevelNumber();
     if (level_num < 3) {
@@ -230,18 +245,8 @@ void Order::UpdateCandidateSets() {
                 }
                 std::vector<AttributeList> extended_rhss = Extend(lhs, rhs);
                 for (AttributeList const& extended : extended_rhss) {
-                    if (lhs.size() > 1) {
-                        AttributeList lhs_max_prefix = MaxPrefix(lhs);
-                        std::vector<AttributeList> extended_prefixes = GetPrefixes(extended);
-                        auto prefix_is_valid =
-                                [this, &lhs_max_prefix](AttributeList const& extended_prefix) {
-                                    return InUnorderedMap(valid_, lhs_max_prefix, extended_prefix);
-                                };
-                        if ((std::find_if(extended_prefixes.begin(), extended_prefixes.end(),
-                                          prefix_is_valid) == extended_prefixes.end()) &&
-                            !InUnorderedMap(candidate_sets_, lhs_max_prefix, extended)) {
-                            continue;
-                        }
+                    if (lhs.size() > 1 && ExtendedRhsIsPrunable(lhs, extended)) {
+                        continue;
                     }
                     if (!IsMinimal(extended)) {
                         continue;

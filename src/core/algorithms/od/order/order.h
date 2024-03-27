@@ -40,6 +40,7 @@ public:
     void ComputeDependencies(ListLattice::LatticeLevel const& lattice_level);
     std::vector<AttributeList> Extend(AttributeList const& lhs, AttributeList const& rhs) const;
     bool IsMinimal(AttributeList const& a) const;
+    bool ExtendedRhsIsPrunable(AttributeList const& lhs, AttributeList const& extended_rhs) const;
     void UpdateCandidateSets();
     void MergePrune();
     void PrintValidOD();
