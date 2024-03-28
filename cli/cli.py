@@ -10,8 +10,6 @@ from os import scandir
 import click
 import desbordante
 
-from table_param_type import TableParamType
-
 
 class Task(StrEnum):
     fd = auto()
