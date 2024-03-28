@@ -450,16 +450,7 @@ def is_omitted(value: Any) -> bool:
 def set_option(algo: desbordante.Algorithm, opt_name: str, opt_value: Any) \
         -> None:
     try:
-        if opt_name == TABLES_LIST:
-            if opt_value is not None:
-                tables = parse_tables_list_file(opt_value)
-                algo.set_option(TABLES, tables)
-        elif opt_name == TABLES_DIRECTORY:
-            if opt_value is not None:
-                tables = parse_tables_directory(opt_value)
-                algo.set_option(TABLES, tables)
-        else:
-            algo.set_option(opt_name, opt_value)
+        algo.set_option(opt_name, opt_value)
     except Exception as exc:
         click.echo(exc)
         sys.exit(1)
@@ -468,8 +459,6 @@ def set_option(algo: desbordante.Algorithm, opt_name: str, opt_value: Any) \
 def set_algo_options(algo: desbordante.Algorithm, args: dict[str, Any]) -> set:
     used_options = set()
     while opts := algo.get_needed_options():
-        if TABLES in opts:
-            opts |= {TABLES_LIST, TABLES_DIRECTORY} # FIXME: get rid of this
         for option_name in opts:
             value = args[option_name]
             if is_omitted(value):
@@ -594,6 +583,29 @@ def get_option_type_info() -> dict[str, Any]:
     return option_type_info
 
 
+def process_tables_options(opts: dict[str, Any]) -> dict[str, Any]:
+    new_tables = []
+    if TABLES_LIST in opts:
+        if not is_omitted(opts[TABLES_LIST]):
+            new_tables.extend(parse_tables_list_file(opts[TABLES_LIST]))
+        opts.pop(TABLES_LIST)
+    if TABLES_DIRECTORY in opts:
+        if not is_omitted(opts[TABLES_DIRECTORY]):
+            new_tables.extend(parse_tables_directory(opts[TABLES_DIRECTORY]))
+        opts.pop(TABLES_DIRECTORY)
+
+    if new_tables:
+        if TABLES in opts:
+            if is_omitted(opts[TABLES]):
+                opts[TABLES] = new_tables
+            else:
+                opts[TABLES].extend(new_tables)
+        else:
+            opts.update(TABLES, new_tables)
+    
+    return opts
+
+
 def algos_options() -> Callable:
     option_type_info = get_option_type_info()
 
@@ -651,11 +663,13 @@ def desbordante_cli(**kwargs: Any) -> None:
     check_error_option_presence(curr_task, error_opt)
     check_error_measure_option_presence(curr_task, error_measure_opt)
 
+    opts = process_tables_options(kwargs)
+
     start_point = process_time()
-    used_opts = set_algo_options(curr_algo, kwargs)
+    used_opts = set_algo_options(curr_algo, opts)
     curr_algo.load_data()
-    used_opts |= set_algo_options(curr_algo, kwargs)
-    provided_options = get_provided_options(kwargs)
+    used_opts |= set_algo_options(curr_algo, opts)
+    provided_options = get_provided_options(opts)
     print_unused_opts(used_opts, set(provided_options.keys()))
     result = get_algo_result(curr_algo, curr_algo_name)
     end_point = process_time()
