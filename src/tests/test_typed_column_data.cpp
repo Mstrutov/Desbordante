@@ -57,7 +57,7 @@ INSTANTIATE_TEST_SUITE_P(
                            TypeId::kInt, TypeId::kInt, TypeId::kInt,
                            TypeId::kInt, TypeId::kUndefined, TypeId::kUndefined},
                           kCIPublicHighway700),
-        TypeParsingParams({TypeId::kInt, TypeId::kInt, TypeId::kMixed,
+        TypeParsingParams({TypeId::kInt, TypeId::kInt, TypeId::kDouble,
                            TypeId::kInt, TypeId::kInt, TypeId::kInt,
                            TypeId::kInt},
                           kNeighbors10k),

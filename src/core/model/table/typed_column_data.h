@@ -173,7 +173,7 @@ private:
     inline static std::unordered_map<TypeId, std::regex> const kTypeIdToRegex = {
             {TypeId::kInt, std::regex(R"(^(\+|-)?\d{1,19}$)")},
             {TypeId::kBigInt, std::regex(R"(^(\+|-)?\d{20,}$)")},
-            {TypeId::kDouble, std::regex(R"(^(\+|-)?\d+\.\d*$)")},
+            {TypeId::kDouble, std::regex(R"(^(\+|-)?\d+\.\d*((E|e)(\+|-)\d*)?$)")},
             {TypeId::kDate,
              std::regex(R"(^([0-9]{4})[-.\/]?(1[0-2]|0[1-9])[-.\/]?(3[0-1]|0[1-9]|[1-2][0-9])$)")},
             {TypeId::kNull, std::regex(Null::kValue.data())},
