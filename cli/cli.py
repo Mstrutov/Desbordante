@@ -462,8 +462,7 @@ def set_algo_options(algo: desbordante.Algorithm, args: dict[str, Any]) -> set:
         for option_name in opts:
             value = args[option_name]
             if is_omitted(value):
-                if option_name != TABLES:
-                    set_option(algo, option_name, None)
+                set_option(algo, option_name, None)
             else:
                 set_option(algo, option_name, value)
                 used_options.add(option_name)
