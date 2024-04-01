@@ -3,12 +3,10 @@
 #include <cassert>
 
 #include "algorithms/md/hymd/lowest_bound.h"
-#include "algorithms/md/hymd/utility/get_first_non_zero_index.h"
 
 namespace {
 using namespace algos::hymd;
 using model::Index;
-using utility::GetFirstNonZeroIndex;
 }  // namespace
 
 namespace algos::hymd::lattice::cardinality {
@@ -28,14 +26,12 @@ void MinPickerLattice::ExcludeGeneralizationRhs(Node const& cur_node,
         considered_indices -= cur_node_indices;
         return;
     }
-    DecisionBoundaryVector const& lhs_bounds = messenger.GetLhs();
-    Index const next_node_index = GetFirstNonZeroIndex(lhs_bounds, cur_node_index);
-    assert(next_node_index < lhs_bounds.size());
+    MdLhs const& lhs = messenger.GetLhs();
+    auto const [next_node_index, next_lhs_bound] = lhs.FindNextNonZero(cur_node_index);
     Index const child_array_index = next_node_index - cur_node_index;
     OptionalChild const& optional_child = cur_node.children[child_array_index];
     if (!optional_child.has_value()) return;
     Node::BoundMap const& bound_map = *optional_child;
-    model::md::DecisionBoundary const next_lhs_bound = lhs_bounds[next_node_index];
     for (auto const& [bound, node] : bound_map) {
         if (bound > next_lhs_bound) break;
         ExcludeGeneralizationRhs(node, messenger, next_node_index + 1, considered_indices);
@@ -48,11 +44,11 @@ void MinPickerLattice::RemoveSpecializations(Node& cur_node,
                                              model::Index cur_node_index,
                                              boost::dynamic_bitset<> const& picked_indices) {
     // All MDs in the tree are of the same cardinality.
-    DecisionBoundaryVector const& lhs_bounds = messenger.GetLhs();
-    model::Index const next_node_index = GetFirstNonZeroIndex(lhs_bounds, cur_node_index);
+    MdLhs const& lhs = messenger.GetLhs();
+    MdElement const element = lhs.FindNextNonZero(cur_node_index);
     NodeChildren& children = cur_node.children;
     ValidationInfo*& task_info = cur_node.task_info;
-    if (next_node_index == lhs_bounds.size()) {
+    if (lhs.IsEnd(element)) {
         assert(children.empty());
         if (task_info != nullptr) {
             boost::dynamic_bitset<>& this_node_rhs_indices = task_info->rhs_indices;
@@ -61,15 +57,16 @@ void MinPickerLattice::RemoveSpecializations(Node& cur_node,
         }
         return;
     }
+    auto const& [next_node_index, next_node_bound] = element;
     model::Index const child_array_index = next_node_index - cur_node_index;
     OptionalChild& optional_child = children[child_array_index];
     if (!optional_child.has_value()) return;
-    model::md::DecisionBoundary const next_node_bound = lhs_bounds[next_node_index];
     Node::BoundMap& bound_map = *optional_child;
     auto mapping_end = bound_map.end();
+    cur_node_index = next_node_index + 1;
     for (auto it_map = bound_map.lower_bound(next_node_bound); it_map != mapping_end; ++it_map) {
         auto& node = it_map->second;
-        RemoveSpecializations(node, messenger, next_node_index + 1, picked_indices);
+        RemoveSpecializations(node, messenger, cur_node_index, picked_indices);
     }
 }
 
@@ -80,9 +77,9 @@ void MinPickerLattice::GetAll(Node& cur_node, std::vector<ValidationInfo>& colle
         collected.push_back(std::move(*task_info));
     }
     auto collect = [&](BoundMap& bound_map, model::Index child_array_index) {
-        model::Index const next_node_index = cur_node_index + child_array_index;
+        model::Index const next_node_index = cur_node_index + child_array_index + 1;
         for (auto& [boundary, node] : bound_map) {
-            GetAll(node, collected, next_node_index + 1);
+            GetAll(node, collected, next_node_index);
         }
     };
     cur_node.ForEachNonEmpty(collect);
@@ -116,7 +113,6 @@ std::vector<ValidationInfo> MinPickerLattice::GetAll() noexcept(kNeedsEmptyRemov
     if constexpr (kNeedsEmptyRemoval) {
         // TODO: investigate different orders.
         return std::move(info_);
-
     } else {
         std::vector<ValidationInfo> collected;
         collected.reserve(info_.size());

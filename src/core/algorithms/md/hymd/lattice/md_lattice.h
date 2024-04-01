@@ -13,6 +13,7 @@
 #include "algorithms/md/hymd/lattice/node_base.h"
 #include "algorithms/md/hymd/lattice/single_level_func.h"
 #include "algorithms/md/hymd/md_element.h"
+#include "algorithms/md/hymd/md_lhs.h"
 #include "algorithms/md/hymd/rhss.h"
 #include "algorithms/md/hymd/similarity_vector.h"
 #include "algorithms/md/hymd/utility/invalidated_rhss.h"
@@ -23,10 +24,10 @@ namespace algos::hymd::lattice {
 class MdLattice {
 private:
     struct LhsSpecialization {
-        DecisionBoundaryVector const& old_lhs;
+        MdLhs const& old_lhs;
         MdElement specialized;
 
-        DecisionBoundaryVector const& ToUnspecialized() const {
+        MdLhs const& ToUnspecialized() const {
             return old_lhs;
         }
 
@@ -36,7 +37,7 @@ private:
     };
 
     struct Md {
-        DecisionBoundaryVector const& lhs;
+        MdLhs const& lhs;
         MdElement rhs;
     };
 
@@ -55,8 +56,13 @@ private:
 
     struct MdNode : public NodeBase<MdNode> {
         using Specialization = MdSpecialization;
+        using Unspecialized = Md;
 
         DecisionBoundaryVector rhs_bounds;
+
+        static MdLhs const& GetLhs(Unspecialized const& md) {
+            return md.lhs;
+        }
 
         MdNode* AddOneUnchecked(model::Index child_array_index, model::md::DecisionBoundary bound) {
             return AddOneUncheckedBase(child_array_index, bound, rhs_bounds.size());
@@ -71,8 +77,13 @@ private:
 
     struct SupportNode : public NodeBase<SupportNode> {
         using Specialization = LhsSpecialization;
+        using Unspecialized = MdLhs;
 
         bool is_unsupported = false;
+
+        static MdLhs const& GetLhs(Unspecialized const& lhs) {
+            return lhs;
+        }
 
         SupportNode* AddOneUnchecked(model::Index child_array_index,
                                      model::md::DecisionBoundary bound) {
@@ -96,12 +107,12 @@ public:
     class MdRefiner {
         MdLattice* lattice_;
         SimilarityVector const* sim_;
-        DecisionBoundaryVector lhs_;
+        MdLhs lhs_;
         DecisionBoundaryVector* rhs_;
         utility::InvalidatedRhss invalidated_;
 
     public:
-        MdRefiner(MdLattice* lattice, SimilarityVector const* sim, DecisionBoundaryVector lhs,
+        MdRefiner(MdLattice* lattice, SimilarityVector const* sim, MdLhs lhs,
                   DecisionBoundaryVector* rhs, utility::InvalidatedRhss invalidated)
             : lattice_(lattice),
               sim_(sim),
@@ -109,7 +120,7 @@ public:
               rhs_(rhs),
               invalidated_(std::move(invalidated)) {}
 
-        DecisionBoundaryVector const& GetLhs() const {
+        MdLhs const& GetLhs() const {
             return lhs_;
         }
 
@@ -122,15 +133,14 @@ public:
 
     class MdVerificationMessenger {
         MdLattice* lattice_;
-        DecisionBoundaryVector lhs_;
+        MdLhs lhs_;
         DecisionBoundaryVector* rhs_;
 
     public:
-        MdVerificationMessenger(MdLattice* lattice, DecisionBoundaryVector lhs,
-                                DecisionBoundaryVector* rhs)
+        MdVerificationMessenger(MdLattice* lattice, MdLhs lhs, DecisionBoundaryVector* rhs)
             : lattice_(lattice), lhs_(std::move(lhs)), rhs_(rhs) {}
 
-        DecisionBoundaryVector const& GetLhs() const {
+        MdLhs const& GetLhs() const {
             return lhs_;
         }
 
@@ -162,7 +172,6 @@ private:
     bool HasChildGenSpec(NodeType const& node, model::Index node_index,
                          model::Index next_node_index, model::md::DecisionBoundary bound_limit,
                          auto const& md, auto gen_method, auto get_b_map_iter) const;
-
     template <typename NodeType>
     bool NodeHasLhsGeneralizationSpec(NodeType const& node,
                                       NodeType::Specialization const& specialization,
@@ -191,27 +200,24 @@ private:
     }
 
     void GetLevel(MdNode& cur_node, std::vector<MdVerificationMessenger>& collected,
-                  DecisionBoundaryVector& cur_node_lhs_bounds, model::Index cur_node_index,
-                  std::size_t level_left);
+                  MdLhs& cur_node_lhs, model::Index cur_node_index, std::size_t level_left);
 
     void RaiseInterestingnessBounds(
-            MdNode const& cur_node, DecisionBoundaryVector const& lhs_bounds,
+            MdNode const& cur_node, MdLhs const& lhs,
             std::vector<model::md::DecisionBoundary>& cur_interestingness_bounds,
             model::Index cur_node_index, std::vector<model::Index> const& indices) const;
 
     void TryAddRefiner(std::vector<MdRefiner>& found, DecisionBoundaryVector& rhs,
-                       SimilarityVector const& similarity_vector,
-                       DecisionBoundaryVector const& cur_node_lhs_bounds);
+                       SimilarityVector const& similarity_vector, MdLhs const& cur_node_lhs);
     void CollectRefinersForViolated(MdNode& cur_node, std::vector<MdRefiner>& found,
-                                    DecisionBoundaryVector& cur_node_lhs_bounds,
-                                    SimilarityVector const& similarity_vector,
+                                    MdLhs& cur_node_lhs, SimilarityVector const& similarity_vector,
                                     model::Index cur_node_index);
 
-    bool IsUnsupportedTotal(SupportNode const& node, DecisionBoundaryVector const& lhs_bounds,
+    bool IsUnsupportedTotal(SupportNode const& node, MdLhs const& lhs,
                             model::Index node_index) const;
 
-    bool IsUnsupported(DecisionBoundaryVector const& lhs_bounds) const {
-        return IsUnsupportedTotal(support_root_, lhs_bounds, 0);
+    bool IsUnsupported(MdLhs const& lhs) const {
+        return IsUnsupportedTotal(support_root_, lhs, 0);
     }
 
     bool IsUnsupportedSpec(SupportNode const& node, LhsSpecialization const& lhs_specialization,
@@ -229,19 +235,19 @@ private:
     void AddIfMinimal(MdSpecialization const& md);
 
     static auto SetUnsupAction() noexcept {
-        return [](SupportNode* node){ node->is_unsupported = true; };
+        return [](SupportNode* node) { node->is_unsupported = true; };
     }
-    void MarkNewLhs(SupportNode& cur_node, DecisionBoundaryVector const& lhs_bounds,
-                    model::Index cur_node_index);
-    void MarkUnsupported(DecisionBoundaryVector const& lhs_bounds);
+
+    void MarkNewLhs(SupportNode& cur_node, MdLhs const& lhs, model::Index cur_node_index);
+    void MarkUnsupported(MdLhs const& lhs);
 
     [[nodiscard]] std::optional<model::md::DecisionBoundary> SpecializeOneLhs(
             model::Index col_match_index, model::md::DecisionBoundary lhs_bound) const;
-    void Specialize(DecisionBoundaryVector const& lhs_bounds,
-                    DecisionBoundaryVector const& specialize_past, Rhss const& rhss);
+    void Specialize(MdLhs const& lhs, SimilarityVector const& specialize_past, Rhss const& rhss);
+    void Specialize(MdLhs const& lhs, Rhss const& rhss);
 
-    void GetAll(MdNode& cur_node, std::vector<MdLatticeNodeInfo>& collected,
-                DecisionBoundaryVector& cur_node_lhs_bounds, model::Index this_node_index);
+    void GetAll(MdNode& cur_node, std::vector<MdLatticeNodeInfo>& collected, MdLhs& cur_node_lhs,
+                model::Index this_node_index);
 
 public:
     explicit MdLattice(std::size_t column_matches_size, SingleLevelFunc single_level_func,
@@ -257,8 +263,7 @@ public:
     }
 
     std::vector<model::md::DecisionBoundary> GetRhsInterestingnessBounds(
-            DecisionBoundaryVector const& lhs_bounds,
-            std::vector<model::Index> const& indices) const;
+            MdLhs const& lhs, std::vector<model::Index> const& indices) const;
     std::vector<MdVerificationMessenger> GetLevel(std::size_t level);
     std::vector<MdRefiner> CollectRefinersForViolated(SimilarityVector const& similarity_vector);
     std::vector<MdLatticeNodeInfo> GetAll();

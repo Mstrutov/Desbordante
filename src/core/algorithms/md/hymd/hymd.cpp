@@ -186,7 +186,7 @@ void HyMD::RegisterResults(SimilarityData const& similarity_data,
             if (rhs_bound == kLowestBound) continue;
             std::vector<model::md::LhsColumnSimilarityClassifier> lhs;
             for (Index lhs_index = 0; lhs_index != column_match_number; ++lhs_index) {
-                model::md::DecisionBoundary const lhs_bound = md.lhs_bounds[lhs_index];
+                model::md::DecisionBoundary const lhs_bound = md.lhs[lhs_index];
                 lhs.emplace_back(similarity_data.GetPreviousDecisionBound(lhs_bound, lhs_index),
                                  lhs_index, lhs_bound);
             }

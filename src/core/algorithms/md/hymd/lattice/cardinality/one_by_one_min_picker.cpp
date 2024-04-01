@@ -12,14 +12,14 @@ void OneByOnePicker::NewBatch(std::size_t elements) {
 
 void OneByOnePicker::AddGeneralizations(MdLattice::MdVerificationMessenger& messenger,
                                         boost::dynamic_bitset<>& considered_indices) {
-    DecisionBoundaryVector const& lhs_bounds_cur = messenger.GetLhs();
-    auto cur_begin = lhs_bounds_cur.begin();
-    auto cur_end = lhs_bounds_cur.end();
+    MdLhs const& lhs_cur = messenger.GetLhs();
+    auto cur_begin = lhs_cur.GetValues().begin();
+    auto cur_end = lhs_cur.GetValues().end();
     for (ValidationInfo& prev_info : currently_picked_) {
-        DecisionBoundaryVector const& lhs_bounds_prev = prev_info.messenger->GetLhs();
+        MdLhs const& lhs_prev = prev_info.messenger->GetLhs();
         boost::dynamic_bitset<>& indices_prev = prev_info.rhs_indices;
         auto cur_it = cur_begin;
-        auto prev_it = lhs_bounds_prev.begin();
+        auto prev_it = lhs_prev.GetValues().begin();
         while (cur_it != cur_end) {
             model::md::DecisionBoundary const cur_bound = *cur_it;
             model::md::DecisionBoundary const prev_bound = *prev_it;
