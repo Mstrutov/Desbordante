@@ -30,7 +30,8 @@ private:
     indexes::RecordsInfo const* const records_info_;
     bool const single_table_;
 
-    std::vector<ColumnMatchInfo> const column_matches_info_;
+    std::vector<ColumnMatchInfo> const column_matches_sim_info_;
+    std::vector<std::vector<model::md::DecisionBoundary>> const column_matches_lhs_bounds_;
 
     indexes::DictionaryCompressor const& GetLeftCompressor() const noexcept {
         return records_info_->GetLeftCompressor();
@@ -42,26 +43,33 @@ private:
 
 public:
     SimilarityData(indexes::RecordsInfo* records_info,
-                   std::vector<ColumnMatchInfo> column_matches_info) noexcept
+                   std::vector<ColumnMatchInfo> column_matches_sim_info,
+                   std::vector<std::vector<model::md::DecisionBoundary>>
+                           column_matches_lhs_bounds) noexcept
         : records_info_(records_info),
           single_table_(records_info_->OneTableGiven()),
-          column_matches_info_(std::move(column_matches_info)) {}
+          column_matches_sim_info_(std::move(column_matches_sim_info)),
+          column_matches_lhs_bounds_(std::move(column_matches_lhs_bounds)) {}
 
     static SimilarityData CreateFrom(indexes::RecordsInfo* records_info,
                                      ColMatchesInfo column_matches_info,
                                      util::WorkerThreadPool& pool);
 
     [[nodiscard]] std::size_t GetColumnMatchNumber() const noexcept {
-        return column_matches_info_.size();
+        return column_matches_sim_info_.size();
+    }
+
+    std::vector<std::vector<model::md::DecisionBoundary>> const& GetLhsBounds() const noexcept {
+        return column_matches_lhs_bounds_;
     }
 
     [[nodiscard]] std::vector<ColumnMatchInfo> const& GetColumnMatchesInfo() const noexcept {
-        return column_matches_info_;
+        return column_matches_sim_info_;
     }
 
     [[nodiscard]] std::pair<model::Index, model::Index> GetColMatchIndices(
             model::Index index) const {
-        auto const& [_, left_column_index, right_column_index] = column_matches_info_[index];
+        auto const& [_, left_column_index, right_column_index] = column_matches_sim_info_[index];
         return {left_column_index, right_column_index};
     }
 

@@ -7,7 +7,6 @@
 #include <vector>
 
 #include "algorithms/md/decision_boundary.h"
-#include "algorithms/md/hymd/column_match_info.h"
 #include "algorithms/md/hymd/decision_boundary_vector.h"
 #include "algorithms/md/hymd/lattice/md_lattice_node_info.h"
 #include "algorithms/md/hymd/lattice/node_base.h"
@@ -165,7 +164,7 @@ private:
     // Is there a way to define a level in such a way that one cannot use each decision boundary
     // independently to determine an MD's level but the lattice traversal algorithms still works?
     SingleLevelFunc const get_single_level_;
-    std::vector<ColumnMatchInfo> const* const column_matches_info_;
+    std::vector<std::vector<model::md::DecisionBoundary>> const* const lhs_bounds_;
     bool const prune_nondisjoint_;
 
     template <typename NodeType>
@@ -251,7 +250,7 @@ private:
 
 public:
     explicit MdLattice(std::size_t column_matches_size, SingleLevelFunc single_level_func,
-                       std::vector<ColumnMatchInfo> const& column_matches_info,
+                       std::vector<std::vector<model::md::DecisionBoundary>> const& lhs_bounds,
                        bool prune_nondisjoint);
 
     std::size_t GetColMatchNumber() const noexcept {

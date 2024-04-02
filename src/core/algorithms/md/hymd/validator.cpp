@@ -200,13 +200,6 @@ Validator::SetPairProcessor<PairProvider>::MakeWorkingAndRecs(
     working.reserve(working_size);
     recommendations.reserve(working_size);
     IndexVector indices = util::BitsetToIndices<Index>(indices_bitset);
-    if constexpr (kSortIndices) {
-        // TODO: investigate best order.
-        std::sort(indices.begin(), indices.end(), [this](Index ind1, Index ind2) {
-            return column_matches_info_[ind1].similarity_info.lhs_bounds.size() <
-                   column_matches_info_[ind2].similarity_info.lhs_bounds.size();
-        });
-    }
     for (Index index : indices) {
         RecommendationVector& last_recs = recommendations.emplace_back();
         auto const& [sim_info, left_index, right_index] = column_matches_info_[index];

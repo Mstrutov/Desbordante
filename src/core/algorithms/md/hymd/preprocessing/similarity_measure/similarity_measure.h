@@ -41,7 +41,7 @@ public:
         return *arg_type_;
     }
 
-    [[nodiscard]] virtual indexes::ColumnMatchSimilarityInfo MakeIndexes(
+    [[nodiscard]] virtual indexes::SimilarityMeasureOutput MakeIndexes(
             std::shared_ptr<DataInfo const> data_info_left,
             std::shared_ptr<DataInfo const> data_info_right,
             std::vector<indexes::PliCluster> const& clusters_right,

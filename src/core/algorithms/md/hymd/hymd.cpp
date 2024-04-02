@@ -144,7 +144,7 @@ unsigned long long HyMD::ExecuteInternal() {
     SimilarityData similarity_data =
             SimilarityData::CreateFrom(records_info_.get(), std::move(column_matches_info), pool);
     lattice::MdLattice lattice{column_match_number, [](...) { return 1; },
-                               similarity_data.GetColumnMatchesInfo(), prune_nondisjoint_};
+                               similarity_data.GetLhsBounds(), prune_nondisjoint_};
     LatticeTraverser lattice_traverser{
             &lattice,
             std::make_unique<lattice::cardinality::MinPickingLevelGetter>(&lattice),

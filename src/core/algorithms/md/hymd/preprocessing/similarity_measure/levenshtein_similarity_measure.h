@@ -29,7 +29,7 @@ public:
         }
     };
 
-    [[nodiscard]] indexes::ColumnMatchSimilarityInfo MakeIndexes(
+    [[nodiscard]] indexes::SimilarityMeasureOutput MakeIndexes(
             std::shared_ptr<DataInfo const> data_info_left,
             std::shared_ptr<DataInfo const> data_info_right,
             std::vector<indexes::PliCluster> const& clusters_right,

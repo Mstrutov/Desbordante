@@ -83,7 +83,7 @@ unsigned LevenshteinDistance(auto const* l_ptr, auto const* r_ptr, unsigned* v0,
 
 namespace algos::hymd::preprocessing::similarity_measure {
 
-indexes::ColumnMatchSimilarityInfo LevenshteinSimilarityMeasure::MakeIndexes(
+indexes::SimilarityMeasureOutput LevenshteinSimilarityMeasure::MakeIndexes(
         std::shared_ptr<DataInfo const> data_info_left,
         std::shared_ptr<DataInfo const> data_info_right,
         std::vector<indexes::PliCluster> const& clusters_right,
@@ -217,11 +217,11 @@ indexes::ColumnMatchSimilarityInfo LevenshteinSimilarityMeasure::MakeIndexes(
     std::vector<model::md::DecisionBoundary> decision_bounds{decision_bounds_set.begin(),
                                                              decision_bounds_set.end()};
     if (size_limit_ == 0) {
-        return {std::move(decision_bounds), lowest, std::move(similarity_matrix),
-                std::move(similarity_index)};
+        return {std::move(decision_bounds),
+                {lowest, std::move(similarity_matrix), std::move(similarity_index)}};
     }
-    return {util::PickMHighestBias(decision_bounds, size_limit_), lowest,
-            std::move(similarity_matrix), std::move(similarity_index)};
+    return {util::PickMHighestBias(decision_bounds, size_limit_),
+            {lowest, std::move(similarity_matrix), std::move(similarity_index)}};
 }
 
 LevenshteinSimilarityMeasure::LevenshteinSimilarityMeasure(model::md::DecisionBoundary min_sim,

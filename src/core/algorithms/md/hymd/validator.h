@@ -59,8 +59,6 @@ private:
         return GetLeftCompressor().GetNumberOfRecords() * GetRightCompressor().GetNumberOfRecords();
     }
 
-    constexpr static bool kSortIndices = false;
-
     [[nodiscard]] indexes::RecSet const* GetSimilarRecords(ValueIdentifier value_id,
                                                            model::md::DecisionBoundary lhs_bound,
                                                            model::Index column_match_index) const;

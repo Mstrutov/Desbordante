@@ -9,10 +9,14 @@
 
 namespace algos::hymd::indexes {
 struct ColumnMatchSimilarityInfo {
-    std::vector<model::md::DecisionBoundary> lhs_bounds;
     preprocessing::Similarity lowest_similarity;
-    indexes::SimilarityMatrix similarity_matrix;
-    indexes::SimilarityIndex similarity_index;
+    SimilarityMatrix similarity_matrix;
+    SimilarityIndex similarity_index;
     // TODO: add slim similarity index
+};
+
+struct SimilarityMeasureOutput {
+    std::vector<model::md::DecisionBoundary> lhs_bounds;
+    ColumnMatchSimilarityInfo indexes;
 };
 }  // namespace algos::hymd::indexes

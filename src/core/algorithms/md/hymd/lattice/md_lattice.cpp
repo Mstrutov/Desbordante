@@ -22,19 +22,18 @@ namespace algos::hymd::lattice {
 
 // TODO: remove recursion
 MdLattice::MdLattice(std::size_t column_matches_size, SingleLevelFunc single_level_func,
-                     std::vector<ColumnMatchInfo> const& column_matches_info,
+                     std::vector<std::vector<model::md::DecisionBoundary>> const& lhs_bounds,
                      bool prune_nondisjoint)
     : column_matches_size_(column_matches_size),
       md_root_(DecisionBoundaryVector(column_matches_size_, 1.0)),
       support_root_(column_matches_size_),
       get_single_level_(std::move(single_level_func)),
-      column_matches_info_(&column_matches_info),
+      lhs_bounds_(&lhs_bounds),
       prune_nondisjoint_(prune_nondisjoint) {}
 
 std::optional<DecisionBoundary> MdLattice::SpecializeOneLhs(Index col_match_index,
                                                             DecisionBoundary lhs_bound) const {
-    std::vector<DecisionBoundary> const& decision_bounds =
-            (*column_matches_info_)[col_match_index].similarity_info.lhs_bounds;
+    std::vector<DecisionBoundary> const& decision_bounds = (*lhs_bounds_)[col_match_index];
     auto end_bounds = decision_bounds.end();
     auto upper = std::upper_bound(decision_bounds.begin(), end_bounds, lhs_bound);
     if (upper == end_bounds) return std::nullopt;
