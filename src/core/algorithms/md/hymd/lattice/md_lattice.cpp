@@ -263,14 +263,14 @@ void MdLattice::UpdateMaxLevel(LhsSpecialization const& lhs) {
     if (level > max_level_) max_level_ = level;
 }
 
-class MdLattice::GeneralizationChecker {
+class MdLattice::GeneralizationHelper {
 private:
     MdElement const rhs_;
     MdNode* node_;
     DecisionBoundary* cur_node_rhs_ptr_;
 
 public:
-    GeneralizationChecker(MdElement rhs, MdNode& root) noexcept
+    GeneralizationHelper(MdElement rhs, MdNode& root) noexcept
         : rhs_(rhs), node_(&root), cur_node_rhs_ptr_(&node_->rhs_bounds[rhs_.index]) {}
 
     bool SetAndCheck(MdNode* node_ptr) noexcept {
@@ -306,7 +306,7 @@ public:
 };
 
 // Note: writing this in AddIfMinimal with gotos seems to be faster.
-auto MdLattice::TryGetNextNode(MdSpecialization const& md, GeneralizationChecker& checker,
+auto MdLattice::TryGetNextNode(MdSpecialization const& md, GeneralizationHelper& checker,
                                Index cur_node_index, Index const next_node_index,
                                DecisionBoundary const next_lhs_bound) -> MdNode* {
     Index const fol_index = next_node_index + 1;
@@ -340,7 +340,7 @@ auto MdLattice::TryGetNextNode(MdSpecialization const& md, GeneralizationChecker
 }
 
 void MdLattice::AddIfMinimal(MdSpecialization const& md) {
-    auto checker = GeneralizationChecker(md.rhs, md_root_);
+    auto checker = GeneralizationHelper(md.rhs, md_root_);
     Index cur_node_index = 0;
     auto const& [spec_index, spec_bound] = md.lhs_specialization.specialized;
     MdLhs const& old_lhs = md.lhs_specialization.old_lhs;

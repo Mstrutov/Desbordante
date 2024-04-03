@@ -53,7 +53,8 @@ private:
         }
     };
 
-    struct MdNode : public NodeBase<MdNode> {
+    class MdNode : public NodeBase<MdNode> {
+    public:
         using Specialization = MdSpecialization;
         using Unspecialized = Md;
 
@@ -74,7 +75,8 @@ private:
             : NodeBase<MdNode>(rhs.size()), rhs_bounds(std::move(rhs)) {}
     };
 
-    struct SupportNode : public NodeBase<SupportNode> {
+    class SupportNode : public NodeBase<SupportNode> {
+    public:
         using Specialization = LhsSpecialization;
         using Unspecialized = MdLhs;
 
@@ -92,7 +94,7 @@ private:
         SupportNode(std::size_t children_number) : NodeBase<SupportNode>(children_number) {}
     };
 
-    class GeneralizationChecker;
+    class GeneralizationHelper;
 
     using MdBoundMap = MdNode::BoundMap;
     using MdOptionalChild = MdNode::OptionalChild;
@@ -228,7 +230,7 @@ private:
 
     void UpdateMaxLevel(LhsSpecialization const& lhs_specialization);
     void AddNewMinimal(MdNode& cur_node, MdSpecialization const& md, model::Index cur_node_index);
-    MdNode* TryGetNextNode(MdSpecialization const& md, GeneralizationChecker& checker,
+    MdNode* TryGetNextNode(MdSpecialization const& md, GeneralizationHelper& checker,
                            model::Index cur_node_index, model::Index const next_node_index,
                            model::md::DecisionBoundary const next_lhs_bound);
     void AddIfMinimal(MdSpecialization const& md);
@@ -237,6 +239,7 @@ private:
         return [](SupportNode* node) { node->is_unsupported = true; };
     }
 
+    // Generalization check, specialization (add if minimal)
     void MarkNewLhs(SupportNode& cur_node, MdLhs const& lhs, model::Index cur_node_index);
     void MarkUnsupported(MdLhs const& lhs);
 

@@ -11,12 +11,15 @@
 
 namespace algos::hymd::lattice {
 template <typename NodeType>
-struct NodeBase {
+class NodeBase {
+public:
     using BoundMap = std::map<model::md::DecisionBoundary, NodeType>;
     using OptionalChild = std::optional<BoundMap>;
     using Children = std::vector<OptionalChild>;
 
     Children children;
+
+    NodeBase(std::size_t children_number) : children(children_number) {}
 
     std::size_t GetChildArraySize(model::Index child_array_index) const noexcept {
         return children.size() - (child_array_index + 1);
@@ -53,6 +56,7 @@ struct NodeBase {
                             std::mem_fn(&OptionalChild::has_value));
     }
 
+protected:
     template <typename... Args>
     NodeType* AddOneUncheckedBase(model::Index child_array_index, model::md::DecisionBoundary bound,
                                   Args... args) {
@@ -61,8 +65,6 @@ struct NodeBase {
                         .try_emplace(bound, args..., GetChildArraySize(child_array_index))
                         .first->second;
     }
-
-    NodeBase(std::size_t children_number) : children(children_number) {}
 };
 
 template <typename NodeType>
