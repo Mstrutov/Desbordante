@@ -180,21 +180,31 @@ void MdLattice::AddNewMinimal(MdNode& cur_node, MdSpecialization const& md, Inde
     UpdateMaxLevel(md.lhs_specialization);
 }
 
-bool MdLattice::HasLhsGeneralizationTotal(MdNode const& node, Md const& md, Index const node_index,
-                                          Index const start_index) const {
-    MdLhs const& lhs = md.lhs;
+template <typename NodeType>
+bool MdLattice::NodeHasLhsGeneralizationTotal(NodeType const& node,
+                                              NodeType::Unspecialized const& unspecialized,
+                                              Index node_index, Index start_index,
+                                              auto total_method) const {
+    MdLhs const& lhs = NodeType::GetLhs(unspecialized);
     for (MdElement element = lhs.FindNextNonZero(start_index); lhs.IsNotEnd(element);
          element = lhs.FindNextNonZero(element.index + 1)) {
         auto const& [next_node_index, generalization_bound_limit] = element;
         Index const child_array_index = next_node_index - node_index;
-        MdOptionalChild const& optional_child = node.children[child_array_index];
+        typename NodeType::OptionalChild const& optional_child = node.children[child_array_index];
         if (!optional_child.has_value()) continue;
+        Index const fol_index = next_node_index + 1;
         for (auto const& [generalization_bound, node] : *optional_child) {
             if (generalization_bound > generalization_bound_limit) break;
-            if (HasGeneralizationTotal(node, md, next_node_index + 1)) return true;
+            if ((this->*total_method)(node, unspecialized, fol_index, fol_index)) return true;
         }
     }
     return false;
+}
+
+bool MdLattice::HasLhsGeneralizationTotal(MdNode const& node, Md const& md, Index const node_index,
+                                          Index const start_index) const {
+    return NodeHasLhsGeneralizationTotal(node, md, node_index, start_index,
+                                         &MdLattice::HasGeneralizationTotal);
 }
 
 template <typename NodeType>
@@ -209,7 +219,8 @@ bool MdLattice::HasChildGenSpec(NodeType const& node, Index node_index, Index ne
          ++spec_iter) {
         auto const& [generalization_bound, node] = *spec_iter;
         if (generalization_bound > bound_limit) break;
-        if ((this->*gen_method)(node, md, next_node_index + 1)) return true;
+        Index const fol_index = next_node_index + 1;
+        if ((this->*gen_method)(node, md, fol_index, fol_index)) return true;
     }
     return false;
 }
@@ -327,7 +338,8 @@ auto MdLattice::TryGetNextNode(MdSpecialization const& md, GeneralizationHelper&
         auto const& [generalization_bound, node] = *it;
         if (generalization_bound > next_lhs_bound) break;
         if (generalization_bound == next_lhs_bound) return &it->second;
-        if (HasGeneralizationTotal(node, md.ToUnspecialized(), fol_index)) return nullptr;
+        if (HasGeneralizationTotal(node, md.ToUnspecialized(), fol_index, fol_index))
+            return nullptr;
     }
     using std::forward_as_tuple;
     MdNode& new_node =
@@ -359,7 +371,7 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md) {
         assert(bound_map.find(next_lhs_bound) != bound_map.end());
         auto it = bound_map.begin();
         for (; it->first != next_lhs_bound; ++it) {
-            if (HasGeneralizationSpec(it->second, md, cur_node_index)) return;
+            if (HasGeneralizationSpec(it->second, md, cur_node_index, cur_node_index)) return;
         }
         checker.SetAndCheck(&it->second);
     }
@@ -491,26 +503,27 @@ std::vector<MdLatticeNodeInfo> MdLattice::GetAll() {
 }
 
 bool MdLattice::IsUnsupportedTotal(SupportNode const& node, MdLhs const& lhs,
-                                   Index const node_index) const {
+                                   Index const node_index, Index const start_index) const {
     if (node.is_unsupported) return true;
-    for (MdElement element = lhs.FindNextNonZero(node_index); lhs.IsNotEnd(element);
+    for (MdElement element = lhs.FindNextNonZero(start_index); lhs.IsNotEnd(element);
          element = lhs.FindNextNonZero(element.index + 1)) {
         auto const& [next_node_index, generalization_bound_limit] = element;
         Index const child_array_index = next_node_index - node_index;
         SupportOptionalChild const& optional_child = node.children[child_array_index];
         if (!optional_child.has_value()) continue;
+        Index const fol_index = next_node_index + 1;
         for (auto const& [generalization_bound, node] : *optional_child) {
             if (generalization_bound > generalization_bound_limit) break;
-            if (IsUnsupportedTotal(node, lhs, next_node_index + 1)) return true;
+            if (IsUnsupportedTotal(node, lhs, fol_index, fol_index)) return true;
         }
     }
     return false;
 }
 
 bool MdLattice::IsUnsupportedSpec(SupportNode const& node,
-                                  LhsSpecialization const& lhs_specialization,
-                                  Index node_index) const {
-    return NodeHasLhsGeneralizationSpec(node, lhs_specialization, node_index, node_index,
+                                  LhsSpecialization const& lhs_specialization, Index node_index,
+                                  Index start_index) const {
+    return NodeHasLhsGeneralizationSpec(node, lhs_specialization, node_index, start_index,
                                         &MdLattice::IsUnsupportedSpec,
                                         &MdLattice::IsUnsupportedTotal);
 }

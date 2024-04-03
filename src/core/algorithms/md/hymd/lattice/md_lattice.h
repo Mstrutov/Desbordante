@@ -183,21 +183,29 @@ private:
                                   model::Index node_index, model::Index start_index) const;
 
     [[nodiscard]] bool HasGeneralizationSpec(MdNode const& node, MdSpecialization const& md,
-                                             model::Index cur_node_index) const {
-        return HasLhsGeneralizationSpec(node, md, cur_node_index, cur_node_index);
+                                             model::Index cur_node_index,
+                                             model::Index start_index) const {
+        return HasLhsGeneralizationSpec(node, md, cur_node_index, start_index);
     }
+
+    template <typename NodeType>
+    bool NodeHasLhsGeneralizationTotal(NodeType const& node,
+                                       NodeType::Unspecialized const& unspecialized,
+                                       model::Index node_index, model::Index start_index,
+                                       auto gen_method) const;
 
     bool HasLhsGeneralizationTotal(MdNode const& node, Md const& md, model::Index node_index,
                                    model::Index start_index) const;
 
     [[nodiscard]] bool HasGeneralizationTotal(MdNode const& node, Md const& md,
-                                              model::Index cur_node_index) const {
+                                              model::Index cur_node_index,
+                                              model::Index start_index) const {
         if (node.rhs_bounds[md.rhs.index] >= md.rhs.decision_boundary) return true;
-        return HasLhsGeneralizationTotal(node, md, cur_node_index, cur_node_index);
+        return HasLhsGeneralizationTotal(node, md, cur_node_index, start_index);
     }
 
     [[nodiscard]] bool HasGeneralization(Md const& md) const {
-        return HasGeneralizationTotal(md_root_, md, 0);
+        return HasGeneralizationTotal(md_root_, md, 0, 0);
     }
 
     void GetLevel(MdNode& cur_node, std::vector<MdVerificationMessenger>& collected,
@@ -214,18 +222,18 @@ private:
                                     MdLhs& cur_node_lhs, SimilarityVector const& similarity_vector,
                                     model::Index cur_node_index);
 
-    bool IsUnsupportedTotal(SupportNode const& node, MdLhs const& lhs,
-                            model::Index node_index) const;
+    bool IsUnsupportedTotal(SupportNode const& node, MdLhs const& lhs, model::Index node_index,
+                            model::Index start_index) const;
 
     bool IsUnsupported(MdLhs const& lhs) const {
-        return IsUnsupportedTotal(support_root_, lhs, 0);
+        return IsUnsupportedTotal(support_root_, lhs, 0, 0);
     }
 
     bool IsUnsupportedSpec(SupportNode const& node, LhsSpecialization const& lhs_specialization,
-                           model::Index node_index) const;
+                           model::Index node_index, model::Index start_index) const;
 
     bool IsUnsupported(LhsSpecialization const& lhs_specialization) const {
-        return IsUnsupportedSpec(support_root_, lhs_specialization, 0);
+        return IsUnsupportedSpec(support_root_, lhs_specialization, 0, 0);
     }
 
     void UpdateMaxLevel(LhsSpecialization const& lhs_specialization);
