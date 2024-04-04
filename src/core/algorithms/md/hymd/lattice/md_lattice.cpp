@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cassert>
 
+#include "algorithms/md/hymd/lattice/spec_generalization_checker.h"
+#include "algorithms/md/hymd/lattice/total_generalization_checker.h"
 #include "algorithms/md/hymd/lowest_bound.h"
 #include "algorithms/md/hymd/utility/set_for_scope.h"
 #include "util/erase_if_replace.h"
@@ -11,6 +13,8 @@ namespace {
 using namespace algos::hymd::lattice;
 using namespace algos::hymd;
 using model::md::DecisionBoundary, model::Index;
+using MdGenChecker = TotalGeneralizationChecker<MdNode>;
+using MdSpecGenChecker = SpecGeneralizationChecker<MdNode>;
 
 bool NotEmpty(DecisionBoundaryVector const& rhs_bounds) {
     auto not_lowest = [](DecisionBoundary bound) { return bound != kLowestBound; };
@@ -40,7 +44,7 @@ std::optional<DecisionBoundary> MdLattice::SpecializeOneLhs(Index col_match_inde
     return *upper;
 }
 
-void MdLattice::Specialize(MdLhs const& lhs, DecisionBoundaryVector const& specialize_past,
+void MdLattice::Specialize(MdLhs const& lhs, SimilarityVector const& specialize_past,
                            Rhss const& rhss) {
     auto specialize_all_lhs = [this, &lhs, it_begin = rhss.begin(), it_end = rhss.end(),
                                &specialize_past](auto handle_same_lhs_as_rhs) {
@@ -149,6 +153,10 @@ auto MdLattice::CollectRefinersForViolated(SimilarityVector const& similarity_ve
     return found;
 }
 
+bool MdLattice::IsUnsupported(MdLhs const& lhs) const {
+    return TotalGeneralizationChecker<SupportNode>{lhs}.HasGeneralization(support_root_);
+}
+
 void MdLattice::MdVerificationMessenger::MarkUnsupported() {
     // TODO: specializations can be removed from the MD lattice. If not worth it, removing just
     // this node and its children should be cheap. Though, destructors also take time.
@@ -180,81 +188,6 @@ void MdLattice::AddNewMinimal(MdNode& cur_node, MdSpecialization const& md, Inde
     UpdateMaxLevel(md.lhs_specialization);
 }
 
-template <typename NodeType>
-bool MdLattice::NodeHasLhsGeneralizationTotal(NodeType const& node,
-                                              NodeType::Unspecialized const& unspecialized,
-                                              Index node_index, Index start_index,
-                                              auto total_method) const {
-    MdLhs const& lhs = NodeType::GetLhs(unspecialized);
-    for (MdElement element = lhs.FindNextNonZero(start_index); lhs.IsNotEnd(element);
-         element = lhs.FindNextNonZero(element.index + 1)) {
-        auto const& [next_node_index, generalization_bound_limit] = element;
-        Index const child_array_index = next_node_index - node_index;
-        typename NodeType::OptionalChild const& optional_child = node.children[child_array_index];
-        if (!optional_child.has_value()) continue;
-        Index const fol_index = next_node_index + 1;
-        for (auto const& [generalization_bound, node] : *optional_child) {
-            if (generalization_bound > generalization_bound_limit) break;
-            if ((this->*total_method)(node, unspecialized, fol_index, fol_index)) return true;
-        }
-    }
-    return false;
-}
-
-bool MdLattice::HasLhsGeneralizationTotal(MdNode const& node, Md const& md, Index const node_index,
-                                          Index const start_index) const {
-    return NodeHasLhsGeneralizationTotal(node, md, node_index, start_index,
-                                         &MdLattice::HasGeneralizationTotal);
-}
-
-template <typename NodeType>
-bool MdLattice::HasChildGenSpec(NodeType const& node, Index node_index, Index next_node_index,
-                                DecisionBoundary bound_limit, auto const& md, auto gen_method,
-                                auto get_b_map_iter) const {
-    Index const child_array_index = next_node_index - node_index;
-    typename NodeType::OptionalChild const& optional_child = node.children[child_array_index];
-    if (!optional_child.has_value()) return false;
-    typename NodeType::BoundMap const& b_map = *optional_child;
-    for (auto spec_iter = get_b_map_iter(b_map), end_iter = b_map.end(); spec_iter != end_iter;
-         ++spec_iter) {
-        auto const& [generalization_bound, node] = *spec_iter;
-        if (generalization_bound > bound_limit) break;
-        Index const fol_index = next_node_index + 1;
-        if ((this->*gen_method)(node, md, fol_index, fol_index)) return true;
-    }
-    return false;
-}
-
-template <typename NodeType>
-bool MdLattice::NodeHasLhsGeneralizationSpec(NodeType const& node,
-                                             NodeType::Specialization const& specialization,
-                                             Index const node_index, Index const start_index,
-                                             auto spec_method, auto total_method) const {
-    LhsSpecialization const& lhs_specialization = specialization.GetLhsSpecialization();
-    auto const& [spec_index, spec_bound] = lhs_specialization.specialized;
-    MdLhs const& old_lhs = lhs_specialization.old_lhs;
-    using BoundMap = NodeType::BoundMap;
-    for (MdElement result = old_lhs.FindNextNonZero(start_index); result.index < spec_index;
-         result = old_lhs.FindNextNonZero(result.index + 1)) {
-        auto const& [next_node_index, next_bound] = result;
-        auto get_first = [](BoundMap const& b_map) { return b_map.begin(); };
-        if (HasChildGenSpec(node, node_index, next_node_index, next_bound, specialization,
-                            spec_method, get_first))
-            return true;
-    }
-    DecisionBoundary const old_bound = old_lhs[spec_index];
-    auto get_higher = [&](BoundMap const& b_map) { return b_map.upper_bound(old_bound); };
-    return HasChildGenSpec(node, node_index, spec_index, spec_bound,
-                           specialization.ToUnspecialized(), total_method, get_higher);
-}
-
-bool MdLattice::HasLhsGeneralizationSpec(MdNode const& node, MdSpecialization const& md,
-                                         Index node_index, Index start_index) const {
-    return NodeHasLhsGeneralizationSpec(node, md, node_index, start_index,
-                                        &MdLattice::HasGeneralizationSpec,
-                                        &MdLattice::HasGeneralizationTotal);
-}
-
 void MdLattice::UpdateMaxLevel(LhsSpecialization const& lhs) {
     std::size_t level = 0;
     auto const& [spec_index, spec_bound] = lhs.specialized;
@@ -279,10 +212,14 @@ private:
     MdElement const rhs_;
     MdNode* node_;
     DecisionBoundary* cur_node_rhs_ptr_;
+    MdGenChecker const& gen_checker_;
 
 public:
-    GeneralizationHelper(MdElement rhs, MdNode& root) noexcept
-        : rhs_(rhs), node_(&root), cur_node_rhs_ptr_(&node_->rhs_bounds[rhs_.index]) {}
+    GeneralizationHelper(MdElement rhs, MdNode& root, MdGenChecker const& gen_checker) noexcept
+        : rhs_(rhs),
+          node_(&root),
+          cur_node_rhs_ptr_(&node_->rhs_bounds[rhs_.index]),
+          gen_checker_(gen_checker) {}
 
     bool SetAndCheck(MdNode* node_ptr) noexcept {
         if (!node_ptr) return true;
@@ -314,15 +251,19 @@ public:
     MdElement GetIncomingRhs() const noexcept {
         return rhs_;
     }
+
+    MdGenChecker const& GetTotalChecker() const noexcept {
+        return gen_checker_;
+    }
 };
 
 // Note: writing this in AddIfMinimal with gotos seems to be faster.
-auto MdLattice::TryGetNextNode(MdSpecialization const& md, GeneralizationHelper& checker,
+auto MdLattice::TryGetNextNode(MdSpecialization const& md, GeneralizationHelper& helper,
                                Index cur_node_index, Index const next_node_index,
                                DecisionBoundary const next_lhs_bound) -> MdNode* {
     Index const fol_index = next_node_index + 1;
     Index const child_array_index = next_node_index - cur_node_index;
-    MdNode& cur_node = checker.CurNode();
+    MdNode& cur_node = helper.CurNode();
     auto [boundary_mapping, is_first_arr] = cur_node.TryEmplaceChild(child_array_index);
     std::size_t const next_child_array_size = cur_node.GetChildArraySize(child_array_index);
     if (is_first_arr) [[unlikely]] {
@@ -334,12 +275,12 @@ auto MdLattice::TryGetNextNode(MdSpecialization const& md, GeneralizationHelper&
         return nullptr;
     }
     auto it = boundary_mapping.begin();
+    MdGenChecker total_checker = helper.GetTotalChecker();
     for (auto end_it = boundary_mapping.end(); it != end_it; ++it) {
         auto const& [generalization_bound, node] = *it;
         if (generalization_bound > next_lhs_bound) break;
         if (generalization_bound == next_lhs_bound) return &it->second;
-        if (HasGeneralizationTotal(node, md.ToUnspecialized(), fol_index, fol_index))
-            return nullptr;
+        if (total_checker.HasGeneralization(node, fol_index)) return nullptr;
     }
     using std::forward_as_tuple;
     MdNode& new_node =
@@ -352,43 +293,46 @@ auto MdLattice::TryGetNextNode(MdSpecialization const& md, GeneralizationHelper&
 }
 
 void MdLattice::AddIfMinimal(MdSpecialization const& md) {
-    auto checker = GeneralizationHelper(md.rhs, md_root_);
+    MdSpecGenChecker gen_checker{md};
+    MdGenChecker const& total_checker = gen_checker.GetTotalChecker();
+    auto helper = GeneralizationHelper(md.rhs, md_root_, total_checker);
     Index cur_node_index = 0;
     auto const& [spec_index, spec_bound] = md.lhs_specialization.specialized;
     MdLhs const& old_lhs = md.lhs_specialization.old_lhs;
     auto try_set_next = [&](auto... args) {
-        return checker.SetAndCheck(TryGetNextNode(md, checker, cur_node_index, args...));
+        return helper.SetAndCheck(TryGetNextNode(md, helper, cur_node_index, args...));
     };
     for (MdElement result = old_lhs.FindNextNonZero(cur_node_index); result.index < spec_index;
          result = old_lhs.FindNextNonZero(cur_node_index)) {
         auto const& [next_node_index, next_lhs_bound] = result;
         Index const child_array_index = next_node_index - cur_node_index;
         Index const fol_index = result.index + 1;
-        if (HasLhsGeneralizationSpec(checker.CurNode(), md, cur_node_index, fol_index)) return;
+        if (gen_checker.HasGeneralizationInChildren(helper.CurNode(), cur_node_index, fol_index))
+            return;
         cur_node_index = fol_index;
-        assert(checker.Children()[child_array_index].has_value());
-        MdBoundMap& bound_map = *checker.Children()[child_array_index];
+        assert(helper.Children()[child_array_index].has_value());
+        MdBoundMap& bound_map = *helper.Children()[child_array_index];
         assert(bound_map.find(next_lhs_bound) != bound_map.end());
         auto it = bound_map.begin();
         for (; it->first != next_lhs_bound; ++it) {
-            if (HasGeneralizationSpec(it->second, md, cur_node_index, cur_node_index)) return;
+            if (gen_checker.HasGeneralization(it->second, cur_node_index)) return;
         }
-        checker.SetAndCheck(&it->second);
+        helper.SetAndCheck(&it->second);
     }
     if (try_set_next(spec_index, spec_bound)) return;
 
     cur_node_index = spec_index + 1;
-    Md const old_md = md.ToUnspecialized();
     for (MdElement element = old_lhs.FindNextNonZero(cur_node_index); old_lhs.IsNotEnd(element);
          element = old_lhs.FindNextNonZero(cur_node_index)) {
         auto const& [next_node_index, next_lhs_bound] = element;
         Index const fol_index = next_node_index + 1;
-        if (HasLhsGeneralizationTotal(checker.CurNode(), old_md, cur_node_index, fol_index)) return;
+        if (total_checker.HasGeneralizationInChildren(helper.CurNode(), cur_node_index, fol_index))
+            return;
         if (try_set_next(next_node_index, next_lhs_bound)) return;
         cur_node_index = fol_index;
     }
     // Note: Metanome implemented this incorrectly, potentially missing out on recommendations.
-    checker.SetBoundOnCurrent();
+    helper.SetBoundOnCurrent();
 }
 
 void MdLattice::RaiseInterestingnessBounds(
@@ -439,6 +383,10 @@ std::vector<DecisionBoundary> MdLattice::GetRhsInterestingnessBounds(
     }
     RaiseInterestingnessBounds(md_root_, lhs, interestingness_bounds, 0, indices);
     return interestingness_bounds;
+}
+
+bool MdLattice::HasGeneralization(Md const& md) const {
+    return MdGenChecker{md}.HasGeneralization(md_root_);
 }
 
 void MdLattice::GetLevel(MdNode& cur_node, std::vector<MdVerificationMessenger>& collected,
@@ -502,30 +450,8 @@ std::vector<MdLatticeNodeInfo> MdLattice::GetAll() {
     return collected;
 }
 
-bool MdLattice::IsUnsupportedTotal(SupportNode const& node, MdLhs const& lhs,
-                                   Index const node_index, Index const start_index) const {
-    if (node.is_unsupported) return true;
-    for (MdElement element = lhs.FindNextNonZero(start_index); lhs.IsNotEnd(element);
-         element = lhs.FindNextNonZero(element.index + 1)) {
-        auto const& [next_node_index, generalization_bound_limit] = element;
-        Index const child_array_index = next_node_index - node_index;
-        SupportOptionalChild const& optional_child = node.children[child_array_index];
-        if (!optional_child.has_value()) continue;
-        Index const fol_index = next_node_index + 1;
-        for (auto const& [generalization_bound, node] : *optional_child) {
-            if (generalization_bound > generalization_bound_limit) break;
-            if (IsUnsupportedTotal(node, lhs, fol_index, fol_index)) return true;
-        }
-    }
-    return false;
-}
-
-bool MdLattice::IsUnsupportedSpec(SupportNode const& node,
-                                  LhsSpecialization const& lhs_specialization, Index node_index,
-                                  Index start_index) const {
-    return NodeHasLhsGeneralizationSpec(node, lhs_specialization, node_index, start_index,
-                                        &MdLattice::IsUnsupportedSpec,
-                                        &MdLattice::IsUnsupportedTotal);
+bool MdLattice::IsUnsupported(LhsSpecialization const& lhs_spec) const {
+    return SpecGeneralizationChecker<SupportNode>{lhs_spec}.HasGeneralization(support_root_, 0);
 }
 
 void MdLattice::MarkNewLhs(SupportNode& cur_node, MdLhs const& lhs, Index cur_node_index) {
