@@ -26,6 +26,12 @@ Vertical RelationalSchema::GetVertical(boost::dynamic_bitset<> indices) const {
     return Vertical(this, std::move(indices));
 }
 
+bool RelationalSchema::IsColumnInSchema(std::string const& col_name) const {
+    return std::find_if(columns_.begin(), columns_.end(), [&col_name](auto& column) {
+               return column->name_ == col_name;
+           }) != columns_.end();
+}
+
 Column const* RelationalSchema::GetColumn(std::string const& col_name) const {
     auto found_entry_iterator =
             std::find_if(columns_.begin(), columns_.end(),

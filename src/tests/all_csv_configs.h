@@ -79,4 +79,5 @@ extern CSVConfig const kProbeTest1;
 extern CSVConfig const kProbeTest2;
 extern CSVConfig const kTestParse;
 extern CSVConfig const kODnorm6;
+extern CSVConfig const kDrunkAnimals;
 }  // namespace tests

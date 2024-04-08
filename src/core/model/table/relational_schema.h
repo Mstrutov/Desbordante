@@ -46,6 +46,8 @@ public:
         return columns_;
     };
 
+    bool IsColumnInSchema(std::string const& col_name) const;
+
     Column const* GetColumn(std::string const& col_name) const;
     Column const* GetColumn(size_t index) const;
     size_t GetNumColumns() const;

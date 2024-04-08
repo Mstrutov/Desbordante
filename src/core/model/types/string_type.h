@@ -89,6 +89,10 @@ public:
     static void Destruct(std::byte const* v) {
         reinterpret_cast<String const*>(v)->~String();
     }
+
+    Destructor GetDestructor() const override {
+        return Destruct;
+    }
 };
 
 using StringTypeDeleter = decltype(std::declval<StringType>().GetDeleter());
