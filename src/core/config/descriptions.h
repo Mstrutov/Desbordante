@@ -102,4 +102,30 @@ constexpr auto kDIgnoreConstantCols =
 constexpr auto kDGraphData = "Path to dot-file with graph";
 constexpr auto kDGfdData = "Path to file with GFD";
 constexpr auto kDMemLimitMB = "memory limit im MBs";
+constexpr auto kDMinCard =
+        " (1-val) * |R| (where |R| is amount of rows in table R) denotes minimum "
+        "cardinality of a column to be considered a soft key. Value lies in (0, 1)";
+constexpr auto kDOnlySFD = "Don't mine correlations";
+constexpr auto kDMaxDiffValsProportion =
+        "the maximum proportion that the number"
+        "of different values in the concatenation of sample columns from the number of rows in the "
+        "sample for the test for SFD to be meaningful. Value lies in (0, 1)";
+constexpr auto kDMinSFDStrengthMeasure =
+        "Minimum threshold of strength measure of a SFD. Value lies in (0, 1)";
+constexpr auto kDMinSkewThreshold =
+        "(1-val) *|R| (where |R| is amount of rows in table R) is the minimum sum of the "
+        "frequencies of occurrence of the most frequent"
+        "values of the column in the table R, indicating that the distribution of values in the "
+        "column is skewed. Value lies in (0, 1).";
+constexpr auto kDMinStructuralZeroesAmount =
+        "val*d1*d2 is the minimum number of structural zeros in the contingency table indicating "
+        "that the columns are correlated. d1, d2 - the number of different values in columns C1, "
+        "C2, respectively. Value lies in (0, 1).";
+constexpr auto kDMaxFalsePositiveProbability =
+        "1 - val is the maximum acceptable probability of a false-positive correlation test "
+        "result. Value lies in (0, 1).";
+constexpr auto kDDelta =
+        "additional constant for computation of sample size. Value lies in (0, 1).";
+constexpr auto kDMaxAmountOfCategories =
+        "Max amount of categories for the chi-squared test in case the data is not skewed";
 }  // namespace config::descriptions
