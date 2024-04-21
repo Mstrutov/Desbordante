@@ -7,6 +7,7 @@
 #include "big_int_type.h"
 #include "create_type.h"
 #include "date_type.h"
+#include "destruct.h"
 #include "double_type.h"
 #include "empty_type.h"
 #include "int_type.h"
@@ -68,12 +69,7 @@ public:
 
     void Free(std::byte const* value) const noexcept override {
         TypeId const type_id = RetrieveTypeId(value);
-        if (type_id == +TypeId::kString || type_id == +TypeId::kBigInt) {
-            StringType::Destruct(RetrieveValue(value));
-        }
-        if (type_id == +TypeId::kDate) {
-            DateType::Destruct(RetrieveValue(value));
-        }
+        Destruct(type_id, RetrieveValue(value));
         Type::Free(value);
     }
 
