@@ -3,8 +3,7 @@
 #include "algo_factory.h"
 #include "all_csv_configs.h"
 #include "config/names.h"
-#include "fd/pfdtane/enums.h"
-#include "fd/pfdtane/pfdtane.h"
+#include "fd/tane/tane.h"
 #include "model/table/column_layout_relation_data.h"
 #include "parser/csv_parser/csv_parser.h"
 
@@ -51,11 +50,12 @@ TEST_P(TestPFDTaneValidation, ErrorCalculationTest) {
     double eps = 0.00001;
     auto table = std::make_shared<CSVParser>(p.csv_config);
     auto relation = ColumnLayoutRelationData::CreateFrom(*table, true);
+
     for (auto const& [lhs_id, rhs_id, expected_error] : p.fds) {
         auto const& lhs = relation->GetColumnData(lhs_id).GetPositionListIndex();
         auto const& rhs = relation->GetColumnData(rhs_id).GetPositionListIndex();
-        config::ErrorType error =
-                algos::PFDTane::CalculateFdError(lhs, lhs->Intersect(rhs).get(), p.error_measure);
+        config::ErrorType error = algos::PFDTane::CalculatePFDError(
+                lhs, lhs->Intersect(rhs).get(), p.error_measure, relation.get());
         EXPECT_NEAR(error, expected_error, eps);
     }
 }
@@ -64,7 +64,11 @@ TEST_P(TestPFDTaneValidation, ErrorCalculationTest) {
 INSTANTIATE_TEST_SUITE_P(
         PFDTaneTestMiningSuite, TestPFDTaneMining,
         ::testing::Values(
-            PFDTaneMiningParams(44381, 0.3, +algos::ErrorMeasure::per_value, kTestFD)
+            PFDTaneMiningParams(44381, 0.3, +algos::ErrorMeasure::per_value, kTestFD),
+            PFDTaneMiningParams(39491, 0.1, +algos::ErrorMeasure::per_value, kIris),
+            PFDTaneMiningParams(10695, 0.01, +algos::ErrorMeasure::per_value, kIris),
+            PFDTaneMiningParams(7893, 0.1, +algos::ErrorMeasure::per_value, kNeighbors10k),
+            PFDTaneMiningParams(41837, 0.01, +algos::ErrorMeasure::per_value, kNeighbors10k)
         ));
 
 INSTANTIATE_TEST_SUITE_P(

@@ -1,47 +1,68 @@
 #pragma once
 
-#include <string>
-
 #include "algorithms/fd/pli_based_fd_algorithm.h"
+#include "algorithms/fd/tane/lattice_level.h"
 #include "config/error/type.h"
+#include "enums.h"
+#include "model/table/column_data.h"
+#include "model/table/column_layout_relation_data.h"
 #include "model/table/position_list_index.h"
-#include "model/table/relation_data.h"
 
 namespace algos {
+namespace tane {
 
-class Tane : public PliBasedFDAlgorithm {
+class TaneCommon : public PliBasedFDAlgorithm {
+protected:
+    config::ErrorType max_fd_error_;
+
 private:
-    void RegisterOptions();
-    void MakeExecuteOptsAvailableFDInternal() final;
-
     void ResetStateFd() final;
+    void Prune(model::LatticeLevel* level);
+    void ComputeDependencies(model::LatticeLevel* level);
     unsigned long long ExecuteInternal() final;
+    virtual config::ErrorType CalculateZeroAryFdError(ColumnData const* rhs) = 0;
+    virtual config::ErrorType CalculateFdError(model::PositionListIndex const* lhs_pli,
+                                               model::PositionListIndex const* joint_pli) = 0;
 
 public:
-    config::ErrorType max_fd_error_;
-    config::ErrorType max_ucc_error_;
-
-    int count_of_fd_ = 0;
-    int count_of_ucc_ = 0;
-    long apriori_millis_ = 0;
-
-    Tane(std::optional<ColumnLayoutRelationDataManager> relation_manager = std::nullopt);
-
-    static double CalculateZeroAryFdError(ColumnData const* rhs,
-                                          ColumnLayoutRelationData const* relation_data);
-    static double CalculateFdError(model::PositionListIndex const* lhs_pli,
-                                   model::PositionListIndex const* joint_pli,
-                                   ColumnLayoutRelationData const* relation_data);
+    TaneCommon(std::optional<ColumnLayoutRelationDataManager> relation_manager = std::nullopt);
     static double CalculateUccError(model::PositionListIndex const* pli,
                                     ColumnLayoutRelationData const* relation_data);
-
-    // static double round(double error) { return ((int)(error * 32768) + 1)/ 32768.0; }
-
     void RegisterAndCountFd(Vertical const& lhs, Column const* rhs, double error,
                             RelationalSchema const* schema);
-    // void RegisterFd(Vertical const* lhs, Column const* rhs, double error, RelationalSchema const*
-    // schema);
-    void RegisterUcc(Vertical const& key, double error, RelationalSchema const* schema);
+};
+
+}  // namespace tane
+
+class Tane : public tane::TaneCommon {
+private:
+    void RegisterOptions();
+    void MakeExecuteOptsAvailableFDInternal() override final;
+    config::ErrorType CalculateZeroAryFdError(ColumnData const* rhs) override;
+    config::ErrorType CalculateFdError(model::PositionListIndex const* lhs_pli,
+                                       model::PositionListIndex const* joint_pli) override;
+
+public:
+    Tane(std::optional<ColumnLayoutRelationDataManager> relation_manager = std::nullopt);
+};
+
+class PFDTane : public tane::TaneCommon {
+private:
+    ErrorMeasure error_measure_ = +ErrorMeasure::per_tuple;
+    void RegisterOptions();
+    void MakeExecuteOptsAvailableFDInternal() final;
+    config::ErrorType CalculateZeroAryFdError(ColumnData const* rhs) override;
+    config::ErrorType CalculateFdError(model::PositionListIndex const* lhs_pli,
+                                       model::PositionListIndex const* joint_pli) override;
+
+public:
+    PFDTane(std::optional<ColumnLayoutRelationDataManager> relation_manager = std::nullopt);
+    static config::ErrorType CalculateZeroAryPFDError(
+            ColumnData const* rhs, ColumnLayoutRelationData const* relation_data);
+    static config::ErrorType CalculatePFDError(model::PositionListIndex const* x_pli,
+                                               model::PositionListIndex const* xa_pli,
+                                               ErrorMeasure error_measure,
+                                               ColumnLayoutRelationData const* relation_data);
 };
 
 }  // namespace algos

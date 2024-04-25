@@ -4,7 +4,7 @@
 #include <string>
 
 #include "algorithms/cfd/enums.h"
-#include "algorithms/fd/pfdtane/enums.h"
+#include "algorithms/fd/tane/enums.h"
 #include "algorithms/metric/enums.h"
 #include "util/enum_to_available_values.h"
 
