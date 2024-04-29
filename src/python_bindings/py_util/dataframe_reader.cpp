@@ -11,10 +11,8 @@
 
 #include "model/types/builtin.h"
 
-namespace python_bindings {
-
+namespace {
 namespace py = pybind11;
-
 static std::vector<std::string> GetColumnNames(py::handle dataframe) {
     std::vector<std::string> names;
     py::list name_lst = dataframe.attr("columns").attr("to_list")();
@@ -23,12 +21,15 @@ static std::vector<std::string> GetColumnNames(py::handle dataframe) {
     }
     return names;
 }
+}  // namespace
+
+namespace python_bindings {
 
 DataframeReaderBase::DataframeReaderBase(py::handle dataframe, std::string name)
     : dataframe_(py::reinterpret_borrow<py::object>(dataframe)),
       df_iter_(dataframe_.attr("itertuples")(false, py::none{})),
       name_(std::move(name)),
-      column_names_(GetColumnNames(dataframe_)) {}
+      column_names_(::GetColumnNames(dataframe_)) {}
 
 void DataframeReaderBase::Reset() {
     df_iter_ = dataframe_.attr("itertuples")(false, py::none{});

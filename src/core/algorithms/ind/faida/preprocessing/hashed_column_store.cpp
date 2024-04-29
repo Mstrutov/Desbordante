@@ -6,15 +6,15 @@ namespace algos::faida {
 
 std::filesystem::path HashedColumnStore::PrepareDirNext(std::filesystem::path dir,
                                                         TableIndex table_idx) {
-    for (std::unique_ptr<Column> const& column : schema_->GetColumns()) {
+    for (Column const& column : schema_->GetColumns()) {
         std::string file_name;
         file_name += std::to_string(table_idx);
         file_name += "_";
-        file_name += std::to_string(column->GetIndex());
+        file_name += std::to_string(column.GetIndex());
         file_name += ".bin";
 
         std::filesystem::path column_file = dir / file_name;
-        column_files_[column->GetIndex()] = std::move(column_file);
+        column_files_[column.GetIndex()] = std::move(column_file);
     }
     return dir;
 }

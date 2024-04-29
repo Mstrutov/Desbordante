@@ -263,7 +263,7 @@ void FDTreeElement::TransformTreeFdCollection(std::bitset<kMaxAttrNum>& active_p
                 lhs_bitset.set(i - 1);
             }
             Vertical lhs(&scheme, lhs_bitset);
-            Column rhs(&scheme, scheme.GetColumn(attr - 1)->GetName(), attr - 1);
+            Column rhs(&scheme, scheme.GetColumn(attr - 1).GetName(), attr - 1);
             fd_collection.emplace_back(FD{lhs, rhs});
         }
     }

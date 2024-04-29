@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <string>
 #include <tuple>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -12,6 +13,7 @@
 #include "algorithms/fd/hycommon/util/pli_util.h"
 #include "algorithms/fd/hycommon/validator_helpers.h"
 #include "hyfd_config.h"
+#include "util/bitset_utils.h"
 
 namespace {
 

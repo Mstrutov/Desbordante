@@ -28,7 +28,7 @@ class CFDAlgorithmTest : public ::testing::Test {
 protected:
     static std::unique_ptr<algos::cfd::FDFirstAlgorithm> CreateAlgorithmInstance(
             CSVConfig const& csv_config, unsigned minsup, double minconf, char const* substrategy,
-            unsigned int max_lhs, unsigned columns_number = 0, unsigned tuples_number = 0) {
+            unsigned int max_lhs, size_t columns_number = 0, size_t tuples_number = 0) {
         using namespace config::names;
 
         algos::StdParamsMap params{

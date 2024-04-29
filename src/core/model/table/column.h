@@ -6,7 +6,9 @@
 #include <boost/dynamic_bitset.hpp>
 
 #include "column_index.h"
-#include "relational_schema.h"
+
+class RelationalSchema;
+class Vertical;
 
 class Column {
     friend RelationalSchema;

@@ -58,11 +58,11 @@ std::vector<CMAXSet> Depminer::GenerateCmaxSets(std::unordered_set<Vertical> con
     std::vector<CMAXSet> c_max_cets;
 
     for (auto const& column : this->schema_->GetColumns()) {
-        CMAXSet result(*column);
+        CMAXSet result(column);
 
         // finding all sets, which doesn't contain column
         for (auto const& ag : agree_sets) {
-            if (!ag.Contains(*column)) {
+            if (!ag.Contains(column)) {
                 result.AddCombination(ag);
             }
         }
@@ -110,16 +110,15 @@ std::vector<CMAXSet> Depminer::GenerateCmaxSets(std::unordered_set<Vertical> con
     return c_max_cets;
 }
 
-void Depminer::LhsForColumn(std::unique_ptr<Column> const& column,
-                            std::vector<CMAXSet> const& c_max_cets) {
+void Depminer::LhsForColumn(Column const& column, std::vector<CMAXSet> const& c_max_cets) {
     std::unordered_set<Vertical> level;
     // 3
-    CMAXSet correct = GenFirstLevel(c_max_cets, *column, level);
+    CMAXSet correct = GenFirstLevel(c_max_cets, column, level);
 
-    auto const pli = relation_->GetColumnData(column->GetIndex()).GetPositionListIndex();
+    auto const pli = relation_->GetColumnData(column.GetIndex()).GetPositionListIndex();
     bool column_contains_only_equal_values = pli->IsConstant();
     if (column_contains_only_equal_values) {
-        RegisterFd(Vertical(), *column);
+        RegisterFd(Vertical(), column);
         return;
     }
 
@@ -137,8 +136,8 @@ void Depminer::LhsForColumn(std::unique_ptr<Column> const& column,
             }
             // 6
             if (is_fd) {
-                if (!l.Contains(*column)) {
-                    this->RegisterFd(l, *column);
+                if (!l.Contains(column)) {
+                    this->RegisterFd(l, column);
                 }
                 level_copy.erase(l);
             }

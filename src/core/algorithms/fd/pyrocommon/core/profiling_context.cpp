@@ -33,10 +33,10 @@ ProfilingContext::ProfilingContext(algos::pyro::Parameters parameters,
                 std::make_unique<model::BlockingVerticalMap<model::AgreeSetSample>>(schema);
         // TODO: сделать, чтобы при одном потоке agree_set_samples_ =
         // std::make_unique<VerticalMap<AgreeSetSample>>(schema);
-        for (auto& column : schema->GetColumns()) {
+        for (auto const& column : schema->GetColumns()) {
             CreateColumnFocusedSample(
-                    static_cast<Vertical>(*column),
-                    relation_data->GetColumnData(column->GetIndex()).GetPositionListIndex(), 1);
+                    static_cast<Vertical>(column),
+                    relation_data->GetColumnData(column.GetIndex()).GetPositionListIndex(), 1);
         }
     } else {
         agree_set_samples_ = nullptr;

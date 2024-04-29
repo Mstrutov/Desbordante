@@ -37,7 +37,7 @@ std::unordered_set<Vertical> LatticeTraversal::FindLHSs() {
     for (unsigned partition_index :
          column_order_.GetOrderHighDistinctCount(Vertical(*rhs_).Invert())) {
         if (partition_index != rhs_->GetIndex()) {
-            seeds.push(Vertical(*schema->GetColumn(partition_index)));
+            seeds.push(Vertical(schema->GetColumn(partition_index)));
         }
     }
 

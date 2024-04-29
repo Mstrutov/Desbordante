@@ -8,6 +8,7 @@
 #include "fd/hycommon/efficiency_threshold.h"
 #include "fd/hycommon/validator_helpers.h"
 #include "ucc/hyucc/model/ucc_tree_vertex.h"
+#include "util/bitset_utils.h"
 
 namespace {
 

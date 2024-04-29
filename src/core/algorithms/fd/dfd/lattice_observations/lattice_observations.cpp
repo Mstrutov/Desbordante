@@ -49,7 +49,7 @@ NodeCategory LatticeObservations::UpdateNonDependencyCategory(Vertical const& no
 
     for (size_t index = column_indices.find_first(); index < column_indices.size();
          index = column_indices.find_next(index)) {
-        auto const superset_node_iter = this->find(node.Union(*node.GetSchema()->GetColumn(index)));
+        auto const superset_node_iter = this->find(node.Union(node.GetSchema()->GetColumn(index)));
 
         if (superset_node_iter == this->end()) {
             // if we found unchecked superset of this node

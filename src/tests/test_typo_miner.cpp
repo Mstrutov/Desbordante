@@ -279,7 +279,7 @@ TEST_P(LinesWithTyposMiningTest, FindLinesWithTypos) {
         assert(fd_by_indices.size() > 1);
         auto bitset =
                 schema->IndicesToBitset(fd_by_indices.cbegin(), std::prev(fd_by_indices.cend()));
-        FD fd(schema->GetVertical(std::move(bitset)), *schema->GetColumn(fd_by_indices.back()));
+        FD fd(schema->GetVertical(std::move(bitset)), schema->GetColumn(fd_by_indices.back()));
         for (auto const& [cluster, typos] : clusters_with_typos) {
             std::vector<model::PLI::Cluster::value_type> const actual =
                     typo_miner->FindLinesWithTypos(fd, cluster, p.radius, p.ratio);

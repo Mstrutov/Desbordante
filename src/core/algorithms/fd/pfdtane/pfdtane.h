@@ -29,7 +29,7 @@ public:
     static double CalculateUccError(model::PositionListIndex const* pli,
                                     ColumnLayoutRelationData const* relation_data);
 
-    void RegisterAndCountFd(Vertical const& lhs, Column const* rhs, double error,
+    void RegisterAndCountFd(Vertical const& lhs, Column const& rhs, double error,
                             RelationalSchema const* schema);
     static config::ErrorType CalculateZeroAryFdError(ColumnData const* rhs);
     static config::ErrorType CalculateFdError(model::PositionListIndex const* x_pli,

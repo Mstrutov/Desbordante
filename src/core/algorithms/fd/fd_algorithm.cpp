@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "config/max_lhs/option.h"
+#include "model/table/relational_schema.h"
 
 namespace algos {
 

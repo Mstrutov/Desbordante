@@ -43,7 +43,7 @@ public:
         return rhs_candidates_;
     }
 
-    void AddRhsCandidates(std::vector<std::unique_ptr<Column>> const& candidates);
+    void AddRhsCandidates(std::vector<Column> const& candidates);
 
     bool ComesBeforeAndSharePrefixWith(LatticeVertex const& that) const;
 

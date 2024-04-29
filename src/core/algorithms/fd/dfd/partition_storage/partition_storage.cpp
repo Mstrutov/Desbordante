@@ -18,9 +18,9 @@ PartitionStorage::PartitionStorage(ColumnLayoutRelationData* relation_data,
               relation_data->GetSchema())),
       caching_method_(caching_method),
       eviction_method_(eviction_method) {
-    for (auto& column_ptr : relation_data->GetSchema()->GetColumns()) {
-        index_->Put(static_cast<Vertical>(*column_ptr),
-                    relation_data->GetColumnData(column_ptr->GetIndex()).GetPliOwnership());
+    for (auto const& column : relation_data->GetSchema()->GetColumns()) {
+        index_->Put(static_cast<Vertical>(column),
+                    relation_data->GetColumnData(column.GetIndex()).GetPliOwnership());
     }
 }
 

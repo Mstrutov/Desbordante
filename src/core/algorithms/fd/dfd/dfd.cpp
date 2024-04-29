@@ -38,11 +38,11 @@ unsigned long long DFD::ExecuteInternal() {
 
     // search for unique columns
     for (auto const& column : schema->GetColumns()) {
-        ColumnData& column_data = relation_->GetColumnData(column->GetIndex());
+        ColumnData& column_data = relation_->GetColumnData(column.GetIndex());
         model::PositionListIndex const* const column_pli = column_data.GetPositionListIndex();
 
         if (column_pli->AllValuesAreUnique()) {
-            Vertical const lhs = Vertical(*column);
+            Vertical const lhs = Vertical(column);
             unique_columns_.push_back(lhs);
             // we do not register an FD at once, because we check for FDs with empty LHS later
         }
@@ -51,10 +51,10 @@ unsigned long long DFD::ExecuteInternal() {
     double progress_step = 100.0 / schema->GetNumColumns();
     boost::asio::thread_pool search_space_pool(number_of_threads_);
 
-    for (auto& rhs : schema->GetColumns()) {
+    for (auto const& rhs : schema->GetColumns()) {
         boost::asio::post(
                 search_space_pool, [this, &rhs, schema, progress_step, &partition_storage]() {
-                    ColumnData const& rhs_data = relation_->GetColumnData(rhs->GetIndex());
+                    ColumnData const& rhs_data = relation_->GetColumnData(rhs.GetIndex());
                     model::PositionListIndex const* const rhs_pli = rhs_data.GetPositionListIndex();
 
                     /* if all the rows have the same value, then we register FD with empty LHS
@@ -62,17 +62,17 @@ unsigned long long DFD::ExecuteInternal() {
                      * this RHS, so we register it and move to the next RHS
                      * */
                     if (rhs_pli->GetNepAsLong() == relation_->GetNumTuplePairs()) {
-                        RegisterFd(*(schema->empty_vertical_), *rhs);
+                        RegisterFd(*(schema->empty_vertical_), rhs);
                         AddProgress(progress_step);
                         return;
                     }
 
-                    auto search_space = LatticeTraversal(rhs.get(), relation_.get(),
-                                                         unique_columns_, partition_storage.get());
+                    auto search_space = LatticeTraversal(&rhs, relation_.get(), unique_columns_,
+                                                         partition_storage.get());
                     auto const minimal_deps = search_space.FindLHSs();
 
                     for (auto const& minimal_dependency_lhs : minimal_deps) {
-                        RegisterFd(minimal_dependency_lhs, *rhs);
+                        RegisterFd(minimal_dependency_lhs, rhs);
                     }
                     AddProgress(progress_step);
                     LOG(INFO) << static_cast<int>(GetProgress().second);

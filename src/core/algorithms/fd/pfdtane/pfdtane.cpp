@@ -88,11 +88,10 @@ double PFDTane::CalculateUccError(model::PositionListIndex const* pli,
     return pli->GetNepAsLong() / static_cast<double>(relation_data->GetNumTuplePairs());
 }
 
-void PFDTane::RegisterAndCountFd(Vertical const& lhs, Column const* rhs,
-                                 [[maybe_unused]] config::ErrorType error,
-                                 [[maybe_unused]] RelationalSchema const* schema) {
+void PFDTane::RegisterAndCountFd(Vertical const& lhs, Column const& rhs, config::ErrorType,
+                                 RelationalSchema const*) {
     dynamic_bitset<> lhs_bitset = lhs.GetColumnIndices();
-    PliBasedFDAlgorithm::RegisterFd(lhs, *rhs);
+    PliBasedFDAlgorithm::RegisterFd(lhs, rhs);
 }
 
 void PFDTane::Prune(model::LatticeLevel* level) {
@@ -111,7 +110,7 @@ void PFDTane::Prune(model::LatticeLevel* level) {
                     for (std::size_t rhs_index = vertex->GetRhsCandidates().find_first();
                          rhs_index != boost::dynamic_bitset<>::npos;
                          rhs_index = vertex->GetRhsCandidates().find_next(rhs_index)) {
-                        Vertical rhs = static_cast<Vertical>(*schema->GetColumn((int)rhs_index));
+                        Vertical rhs = static_cast<Vertical>(schema->GetColumn(rhs_index));
                         if (!columns.Contains(rhs)) {
                             bool is_rhs_candidate = true;
                             for (auto const& column : columns.GetColumns()) {
@@ -186,10 +185,10 @@ void PFDTane::ComputeDependencies(model::LatticeLevel* level) {
             // Check X -> A
             config::ErrorType error = CalculateFdError(x_pli, xa_pli, error_measure_);
             if (error <= max_fd_error_) {
-                Column const* rhs = schema->GetColumns()[a_index].get();
+                Column const& rhs = schema->GetColumns()[a_index];
 
                 RegisterAndCountFd(lhs, rhs, error, schema);
-                xa_vertex->GetRhsCandidates().set(rhs->GetIndex(), false);
+                xa_vertex->GetRhsCandidates().set(rhs.GetIndex(), false);
                 if (error == 0) {
                     xa_vertex->GetRhsCandidates() &= lhs.GetColumnIndices();
                 }
@@ -208,11 +207,10 @@ unsigned long long PFDTane::ExecuteInternal() {
                << relation_->GetMaximumNip() << ".";
 
     for (auto& column : schema->GetColumns()) {
-        double avg_partners = relation_->GetColumnData(column->GetIndex())
-                                      .GetPositionListIndex()
-                                      ->GetNepAsLong() *
-                              2.0 / relation_->GetNumRows();
-        LOG(DEBUG) << "* " << column->ToString() << ": every tuple has " << std::setw(2)
+        double avg_partners =
+                relation_->GetColumnData(column.GetIndex()).GetPositionListIndex()->GetNepAsLong() *
+                2.0 / relation_->GetNumRows();
+        LOG(DEBUG) << "* " << column.ToString() << ": every tuple has " << std::setw(2)
                    << avg_partners << " partners on average.";
     }
     auto start_time = std::chrono::system_clock::now();
@@ -232,8 +230,8 @@ unsigned long long PFDTane::ExecuteInternal() {
     auto level1 = std::make_unique<model::LatticeLevel>(1);
     for (auto& column : schema->GetColumns()) {
         // for each attribute set vertex
-        ColumnData const& column_data = relation_->GetColumnData(column->GetIndex());
-        auto vertex = std::make_unique<model::LatticeVertex>(static_cast<Vertical>(*column));
+        ColumnData const& column_data = relation_->GetColumnData(column.GetIndex());
+        auto vertex = std::make_unique<model::LatticeVertex>(static_cast<Vertical>(column));
 
         vertex->AddRhsCandidates(schema->GetColumns());
         vertex->GetParents().push_back(empty_vertex);
@@ -243,10 +241,10 @@ unsigned long long PFDTane::ExecuteInternal() {
         // check FDs: 0->A
         double fd_error = CalculateZeroAryFdError(&column_data);
         if (fd_error <= max_fd_error_) {  // TODO: max_error
-            zeroary_fd_rhs.set(column->GetIndex());
-            RegisterAndCountFd(*schema->empty_vertical_, column.get(), fd_error, schema);
+            zeroary_fd_rhs.set(column.GetIndex());
+            RegisterAndCountFd(*schema->empty_vertical_, column, fd_error, schema);
 
-            vertex->GetRhsCandidates().set(column->GetIndex(), false);
+            vertex->GetRhsCandidates().set(column.GetIndex(), false);
             if (fd_error == 0) {
                 vertex->GetRhsCandidates().reset();
             }

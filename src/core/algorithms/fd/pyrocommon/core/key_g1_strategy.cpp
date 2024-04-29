@@ -20,10 +20,10 @@ double KeyG1Strategy::CalculateKeyError(double num_violating_tuple_pairs) const 
 void KeyG1Strategy::EnsureInitialized(SearchSpace* search_space) const {
     if (search_space->is_initialized_) return;
 
-    for (auto& column : context_->GetSchema()->GetColumns()) {
-        if (IsIrrelevantColumn(column->GetIndex())) continue;
+    for (auto const& column : context_->GetSchema()->GetColumns()) {
+        if (IsIrrelevantColumn(column.GetIndex())) continue;
 
-        search_space->AddLaunchPad(CreateDependencyCandidate(static_cast<Vertical>(*column)));
+        search_space->AddLaunchPad(CreateDependencyCandidate(static_cast<Vertical>(column)));
     }
 
     search_space->is_initialized_ = true;

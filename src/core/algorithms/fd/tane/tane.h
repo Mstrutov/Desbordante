@@ -37,7 +37,7 @@ public:
 
     // static double round(double error) { return ((int)(error * 32768) + 1)/ 32768.0; }
 
-    void RegisterAndCountFd(Vertical const& lhs, Column const* rhs, double error,
+    void RegisterAndCountFd(Vertical const& lhs, Column const& rhs, double error,
                             RelationalSchema const* schema);
     // void RegisterFd(Vertical const* lhs, Column const* rhs, double error, RelationalSchema const*
     // schema);

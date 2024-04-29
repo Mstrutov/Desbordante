@@ -29,17 +29,15 @@ PLICache::PLICache(ColumnLayoutRelationData* relation_data, CachingMethod cachin
       median_entropy_(median_entropy),
       median_gini_(median_gini),
       median_inverted_entropy_(median_inverted_entropy) {
-    for (auto& column_ptr : relation_data->GetSchema()->GetColumns()) {
-        index_->Put(static_cast<Vertical>(*column_ptr),
-                    relation_data->GetColumnData(column_ptr->GetIndex()).GetPliOwnership());
+    for (auto& column : relation_data->GetSchema()->GetColumns()) {
+        index_->Put(static_cast<Vertical>(column),
+                    relation_data->GetColumnData(column.GetIndex()).GetPliOwnership());
     }
 }
 
 PLICache::~PLICache() {
-    for (auto& column_ptr : relation_data_->GetSchema()->GetColumns()) {
-        // auto PLI =
-        index_->Remove(static_cast<Vertical>(*column_ptr));
-        // relation_data_->GetColumnData(column_ptr->getIndex()).getPLI(std::move(PLI));
+    for (auto const& column : relation_data_->GetSchema()->GetColumns()) {
+        index_->Remove(static_cast<Vertical>(column));
     }
 }
 

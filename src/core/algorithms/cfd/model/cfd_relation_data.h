@@ -42,7 +42,7 @@ private:
     static void AddNewItemsInFullTable(ItemDictionary &, ColumnesValuesDict &,
                                        std::vector<ItemInfo> &, std::vector<std::string> const &,
                                        std::vector<int> &, std::vector<Transaction> &, int &,
-                                       unsigned);
+                                       size_t);
 
     static void AddNewItemsInPartialTable(ItemDictionary &, ColumnesValuesDict &,
                                           std::vector<ItemInfo> &, std::vector<std::string> const &,
@@ -74,9 +74,8 @@ public:
     static std::unique_ptr<CFDRelationData> CreateFrom(model::IDatasetStream &file_input,
                                                        double c_sample = 1, double r_sample = 1);
     static std::unique_ptr<CFDRelationData> CreateFrom(model::IDatasetStream &file_input,
-                                                       unsigned columns_number,
-                                                       unsigned tuples_number, double c_sample = 1,
-                                                       double r_sample = 1);
+                                                       size_t columns_number, size_t tuples_number,
+                                                       double c_sample = 1, double r_sample = 1);
 
     CFDRelationData(std::unique_ptr<RelationalSchema> schema,
                     std::vector<CFDColumnData> column_data, std::vector<Transaction> data,

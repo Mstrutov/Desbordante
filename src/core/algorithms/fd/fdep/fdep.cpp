@@ -28,12 +28,11 @@ void FDep::LoadDataInternal() {
     }
     column_names_.resize(number_attributes_);
 
-    schema_ = std::make_unique<RelationalSchema>(input_table_->GetRelationName());
-
     for (size_t i = 0; i < number_attributes_; ++i) {
         column_names_[i] = input_table_->GetColumnName(static_cast<int>(i));
-        schema_->AppendColumn(column_names_[i]);
     }
+
+    schema_ = RelationalSchema::CreateFrom(*input_table_);
 
     std::vector<std::string> next_line;
     while (input_table_->HasNextRow()) {

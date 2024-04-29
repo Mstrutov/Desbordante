@@ -3,49 +3,51 @@
 #include <memory>
 #include <utility>
 
-#include "vertical.h"
 #include "vertical_map.h"
 
-RelationalSchema::RelationalSchema(std::string name)
-    : columns_(), name_(std::move(name)), empty_vertical_() {
-    Init();
-}
-
-void RelationalSchema::Init() {
-    empty_vertical_ = Vertical::EmptyVertical(this);
-}
-
-// TODO: В оригинале тут что-то непонятное + приходится пересоздавать empty_vertical_ -- тут
-// должен быть unique_ptr, тк создаём в остальных случаях новую вершину и выдаём наружу с овнершипом
-Vertical RelationalSchema::GetVertical(boost::dynamic_bitset<> indices) const {
-    if (indices.empty()) return *Vertical::EmptyVertical(this);
-
-    if (indices.count() == 1) {
-        return Vertical(this, std::move(indices));
+namespace {
+auto MakeColumns(RelationalSchema* schema, std::vector<std::string> column_names) {
+    std::vector<Column> columns;
+    std::size_t const number_of_columns = column_names.size();
+    columns.reserve(number_of_columns);
+    for (model::ColumnIndex i = 0; i < number_of_columns; ++i) {
+        columns.emplace_back(schema, column_names[i], i);
     }
+    return columns;
+}
+}  // namespace
+
+RelationalSchema::RelationalSchema(std::string name, std::vector<std::string> column_names)
+    : columns_(MakeColumns(this, std::move(column_names))),
+      name_(std::move(name)),
+      empty_vertical_(std::make_unique<Vertical>(this, boost::dynamic_bitset<>(columns_.size()))) {}
+
+std::unique_ptr<RelationalSchema> RelationalSchema::CreateFrom(model::IDatasetStream& table) {
+    std::vector<std::string> column_names;
+    std::size_t const number_of_columns = table.GetNumberOfColumns();
+    column_names.reserve(number_of_columns);
+    for (model::ColumnIndex i = 0; i < number_of_columns; ++i) {
+        column_names.push_back(table.GetColumnName(i));
+    }
+    return std::make_unique<RelationalSchema>(table.GetRelationName(), std::move(column_names));
+}
+
+Vertical RelationalSchema::GetVertical(boost::dynamic_bitset<> indices) const {
     return Vertical(this, std::move(indices));
 }
 
-Column const* RelationalSchema::GetColumn(std::string const& col_name) const {
+Column const& RelationalSchema::GetColumn(std::string const& col_name) const {
     auto found_entry_iterator =
             std::find_if(columns_.begin(), columns_.end(),
-                         [&col_name](auto& column) { return column->name_ == col_name; });
-    if (found_entry_iterator != columns_.end()) return found_entry_iterator->get();
+                         [&col_name](auto& column) { return column.name_ == col_name; });
+    if (found_entry_iterator != columns_.end()) return *found_entry_iterator;
 
     throw std::invalid_argument("Couldn't match column name \'" + col_name +
                                 "\' to any of the schema's column names");
 }
 
-Column const* RelationalSchema::GetColumn(size_t index) const {
-    return columns_.at(index).get();
-}
-
-void RelationalSchema::AppendColumn(std::string const& col_name) {
-    columns_.push_back(std::make_unique<Column>(this, col_name, columns_.size()));
-}
-
-void RelationalSchema::AppendColumn(Column column) {
-    columns_.push_back(std::make_unique<Column>(std::move(column)));
+Column const& RelationalSchema::GetColumn(size_t index) const {
+    return columns_.at(index);
 }
 
 size_t RelationalSchema::GetNumColumns() const {
@@ -87,7 +89,7 @@ std::unordered_set<Vertical> RelationalSchema::CalculateHittingSet(
                  corrective_column_index != boost::dynamic_bitset<>::npos;
                  corrective_column_index =
                          vertical.GetColumnIndices().find_next(corrective_column_index)) {
-                auto corrective_column = *GetColumn(corrective_column_index);
+                auto corrective_column = GetColumn(corrective_column_index);
                 auto corrected_member =
                         invalid_member.Union(static_cast<Vertical>(corrective_column));
 

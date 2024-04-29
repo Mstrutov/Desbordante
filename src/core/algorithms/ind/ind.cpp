@@ -37,7 +37,7 @@ std::string IND::ToLongString() const {
             if (it != indices.begin()) {
                 ss << ", ";
             }
-            ss << schemas_->at(table_idx).GetColumn(*it)->GetName();
+            ss << schemas_->at(table_idx).GetColumn(*it).GetName();
         }
         ss << "])";
         return ss.str();

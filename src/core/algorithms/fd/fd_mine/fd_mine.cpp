@@ -276,8 +276,8 @@ void FdMine::Display() {
             }
             Vertical lhs_vertical(schema_, lhs);
             LOG(DEBUG) << "Discovered FD: " << lhs_vertical.ToString() << " -> "
-                       << schema_->GetColumn(j)->GetName();
-            RegisterFd(std::move(lhs_vertical), *schema_->GetColumn(j));
+                       << schema_->GetColumn(j).GetName();
+            RegisterFd(std::move(lhs_vertical), schema_->GetColumn(j));
             fd_counter++;
         }
     }

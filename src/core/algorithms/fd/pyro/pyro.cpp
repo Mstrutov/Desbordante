@@ -63,10 +63,10 @@ unsigned long long Pyro::ExecuteInternal() {
     }
 
     int next_id = 0;
-    for (auto& rhs : schema->GetColumns()) {
+    for (auto const& rhs : schema->GetColumns()) {
         std::unique_ptr<DependencyStrategy> strategy;
         if (parameters_.ucc_error_measure == "g1prime") {
-            strategy = std::make_unique<FdG1Strategy>(rhs.get(), parameters_.max_ucc_error,
+            strategy = std::make_unique<FdG1Strategy>(&rhs, parameters_.max_ucc_error,
                                                       parameters_.error_dev);
         } else {
             throw std::runtime_error("Unknown key error measure.");

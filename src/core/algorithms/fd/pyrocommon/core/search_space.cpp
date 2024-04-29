@@ -219,13 +219,13 @@ bool SearchSpace::Ascend(DependencyCandidate const& launch_pad) {
 
         boost::optional<DependencyCandidate> next_candidate;
         int num_seen_elements = is_ascend_randomly_ ? 1 : -1;
-        for (auto& extension_column : context_->GetSchema()->GetColumns()) {
-            if (traversal_candidate.vertical_.GetColumnIndices()[extension_column->GetIndex()] ||
-                strategy_->IsIrrelevantColumn(*extension_column)) {
+        for (auto const& extension_column : context_->GetSchema()->GetColumns()) {
+            if (traversal_candidate.vertical_.GetColumnIndices()[extension_column.GetIndex()] ||
+                strategy_->IsIrrelevantColumn(extension_column)) {
                 continue;
             }
             auto extended_vertical =
-                    traversal_candidate.vertical_.Union(static_cast<Vertical>(*extension_column));
+                    traversal_candidate.vertical_.Union(static_cast<Vertical>(extension_column));
 
             if (scope_ != nullptr && scope_->GetSupersetEntries(extended_vertical).empty()) {
                 continue;

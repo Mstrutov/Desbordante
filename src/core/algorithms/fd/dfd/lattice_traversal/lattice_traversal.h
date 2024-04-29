@@ -1,7 +1,9 @@
 #pragma once
 
+#include <list>
 #include <random>
 #include <stack>
+#include <vector>
 
 #include "../column_order/column_order.h"
 #include "../lattice_observations/lattice_observations.h"
