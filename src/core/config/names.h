@@ -56,4 +56,13 @@ constexpr auto kIgnoreConstantCols = "ignore_constant_cols";
 constexpr auto kGraphData = "graph";
 constexpr auto kGfdData = "gfd";
 constexpr auto kMemLimitMB = "mem_limit";
+constexpr auto kOnlySFD = "only_sfd";
+constexpr auto kMinCard = "min_cardinality";
+constexpr auto kMaxDiffValsProportion = "max_different_values_proportion";
+constexpr auto kMinSFDStrengthMeasure = "min_sfd_strength";
+constexpr auto kMinSkewThreshold = "min_skew_threshold";
+constexpr auto kMinStructuralZeroesAmount = "min_structural_zeroes_amount";
+constexpr auto kMaxFalsePositiveProbability = "max_false_positive_probability";
+constexpr auto kDelta = "delta";
+constexpr auto kMaxAmountOfCategories = "max_amount_of_categories";
 }  // namespace config::names

@@ -14,6 +14,7 @@
 #include "ind/bind_ind.h"
 #include "mfd/bind_mfd_verification.h"
 #include "od/bind_od.h"
+#include "sfd/bind_sfd.h"
 #include "statistics/bind_statistics.h"
 #include "ucc/bind_ucc.h"
 #include "ucc/bind_ucc_verification.h"
@@ -35,7 +36,7 @@ PYBIND11_MODULE(desbordante, module) {
 
     for (auto bind_func : {BindMainClasses, BindDataTypes, BindFd, BindCfd, BindAr, BindUcc, BindAc,
                            BindOd, BindFdVerification, BindMfdVerification, BindUccVerification,
-                           BindStatistics, BindInd, BindGfdVerification}) {
+                           BindStatistics, BindInd, BindGfdVerification, BindSFD}) {
         bind_func(module);
     }
 }

@@ -4,6 +4,7 @@
 #include "algorithms/association_rules/mining_algorithms.h"
 #include "algorithms/cfd/mining_algorithms.h"
 #include "algorithms/fd/mining_algorithms.h"
+#include "algorithms/fd/sfd/cords.h"
 #include "algorithms/fd/verification_algorithms.h"
 #include "algorithms/gfd/verification_algorithms.h"
 #include "algorithms/ind/mining_algorithms.h"
