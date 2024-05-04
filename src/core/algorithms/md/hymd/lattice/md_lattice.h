@@ -39,25 +39,23 @@ public:
     class MdRefiner {
         MdLattice* lattice_;
         SimilarityVector const* sim_;
-        MdLhs lhs_;
-        DecisionBoundaryVector* rhs_;
+        MdLatticeNodeInfo node_info_;
         utility::InvalidatedRhss invalidated_;
 
     public:
-        MdRefiner(MdLattice* lattice, SimilarityVector const* sim, MdLhs lhs,
-                  DecisionBoundaryVector* rhs, utility::InvalidatedRhss invalidated)
+        MdRefiner(MdLattice* lattice, SimilarityVector const* sim, MdLatticeNodeInfo node_info,
+                  utility::InvalidatedRhss invalidated)
             : lattice_(lattice),
               sim_(sim),
-              lhs_(std::move(lhs)),
-              rhs_(rhs),
+              node_info_(std::move(node_info)),
               invalidated_(std::move(invalidated)) {}
 
         MdLhs const& GetLhs() const {
-            return lhs_;
+            return node_info_.lhs;
         }
 
         void ZeroRhs() {
-            rhs_->assign(lattice_->GetColMatchNumber(), 0.0);
+            node_info_.ZeroRhs();
         }
 
         void Refine();
@@ -65,25 +63,24 @@ public:
 
     class MdVerificationMessenger {
         MdLattice* lattice_;
-        MdLhs lhs_;
-        DecisionBoundaryVector* rhs_;
+        MdLatticeNodeInfo node_info_;
 
     public:
-        MdVerificationMessenger(MdLattice* lattice, MdLhs lhs, DecisionBoundaryVector* rhs)
-            : lattice_(lattice), lhs_(std::move(lhs)), rhs_(rhs) {}
+        MdVerificationMessenger(MdLattice* lattice, MdLatticeNodeInfo node_info)
+            : lattice_(lattice), node_info_(std::move(node_info)) {}
 
         MdLhs const& GetLhs() const {
-            return lhs_;
+            return node_info_.lhs;
         }
 
         DecisionBoundaryVector& GetRhs() {
-            return *rhs_;
+            return *node_info_.rhs_bounds;
         }
 
         void MarkUnsupported();
 
         void ZeroRhs() {
-            rhs_->assign(lattice_->GetColMatchNumber(), 0.0);
+            node_info_.ZeroRhs();
         }
 
         void LowerAndSpecialize(utility::InvalidatedRhss const& invalidated);

@@ -87,15 +87,15 @@ void MdLattice::MdRefiner::Refine() {
     for (auto upd_iter = invalidated_.UpdateIterBegin(), upd_end = invalidated_.UpdateIterEnd();
          upd_iter != upd_end; ++upd_iter) {
         auto const& [rhs_index, new_bound] = *upd_iter;
-        DecisionBoundary& md_rhs_bound_ref = (*rhs_)[rhs_index];
+        DecisionBoundary& md_rhs_bound_ref = (*node_info_.rhs_bounds)[rhs_index];
         md_rhs_bound_ref = kLowestBound;
         // trivial
-        if (new_bound == lhs_[rhs_index]) continue;
+        if (new_bound == GetLhs()[rhs_index]) continue;
         // not minimal
-        if (lattice_->HasGeneralization({lhs_, *upd_iter})) continue;
+        if (lattice_->HasGeneralization({GetLhs(), *upd_iter})) continue;
         md_rhs_bound_ref = new_bound;
     }
-    lattice_->Specialize(lhs_, *sim_, invalidated_.GetInvalidated());
+    lattice_->Specialize(GetLhs(), *sim_, invalidated_.GetInvalidated());
 }
 
 void MdLattice::TryAddRefiner(std::vector<MdRefiner>& found, DecisionBoundaryVector& rhs,
@@ -113,7 +113,8 @@ void MdLattice::TryAddRefiner(std::vector<MdRefiner>& found, DecisionBoundaryVec
             if (sim_bound >= rhs_bound) continue;
             invalidated.PushBack({i, rhs_bound}, sim_bound);
         }
-        found.emplace_back(this, &similarity_vector, cur_node_lhs, &rhs, std::move(invalidated));
+        found.emplace_back(this, &similarity_vector, MdLatticeNodeInfo{cur_node_lhs, &rhs},
+                           std::move(invalidated));
         break;
     }
 }
@@ -166,7 +167,7 @@ void MdLattice::MdVerificationMessenger::MarkUnsupported() {
     // filtered out).
     ZeroRhs();
 
-    lattice_->MarkUnsupported(lhs_);
+    lattice_->MarkUnsupported(GetLhs());
 }
 
 void MdLattice::MdVerificationMessenger::LowerAndSpecialize(
@@ -174,9 +175,9 @@ void MdLattice::MdVerificationMessenger::LowerAndSpecialize(
     for (auto upd_iter = invalidated.UpdateIterBegin(), upd_end = invalidated.UpdateIterEnd();
          upd_iter != upd_end; ++upd_iter) {
         auto const& [rhs_index, new_bound] = *upd_iter;
-        (*rhs_)[rhs_index] = new_bound;
+        GetRhs()[rhs_index] = new_bound;
     }
-    lattice_->Specialize(lhs_, invalidated.GetInvalidated());
+    lattice_->Specialize(GetLhs(), invalidated.GetInvalidated());
 }
 
 void MdLattice::AddNewMinimal(MdNode& cur_node, MdSpecialization const& md, Index cur_node_index) {
@@ -394,7 +395,8 @@ void MdLattice::GetLevel(MdNode& cur_node, std::vector<MdVerificationMessenger>&
                          std::size_t const level_left) {
     DecisionBoundaryVector& rhs_bounds = cur_node.rhs_bounds;
     if (level_left == 0) {
-        if (NotEmpty(rhs_bounds)) collected.emplace_back(this, cur_node_lhs, &rhs_bounds);
+        if (NotEmpty(rhs_bounds))
+            collected.emplace_back(this, MdLatticeNodeInfo{cur_node_lhs, &rhs_bounds});
         return;
     }
     auto collect = [&](MdBoundMap& bound_map, model::Index child_array_index) {
