@@ -20,7 +20,7 @@ struct hash<std::vector<double>> {
                         hymd::utility::BitCast<std::int64_t>(element);
             });
         } else {
-            util::PyTupleHash<double> hasher{p.size()};
+            util::PyTupleHash hasher{p.size()};
             for (double el : p) {
                 hasher.AddValue(el);
             }

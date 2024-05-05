@@ -55,7 +55,7 @@ struct hash<vector<ValueIdentifier>> {
         if constexpr (use_java_hash) {
             return utility::HashIterable(p);
         } else {
-            auto hasher = util::PyTupleHash<ValueIdentifier>(p.size());
+            auto hasher = util::PyTupleHash(p.size());
             for (ValueIdentifier el : p) {
                 hasher.AddValue(el);
             }

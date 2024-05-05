@@ -6,11 +6,9 @@
 
 namespace util {
 
-template <typename T>
 class PyTupleHash {
     std::size_t res_ = 0x345678UL;
     std::size_t mult_ = 1000003UL;
-    std::hash<T> const hasher_{};
     std::int64_t len_;
 
 public:
@@ -20,11 +18,15 @@ public:
         return res_;
     }
 
-    void AddValue(T const& value) noexcept {
+    void AppendHash(std::size_t hash) {
         --len_;
-        std::size_t hash = hasher_(value);
         res_ = (res_ ^ hash) * mult_;
         mult_ += 82520UL + len_ + len_;
+    }
+
+    template <typename T>
+    void AddValue(T const& value) noexcept {
+        AppendHash(std::hash<T>{}(value));
     }
 };
 

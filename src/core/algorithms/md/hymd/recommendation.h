@@ -39,7 +39,7 @@ struct hash<algos::hymd::Recommendation> {
                            algos::hymd::utility::HashIterable(right_record)};
             return algos::hymd::utility::CombineHashes(values);
         } else {
-            util::PyTupleHash<ValueIdentifier> hasher{left_record.size() * 2};
+            util::PyTupleHash hasher{left_record.size() * 2};
             for (ValueIdentifier v : left_record) {
                 hasher.AddValue(v);
             }

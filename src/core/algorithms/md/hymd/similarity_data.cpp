@@ -4,8 +4,6 @@
 
 #include "algorithms/md/hymd/indexes/column_similarity_info.h"
 #include "algorithms/md/hymd/lowest_bound.h"
-#include "algorithms/md/hymd/utility/java_hash.h"
-#include "util/py_tuple_hash.h"
 
 namespace algos::hymd {
 
