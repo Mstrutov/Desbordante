@@ -1,11 +1,12 @@
 #include "validator.h"
 
 #include <algorithm>
-#include <string>
-#include <tuple>
+#include <future>
 #include <utility>
 #include <vector>
 
+#include <boost/asio/post.hpp>
+#include <boost/asio/thread_pool.hpp>
 #include <boost/dynamic_bitset.hpp>
 #include <easylogging++.h>
 
@@ -249,6 +250,30 @@ Validator::FDValidations Validator::ValidateAndExtendSeq(std::vector<LhsPair> co
     return result;
 }
 
+Validator::FDValidations Validator::ValidateAndExtendPar(std::vector<LhsPair> const& vertices) {
+    FDValidations result;
+    boost::asio::thread_pool pool(threads_num_);
+    std::vector<std::future<FDValidations>> validation_futures;
+    validation_futures.reserve(vertices.size());
+
+    for (auto const& vertex : vertices) {
+        std::packaged_task<FDValidations()> task(
+                [this, &vertex]() { return GetValidations(vertex); });
+        validation_futures.push_back(task.get_future());
+        boost::asio::post(pool, std::move(task));
+    }
+
+    pool.join();
+    pool.wait();
+
+    for (auto&& future : validation_futures) {
+        assert(future.valid());
+        result.Add(future.get());
+    }
+
+    return result;
+}
+
 algos::hy::IdPairs Validator::ValidateAndExtendCandidates() {
     size_t const num_attributes = plis_->size();
 
@@ -263,7 +288,12 @@ algos::hy::IdPairs Validator::ValidateAndExtendCandidates() {
     size_t previous_num_invalid_fds = 0;
     algos::hy::IdPairs comparison_suggestions;
     while (!cur_level_vertices.empty()) {
-        auto const result = ValidateAndExtendSeq(cur_level_vertices);
+        FDValidations result;
+        if (threads_num_ > 1) {
+            result = ValidateAndExtendPar(cur_level_vertices);
+        } else {
+            result = ValidateAndExtendSeq(cur_level_vertices);
+        }
 
         comparison_suggestions.insert(comparison_suggestions.end(),
                                       result.ComparisonSuggestions().begin(),

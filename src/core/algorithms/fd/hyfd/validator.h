@@ -7,6 +7,7 @@
 #include "algorithms/fd/hycommon/primitive_validations.h"
 #include "algorithms/fd/hyfd/model/fd_tree.h"
 #include "algorithms/fd/raw_fd.h"
+#include "config/thread_number/type.h"
 #include "model/table/position_list_index.h"
 #include "types.h"
 
@@ -33,16 +34,21 @@ private:
 
     FDValidations ValidateAndExtendSeq(std::vector<LhsPair> const& vertices);
 
+    FDValidations ValidateAndExtendPar(std::vector<LhsPair> const& vertices);
+
     [[nodiscard]] unsigned GetLevelNum() const {
         return current_level_number_;
     }
 
+    config::ThreadNumType threads_num_ = 1;
+
 public:
     Validator(std::shared_ptr<fd_tree::FDTree> fds, hy::PLIsPtr plis,
-              hy::RowsPtr compressed_records) noexcept
+              hy::RowsPtr compressed_records, config::ThreadNumType threads_num) noexcept
         : fds_(std::move(fds)),
           plis_(std::move(plis)),
-          compressed_records_(std::move(compressed_records)) {}
+          compressed_records_(std::move(compressed_records)),
+          threads_num_(threads_num) {}
 
     hy::IdPairs ValidateAndExtendCandidates();
 };

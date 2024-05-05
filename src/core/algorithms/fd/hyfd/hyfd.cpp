@@ -14,12 +14,16 @@
 #include "algorithms/fd/hycommon/util/pli_util.h"
 #include "inductor.h"
 #include "sampler.h"
+#include "thread_number/option.h"
 #include "validator.h"
 
 namespace algos::hyfd {
 
 HyFD::HyFD(std::optional<ColumnLayoutRelationDataManager> relation_manager)
-    : PliBasedFDAlgorithm({}, relation_manager) {}
+    : PliBasedFDAlgorithm({}, relation_manager) {
+    RegisterOption(config::kThreadNumberOpt(&threads_num_));
+    MakeOptionsAvailable({config::kThreadNumberOpt.GetName()});
+}
 
 unsigned long long HyFD::ExecuteInternal() {
     using namespace hy;
@@ -30,12 +34,12 @@ unsigned long long HyFD::ExecuteInternal() {
     auto const plis_shared = std::make_shared<PLIs>(std::move(plis));
     auto const pli_records_shared = std::make_shared<Rows>(std::move(pli_records));
 
-    Sampler sampler(plis_shared, pli_records_shared);
+    Sampler sampler(plis_shared, pli_records_shared, threads_num_);
 
     auto const positive_cover_tree =
             std::make_shared<fd_tree::FDTree>(GetRelation().GetNumColumns());
     Inductor inductor(positive_cover_tree);
-    Validator validator(positive_cover_tree, plis_shared, pli_records_shared);
+    Validator validator(positive_cover_tree, plis_shared, pli_records_shared, threads_num_);
 
     IdPairs comparison_suggestions;
 

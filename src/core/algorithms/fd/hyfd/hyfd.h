@@ -9,6 +9,7 @@
 #include "algorithms/fd/pli_based_fd_algorithm.h"
 #include "algorithms/fd/raw_fd.h"
 #include "model/table/position_list_index.h"
+#include "thread_number/type.h"
 
 namespace algos::hyfd {
 
@@ -42,6 +43,8 @@ private:
     unsigned long long ExecuteInternal() override;
 
     void RegisterFDs(std::vector<RawFD>&& fds, std::vector<algos::hy::ClusterId> const& og_mapping);
+
+    config::ThreadNumType threads_num_ = 1;
 
 public:
     HyFD(std::optional<ColumnLayoutRelationDataManager> relation_manager = std::nullopt);
