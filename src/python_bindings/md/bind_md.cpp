@@ -28,11 +28,11 @@ void BindMd(py::module_& main_module) {
             .def("to_long_string", &MD::ToStringFull)
             .def("to_short_string", &MD::ToStringShort)
             .def("__str__", &MD::ToStringShort);
-    auto metrics_module = md_module.def_submodule("similarity_metrics");
+    auto measures_module = md_module.def_submodule("similarity_measures");
     py::class_<SimilarityMeasureCreator, std::shared_ptr<SimilarityMeasureCreator>>(
-            metrics_module, "SimilarityMeasure");
+            measures_module, "SimilarityMeasure");
     py::class_<LevenshteinSimilarityMeasure::Creator, SimilarityMeasureCreator,
-               std::shared_ptr<LevenshteinSimilarityMeasure::Creator>>(metrics_module,
+               std::shared_ptr<LevenshteinSimilarityMeasure::Creator>>(measures_module,
                                                                        "LevenshteinSimilarity")
             .def(py::init<model::md::DecisionBoundary, bool, std::size_t>(),
                  "minimum_similarity"_a = 0.7, "is_null_equal_null"_a = true,
