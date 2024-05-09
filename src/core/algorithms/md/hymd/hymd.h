@@ -15,10 +15,11 @@
 namespace algos::hymd {
 
 class HyMD final : public MdAlgorithm {
-private:
+public:
     using ColMatchesVector = std::vector<
             std::tuple<std::string, std::string, std::shared_ptr<SimilarityMeasureCreator>>>;
 
+private:
     config::InputTable left_table_;
     config::InputTable right_table_;
 
