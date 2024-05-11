@@ -11,6 +11,7 @@ constexpr auto kSeparator = "separator";
 constexpr auto kHasHeader = "has_header";
 constexpr auto kEqualNulls = "is_null_equal_null";
 constexpr auto kThreads = "threads";
+constexpr auto kCustomRandom = "custom_random";
 constexpr auto kError = "error";
 constexpr auto kErrorMeasure = "error_measure";
 constexpr auto kMaximumLhs = "max_lhs";
