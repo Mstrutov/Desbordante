@@ -7,7 +7,7 @@
 namespace algos {
 
 using AlgorithmTypes =
-        std::tuple<Depminer, DFD, FastFDs, FDep, FdMine, Pyro, Tane, PFDTane, FUN, hyfd::HyFD, Aid,
+        std::tuple<Depminer, DFD, FastFDs, FDep, FdMine, Pyro, Tane, PFDTane, FUN, hyfd::HyFD, Aid, EulerFD,
                    Apriori, metric::MetricVerifier, DataStats, fd_verifier::FDVerifier, HyUCC,
                    PyroUCC, cfd::FDFirstAlgorithm, ACAlgorithm, UCCVerifier, Faida, Spider, Mind,
                    Fastod, GfdValidation, EGfdValidation, NaiveGfdValidation, order::Order,
@@ -33,6 +33,7 @@ BETTER_ENUM(AlgorithmType, char,
     fun,
     hyfd,
     aidfd,
+    eulerfd,
 
 /* Association rules mining algorithms */
     apriori,
