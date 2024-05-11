@@ -58,6 +58,9 @@ ALGO_CORRECT_OPTIONS_INFO = [
     (desb.ucc.algorithms.HyUCC, [
         get_common_option_container({"threads": 15}),
     ]),
+    (desb.fd.algorithms.EulerFD, [
+        get_common_option_container({"max_lhs": 256, "custom_random": (False, 47)}),
+    ]),
     (desb.fd_verification.algorithms.FDVerifier, [
         get_common_option_container(
             {"lhs_indices": [1, 2, 3], "rhs_indices": [1, 2, 3]}
