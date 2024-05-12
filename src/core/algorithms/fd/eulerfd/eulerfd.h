@@ -11,9 +11,9 @@
 #include <boost/unordered_set.hpp>
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
 
-#include "config/tabular_data/input_table_type.h"
 #include "config/tabular_data/input_table/option.h"
 #include "custom_random/type.h"
+#include "config/equal_nulls/option.h"
 #include "custom_random/option.h"
 #include "util/custom_random.h"
 
@@ -43,6 +43,8 @@ class EulerFD : public FDAlgorithm {
     config::InputTable input_table_;
     std::unique_ptr<RelationalSchema> schema_ {};
     std::vector<std::vector<size_t>> tuples_;
+
+    config::EqNullsType is_null_equal_null_ {};
 
     // thresholds to checking criterion of euler fd cycles
     constexpr static double pos_cover_growth_treshold_ = 0.01;

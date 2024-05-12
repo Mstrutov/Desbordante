@@ -13,8 +13,10 @@ EulerFD::EulerFD() :
     last_pcover_ratios_.fill(1);
     RegisterOption(config::CustomRandomFlagOpt(&custom_random_opt_));
 
+    // set configuration options
     RegisterOption(config::kTableOpt(&input_table_));
-    MakeOptionsAvailable({config::kTableOpt.GetName()});
+    RegisterOption(config::kEqualNullsOpt(&is_null_equal_null_));
+    MakeOptionsAvailable({config::kTableOpt.GetName(), config::kEqualNullsOpt.GetName()});
 
     max_lhs_ = std::numeric_limits<unsigned int>::max();
 }

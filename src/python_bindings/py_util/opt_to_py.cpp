@@ -13,6 +13,7 @@
 #include "config/indices/type.h"
 #include "config/max_lhs/type.h"
 #include "config/thread_number/type.h"
+#include "config/custom_random/type.h"
 
 namespace {
 namespace py = pybind11;
@@ -34,6 +35,7 @@ std::unordered_map<std::type_index, ConvFunction> const kConverters{
         normal_conv_pair<unsigned int>,
         normal_conv_pair<bool>,
         normal_conv_pair<config::ThreadNumType>,
+        normal_conv_pair<config::CustomRandomFlagType>,
         normal_conv_pair<config::MaxLhsType>,
         normal_conv_pair<config::ErrorType>,
         normal_conv_pair<config::IndicesType>,
