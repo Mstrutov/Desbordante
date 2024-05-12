@@ -4,10 +4,10 @@ namespace algos {
 
 void Cluster::ShuffleData(RandomStrategy rand) {
     if (cluster_data_.size() == 0) {
-      return;
+        return;
     }
     for (size_t i = cluster_data_.size() - 1; i > 0; i--) {
-      std::swap(cluster_data_[i], cluster_data_[rand() % (i + 1)]);
+        std::swap(cluster_data_[i], cluster_data_[rand() % (i + 1)]);
     }
 }
 

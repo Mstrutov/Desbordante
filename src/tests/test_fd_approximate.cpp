@@ -80,12 +80,12 @@ TYPED_TEST_P(ApproximateFDTest, WorksOnWideDataset) {
 
 TYPED_TEST_P(ApproximateFDTest, LightDatasetsConsistentHash) {
     TestFixture::PerformConsistentHashTestOn(
-            ApproximateDatasets<typename TestFixture::AlgorithmType>::light_datasets_);
+            ApproximateDatasets<typename TestFixture::AlgorithmType>::kLightDatasets);
 }
 
 TYPED_TEST_P(ApproximateFDTest, HeavyDatasetsConsistentHash) {
     TestFixture::PerformConsistentHashTestOn(
-            ApproximateDatasets<typename TestFixture::AlgorithmType>::heavy_datasets_);
+            ApproximateDatasets<typename TestFixture::AlgorithmType>::kHeavyDatasets);
 }
 
 TYPED_TEST_P(ApproximateFDTest, ConsistentRepeatedExecution) {

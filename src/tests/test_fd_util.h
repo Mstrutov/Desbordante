@@ -125,14 +125,14 @@ public:
 // testing data
 template <typename Alg>
 struct ApproximateDatasets {
-    inline static std::vector<CSVConfigHash> const light_datasets_;
-    inline static std::vector<CSVConfigHash> const heavy_datasets_;
+    inline static std::vector<CSVConfigHash> const kLightDatasets;
+    inline static std::vector<CSVConfigHash> const kHeavyDatasets;
 };
 
 // specialization fd for EulerFD
 template <>
 struct ApproximateDatasets<algos::EulerFD> {
-    inline static std::vector<CSVConfigHash> const light_datasets_ = {{
+    inline static std::vector<CSVConfigHash> const kLightDatasets = {{
             {tests::kCIPublicHighway10k, 33398},
             {tests::kNeighbors10k, 43368},
             {tests::kWdcAstronomical, 2902},  // answer is 9 / 15
@@ -143,13 +143,13 @@ struct ApproximateDatasets<algos::EulerFD> {
             {tests::kWdcKepler, 17294},  // empty answer, 0 clusters after stripping
     }};
 
-    inline static std::vector<CSVConfigHash> const heavy_datasets_ = {
-            {{tests::kAdult, 23075},
-             {tests::kCIPublicHighway, 13035},
-             {tests::kEpicMeds, 26201},  // answer is 15 / 16
-             {tests::kEpicVitals, 2083},
-             {tests::kIowa1kk, 57837},  // answer is 2531 / 1584 (average 2k, it is bad seed :(
-             {tests::kLegacyPayors, 43612},
+    inline static std::vector<CSVConfigHash> const kHeavyDatasets = {{
+            {tests::kAdult, 23075},
+            {tests::kCIPublicHighway, 13035},
+            {tests::kEpicMeds, 26201},  // answer is 15 / 16
+            {tests::kEpicVitals, 2083},
+            {tests::kIowa1kk, 57837},  // answer is 2531 / 1584 (average 2k, it is bad seed :(
+            {tests::kLegacyPayors, 43612},
     }};
 };
 
