@@ -36,6 +36,6 @@ public:
     size_t GetEffectiveSize() const;
     size_t GetLastQueueSize() const;
     double MaxEffectInLastQueue() const;
-    void clear();
+    void Clear();
 };
 }  // namespace algos

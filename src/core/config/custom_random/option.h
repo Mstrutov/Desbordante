@@ -4,5 +4,5 @@
 #include "config/custom_random/type.h"
 
 namespace config {
-extern CommonOption<CustomRandomFlagType> const CustomRandomFlagOpt;
+extern CommonOption<CustomRandomFlagType> const kCustomRandomFlagOpt;
 }  // namespace config

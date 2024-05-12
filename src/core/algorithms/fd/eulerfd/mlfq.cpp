@@ -71,7 +71,7 @@ double MLFQ::MaxEffectInLastQueue() const {
     return last_queue_.top().cluster->GetAverage();
 }
 
-void MLFQ::clear() {
+void MLFQ::Clear() {
     last_queue_ = {};
     for (auto &q : queues_) {
         q.first = {};

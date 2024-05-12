@@ -2,10 +2,10 @@
 
 namespace algos {
 
-EulerFD::EulerFD() : FDAlgorithm({kDefaultPhaseName}), mlfq_(queues_number_) {
+EulerFD::EulerFD() : FDAlgorithm({kDefaultPhaseName}), mlfq_(kQueuesNumber) {
     last_ncover_ratios_.fill(1);
     last_pcover_ratios_.fill(1);
-    RegisterOption(config::CustomRandomFlagOpt(&custom_random_opt_));
+    RegisterOption(config::kCustomRandomFlagOpt(&custom_random_opt_));
 
     // set configuration options
     RegisterOption(config::kTableOpt(&input_table_));
@@ -16,7 +16,7 @@ EulerFD::EulerFD() : FDAlgorithm({kDefaultPhaseName}), mlfq_(queues_number_) {
 }
 
 void EulerFD::MakeExecuteOptsAvailable() {
-    MakeOptionsAvailable({config::CustomRandomFlagOpt.GetName()});
+    MakeOptionsAvailable({config::kCustomRandomFlagOpt.GetName()});
 }
 
 void EulerFD::LoadDataInternal() {
@@ -64,8 +64,8 @@ void EulerFD::ResetStateFd() {
     constant_columns_.clear();
     is_first_sample_ = true;
 
-    mlfq_.clear();
-    effective_treshold_ = initial_effective_treshold_;
+    mlfq_.Clear();
+    effective_treshold_ = kInitialEffectiveTreshold;
 
     invalids_.clear();
     new_invalids_.clear();
@@ -224,14 +224,14 @@ void EulerFD::Sampling() {
 
 bool EulerFD::IsNCoverGrowthSmall() const {
     double sum = std::accumulate(last_ncover_ratios_.begin(), last_ncover_ratios_.end(), 0.0);
-    double grow_rate = sum / window_;
-    return grow_rate < neg_cover_growth_treshold_;
+    double grow_rate = sum / kWindow;
+    return grow_rate < kNegCoverGrowthTreshold;
 }
 
 bool EulerFD::IsPCoverGrowthSmall() const {
     double sum = std::accumulate(last_pcover_ratios_.begin(), last_pcover_ratios_.end(), 0.0);
-    double grow_rate = sum / window_;
-    return grow_rate < pos_cover_growth_treshold_;
+    double grow_rate = sum / kWindow;
+    return grow_rate < kPosCoverGrowthTreshold;
 }
 
 std::vector<size_t> EulerFD::GetAttributesSortedByFrequency(
@@ -378,7 +378,7 @@ unsigned long long EulerFD::ExecuteInternal() {
     // choose random strategy (it is neccesary for stable unit tests)
     if (custom_random_opt_.first) {
         random_ = std::make_unique<CustomRandom>(custom_random_opt_.second);
-        rand_function_ = [&]() { return random_->NextInt(random_upper_bound_); };
+        rand_function_ = [&]() { return random_->NextInt(kRandomUpperBound); };
     } else {
         srand(time(NULL));
         rand_function_ = std::rand;
@@ -399,7 +399,7 @@ unsigned long long EulerFD::ExecuteInternal() {
         size_t ncover_size = invalids_.size();
         Sampling();
 
-        last_ncover_ratios_[iteration_number % window_] =
+        last_ncover_ratios_[iteration_number % kWindow] =
                 invalids_.size() == 0 ? 0
                                       : (double)(invalids_.size() - ncover_size) / invalids_.size();
 
@@ -407,7 +407,7 @@ unsigned long long EulerFD::ExecuteInternal() {
         if (IsNCoverGrowthSmall()) {
             size_t pcover_size = fd_num_;
             fd_num_ = GenerateResults();
-            last_pcover_ratios_[iteration_number % window_] =
+            last_pcover_ratios_[iteration_number % kWindow] =
                     fd_num_ == 0 ? 0 : (double)(fd_num_ - pcover_size) / fd_num_;
             if (IsPCoverGrowthSmall()) {
                 break;

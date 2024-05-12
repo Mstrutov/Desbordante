@@ -14,15 +14,15 @@ public:
 private:
     std::vector<size_t> cluster_data_;
 
-    constexpr static size_t initial_window_ = 3;
-    std::array<double, initial_window_> hist_effects_;
+    constexpr static size_t kInitialWindow = 3;
+    std::array<double, kInitialWindow> hist_effects_;
     size_t window_ = 0;
 
     size_t sample_number_ = 0;
     size_t new_tuples_pairs_ = 0;
     size_t new_non_fds_ = 0;
 
-    void shuffle_data(RandomStrategy rand);
+    void ShuffleData(RandomStrategy rand);
 
 public:
     Cluster(std::vector<size_t> &&cluster_data, RandomStrategy rand);

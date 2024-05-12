@@ -36,7 +36,7 @@ class EulerFD : public FDAlgorithm {
     config::CustomRandomFlagType custom_random_opt_;
     RandomStrategy rand_function_;
     std::unique_ptr<CustomRandom> random_{};
-    constexpr static std::size_t random_upper_bound_ = 3047102;
+    constexpr static std::size_t kRandomUpperBound = 3047102;
 
     // data from load data
     size_t number_of_attributes_{};
@@ -48,11 +48,11 @@ class EulerFD : public FDAlgorithm {
     config::EqNullsType is_null_equal_null_{};
 
     // thresholds to checking criterion of euler fd cycles
-    constexpr static double pos_cover_growth_treshold_ = 0.01;
-    constexpr static double neg_cover_growth_treshold_ = 0.01;
-    constexpr static size_t window_ = 3;
-    std::array<double, window_> last_ncover_ratios_;
-    std::array<double, window_> last_pcover_ratios_;
+    constexpr static double kPosCoverGrowthTreshold = 0.01;
+    constexpr static double kNegCoverGrowthTreshold = 0.01;
+    constexpr static size_t kWindow = 3;
+    std::array<double, kWindow> last_ncover_ratios_;
+    std::array<double, kWindow> last_pcover_ratios_;
 
     // clusters from partition
     std::vector<Cluster> clusters_;
@@ -60,10 +60,10 @@ class EulerFD : public FDAlgorithm {
 
     // mlfq sampling data
     bool is_first_sample_ = true;
-    constexpr static size_t const queues_number_ = 5;
+    constexpr static size_t const kQueuesNumber = 5;
     MLFQ mlfq_;
-    constexpr static double initial_effective_treshold_ = 0.01;
-    double effective_treshold_ = initial_effective_treshold_;
+    constexpr static double kInitialEffectiveTreshold = 0.01;
+    double effective_treshold_ = kInitialEffectiveTreshold;
 
     // invalid fds storages
     std::unordered_set<Bitset> invalids_;

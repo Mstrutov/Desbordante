@@ -149,7 +149,8 @@ struct ApproximateDatasets<algos::EulerFD> {
              {tests::kEpicMeds, 26201},  // answer is 15 / 16
              {tests::kEpicVitals, 2083},
              {tests::kIowa1kk, 57837},  // answer is 2531 / 1584 (average 2k, it is bad seed :(
-             {tests::kLegacyPayors, 43612}}};
+             {tests::kLegacyPayors, 43612},
+    }};
 };
 
 }  // namespace tests
