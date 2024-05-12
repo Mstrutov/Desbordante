@@ -7,10 +7,10 @@
 namespace algos {
 
 using AlgorithmTypes =
-        std::tuple<Depminer, DFD, FastFDs, FDep, FdMine, Pyro, Tane, PFDTane, FUN, hyfd::HyFD, Aid, EulerFD,
-                   Apriori, metric::MetricVerifier, DataStats, fd_verifier::FDVerifier, HyUCC,
-                   PyroUCC, cfd::FDFirstAlgorithm, ACAlgorithm, UCCVerifier, Faida, Spider, Mind,
-                   Fastod, GfdValidation, EGfdValidation, NaiveGfdValidation, order::Order,
+        std::tuple<Depminer, DFD, FastFDs, FDep, FdMine, Pyro, Tane, PFDTane, FUN, hyfd::HyFD, Aid,
+                   EulerFD, Apriori, metric::MetricVerifier, DataStats, fd_verifier::FDVerifier,
+                   HyUCC, PyroUCC, cfd::FDFirstAlgorithm, ACAlgorithm, UCCVerifier, Faida, Spider,
+                   Mind, Fastod, GfdValidation, EGfdValidation, NaiveGfdValidation, order::Order,
                    dd::Split>;
 
 // clang-format off

@@ -8,12 +8,12 @@
 
 #include "algorithms/metric/enums.h"
 #include "association_rules/ar_algorithm_enums.h"
+#include "config/custom_random/type.h"
 #include "config/equal_nulls/type.h"
 #include "config/error/type.h"
 #include "config/indices/type.h"
 #include "config/max_lhs/type.h"
 #include "config/thread_number/type.h"
-#include "config/custom_random/type.h"
 
 namespace {
 namespace py = pybind11;

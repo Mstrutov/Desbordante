@@ -2,9 +2,11 @@
 
 namespace algos {
 
-SearchTreeEulerFD::Node::Node(size_t bit, SearchTreeEulerFD::Bitset set, SearchTreeEulerFD::Bitset sets_union,
-                       SearchTreeEulerFD::Bitset sets_inter, std::shared_ptr<Node> const& parent,
-                       std::shared_ptr<Node> left, std::shared_ptr<Node> right)
+SearchTreeEulerFD::Node::Node(size_t bit, SearchTreeEulerFD::Bitset set,
+                              SearchTreeEulerFD::Bitset sets_union,
+                              SearchTreeEulerFD::Bitset sets_inter,
+                              std::shared_ptr<Node> const& parent, std::shared_ptr<Node> left,
+                              std::shared_ptr<Node> right)
     : bit_(bit),
       set_(std::move(set)),
       union_(std::move(sets_union)),
@@ -13,9 +15,10 @@ SearchTreeEulerFD::Node::Node(size_t bit, SearchTreeEulerFD::Bitset set, SearchT
       right_(std::move(right)),
       parent_(parent) {}
 
-SearchTreeEulerFD::Node::Node(size_t bit, SearchTreeEulerFD::Bitset sets_union, SearchTreeEulerFD::Bitset sets_inter,
-                       std::shared_ptr<Node> const& parent, std::shared_ptr<Node> left,
-                       std::shared_ptr<Node> right)
+SearchTreeEulerFD::Node::Node(size_t bit, SearchTreeEulerFD::Bitset sets_union,
+                              SearchTreeEulerFD::Bitset sets_inter,
+                              std::shared_ptr<Node> const& parent, std::shared_ptr<Node> left,
+                              std::shared_ptr<Node> right)
     : bit_(bit),
       union_(std::move(sets_union)),
       inter_(std::move(sets_inter)),
@@ -23,7 +26,8 @@ SearchTreeEulerFD::Node::Node(size_t bit, SearchTreeEulerFD::Bitset sets_union, 
       right_(std::move(right)),
       parent_(parent) {}
 
-SearchTreeEulerFD::Node::Node(size_t bit, SearchTreeEulerFD::Bitset set, std::shared_ptr<Node> const& parent)
+SearchTreeEulerFD::Node::Node(size_t bit, SearchTreeEulerFD::Bitset set,
+                              std::shared_ptr<Node> const& parent)
     : bit_(bit), set_(std::move(set)), parent_(parent) {}
 
 bool SearchTreeEulerFD::Node::IsLeaf() const {
@@ -39,7 +43,8 @@ SearchTreeEulerFD::Bitset const& SearchTreeEulerFD::Node::GetInter() const {
     return IsLeaf() ? set_ : inter_;
 }
 
-SearchTreeEulerFD::SearchTreeEulerFD(size_t number_of_attributes) : number_of_attributes_(number_of_attributes) {}
+SearchTreeEulerFD::SearchTreeEulerFD(size_t number_of_attributes)
+    : number_of_attributes_(number_of_attributes) {}
 
 SearchTreeEulerFD::SearchTreeEulerFD(Bitset const& set) : number_of_attributes_(set.size()) {
     CreateSingleElementSets(set);
@@ -107,7 +112,7 @@ bool SearchTreeEulerFD::Remove(Bitset const& set) {
 }
 
 void SearchTreeEulerFD::CollectSubsets(Bitset const& set, std::shared_ptr<Node> const& current_node,
-                                BitsetConsumer const& collect, bool& go_further) const {
+                                       BitsetConsumer const& collect, bool& go_further) const {
     if (current_node->IsLeaf()) {
         auto node_set = current_node->set_;
         if (node_set.is_subset_of(set)) {
@@ -136,7 +141,7 @@ bool SearchTreeEulerFD::ContainsAnySubsetOf(Bitset const& set) const {
 }
 
 void SearchTreeEulerFD::ForEach(std::shared_ptr<Node> const& current_node,
-                         BitsetConsumer const& collect) const {
+                                BitsetConsumer const& collect) const {
     if (current_node->IsLeaf()) {
         collect(current_node->set_);
         return;
@@ -152,7 +157,8 @@ void SearchTreeEulerFD::ForEach(BitsetConsumer const& collect) const {
     }
 }
 
-void SearchTreeEulerFD::ForEachSubset(SearchTreeEulerFD::Bitset const& set, BitsetConsumer const& collect) const {
+void SearchTreeEulerFD::ForEachSubset(SearchTreeEulerFD::Bitset const& set,
+                                      BitsetConsumer const& collect) const {
     if (root_) {
         bool go_further = true;
         CollectSubsets(set, root_, collect, go_further);
@@ -218,7 +224,7 @@ void SearchTreeEulerFD::CutLeaf(std::shared_ptr<Node> const& node_to_remove) {
 }
 
 std::pair<size_t, size_t> SearchTreeEulerFD::FindNodeAndSetBits(Bitset const& node_set,
-                                                         Bitset const& set) {
+                                                                Bitset const& set) {
     size_t node_bit = node_set.find_first();
     size_t set_bit = set.find_first();
     for (; node_bit == set_bit;
@@ -231,8 +237,8 @@ std::pair<size_t, size_t> SearchTreeEulerFD::FindNodeAndSetBits(Bitset const& no
     return std::make_pair(node_bit, set_bit);
 }
 
-void SearchTreeEulerFD::InsertLeafIntoEnd(std::shared_ptr<Node> const& current_node, Bitset const& set,
-                                   size_t node_bit, size_t set_bit) {
+void SearchTreeEulerFD::InsertLeafIntoEnd(std::shared_ptr<Node> const& current_node,
+                                          Bitset const& set, size_t node_bit, size_t set_bit) {
     Bitset const& node_set = current_node->set_;
     auto new_left = std::make_shared<Node>(node_bit, node_set, current_node);
     auto new_right = std::make_shared<Node>(set_bit, set, current_node);
@@ -253,7 +259,7 @@ void SearchTreeEulerFD::InsertLeafIntoEnd(std::shared_ptr<Node> const& current_n
 }
 
 void SearchTreeEulerFD::InsertLeafIntoMiddle(std::shared_ptr<Node> const& current_node,
-                                      SearchTreeEulerFD::Bitset const& set, size_t set_bit) {
+                                             SearchTreeEulerFD::Bitset const& set, size_t set_bit) {
     auto new_left = std::make_shared<Node>(current_node->bit_, current_node->set_,
                                            current_node->union_, current_node->inter_, current_node,
                                            current_node->left_, current_node->right_);
@@ -274,8 +280,8 @@ void SearchTreeEulerFD::InsertLeafIntoMiddle(std::shared_ptr<Node> const& curren
     UpdateInterAndUnion(current_node);
 }
 
-bool SearchTreeEulerFD::SupersetsTraverse(
-  Bitset const& set, std::shared_ptr<Node> const& current_node) const {
+bool SearchTreeEulerFD::SupersetsTraverse(Bitset const& set,
+                                          std::shared_ptr<Node> const& current_node) const {
     if (current_node->IsLeaf()) {
         return set.is_subset_of(current_node->set_);
     }
@@ -290,4 +296,4 @@ bool SearchTreeEulerFD::ContainsAnySupersetOf(Bitset const& set) const {
     return root_ ? SupersetsTraverse(set, root_) : false;
 }
 
-} // namespace algos
+}  // namespace algos

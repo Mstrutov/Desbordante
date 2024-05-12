@@ -1,15 +1,16 @@
 #include "mlfq.h"
+
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <iostream>
 #include <iterator>
 #include <queue>
 #include <unistd.h>
-#include <algorithm>
-#include <iostream>
 
 namespace algos {
 
-bool MLFQ::LastQueueElement::operator<(const LastQueueElement &other) const {
+bool MLFQ::LastQueueElement::operator<(LastQueueElement const &other) const {
     return cluster->GetAverage() < other.cluster->GetAverage();
 }
 
@@ -37,15 +38,15 @@ void MLFQ::Add(Cluster *cluster, double prioritet, bool add_if_zero) {
     }
 }
 
-void MLFQ::AddAtLast(Cluster * cluster) {
+void MLFQ::AddAtLast(Cluster *cluster) {
     if (cluster->GetAverage() > 0) {
         last_queue_.push({cluster});
     }
 }
 
-Cluster * MLFQ::Get() {
+Cluster *MLFQ::Get() {
     if (actual_queue_ >= 0) {
-        Cluster * save = queues_[actual_queue_].first.front();
+        Cluster *save = queues_[actual_queue_].first.front();
         queues_[actual_queue_].first.pop();
         effective_size_--;
         while (actual_queue_ >= 0 && queues_[actual_queue_].first.size() == 0) {
@@ -76,4 +77,4 @@ void MLFQ::clear() {
         q.first = {};
     }
 }
-}
+}  // namespace algos

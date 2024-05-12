@@ -39,7 +39,8 @@ static testing::AssertionResult CheckFdListEquality(
                           : testing::AssertionFailure() << "some FDs remain undiscovered";
 }
 
-static std::set<std::pair<std::vector<unsigned int>, unsigned int>> FDsToSet(std::list<FD> const& fds) {
+static std::set<std::pair<std::vector<unsigned int>, unsigned int>> FDsToSet(
+        std::list<FD> const& fds) {
     std::set<std::pair<std::vector<unsigned int>, unsigned int>> set;
     for (auto const& fd : fds) {
         auto const& raw_fd = fd.ToRawFD();
@@ -79,12 +80,12 @@ TYPED_TEST_P(ApproximateFDTest, WorksOnWideDataset) {
 
 TYPED_TEST_P(ApproximateFDTest, LightDatasetsConsistentHash) {
     TestFixture::PerformConsistentHashTestOn(
-        ApproximateDatasets<typename TestFixture::AlgorithmType>::light_datasets_);
+            ApproximateDatasets<typename TestFixture::AlgorithmType>::light_datasets_);
 }
 
 TYPED_TEST_P(ApproximateFDTest, HeavyDatasetsConsistentHash) {
     TestFixture::PerformConsistentHashTestOn(
-        ApproximateDatasets<typename TestFixture::AlgorithmType>::heavy_datasets_);
+            ApproximateDatasets<typename TestFixture::AlgorithmType>::heavy_datasets_);
 }
 
 TYPED_TEST_P(ApproximateFDTest, ConsistentRepeatedExecution) {
@@ -104,4 +105,4 @@ REGISTER_TYPED_TEST_SUITE_P(ApproximateFDTest, ThrowsOnEmpty, ReturnsEmptyOnSing
 
 using Algorithms = ::testing::Types<algos::EulerFD>;
 INSTANTIATE_TYPED_TEST_SUITE_P(ApproximateFDTest, ApproximateFDTest, Algorithms);
-} // namespace tests
+}  // namespace tests

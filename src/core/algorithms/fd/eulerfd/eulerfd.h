@@ -1,6 +1,9 @@
 #pragma once
 
 #include <array>
+#include <cstdlib>
+#include <iostream>
+#include <limits>
 #include <memory>
 #include <numeric>
 #include <unordered_map>
@@ -8,22 +11,20 @@
 #include <vector>
 
 #include <boost/dynamic_bitset.hpp>
-#include <boost/unordered_set.hpp>
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
+#include <boost/unordered_set.hpp>
 
-#include "config/tabular_data/input_table/option.h"
-#include "custom_random/type.h"
 #include "config/equal_nulls/option.h"
+#include "config/tabular_data/input_table/option.h"
 #include "custom_random/option.h"
-#include "util/custom_random.h"
-
+#include "custom_random/type.h"
 #include "fd/fd_algorithm.h"
+#include "mlfq.h"
 #include "model/table/column.h"
 #include "model/table/relational_schema.h"
 #include "model/table/vertical.h"
-
 #include "search_tree.h"
-#include "mlfq.h"
+#include "util/custom_random.h"
 
 namespace algos {
 
@@ -34,17 +35,17 @@ class EulerFD : public FDAlgorithm {
     // random strategy for unit tests
     config::CustomRandomFlagType custom_random_opt_;
     RandomStrategy rand_function_;
-    std::unique_ptr<CustomRandom> random_ {};
+    std::unique_ptr<CustomRandom> random_{};
     constexpr static std::size_t random_upper_bound_ = 3047102;
 
     // data from load data
-    size_t number_of_attributes_ {};
-    size_t number_of_tuples_ {};
+    size_t number_of_attributes_{};
+    size_t number_of_tuples_{};
     config::InputTable input_table_;
-    std::unique_ptr<RelationalSchema> schema_ {};
+    std::unique_ptr<RelationalSchema> schema_{};
     std::vector<std::vector<size_t>> tuples_;
 
-    config::EqNullsType is_null_equal_null_ {};
+    config::EqNullsType is_null_equal_null_{};
 
     // thresholds to checking criterion of euler fd cycles
     constexpr static double pos_cover_growth_treshold_ = 0.01;
@@ -59,7 +60,7 @@ class EulerFD : public FDAlgorithm {
 
     // mlfq sampling data
     bool is_first_sample_ = true;
-    constexpr static const size_t queues_number_ = 5;
+    constexpr static size_t const queues_number_ = 5;
     MLFQ mlfq_;
     constexpr static double initial_effective_treshold_ = 0.01;
     double effective_treshold_ = initial_effective_treshold_;
@@ -93,17 +94,17 @@ class EulerFD : public FDAlgorithm {
     size_t GenerateResults();
 
     [[nodiscard]] std::vector<size_t> GetAttributesSortedByFrequency(
-        const std::vector<Bitset> &neg_cover_vector);
-    [[nodiscard]] static Bitset ChangeAttributesOrder(
-         const Bitset &initial_bitset, const std::vector<size_t> &new_order);
+            std::vector<Bitset> const &neg_cover_vector);
+    [[nodiscard]] static Bitset ChangeAttributesOrder(Bitset const &initial_bitset,
+                                                      std::vector<size_t> const &new_order);
 
-    [[nodiscard]] std::vector<Bitset> CreateNegativeCover(size_t rhs,
-      const std::vector<Bitset> &neg_cover_vector);
-    size_t Invert(size_t rhs, const std::vector<Bitset> &neg);
+    [[nodiscard]] std::vector<Bitset> CreateNegativeCover(
+            size_t rhs, std::vector<Bitset> const &neg_cover_vector);
+    size_t Invert(size_t rhs, std::vector<Bitset> const &neg);
 
-    static void AddInvalidAtTree(SearchTreeEulerFD &tree, const Bitset &invalid);
-    static std::unordered_set<Bitset> RemoveGeneralizations(
-        SearchTreeEulerFD &tree, const Bitset &invalid);
+    static void AddInvalidAtTree(SearchTreeEulerFD &tree, Bitset const &invalid);
+    static std::unordered_set<Bitset> RemoveGeneralizations(SearchTreeEulerFD &tree,
+                                                            Bitset const &invalid);
 
     bool IsNCoverGrowthSmall() const;
     bool IsPCoverGrowthSmall() const;
@@ -115,4 +116,4 @@ class EulerFD : public FDAlgorithm {
 public:
     EulerFD();
 };
-}
+}  // namespace algos

@@ -50,8 +50,7 @@ private:
 
     void CollectSubsets(Bitset const& set, std::shared_ptr<Node> const& current_node,
                         BitsetConsumer const& collect, bool& go_further) const;
-    bool SupersetsTraverse(const Bitset &set,
-        const std::shared_ptr<Node> &current_node) const;
+    bool SupersetsTraverse(Bitset const& set, std::shared_ptr<Node> const& current_node) const;
 
     void ForEach(std::shared_ptr<Node> const& current_node, BitsetConsumer const& collect) const;
 
@@ -83,4 +82,4 @@ public:
     [[nodiscard]] bool ContainsAnySupersetOf(Bitset const& set) const;
 };
 
-} // namespace algos
+}  // namespace algos
