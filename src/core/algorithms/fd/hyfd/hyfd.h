@@ -8,8 +8,8 @@
 #include "algorithms/fd/hycommon/types.h"
 #include "algorithms/fd/pli_based_fd_algorithm.h"
 #include "algorithms/fd/raw_fd.h"
-#include "model/table/position_list_index.h"
 #include "config/thread_number/type.h"
+#include "model/table/position_list_index.h"
 
 namespace algos::hyfd {
 

@@ -12,10 +12,10 @@
 
 #include "algorithms/fd/hycommon/preprocessor.h"
 #include "algorithms/fd/hycommon/util/pli_util.h"
+#include "config/names.h"
+#include "config/thread_number/option.h"
 #include "inductor.h"
 #include "sampler.h"
-#include "config/thread_number/option.h"
-#include "config/names.h"
 #include "validator.h"
 
 namespace algos::hyfd {
