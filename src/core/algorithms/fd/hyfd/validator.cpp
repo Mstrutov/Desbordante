@@ -264,7 +264,6 @@ Validator::FDValidations Validator::ValidateAndExtendPar(std::vector<LhsPair> co
     }
 
     pool.join();
-    pool.wait();
 
     for (auto&& future : validation_futures) {
         assert(future.valid());
