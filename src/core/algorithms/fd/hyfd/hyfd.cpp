@@ -14,7 +14,8 @@
 #include "algorithms/fd/hycommon/util/pli_util.h"
 #include "inductor.h"
 #include "sampler.h"
-#include "thread_number/option.h"
+#include "config/thread_number/option.h"
+#include "config/names.h"
 #include "validator.h"
 
 namespace algos::hyfd {
@@ -22,7 +23,10 @@ namespace algos::hyfd {
 HyFD::HyFD(std::optional<ColumnLayoutRelationDataManager> relation_manager)
     : PliBasedFDAlgorithm({}, relation_manager) {
     RegisterOption(config::kThreadNumberOpt(&threads_num_));
-    MakeOptionsAvailable({config::kThreadNumberOpt.GetName()});
+}
+
+void HyFD::MakeExecuteOptsAvailable() {
+    MakeOptionsAvailable({config::names::kThreads});
 }
 
 unsigned long long HyFD::ExecuteInternal() {
