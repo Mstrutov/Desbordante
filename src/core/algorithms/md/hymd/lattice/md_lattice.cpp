@@ -227,21 +227,27 @@ void MdLattice::AddNewMinimal(MdNode& cur_node, MdSpecialization const& md, Inde
 
 void MdLattice::UpdateMaxLevel(LhsSpecialization const& lhs) {
     std::size_t level = 0;
-    auto const& [spec_child_index, spec_bound] = lhs.specialization_data.new_child;
+    auto const& [spec_child_array_index, spec_bound] = lhs.specialization_data.new_child;
     MdLhs const& old_lhs = lhs.old_lhs;
-    Index spec_index =
-            old_lhs.GetColumnMatchIndex(lhs.specialization_data.spec_before, spec_child_index);
-    for (Index i = 0; i != spec_index; ++i) {
-        DecisionBoundary const cur_bound = old_lhs[i];
-        if (cur_bound == kLowestBound) continue;
-        level += get_single_level_(cur_bound, i);
+    MdLhs::iterator hint_iter = lhs.specialization_data.spec_before;
+    Index cur_col_match_index = 0;
+    MdLhs::iterator lhs_iter = old_lhs.begin();
+    auto add_level = [&]() {
+        auto const& [index_delta, bound] = *lhs_iter;
+        cur_col_match_index += index_delta;
+        level += get_single_level_(bound, cur_col_match_index);
+        ++cur_col_match_index;
+    };
+    for (; lhs_iter != hint_iter; ++lhs_iter) {
+        add_level();
     }
-    assert(spec_bound != kLowestBound);
-    level += get_single_level_(spec_bound, spec_index);
-    for (Index i = spec_index + 1; i != column_matches_size_; ++i) {
-        DecisionBoundary const cur_bound = old_lhs[i];
-        if (cur_bound == kLowestBound) continue;
-        level += get_single_level_(cur_bound, i);
+    level += get_single_level_(spec_bound, cur_col_match_index + spec_child_array_index);
+    MdLhs::iterator lhs_end = old_lhs.end();
+    if (lhs_iter != lhs_end) {
+        if (spec_child_array_index != lhs_iter->child_array_index) add_level();
+        for (++lhs_iter; lhs_iter != lhs_end; ++lhs_iter) {
+            add_level();
+        }
     }
     if (level > max_level_) max_level_ = level;
 }
