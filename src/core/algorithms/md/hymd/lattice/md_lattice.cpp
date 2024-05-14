@@ -462,7 +462,7 @@ void MdLattice::MarkNewLhs(SupportNode& cur_node, MdLhs const& lhs, Index cur_no
 
 void MdLattice::MarkUnsupported(MdLhs const& lhs) {
     auto mark_new = [this](auto&&... args) { MarkNewLhs(std::forward<decltype(args)>(args)...); };
-    CheckedAdd(&support_root_, lhs, lhs, mark_new, SetUnsupAction());
+    CheckedAddOld(&support_root_, lhs, lhs, mark_new, SetUnsupAction());
 }
 
 }  // namespace algos::hymd::lattice

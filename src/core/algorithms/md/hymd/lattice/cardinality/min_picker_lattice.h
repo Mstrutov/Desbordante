@@ -34,16 +34,15 @@ private:
     static auto SetInfoAction(ValidationInfo* info) {
         return [info](Node* node) { node->task_info = info; };
     }
-    void AddNewLhs(Node& cur_node, ValidationInfo* validation_info, model::Index cur_node_index);
+    void AddNewLhs(Node& cur_node, ValidationInfo* validation_info, MdLhs::iterator cur_lhs_iter);
     void ExcludeGeneralizationRhs(Node const& cur_node,
                                   MdLattice::MdVerificationMessenger const& messenger,
-                                  model::Index cur_node_index,
+                                  MdLhs::iterator cur_lhs_iter,
                                   boost::dynamic_bitset<>& considered_indices);
     void RemoveSpecializations(Node& cur_node, MdLattice::MdVerificationMessenger const& messenger,
-                               model::Index cur_node_index,
+                               MdLhs::iterator cur_lhs_iter,
                                boost::dynamic_bitset<> const& picked_indices);
-    void GetAll(Node& cur_node, std::vector<ValidationInfo>& collected,
-                model::Index cur_node_index);
+    void GetAll(Node& cur_node, std::vector<ValidationInfo>& collected);
     void Add(ValidationInfo* validation_info);
 
 public:
