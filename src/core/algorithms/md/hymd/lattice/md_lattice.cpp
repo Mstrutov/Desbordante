@@ -107,7 +107,7 @@ void MdLattice::MdRefiner::Refine() {
         DecisionBoundary& md_rhs_bound_ref = (*node_info_.rhs_bounds)[rhs_index];
         md_rhs_bound_ref = kLowestBound;
         // trivial
-        if (new_bound == GetLhs()[rhs_index]) continue;
+        if (new_bound == kLowestBound) continue;
         // not minimal
         if (lattice_->HasGeneralization({GetLhs(), *upd_iter})) continue;
         md_rhs_bound_ref = new_bound;
@@ -119,21 +119,40 @@ void MdLattice::TryAddRefiner(std::vector<MdRefiner>& found, DecisionBoundaryVec
                               SimilarityVector const& similarity_vector,
                               MdLhs const& cur_node_lhs) {
     utility::InvalidatedRhss invalidated;
-    for (Index i = 0; i != column_matches_size_; ++i) {
-        DecisionBoundary sim_bound = similarity_vector[i];
-        DecisionBoundary rhs_bound = rhs[i];
-        if (sim_bound >= rhs_bound) continue;
-        invalidated.PushBack({i, rhs_bound}, sim_bound);
-        for (++i; i != column_matches_size_; ++i) {
-            DecisionBoundary sim_bound = similarity_vector[i];
-            DecisionBoundary rhs_bound = rhs[i];
-            if (sim_bound >= rhs_bound) continue;
-            invalidated.PushBack({i, rhs_bound}, sim_bound);
+    Index rhs_index = 0;
+    Index cur_lhs_index = 0;
+    auto try_push_no_match_classifier = [&]() {
+        DecisionBoundary sim_bound = similarity_vector[rhs_index];
+        DecisionBoundary rhs_bound = rhs[rhs_index];
+        if (sim_bound < rhs_bound) {
+            invalidated.PushBack({rhs_index, rhs_bound}, sim_bound);
         }
-        found.emplace_back(this, &similarity_vector, MdLatticeNodeInfo{cur_node_lhs, &rhs},
-                           std::move(invalidated));
-        break;
+    };
+    for (auto const& [child_index, lhs_bound] : cur_node_lhs) {
+        cur_lhs_index += child_index;
+        for (; rhs_index != cur_lhs_index; ++rhs_index) {
+            try_push_no_match_classifier();
+        }
+        assert(rhs_index < column_matches_size_);
+        DecisionBoundary const sim_bound = similarity_vector[rhs_index];
+        DecisionBoundary const rhs_bound = rhs[rhs_index];
+        if (sim_bound < rhs_bound) {
+            MdElement invalid{rhs_index, rhs_bound};
+            if (sim_bound == lhs_bound) {
+                invalidated.PushBack(invalid, kLowestBound);
+            } else {
+                assert(sim_bound > lhs_bound);
+                invalidated.PushBack(invalid, sim_bound);
+            }
+        }
+        ++cur_lhs_index;
     }
+    for (; rhs_index != column_matches_size_; ++rhs_index) {
+        try_push_no_match_classifier();
+    }
+    if (invalidated.IsEmpty()) return;
+    found.emplace_back(this, &similarity_vector, MdLatticeNodeInfo{cur_node_lhs, &rhs},
+                       std::move(invalidated));
 }
 
 void MdLattice::CollectRefinersForViolated(MdNode& cur_node, std::vector<MdRefiner>& found,

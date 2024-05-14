@@ -76,5 +76,9 @@ public:
     Rhss const& GetInvalidated() const {
         return invalidated_;
     }
+
+    bool IsEmpty() const noexcept {
+        return invalidated_.empty();
+    }
 };
 }  // namespace algos::hymd::utility
