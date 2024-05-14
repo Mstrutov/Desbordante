@@ -360,7 +360,7 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md) {
 
 void MdLattice::RaiseInterestingnessBounds(
         MdNode const& cur_node, MdLhs const& lhs,
-        std::vector<DecisionBoundary>& cur_interestingness_bounds, Index const cur_node_index,
+        std::vector<DecisionBoundary>& cur_interestingness_bounds, MdLhs::iterator cur_lhs_iter,
         std::vector<Index> const& indices) const {
     {
         std::size_t const indices_size = indices.size();
@@ -381,15 +381,16 @@ void MdLattice::RaiseInterestingnessBounds(
         }
     }
 
-    for (MdElement element = lhs.FindNextNonZero(cur_node_index); lhs.IsNotEnd(element);
-         element = lhs.FindNextNonZero(element.index + 1)) {
-        auto const& [next_node_index, generalization_bound_limit] = element;
-        Index const child_array_index = next_node_index - cur_node_index;
+    Index child_array_index = 0;
+    for (MdLhs::iterator end = lhs.end(); cur_lhs_iter != end;
+         ++cur_lhs_iter, ++child_array_index) {
+        auto const& [offset, generalization_bound_limit] = *cur_lhs_iter;
+        child_array_index += offset;
         MdOptionalChild const& optional_child = cur_node.children[child_array_index];
         if (!optional_child.has_value()) continue;
         for (auto const& [generalization_bound, node] : *optional_child) {
             if (generalization_bound > generalization_bound_limit) break;
-            RaiseInterestingnessBounds(node, lhs, cur_interestingness_bounds, next_node_index + 1,
+            RaiseInterestingnessBounds(node, lhs, cur_interestingness_bounds, cur_lhs_iter + 1,
                                        indices);
         }
     }
@@ -398,13 +399,35 @@ void MdLattice::RaiseInterestingnessBounds(
 std::vector<DecisionBoundary> MdLattice::GetRhsInterestingnessBounds(
         MdLhs const& lhs, std::vector<Index> const& indices) const {
     std::vector<DecisionBoundary> interestingness_bounds;
-    interestingness_bounds.reserve(indices.size());
-    for (Index index : indices) {
-        DecisionBoundary const lhs_bound = lhs[index];
-        assert(lhs_bound != 1.0);
-        interestingness_bounds.push_back(lhs_bound);
+    std::size_t indices_size = indices.size();
+    if (prune_nondisjoint_) {
+        interestingness_bounds.assign(indices_size, kLowestBound);
+    } else {
+        interestingness_bounds.reserve(indices_size);
+        assert(std::is_sorted(indices.begin(), indices.end()));
+        auto fill_bounds = [&]() {
+            auto index_it = indices.begin(), index_end = indices.end();
+            Index cur_index = 0;
+            assert(!indices.empty());
+            for (auto const& [child_index, bound] : lhs) {
+                cur_index += child_index;
+                Index index;
+                while ((index = *index_it) < cur_index) {
+                    interestingness_bounds.push_back(kLowestBound);
+                    if (++index_it == index_end) return;
+                }
+                if (cur_index == index) {
+                    interestingness_bounds.push_back(bound);
+                }
+                ++cur_index;
+            }
+            for (; index_it != index_end; ++index_it) {
+                interestingness_bounds.push_back(kLowestBound);
+            }
+        };
+        fill_bounds();
     }
-    RaiseInterestingnessBounds(md_root_, lhs, interestingness_bounds, 0, indices);
+    RaiseInterestingnessBounds(md_root_, lhs, interestingness_bounds, lhs.begin(), indices);
     return interestingness_bounds;
 }
 

@@ -105,7 +105,7 @@ private:
     void RaiseInterestingnessBounds(
             MdNode const& cur_node, MdLhs const& lhs,
             std::vector<model::md::DecisionBoundary>& cur_interestingness_bounds,
-            model::Index cur_node_index, std::vector<model::Index> const& indices) const;
+            MdLhs::iterator cur_lhs_iter, std::vector<model::Index> const& indices) const;
 
     void TryAddRefiner(std::vector<MdRefiner>& found, DecisionBoundaryVector& rhs,
                        SimilarityVector const& similarity_vector, MdLhs const& cur_node_lhs);
