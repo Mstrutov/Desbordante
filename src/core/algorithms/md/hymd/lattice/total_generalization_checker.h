@@ -7,7 +7,7 @@
 namespace algos::hymd::lattice {
 template <typename NodeType>
 class TotalGeneralizationChecker {
-    using Unspecialized = NodeType::Unspecialized;
+    using Unspecialized = NodeType::Specialization::Unspecialized;
     using OptionalChild = NodeType::OptionalChild;
     Unspecialized unspecialized_;
 

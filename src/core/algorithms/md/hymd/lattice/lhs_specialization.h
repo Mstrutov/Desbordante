@@ -5,10 +5,12 @@
 
 namespace algos::hymd::lattice {
 struct LhsSpecialization {
+    using Unspecialized = MdLhs const&;
+
     MdLhs const& old_lhs;
     MdElement specialized;
 
-    MdLhs const& ToUnspecialized() const {
+    Unspecialized ToUnspecialized() const {
         return old_lhs;
     }
 

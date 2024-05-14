@@ -9,15 +9,14 @@ namespace algos::hymd::lattice {
 class MdNode : public NodeBase<MdNode> {
 public:
     using Specialization = MdSpecialization;
-    using Unspecialized = Md;
 
     DecisionBoundaryVector rhs_bounds;
 
-    static MdLhs const& GetLhs(Unspecialized const& md) noexcept {
+    static MdLhs const& GetLhs(Specialization::Unspecialized const& md) noexcept {
         return md.lhs;
     }
 
-    bool ContainsGeneralizationOf(Unspecialized const& md) const noexcept {
+    bool ContainsGeneralizationOf(Specialization::Unspecialized const& md) const noexcept {
         return rhs_bounds[md.rhs.index] >= md.rhs.decision_boundary;
     }
 

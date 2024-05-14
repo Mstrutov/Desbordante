@@ -8,15 +8,14 @@ namespace algos::hymd::lattice {
 class SupportNode : public NodeBase<SupportNode> {
 public:
     using Specialization = LhsSpecialization;
-    using Unspecialized = MdLhs;
 
     bool is_unsupported = false;
 
-    static MdLhs const& GetLhs(Unspecialized const& lhs) noexcept {
+    static MdLhs const& GetLhs(Specialization::Unspecialized lhs) noexcept {
         return lhs;
     }
 
-    bool ContainsGeneralizationOf(Unspecialized const&) const noexcept {
+    bool ContainsGeneralizationOf(Specialization::Unspecialized) const noexcept {
         return is_unsupported;
     }
 

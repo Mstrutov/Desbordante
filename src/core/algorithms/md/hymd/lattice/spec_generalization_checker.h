@@ -7,6 +7,9 @@ namespace algos::hymd::lattice {
 template <typename NodeType>
 class SpecGeneralizationChecker {
     using Specialization = NodeType::Specialization;
+    using BoundMap = NodeType::BoundMap;
+    using OptionalChild = NodeType::OptionalChild;
+
     Specialization const& specialization_;
     TotalGeneralizationChecker<NodeType> total_checker_{specialization_.ToUnspecialized()};
 
@@ -18,9 +21,9 @@ class SpecGeneralizationChecker {
                          model::Index next_node_index, model::md::DecisionBoundary bound_limit,
                          auto gen_method, auto get_b_map_iter) const {
         model::Index const child_array_index = next_node_index - node_index;
-        typename NodeType::OptionalChild const& optional_child = node.children[child_array_index];
+        OptionalChild const& optional_child = node.children[child_array_index];
         if (!optional_child.has_value()) return false;
-        typename NodeType::BoundMap const& b_map = *optional_child;
+        BoundMap const& b_map = *optional_child;
         for (auto spec_iter = get_b_map_iter(b_map), end_iter = b_map.end(); spec_iter != end_iter;
              ++spec_iter) {
             auto const& [generalization_bound, node] = *spec_iter;
