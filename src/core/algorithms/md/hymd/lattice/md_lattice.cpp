@@ -528,13 +528,13 @@ bool MdLattice::IsUnsupported(LhsSpecialization const& lhs_spec) const {
     return SpecGeneralizationChecker<SupportNode>{lhs_spec}.HasGeneralization(support_root_);
 }
 
-void MdLattice::MarkNewLhs(SupportNode& cur_node, MdLhs const& lhs, Index cur_node_index) {
-    AddUnchecked(&cur_node, lhs, cur_node_index, SetUnsupAction());
+void MdLattice::MarkNewLhs(SupportNode& cur_node, MdLhs const& lhs, MdLhs::iterator cur_lhs_iter) {
+    AddUnchecked(&cur_node, lhs, cur_lhs_iter, SetUnsupAction());
 }
 
 void MdLattice::MarkUnsupported(MdLhs const& lhs) {
     auto mark_new = [this](auto&&... args) { MarkNewLhs(std::forward<decltype(args)>(args)...); };
-    CheckedAddOld(&support_root_, lhs, lhs, mark_new, SetUnsupAction());
+    CheckedAdd(&support_root_, lhs, lhs, mark_new, SetUnsupAction());
 }
 
 }  // namespace algos::hymd::lattice

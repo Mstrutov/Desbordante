@@ -129,7 +129,7 @@ private:
     }
 
     // Generalization check, specialization (add if minimal)
-    void MarkNewLhs(SupportNode& cur_node, MdLhs const& lhs, model::Index cur_node_index);
+    void MarkNewLhs(SupportNode& cur_node, MdLhs const& lhs, MdLhs::iterator cur_lhs_iter);
     void MarkUnsupported(MdLhs const& lhs);
 
     [[nodiscard]] std::optional<model::md::DecisionBoundary> SpecializeOneLhs(

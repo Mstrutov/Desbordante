@@ -116,33 +116,4 @@ void CheckedAdd(NodeType* cur_node_ptr, MdLhs const& lhs, auto const& info, auto
     };
     final_node_action(cur_node_ptr);
 }
-
-template <typename NodeType>
-void CheckedAddOld(NodeType* cur_node_ptr, MdLhs const& lhs, auto const& info, auto unchecked_add,
-                auto final_node_action) {
-    model::Index cur_node_index = 0;
-    for (MdElement element = lhs.FindNextNonZero(cur_node_index); lhs.IsNotEnd(element);
-         element = lhs.FindNextNonZero(cur_node_index)) {
-        auto const& [next_node_index, next_bound] = element;
-        model::Index const child_array_index = next_node_index - cur_node_index;
-        cur_node_index = next_node_index + 1;
-        std::size_t const next_child_array_size =
-                cur_node_ptr->GetChildArraySize(child_array_index);
-        auto [boundary_map, is_first_arr] = cur_node_ptr->TryEmplaceChild(child_array_index);
-        if (is_first_arr) {
-            NodeType& new_node =
-                    boundary_map.try_emplace(next_bound, next_child_array_size).first->second;
-            unchecked_add(new_node, info, cur_node_index);
-            return;
-        }
-        auto [it_map, is_first_map] = boundary_map.try_emplace(next_bound, next_child_array_size);
-        NodeType& next_node = it_map->second;
-        if (is_first_map) {
-            unchecked_add(next_node, info, cur_node_index);
-            return;
-        }
-        cur_node_ptr = &next_node;
-    };
-    final_node_action(cur_node_ptr);
-}
 }  // namespace algos::hymd::lattice
