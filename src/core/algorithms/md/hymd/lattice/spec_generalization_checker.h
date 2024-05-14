@@ -41,8 +41,10 @@ public:
     bool HasGeneralizationInChildren(NodeType const& node, model::Index node_index,
                                      model::Index start_index) const {
         LhsSpecialization const& lhs_specialization = specialization_.GetLhsSpecialization();
-        auto const& [spec_index, spec_bound] = lhs_specialization.specialized;
         MdLhs const& old_lhs = lhs_specialization.old_lhs;
+        auto const& [spec_child_index, spec_bound] = lhs_specialization.specialization_data.new_child;
+        MdLhs::iterator const spec_iter = lhs_specialization.specialization_data.spec_before;
+        model::Index spec_index = old_lhs.GetColumnMatchIndex(spec_iter, spec_child_index);
         using BoundMap = NodeType::BoundMap;
         for (MdElement result = old_lhs.FindNextNonZero(start_index); result.index < spec_index;
              result = old_lhs.FindNextNonZero(result.index + 1)) {

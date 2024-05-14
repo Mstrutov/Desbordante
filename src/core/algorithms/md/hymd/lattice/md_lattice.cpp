@@ -44,43 +44,60 @@ std::optional<DecisionBoundary> MdLattice::SpecializeOneLhs(Index col_match_inde
     return *upper;
 }
 
-void MdLattice::Specialize(MdLhs const& lhs, SimilarityVector const& specialize_past,
-                           Rhss const& rhss) {
-    auto specialize_all_lhs = [this, &lhs, it_begin = rhss.begin(), it_end = rhss.end(),
-                               &specialize_past](auto handle_same_lhs_as_rhs) {
-        for (Index lhs_spec_index = 0; lhs_spec_index < column_matches_size_; ++lhs_spec_index) {
-            std::optional<DecisionBoundary> const specialized_lhs_bound =
-                    SpecializeOneLhs(lhs_spec_index, specialize_past[lhs_spec_index]);
-            if (!specialized_lhs_bound.has_value()) continue;
-
-            LhsSpecialization lhs_specialization{lhs, {lhs_spec_index, *specialized_lhs_bound}};
-            if (IsUnsupported(lhs_specialization)) continue;
-
-            for (auto it = it_begin; it != it_end; ++it) {
-                if (it->index == lhs_spec_index) {
-                    handle_same_lhs_as_rhs(lhs_specialization, *it);
-                    for (++it; it != it_end; ++it) {
-                        AddIfMinimal({lhs_specialization, *it});
-                    }
-                    break;
+void MdLattice::Specialize(MdLhs const& lhs, Rhss const& rhss, auto get_higher_lhs_bound,
+                           auto get_higher_other_bound) {
+    Index lhs_spec_index = 0;
+    auto rhs_begin = rhss.begin(), rhs_end = rhss.end();
+    auto lhs_iter = lhs.begin(), lhs_end = lhs.end();
+    auto add_all_rhs = [&](LhsSpecialization const& lhs_spec) {
+        for (auto rhs_it = rhs_begin; rhs_it != rhs_end; ++rhs_it) {
+            if (rhs_it->index == lhs_spec_index) {
+                if (!prune_nondisjoint_) {
+                    DecisionBoundary const specialized_lhs_bound =
+                            lhs_spec.specialization_data.new_child.decision_boundary;
+                    if (specialized_lhs_bound < rhs_it->decision_boundary)
+                        AddIfMinimal({lhs_spec, *rhs_it});
                 }
-                AddIfMinimal({lhs_specialization, *it});
+                for (++rhs_it; rhs_it != rhs_end; ++rhs_it) {
+                    AddIfMinimal({lhs_spec, *rhs_it});
+                }
+                return;
             }
+            AddIfMinimal({lhs_spec, *rhs_it});
         }
     };
-    if (prune_nondisjoint_) {
-        specialize_all_lhs([](...) {});
-    } else {
-        specialize_all_lhs([this](LhsSpecialization const& lhs_spec, MdElement rhs) {
-            if (rhs.decision_boundary > lhs_spec.specialized.decision_boundary) {
-                AddIfMinimal({lhs_spec, rhs});
-            }
-        });
+    auto specialize_element = [&](Index spec_child_index, DecisionBoundary spec_past) {
+        std::optional<DecisionBoundary> const specialized_lhs_bound =
+                SpecializeOneLhs(lhs_spec_index, spec_past);
+        if (!specialized_lhs_bound.has_value()) return;
+        LhsSpecialization lhs_spec{lhs, {lhs_iter, {spec_child_index, *specialized_lhs_bound}}};
+        if (IsUnsupported(lhs_spec)) return;
+        add_all_rhs(lhs_spec);
+    };
+    for (; lhs_iter != lhs_end; ++lhs_iter, ++lhs_spec_index) {
+        auto const& [child_array_index, bound] = *lhs_iter;
+        for (Index spec_child_index = 0; spec_child_index != child_array_index;
+             ++spec_child_index, ++lhs_spec_index) {
+            specialize_element(spec_child_index, get_higher_other_bound(lhs_spec_index));
+        }
+        specialize_element(child_array_index, get_higher_lhs_bound(lhs_spec_index, bound));
     }
+    for (Index spec_child_index = 0; lhs_spec_index != column_matches_size_;
+         ++lhs_spec_index, ++spec_child_index) {
+        specialize_element(spec_child_index, get_higher_other_bound(lhs_spec_index));
+    };
+}
+
+void MdLattice::Specialize(MdLhs const& lhs, SimilarityVector const& specialize_past,
+                           Rhss const& rhss) {
+    auto get_sim_vec_bound = [&](Index index, ...) { return specialize_past[index]; };
+    Specialize(lhs, rhss, get_sim_vec_bound, get_sim_vec_bound);
 }
 
 void MdLattice::Specialize(MdLhs const& lhs, Rhss const& rhss) {
-    Specialize(lhs, lhs.ToBoundVec(), rhss);
+    auto get_lowest = [&](...) { return kLowestBound; };
+    auto get_lhs_bound = [](Index, DecisionBoundary bound) { return bound; };
+    Specialize(lhs, rhss, get_lhs_bound, get_lowest);
 }
 
 void MdLattice::MdRefiner::Refine() {
@@ -182,7 +199,7 @@ void MdLattice::MdVerificationMessenger::LowerAndSpecialize(
 
 void MdLattice::AddNewMinimal(MdNode& cur_node, MdSpecialization const& md, Index cur_node_index) {
     assert(!NotEmpty(cur_node.rhs_bounds));
-    assert(cur_node_index > md.lhs_specialization.specialized.index);
+    // assert(cur_node_index > md.lhs_specialization.specialized.index);
     auto const& [rhs_index, rhs_bound] = md.rhs;
     auto set_bound = [&](MdNode* node) { node->rhs_bounds[rhs_index] = rhs_bound; };
     AddUnchecked(&cur_node, md.lhs_specialization.old_lhs, cur_node_index, set_bound);
@@ -191,8 +208,10 @@ void MdLattice::AddNewMinimal(MdNode& cur_node, MdSpecialization const& md, Inde
 
 void MdLattice::UpdateMaxLevel(LhsSpecialization const& lhs) {
     std::size_t level = 0;
-    auto const& [spec_index, spec_bound] = lhs.specialized;
+    auto const& [spec_child_index, spec_bound] = lhs.specialization_data.new_child;
     MdLhs const& old_lhs = lhs.old_lhs;
+    Index spec_index =
+            old_lhs.GetColumnMatchIndex(lhs.specialization_data.spec_before, spec_child_index);
     for (Index i = 0; i != spec_index; ++i) {
         DecisionBoundary const cur_bound = old_lhs[i];
         if (cur_bound == kLowestBound) continue;
@@ -298,8 +317,11 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md) {
     MdGenChecker const& total_checker = gen_checker.GetTotalChecker();
     auto helper = GeneralizationHelper(md.rhs, md_root_, total_checker);
     Index cur_node_index = 0;
-    auto const& [spec_index, spec_bound] = md.lhs_specialization.specialized;
+    auto const& [spec_child_index, spec_bound] =
+            md.lhs_specialization.specialization_data.new_child;
     MdLhs const& old_lhs = md.lhs_specialization.old_lhs;
+    MdLhs::iterator spec_iter = md.lhs_specialization.specialization_data.spec_before;
+    Index spec_index = old_lhs.GetColumnMatchIndex(spec_iter, spec_child_index);
     auto try_set_next = [&](auto... args) {
         return helper.SetAndCheck(TryGetNextNode(md, helper, cur_node_index, args...));
     };

@@ -134,6 +134,8 @@ private:
 
     [[nodiscard]] std::optional<model::md::DecisionBoundary> SpecializeOneLhs(
             model::Index col_match_index, model::md::DecisionBoundary lhs_bound) const;
+    void Specialize(MdLhs const& lhs, Rhss const& rhss, auto get_higher_lhs_bound,
+                    auto get_higher_other_bound);
     void Specialize(MdLhs const& lhs, SimilarityVector const& specialize_past, Rhss const& rhss);
     void Specialize(MdLhs const& lhs, Rhss const& rhss);
 
