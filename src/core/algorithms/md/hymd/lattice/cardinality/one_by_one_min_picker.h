@@ -13,7 +13,17 @@ namespace algos::hymd::lattice::cardinality {
 
 class OneByOnePicker {
 private:
+    enum class ComparisonResult {
+        Specialization,
+        Generalization,
+        Incomparable,
+    };
+
     std::vector<ValidationInfo> currently_picked_;
+
+    static bool IsGeneralization(MdLhs::iterator gen_it, MdLhs::iterator spec_it,
+                                 MdLhs::iterator gen_end, MdLhs::iterator spec_end);
+    static ComparisonResult CompareLhss(MdLhs const& cur, MdLhs const& prev);
 
 public:
     static constexpr bool kNeedsEmptyRemoval = true;
