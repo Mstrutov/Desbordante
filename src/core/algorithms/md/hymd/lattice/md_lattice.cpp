@@ -80,7 +80,7 @@ void MdLattice::Specialize(MdLhs const& lhs, SimilarityVector const& specialize_
 }
 
 void MdLattice::Specialize(MdLhs const& lhs, Rhss const& rhss) {
-    Specialize(lhs, lhs.GetValues(), rhss);
+    Specialize(lhs, lhs.ToBoundVec(), rhss);
 }
 
 void MdLattice::MdRefiner::Refine() {
@@ -127,7 +127,7 @@ void MdLattice::CollectRefinersForViolated(MdNode& cur_node, std::vector<MdRefin
 
     auto collect = [&](MdBoundMap& bound_map, model::Index child_array_index) {
         Index const next_node_index = cur_node_index + child_array_index;
-        DecisionBoundary& cur_lhs_bound = cur_node_lhs[next_node_index];
+        DecisionBoundary& cur_lhs_bound = cur_node_lhs.AddNext(child_array_index);
         DecisionBoundary const sim_vec_sim = similarity_vector[next_node_index];
         for (auto& [generalization_bound, node] : bound_map) {
             if (generalization_bound > sim_vec_sim) break;
@@ -135,7 +135,7 @@ void MdLattice::CollectRefinersForViolated(MdNode& cur_node, std::vector<MdRefin
             CollectRefinersForViolated(node, found, cur_node_lhs, similarity_vector,
                                        next_node_index + 1);
         }
-        cur_lhs_bound = kLowestBound;
+        cur_node_lhs.RemoveLast();
     };
     cur_node.ForEachNonEmpty(collect);
 }
@@ -401,14 +401,14 @@ void MdLattice::GetLevel(MdNode& cur_node, std::vector<MdVerificationMessenger>&
     }
     auto collect = [&](MdBoundMap& bound_map, model::Index child_array_index) {
         Index const next_node_index = cur_node_index + child_array_index;
-        DecisionBoundary& next_lhs_bound = cur_node_lhs[next_node_index];
+        DecisionBoundary& next_lhs_bound = cur_node_lhs.AddNext(child_array_index);
         for (auto& [boundary, node] : bound_map) {
             std::size_t const single = get_single_level_(next_node_index, boundary);
             if (single > level_left) break;
             next_lhs_bound = boundary;
             GetLevel(node, collected, cur_node_lhs, next_node_index + 1, level_left - single);
         }
-        next_lhs_bound = kLowestBound;
+        cur_node_lhs.RemoveLast();
     };
     cur_node.ForEachNonEmpty(collect);
 }
@@ -432,12 +432,12 @@ void MdLattice::GetAll(MdNode& cur_node, std::vector<MdLatticeNodeInfo>& collect
     if (NotEmpty(rhs_bounds)) collected.emplace_back(cur_node_lhs, &rhs_bounds);
     auto collect = [&](MdBoundMap& bound_map, model::Index child_array_index) {
         Index const next_node_index = this_node_index + child_array_index;
-        DecisionBoundary& next_lhs_bound = cur_node_lhs[next_node_index];
+        DecisionBoundary& next_lhs_bound = cur_node_lhs.AddNext(child_array_index);
         for (auto& [boundary, node] : bound_map) {
             next_lhs_bound = boundary;
             GetAll(node, collected, cur_node_lhs, next_node_index + 1);
         }
-        next_lhs_bound = kLowestBound;
+        cur_node_lhs.RemoveLast();
     };
     cur_node.ForEachNonEmpty(collect);
 }

@@ -31,7 +31,7 @@ using RecordCluster = std::vector<RecPtr>;
 
 IndexVector GetNonZeroIndices(MdLhs const& lhs) {
     IndexVector indices;
-    DecisionBoundaryVector const& lhs_bounds = lhs.GetValues();
+    DecisionBoundaryVector const lhs_bounds = lhs.ToBoundVec();
     std::size_t const col_match_number = lhs_bounds.size();
     for (Index i = 0; i != col_match_number; ++i) {
         if (lhs_bounds[i] != kLowestBound) indices.push_back(i);
