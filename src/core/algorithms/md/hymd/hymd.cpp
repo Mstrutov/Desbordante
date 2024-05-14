@@ -181,18 +181,29 @@ void HyMD::RegisterResults(SimilarityData const& similarity_data,
     std::vector<model::MD> mds;
     for (lattice::MdLatticeNodeInfo const& md : lattice_mds) {
         DecisionBoundaryVector const& rhs_bounds = *md.rhs_bounds;
+        std::vector<model::md::LhsColumnSimilarityClassifier> const lhs = [&]() {
+            std::vector<model::md::LhsColumnSimilarityClassifier> lhs;
+            lhs.reserve(column_match_number);
+            Index lhs_index = 0;
+            for (auto const& [child_index, bound] : md.lhs) {
+                for (Index i = 0; i != child_index; ++i, ++lhs_index) {
+                    lhs.emplace_back(std::nullopt, lhs_index, kLowestBound);
+                }
+                lhs.emplace_back(similarity_data.GetPreviousDecisionBound(bound, lhs_index)
+                                         .value_or(kLowestBound),
+                                 lhs_index, bound);
+                ++lhs_index;
+            }
+            for (; lhs_index != column_match_number; ++lhs_index) {
+                lhs.emplace_back(std::nullopt, lhs_index, kLowestBound);
+            }
+            return lhs;
+        }();
         for (Index rhs_index = 0; rhs_index < column_match_number; ++rhs_index) {
             model::md::DecisionBoundary const rhs_bound = rhs_bounds[rhs_index];
             if (rhs_bound == kLowestBound) continue;
-            std::vector<model::md::LhsColumnSimilarityClassifier> lhs;
-            for (Index lhs_index = 0; lhs_index != column_match_number; ++lhs_index) {
-                model::md::DecisionBoundary const lhs_bound = md.lhs[lhs_index];
-                lhs.emplace_back(similarity_data.GetPreviousDecisionBound(lhs_bound, lhs_index),
-                                 lhs_index, lhs_bound);
-            }
             model::md::ColumnSimilarityClassifier rhs{rhs_index, rhs_bound};
-            mds.emplace_back(left_schema_.get(), right_schema_.get(), column_matches,
-                             std::move(lhs), rhs);
+            mds.emplace_back(left_schema_.get(), right_schema_.get(), column_matches, lhs, rhs);
         }
     }
     std::sort(mds.begin(), mds.end(), utility::MdLess);
