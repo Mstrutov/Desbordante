@@ -362,7 +362,7 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md) {
         }
         helper.SetAndCheck(&it->second);
     }
-    Index cur_node_index = [&](){
+    Index cur_node_index = [&]() {
         Index index = 0;
         for (auto iter = old_lhs.begin(); iter != spec_iter; ++iter) {
             index += iter->child_array_index + 1;
@@ -372,11 +372,17 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md) {
     auto try_set_next = [&](auto... args) {
         return helper.SetAndCheck(TryGetNextNode(md, helper, cur_node_index, args...));
     };
-    if (try_set_next(spec_index, spec_bound)) return;
 
+    MdLhs::iterator lhs_end = old_lhs.end();
+    if (next_lhs_iter == lhs_end) {  // Append
+        if (try_set_next(spec_index, spec_bound)) return;
+        helper.SetBoundOnCurrent();
+        return;
+    }
+    if (try_set_next(spec_index, spec_bound)) return;
     cur_node_index = spec_index + 1;
-    for (MdLhs::iterator lhs_iter = old_lhs.FindIter(cur_node_index), lhs_end = old_lhs.end();
-         lhs_iter != lhs_end; ++lhs_iter) {
+    for (MdLhs::iterator lhs_iter = old_lhs.FindIter(cur_node_index); lhs_iter != lhs_end;
+         ++lhs_iter) {
         model::Index next_node_index = old_lhs.ToIndex(lhs_iter);
         model::md::DecisionBoundary next_lhs_bound = lhs_iter->decision_boundary;
         Index const fol_index = next_node_index + 1;
