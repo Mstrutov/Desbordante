@@ -225,6 +225,16 @@ void MdLattice::AddNewMinimal(MdNode& cur_node, MdSpecialization const& md, Inde
     UpdateMaxLevel(md.lhs_specialization);
 }
 
+void MdLattice::AddNewMinimal(MdNode& cur_node, MdSpecialization const& md,
+                              MdLhs::iterator cur_node_iter) {
+    assert(!NotEmpty(cur_node.rhs_bounds));
+    assert(cur_node_iter >= md.lhs_specialization.specialization_data.spec_before);
+    auto const& [rhs_index, rhs_bound] = md.rhs;
+    auto set_bound = [&](MdNode* node) { node->rhs_bounds[rhs_index] = rhs_bound; };
+    AddUnchecked(&cur_node, md.lhs_specialization.old_lhs, cur_node_iter, set_bound);
+    UpdateMaxLevel(md.lhs_specialization);
+}
+
 void MdLattice::UpdateMaxLevel(LhsSpecialization const& lhs) {
     std::size_t level = 0;
     auto const& [spec_child_array_index, spec_bound] = lhs.specialization_data.new_child;
@@ -380,8 +390,7 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md) {
     } else if (next_lhs_iter->child_array_index == spec_child_array_index) {  // Replace
         if (try_set_next(spec_child_array_index, spec_index, spec_bound)) return;
         cur_node_index = spec_index + 1;
-        for (MdLhs::iterator lhs_iter = old_lhs.FindIter(cur_node_index); lhs_iter != lhs_end;
-             ++lhs_iter) {
+        for (MdLhs::iterator lhs_iter = next_lhs_iter + 1; lhs_iter != lhs_end; ++lhs_iter) {
             model::Index next_node_index = old_lhs.ToIndex(lhs_iter);
             model::md::DecisionBoundary next_lhs_bound = lhs_iter->decision_boundary;
             Index const fol_index = next_node_index + 1;
@@ -395,11 +404,10 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md) {
         // Note: Metanome implemented this incorrectly, potentially missing out on recommendations.
         helper.SetBoundOnCurrent();
         return;
-    } else {
+    } else {  // Insert
         if (try_set_next(spec_child_array_index, spec_index, spec_bound)) return;
         cur_node_index = spec_index + 1;
-        for (MdLhs::iterator lhs_iter = old_lhs.FindIter(cur_node_index); lhs_iter != lhs_end;
-             ++lhs_iter) {
+        for (MdLhs::iterator lhs_iter = next_lhs_iter; lhs_iter != lhs_end; ++lhs_iter) {
             model::Index next_node_index = old_lhs.ToIndex(lhs_iter);
             model::md::DecisionBoundary next_lhs_bound = lhs_iter->decision_boundary;
             Index const fol_index = next_node_index + 1;
