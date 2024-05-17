@@ -390,16 +390,16 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md) {
     } else if (next_lhs_iter->child_array_index == spec_child_array_index) {  // Replace
         if (try_set_next(spec_child_array_index, spec_index, spec_bound)) return;
         cur_node_index = spec_index + 1;
-        for (MdLhs::iterator lhs_iter = next_lhs_iter + 1; lhs_iter != lhs_end; ++lhs_iter) {
-            model::Index next_node_index = old_lhs.ToIndex(lhs_iter);
-            model::md::DecisionBoundary next_lhs_bound = lhs_iter->decision_boundary;
-            Index const fol_index = next_node_index + 1;
-            if (total_checker.HasGeneralizationInChildren(helper.CurNode(), cur_node_index,
-                                                          fol_index))
+        ++next_lhs_iter;
+        while (next_lhs_iter != lhs_end) {
+            auto const& [child_array_index, next_lhs_bound] = *next_lhs_iter;
+            model::Index next_node_index = old_lhs.ToIndex(next_lhs_iter);
+            ++next_lhs_iter;
+            if (total_checker.HasGeneralizationInChildren(helper.CurNode(), next_lhs_iter,
+                                                          child_array_index + 1))
                 return;
-            if (try_set_next(next_node_index - cur_node_index, next_node_index, next_lhs_bound))
-                return;
-            cur_node_index = fol_index;
+            if (try_set_next(child_array_index, next_node_index, next_lhs_bound)) return;
+            cur_node_index = next_node_index + 1;
         }
         // Note: Metanome implemented this incorrectly, potentially missing out on recommendations.
         helper.SetBoundOnCurrent();
