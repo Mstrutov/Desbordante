@@ -341,19 +341,14 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md) {
     MdSpecGenChecker gen_checker{md};
     MdGenChecker const& total_checker = gen_checker.GetTotalChecker();
     auto helper = GeneralizationHelper(md.rhs, md_root_, total_checker);
-    Index cur_node_index = 0;
     auto const& [spec_child_array_index, spec_bound] =
             md.lhs_specialization.specialization_data.new_child;
-    MdLhs::iterator hint_iter = md.lhs_specialization.specialization_data.spec_before;
+    MdLhs::iterator spec_iter = md.lhs_specialization.specialization_data.spec_before;
     MdLhs const& old_lhs = md.lhs_specialization.old_lhs;
-    Index const spec_index = old_lhs.GetColumnMatchIndex(hint_iter, spec_child_array_index);
-    auto try_set_next = [&](auto... args) {
-        return helper.SetAndCheck(TryGetNextNode(md, helper, cur_node_index, args...));
-    };
+    Index const spec_index = old_lhs.GetColumnMatchIndex(spec_iter, spec_child_array_index);
     MdLhs::iterator next_lhs_iter = old_lhs.begin();
-    while (next_lhs_iter != hint_iter) {
+    while (next_lhs_iter != spec_iter) {
         auto const& [child_array_index, next_lhs_bound] = *next_lhs_iter;
-        cur_node_index += child_array_index + 1;
         ++next_lhs_iter;
         if (gen_checker.HasGeneralizationInChildren(helper.CurNode(), next_lhs_iter,
                                                     child_array_index + 1))
@@ -367,6 +362,16 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md) {
         }
         helper.SetAndCheck(&it->second);
     }
+    Index cur_node_index = [&](){
+        Index index = 0;
+        for (auto iter = old_lhs.begin(); iter != spec_iter; ++iter) {
+            index += iter->child_array_index + 1;
+        }
+        return index;
+    }();
+    auto try_set_next = [&](auto... args) {
+        return helper.SetAndCheck(TryGetNextNode(md, helper, cur_node_index, args...));
+    };
     if (try_set_next(spec_index, spec_bound)) return;
 
     cur_node_index = spec_index + 1;
