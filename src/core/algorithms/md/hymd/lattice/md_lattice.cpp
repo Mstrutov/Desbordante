@@ -350,21 +350,20 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md) {
     auto try_set_next = [&](auto... args) {
         return helper.SetAndCheck(TryGetNextNode(md, helper, cur_node_index, args...));
     };
-    for (MdLhs::iterator lhs_iter = old_lhs.begin(); lhs_iter != hint_iter; ++lhs_iter) {
-        model::Index next_node_index = old_lhs.ToIndex(lhs_iter);
-        model::md::DecisionBoundary next_lhs_bound = lhs_iter->decision_boundary;
-        Index const child_array_index = next_node_index - cur_node_index;
-        Index const fol_index = next_node_index + 1;
-        if (gen_checker.HasGeneralizationInChildren(helper.CurNode(), lhs_iter + 1,
-                                                    lhs_iter->child_array_index + 1))
+    MdLhs::iterator next_lhs_iter = old_lhs.begin();
+    while (next_lhs_iter != hint_iter) {
+        auto const& [child_array_index, next_lhs_bound] = *next_lhs_iter;
+        cur_node_index += child_array_index + 1;
+        ++next_lhs_iter;
+        if (gen_checker.HasGeneralizationInChildren(helper.CurNode(), next_lhs_iter,
+                                                    child_array_index + 1))
             return;
-        cur_node_index = fol_index;
         assert(helper.Children()[child_array_index].has_value());
         MdBoundMap& bound_map = *helper.Children()[child_array_index];
         assert(bound_map.find(next_lhs_bound) != bound_map.end());
         auto it = bound_map.begin();
         for (; it->first != next_lhs_bound; ++it) {
-            if (gen_checker.HasGeneralization(it->second, lhs_iter + 1)) return;
+            if (gen_checker.HasGeneralization(it->second, next_lhs_iter)) return;
         }
         helper.SetAndCheck(&it->second);
     }
