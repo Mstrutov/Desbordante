@@ -304,10 +304,9 @@ public:
 
 // Note: writing this in AddIfMinimal with gotos seems to be faster.
 auto MdLattice::TryGetNextNode(MdSpecialization const& md, GeneralizationHelper& helper,
-                               Index cur_node_index, Index const next_node_index,
+                               Index const child_array_index, Index const next_node_index,
                                DecisionBoundary const next_lhs_bound) -> MdNode* {
     Index const fol_index = next_node_index + 1;
-    Index const child_array_index = next_node_index - cur_node_index;
     MdNode& cur_node = helper.CurNode();
     auto [boundary_mapping, is_first_arr] = cur_node.TryEmplaceChild(child_array_index);
     std::size_t const next_child_array_size = cur_node.GetChildArraySize(child_array_index);
@@ -370,16 +369,16 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md) {
         return index;
     }();
     auto try_set_next = [&](auto... args) {
-        return helper.SetAndCheck(TryGetNextNode(md, helper, cur_node_index, args...));
+        return helper.SetAndCheck(TryGetNextNode(md, helper, args...));
     };
 
     MdLhs::iterator lhs_end = old_lhs.end();
     if (next_lhs_iter == lhs_end) {  // Append
-        if (try_set_next(spec_index, spec_bound)) return;
+        if (try_set_next(spec_child_array_index, spec_index, spec_bound)) return;
         helper.SetBoundOnCurrent();
         return;
     }
-    if (try_set_next(spec_index, spec_bound)) return;
+    if (try_set_next(spec_index - cur_node_index, spec_index, spec_bound)) return;
     cur_node_index = spec_index + 1;
     for (MdLhs::iterator lhs_iter = old_lhs.FindIter(cur_node_index); lhs_iter != lhs_end;
          ++lhs_iter) {
@@ -388,7 +387,7 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md) {
         Index const fol_index = next_node_index + 1;
         if (total_checker.HasGeneralizationInChildren(helper.CurNode(), cur_node_index, fol_index))
             return;
-        if (try_set_next(next_node_index, next_lhs_bound)) return;
+        if (try_set_next(next_node_index - cur_node_index, next_node_index, next_lhs_bound)) return;
         cur_node_index = fol_index;
     }
     // Note: Metanome implemented this incorrectly, potentially missing out on recommendations.

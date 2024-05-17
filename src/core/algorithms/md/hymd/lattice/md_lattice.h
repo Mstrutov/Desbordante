@@ -120,7 +120,7 @@ private:
     void UpdateMaxLevel(LhsSpecialization const& lhs_specialization);
     void AddNewMinimal(MdNode& cur_node, MdSpecialization const& md, model::Index cur_node_index);
     MdNode* TryGetNextNode(MdSpecialization const& md, GeneralizationHelper& helper,
-                           model::Index cur_node_index, model::Index const next_node_index,
+                           model::Index child_array_index, model::Index const next_node_index,
                            model::md::DecisionBoundary const next_lhs_bound);
     void AddIfMinimal(MdSpecialization const& md);
 
