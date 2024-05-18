@@ -315,8 +315,8 @@ public:
 // Note: writing this in AddIfMinimal with gotos seems to be faster.
 MdNode* MdLattice::TryGetNextNode(GeneralizationHelper& helper, Index const child_array_index,
                                   auto new_minimal_action, DecisionBoundary const next_lhs_bound,
-                                  MdLhs::iterator iter, std::size_t gen_check_offset,
-                                  auto get_b_map_iter) {
+                                  MdLhs::iterator iter, auto get_b_map_iter,
+                                  std::size_t gen_check_offset) {
     MdNode& cur_node = helper.CurNode();
     auto [boundary_mapping, is_first_arr] = cur_node.TryEmplaceChild(child_array_index);
     std::size_t const next_child_array_size = cur_node.GetChildArraySize(child_array_index);
@@ -380,9 +380,12 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md) {
         if (try_set_next(spec_child_array_index, new_minimal_action, spec_bound, next_lhs_iter))
             return;
     } else if (next_lhs_iter->child_array_index == spec_child_array_index) {  // Replace
+        DecisionBoundary const old_bound = next_lhs_iter->decision_boundary;
         ++next_lhs_iter;
         auto new_minimal_action = [&](MdNode& node) { AddNewMinimal(node, md, next_lhs_iter); };
-        if (try_set_next(spec_child_array_index, new_minimal_action, spec_bound, next_lhs_iter))
+        auto get_higher = [&](MdBoundMap& b_map) { return b_map.upper_bound(old_bound); };
+        if (try_set_next(spec_child_array_index, new_minimal_action, spec_bound, next_lhs_iter,
+                         get_higher))
             return;
     } else {  // Insert
         auto const& [old_child_array_index, next_lhs_bound] = *next_lhs_iter;

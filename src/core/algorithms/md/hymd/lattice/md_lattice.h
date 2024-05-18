@@ -131,7 +131,7 @@ private:
                            std::size_t gen_check_offset = 0) {
         return TryGetNextNode(
                 helper, child_array_index, new_minimal_action, next_lhs_bound, iter,
-                [](MdNode::BoundMap& b_map) { return b_map.begin(); }, gen_check_offset);
+                [](MdBoundMap& b_map) { return b_map.begin(); }, gen_check_offset);
     }
 
     void AddIfMinimal(MdSpecialization const& md);
