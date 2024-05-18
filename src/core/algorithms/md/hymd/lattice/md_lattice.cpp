@@ -354,7 +354,6 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md) {
             md.lhs_specialization.specialization_data.new_child;
     MdLhs::iterator spec_iter = md.lhs_specialization.specialization_data.spec_before;
     MdLhs const& old_lhs = md.lhs_specialization.old_lhs;
-    Index const spec_index = old_lhs.GetColumnMatchIndex(spec_iter, spec_child_array_index);
     MdLhs::iterator next_lhs_iter = old_lhs.begin();
     while (next_lhs_iter != spec_iter) {
         auto const& [child_array_index, next_lhs_bound] = *next_lhs_iter;
@@ -388,26 +387,24 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md) {
     } else {  // Insert
         auto const& [old_child_array_index, next_lhs_bound] = *next_lhs_iter;
         std::size_t const offset = -(spec_child_array_index + 1);
-        auto new_minimal_action = [&](MdNode& node) { AddNewMinimal(node, md, spec_index + 1); };
+        std::size_t const fol_spec_child_index = old_child_array_index + offset;
+        auto new_minimal_action = [&](MdNode& node) {
+            AddNewMinimal(*node.AddOneUnchecked(fol_spec_child_index, next_lhs_bound), md,
+                          next_lhs_iter + 1);
+        };
         if (try_set_next(spec_child_array_index, new_minimal_action, spec_bound, next_lhs_iter,
                          offset))
             return;
         if (total_checker.HasGeneralizationInChildren(helper.CurNode(), next_lhs_iter, offset))
             return;
-        std::size_t const fol_spec_child_index = old_child_array_index + offset;
-        model::Index next_node_index = old_lhs.ToIndex(next_lhs_iter);
         ++next_lhs_iter;
-        auto new_minimal_action2 = [&](MdNode& node) {
-            AddNewMinimal(node, md, next_node_index + 1);
-        };
+        auto new_minimal_action2 = [&](MdNode& node) { AddNewMinimal(node, md, next_lhs_iter); };
         if (try_set_next(fol_spec_child_index, new_minimal_action2, next_lhs_bound, next_lhs_iter))
             return;
     }
     while (next_lhs_iter != lhs_end) {
         auto const& [child_array_index, next_lhs_bound] = *next_lhs_iter;
-        auto new_minimal_action2 = [&](MdNode& node) {
-            AddNewMinimal(node, md, next_lhs_iter);
-        };
+        auto new_minimal_action2 = [&](MdNode& node) { AddNewMinimal(node, md, next_lhs_iter); };
         ++next_lhs_iter;
         if (total_checker.HasGeneralizationInChildren(helper.CurNode(), next_lhs_iter,
                                                       child_array_index + 1))
