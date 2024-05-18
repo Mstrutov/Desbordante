@@ -123,16 +123,13 @@ private:
     MdNode* TryGetNextNode(GeneralizationHelper& helper, model::Index child_array_index,
                            auto new_minimal_action,
                            model::md::DecisionBoundary const next_lhs_bound, MdLhs::iterator iter,
-                           auto get_b_map_iter, std::size_t gen_check_offset = 0);
+                           std::size_t gen_check_offset = 0);
 
-    MdNode* TryGetNextNode(GeneralizationHelper& helper, model::Index child_array_index,
-                           auto new_minimal_action,
-                           model::md::DecisionBoundary const next_lhs_bound, MdLhs::iterator iter,
-                           std::size_t gen_check_offset = 0) {
-        return TryGetNextNode(
-                helper, child_array_index, new_minimal_action, next_lhs_bound, iter,
-                [](MdBoundMap& b_map) { return b_map.begin(); }, gen_check_offset);
-    }
+    MdNode* TryGetNextNodeBoundMap(MdBoundMap& boundary_mapping, GeneralizationHelper& helper,
+                                   model::Index child_array_index, auto new_minimal_action,
+                                   model::md::DecisionBoundary const next_lhs_bound,
+                                   MdLhs::iterator iter, auto get_b_map_iter,
+                                   std::size_t gen_check_offset = 0);
 
     void AddIfMinimal(MdSpecialization const& md);
 
