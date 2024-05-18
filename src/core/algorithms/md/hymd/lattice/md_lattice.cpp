@@ -371,13 +371,6 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md) {
         }
         helper.SetAndCheck(&it->second);
     }
-    Index cur_node_index = [&]() {
-        Index index = 0;
-        for (auto iter = old_lhs.begin(); iter != spec_iter; ++iter) {
-            index += iter->child_array_index + 1;
-        }
-        return index;
-    }();
     auto try_set_next = [&](auto... args) {
         return helper.SetAndCheck(TryGetNextNode(md, helper, args...));
     };
@@ -389,7 +382,6 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md) {
         return;
     } else if (next_lhs_iter->child_array_index == spec_child_array_index) {  // Replace
         if (try_set_next(spec_child_array_index, spec_index, spec_bound)) return;
-        cur_node_index = spec_index + 1;
         ++next_lhs_iter;
         while (next_lhs_iter != lhs_end) {
             auto const& [child_array_index, next_lhs_bound] = *next_lhs_iter;
@@ -399,24 +391,27 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md) {
                                                           child_array_index + 1))
                 return;
             if (try_set_next(child_array_index, next_node_index, next_lhs_bound)) return;
-            cur_node_index = next_node_index + 1;
         }
         // Note: Metanome implemented this incorrectly, potentially missing out on recommendations.
         helper.SetBoundOnCurrent();
-        return;
     } else {  // Insert
+        auto const& [old_child_array_index, next_lhs_bound] = *next_lhs_iter;
+        std::size_t const offset = -(spec_child_array_index + 1);
         if (try_set_next(spec_child_array_index, spec_index, spec_bound)) return;
-        cur_node_index = spec_index + 1;
-        for (MdLhs::iterator lhs_iter = next_lhs_iter; lhs_iter != lhs_end; ++lhs_iter) {
-            model::Index next_node_index = old_lhs.ToIndex(lhs_iter);
-            model::md::DecisionBoundary next_lhs_bound = lhs_iter->decision_boundary;
-            Index const fol_index = next_node_index + 1;
-            if (total_checker.HasGeneralizationInChildren(helper.CurNode(), cur_node_index,
-                                                          fol_index))
+        if (total_checker.HasGeneralizationInChildren(helper.CurNode(), next_lhs_iter, offset))
+            return;
+        std::size_t const fol_spec_child_index = old_child_array_index + offset;
+        model::Index next_node_index = old_lhs.ToIndex(next_lhs_iter);
+        if (try_set_next(fol_spec_child_index, next_node_index, next_lhs_bound)) return;
+        ++next_lhs_iter;
+        while (next_lhs_iter != lhs_end) {
+            auto const& [child_array_index, next_lhs_bound] = *next_lhs_iter;
+            model::Index next_node_index = old_lhs.ToIndex(next_lhs_iter);
+            ++next_lhs_iter;
+            if (total_checker.HasGeneralizationInChildren(helper.CurNode(), next_lhs_iter,
+                                                          child_array_index + 1))
                 return;
-            if (try_set_next(next_node_index - cur_node_index, next_node_index, next_lhs_bound))
-                return;
-            cur_node_index = fol_index;
+            if (try_set_next(child_array_index, next_node_index, next_lhs_bound)) return;
         }
         // Note: Metanome implemented this incorrectly, potentially missing out on recommendations.
         helper.SetBoundOnCurrent();
