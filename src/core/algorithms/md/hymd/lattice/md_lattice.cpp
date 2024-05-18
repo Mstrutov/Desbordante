@@ -377,12 +377,12 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md) {
 
     MdLhs::iterator lhs_end = old_lhs.end();
     if (next_lhs_iter == lhs_end) {  // Append
-        auto new_minimal_action = [&](MdNode& node) { AddNewMinimal(node, md, spec_index + 1); };
+        auto new_minimal_action = [&](MdNode& node) { AddNewMinimal(node, md, next_lhs_iter); };
         if (try_set_next(spec_child_array_index, new_minimal_action, spec_bound, next_lhs_iter))
             return;
     } else if (next_lhs_iter->child_array_index == spec_child_array_index) {  // Replace
         ++next_lhs_iter;
-        auto new_minimal_action = [&](MdNode& node) { AddNewMinimal(node, md, spec_index + 1); };
+        auto new_minimal_action = [&](MdNode& node) { AddNewMinimal(node, md, next_lhs_iter); };
         if (try_set_next(spec_child_array_index, new_minimal_action, spec_bound, next_lhs_iter))
             return;
     } else {  // Insert
@@ -405,9 +405,8 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md) {
     }
     while (next_lhs_iter != lhs_end) {
         auto const& [child_array_index, next_lhs_bound] = *next_lhs_iter;
-        model::Index next_node_index = old_lhs.ToIndex(next_lhs_iter);
         auto new_minimal_action2 = [&](MdNode& node) {
-            AddNewMinimal(node, md, next_node_index + 1);
+            AddNewMinimal(node, md, next_lhs_iter);
         };
         ++next_lhs_iter;
         if (total_checker.HasGeneralizationInChildren(helper.CurNode(), next_lhs_iter,
