@@ -313,11 +313,10 @@ public:
 };
 
 // Note: writing this in AddIfMinimal with gotos seems to be faster.
-MdNode* MdLattice::TryGetNextNode(MdSpecialization const& md, GeneralizationHelper& helper,
-                                  Index const child_array_index, Index const next_node_index,
+MdNode* MdLattice::TryGetNextNode(MdSpecialization const&, GeneralizationHelper& helper,
+                                  Index const child_array_index, auto new_minimal_action,
                                   DecisionBoundary const next_lhs_bound, MdLhs::iterator iter,
                                   std::size_t gen_check_offset) {
-    Index const fol_index = next_node_index + 1;
     MdNode& cur_node = helper.CurNode();
     auto [boundary_mapping, is_first_arr] = cur_node.TryEmplaceChild(child_array_index);
     std::size_t const next_child_array_size = cur_node.GetChildArraySize(child_array_index);
@@ -326,7 +325,7 @@ MdNode* MdLattice::TryGetNextNode(MdSpecialization const& md, GeneralizationHelp
                 boundary_mapping
                         .try_emplace(next_lhs_bound, column_matches_size_, next_child_array_size)
                         .first->second;
-        AddNewMinimal(new_node, md, fol_index);
+        new_minimal_action(new_node);
         return nullptr;
     }
     auto it = boundary_mapping.begin();
@@ -343,7 +342,7 @@ MdNode* MdLattice::TryGetNextNode(MdSpecialization const& md, GeneralizationHelp
                     .emplace_hint(it, std::piecewise_construct, forward_as_tuple(next_lhs_bound),
                                   forward_as_tuple(column_matches_size_, next_child_array_size))
                     ->second;
-    AddNewMinimal(new_node, md, fol_index);
+    new_minimal_action(new_node);
     return nullptr;
 }
 
@@ -378,49 +377,47 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md) {
 
     MdLhs::iterator lhs_end = old_lhs.end();
     if (next_lhs_iter == lhs_end) {  // Append
-        if (try_set_next(spec_child_array_index, spec_index, spec_bound, next_lhs_iter)) return;
-        helper.SetBoundOnCurrent();
-        return;
+        auto new_minimal_action = [&](MdNode& node) { AddNewMinimal(node, md, spec_index + 1); };
+        if (try_set_next(spec_child_array_index, new_minimal_action, spec_bound, next_lhs_iter))
+            return;
     } else if (next_lhs_iter->child_array_index == spec_child_array_index) {  // Replace
         ++next_lhs_iter;
-        if (try_set_next(spec_child_array_index, spec_index, spec_bound, next_lhs_iter)) return;
-        while (next_lhs_iter != lhs_end) {
-            auto const& [child_array_index, next_lhs_bound] = *next_lhs_iter;
-            model::Index next_node_index = old_lhs.ToIndex(next_lhs_iter);
-            ++next_lhs_iter;
-            if (total_checker.HasGeneralizationInChildren(helper.CurNode(), next_lhs_iter,
-                                                          child_array_index + 1))
-                return;
-            if (try_set_next(child_array_index, next_node_index, next_lhs_bound, next_lhs_iter))
-                return;
-        }
-        // Note: Metanome implemented this incorrectly, potentially missing out on recommendations.
-        helper.SetBoundOnCurrent();
+        auto new_minimal_action = [&](MdNode& node) { AddNewMinimal(node, md, spec_index + 1); };
+        if (try_set_next(spec_child_array_index, new_minimal_action, spec_bound, next_lhs_iter))
+            return;
     } else {  // Insert
         auto const& [old_child_array_index, next_lhs_bound] = *next_lhs_iter;
         std::size_t const offset = -(spec_child_array_index + 1);
-        if (try_set_next(spec_child_array_index, spec_index, spec_bound, next_lhs_iter, offset))
+        auto new_minimal_action = [&](MdNode& node) { AddNewMinimal(node, md, spec_index + 1); };
+        if (try_set_next(spec_child_array_index, new_minimal_action, spec_bound, next_lhs_iter,
+                         offset))
             return;
         if (total_checker.HasGeneralizationInChildren(helper.CurNode(), next_lhs_iter, offset))
             return;
         std::size_t const fol_spec_child_index = old_child_array_index + offset;
         model::Index next_node_index = old_lhs.ToIndex(next_lhs_iter);
         ++next_lhs_iter;
-        if (try_set_next(fol_spec_child_index, next_node_index, next_lhs_bound, next_lhs_iter))
+        auto new_minimal_action2 = [&](MdNode& node) {
+            AddNewMinimal(node, md, next_node_index + 1);
+        };
+        if (try_set_next(fol_spec_child_index, new_minimal_action2, next_lhs_bound, next_lhs_iter))
             return;
-        while (next_lhs_iter != lhs_end) {
-            auto const& [child_array_index, next_lhs_bound] = *next_lhs_iter;
-            model::Index next_node_index = old_lhs.ToIndex(next_lhs_iter);
-            ++next_lhs_iter;
-            if (total_checker.HasGeneralizationInChildren(helper.CurNode(), next_lhs_iter,
-                                                          child_array_index + 1))
-                return;
-            if (try_set_next(child_array_index, next_node_index, next_lhs_bound, next_lhs_iter))
-                return;
-        }
-        // Note: Metanome implemented this incorrectly, potentially missing out on recommendations.
-        helper.SetBoundOnCurrent();
     }
+    while (next_lhs_iter != lhs_end) {
+        auto const& [child_array_index, next_lhs_bound] = *next_lhs_iter;
+        model::Index next_node_index = old_lhs.ToIndex(next_lhs_iter);
+        auto new_minimal_action2 = [&](MdNode& node) {
+            AddNewMinimal(node, md, next_node_index + 1);
+        };
+        ++next_lhs_iter;
+        if (total_checker.HasGeneralizationInChildren(helper.CurNode(), next_lhs_iter,
+                                                      child_array_index + 1))
+            return;
+        if (try_set_next(child_array_index, new_minimal_action2, next_lhs_bound, next_lhs_iter))
+            return;
+    }
+    // Note: Metanome implemented this incorrectly, potentially missing out on recommendations.
+    helper.SetBoundOnCurrent();
 }
 
 void MdLattice::RaiseInterestingnessBounds(
