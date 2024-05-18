@@ -120,10 +120,20 @@ private:
     void UpdateMaxLevel(LhsSpecialization const& lhs_specialization);
     void AddNewMinimal(MdNode& cur_node, MdSpecialization const& md, model::Index cur_node_index);
     void AddNewMinimal(MdNode& cur_node, MdSpecialization const& md, MdLhs::iterator cur_node_iter);
-    MdNode* TryGetNextNode(MdSpecialization const& md, GeneralizationHelper& helper,
-                           model::Index child_array_index, auto new_minimal_action,
+    MdNode* TryGetNextNode(GeneralizationHelper& helper, model::Index child_array_index,
+                           auto new_minimal_action,
                            model::md::DecisionBoundary const next_lhs_bound, MdLhs::iterator iter,
-                           std::size_t gen_check_offset = 0);
+                           auto get_b_map_iter, std::size_t gen_check_offset = 0);
+
+    MdNode* TryGetNextNode(GeneralizationHelper& helper, model::Index child_array_index,
+                           auto new_minimal_action,
+                           model::md::DecisionBoundary const next_lhs_bound, MdLhs::iterator iter,
+                           std::size_t gen_check_offset = 0) {
+        return TryGetNextNode(
+                helper, child_array_index, new_minimal_action, next_lhs_bound, iter,
+                [](MdNode::BoundMap& b_map) { return b_map.begin(); }, gen_check_offset);
+    }
+
     void AddIfMinimal(MdSpecialization const& md);
 
     static auto SetUnsupAction() noexcept {

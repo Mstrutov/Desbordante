@@ -313,10 +313,10 @@ public:
 };
 
 // Note: writing this in AddIfMinimal with gotos seems to be faster.
-MdNode* MdLattice::TryGetNextNode(MdSpecialization const&, GeneralizationHelper& helper,
-                                  Index const child_array_index, auto new_minimal_action,
-                                  DecisionBoundary const next_lhs_bound, MdLhs::iterator iter,
-                                  std::size_t gen_check_offset) {
+MdNode* MdLattice::TryGetNextNode(GeneralizationHelper& helper, Index const child_array_index,
+                                  auto new_minimal_action, DecisionBoundary const next_lhs_bound,
+                                  MdLhs::iterator iter, std::size_t gen_check_offset,
+                                  auto get_b_map_iter) {
     MdNode& cur_node = helper.CurNode();
     auto [boundary_mapping, is_first_arr] = cur_node.TryEmplaceChild(child_array_index);
     std::size_t const next_child_array_size = cur_node.GetChildArraySize(child_array_index);
@@ -328,7 +328,7 @@ MdNode* MdLattice::TryGetNextNode(MdSpecialization const&, GeneralizationHelper&
         new_minimal_action(new_node);
         return nullptr;
     }
-    auto it = boundary_mapping.begin();
+    auto it = get_b_map_iter(boundary_mapping);
     MdGenChecker total_checker = helper.GetTotalChecker();
     for (auto end_it = boundary_mapping.end(); it != end_it; ++it) {
         auto const& [generalization_bound, node] = *it;
@@ -371,7 +371,7 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md) {
         helper.SetAndCheck(&it->second);
     }
     auto try_set_next = [&](auto... args) {
-        return helper.SetAndCheck(TryGetNextNode(md, helper, args...));
+        return helper.SetAndCheck(TryGetNextNode(helper, args...));
     };
 
     MdLhs::iterator lhs_end = old_lhs.end();
