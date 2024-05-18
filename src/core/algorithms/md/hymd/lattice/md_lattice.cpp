@@ -313,9 +313,10 @@ public:
 };
 
 // Note: writing this in AddIfMinimal with gotos seems to be faster.
-auto MdLattice::TryGetNextNode(MdSpecialization const& md, GeneralizationHelper& helper,
-                               Index const child_array_index, Index const next_node_index,
-                               DecisionBoundary const next_lhs_bound) -> MdNode* {
+MdNode* MdLattice::TryGetNextNode(MdSpecialization const& md, GeneralizationHelper& helper,
+                                  Index const child_array_index, Index const next_node_index,
+                                  DecisionBoundary const next_lhs_bound, MdLhs::iterator iter,
+                                  std::size_t gen_check_offset) {
     Index const fol_index = next_node_index + 1;
     MdNode& cur_node = helper.CurNode();
     auto [boundary_mapping, is_first_arr] = cur_node.TryEmplaceChild(child_array_index);
@@ -334,7 +335,7 @@ auto MdLattice::TryGetNextNode(MdSpecialization const& md, GeneralizationHelper&
         auto const& [generalization_bound, node] = *it;
         if (generalization_bound > next_lhs_bound) break;
         if (generalization_bound == next_lhs_bound) return &it->second;
-        if (total_checker.HasGeneralization(node, fol_index)) return nullptr;
+        if (total_checker.HasGeneralization(node, iter, gen_check_offset)) return nullptr;
     }
     using std::forward_as_tuple;
     MdNode& new_node =
@@ -377,12 +378,12 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md) {
 
     MdLhs::iterator lhs_end = old_lhs.end();
     if (next_lhs_iter == lhs_end) {  // Append
-        if (try_set_next(spec_child_array_index, spec_index, spec_bound)) return;
+        if (try_set_next(spec_child_array_index, spec_index, spec_bound, next_lhs_iter)) return;
         helper.SetBoundOnCurrent();
         return;
     } else if (next_lhs_iter->child_array_index == spec_child_array_index) {  // Replace
-        if (try_set_next(spec_child_array_index, spec_index, spec_bound)) return;
         ++next_lhs_iter;
+        if (try_set_next(spec_child_array_index, spec_index, spec_bound, next_lhs_iter)) return;
         while (next_lhs_iter != lhs_end) {
             auto const& [child_array_index, next_lhs_bound] = *next_lhs_iter;
             model::Index next_node_index = old_lhs.ToIndex(next_lhs_iter);
@@ -390,20 +391,23 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md) {
             if (total_checker.HasGeneralizationInChildren(helper.CurNode(), next_lhs_iter,
                                                           child_array_index + 1))
                 return;
-            if (try_set_next(child_array_index, next_node_index, next_lhs_bound)) return;
+            if (try_set_next(child_array_index, next_node_index, next_lhs_bound, next_lhs_iter))
+                return;
         }
         // Note: Metanome implemented this incorrectly, potentially missing out on recommendations.
         helper.SetBoundOnCurrent();
     } else {  // Insert
         auto const& [old_child_array_index, next_lhs_bound] = *next_lhs_iter;
         std::size_t const offset = -(spec_child_array_index + 1);
-        if (try_set_next(spec_child_array_index, spec_index, spec_bound)) return;
+        if (try_set_next(spec_child_array_index, spec_index, spec_bound, next_lhs_iter, offset))
+            return;
         if (total_checker.HasGeneralizationInChildren(helper.CurNode(), next_lhs_iter, offset))
             return;
         std::size_t const fol_spec_child_index = old_child_array_index + offset;
         model::Index next_node_index = old_lhs.ToIndex(next_lhs_iter);
-        if (try_set_next(fol_spec_child_index, next_node_index, next_lhs_bound)) return;
         ++next_lhs_iter;
+        if (try_set_next(fol_spec_child_index, next_node_index, next_lhs_bound, next_lhs_iter))
+            return;
         while (next_lhs_iter != lhs_end) {
             auto const& [child_array_index, next_lhs_bound] = *next_lhs_iter;
             model::Index next_node_index = old_lhs.ToIndex(next_lhs_iter);
@@ -411,7 +415,8 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md) {
             if (total_checker.HasGeneralizationInChildren(helper.CurNode(), next_lhs_iter,
                                                           child_array_index + 1))
                 return;
-            if (try_set_next(child_array_index, next_node_index, next_lhs_bound)) return;
+            if (try_set_next(child_array_index, next_node_index, next_lhs_bound, next_lhs_iter))
+                return;
         }
         // Note: Metanome implemented this incorrectly, potentially missing out on recommendations.
         helper.SetBoundOnCurrent();

@@ -122,7 +122,8 @@ private:
     void AddNewMinimal(MdNode& cur_node, MdSpecialization const& md, MdLhs::iterator cur_node_iter);
     MdNode* TryGetNextNode(MdSpecialization const& md, GeneralizationHelper& helper,
                            model::Index child_array_index, model::Index const next_node_index,
-                           model::md::DecisionBoundary const next_lhs_bound);
+                           model::md::DecisionBoundary const next_lhs_bound, MdLhs::iterator iter,
+                           std::size_t gen_check_offset = 0);
     void AddIfMinimal(MdSpecialization const& md);
 
     static auto SetUnsupAction() noexcept {
