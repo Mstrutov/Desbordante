@@ -32,29 +32,10 @@ public:
         return false;
     }
 
-    bool HasGeneralizationInChildren(NodeType const& node, model::Index const node_index,
-                                     model::Index const start_index) const {
-        MdLhs const& lhs = NodeType::GetLhs(unspecialized_);
-        auto iter = lhs.FindIter(start_index);
-        if (iter == lhs.end()) return false;
-        return HasGeneralizationInChildren(
-                node, iter, lhs.ToIndex(iter) - node_index - iter->child_array_index);
-    }
-
     bool HasGeneralization(NodeType const& node, MdLhs::iterator next_iter,
-                           model::Index child_array_index) const {
+                           model::Index child_array_index = 0) const {
         return node.ContainsGeneralizationOf(unspecialized_) ||
                HasGeneralizationInChildren(node, next_iter, child_array_index);
-    }
-
-    bool HasGeneralization(NodeType const& node, MdLhs::iterator next_iter) const {
-        return node.ContainsGeneralizationOf(unspecialized_) ||
-               HasGeneralizationInChildren(node, next_iter);
-    }
-
-    bool HasGeneralization(NodeType const& node, model::Index node_index) const {
-        return node.ContainsGeneralizationOf(unspecialized_) ||
-               HasGeneralizationInChildren(node, node_index, node_index);
     }
 
     bool HasGeneralization(NodeType const& node) const {

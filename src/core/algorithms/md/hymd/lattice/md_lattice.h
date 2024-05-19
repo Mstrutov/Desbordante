@@ -118,7 +118,6 @@ private:
     bool IsUnsupported(LhsSpecialization const& lhs_specialization) const;
 
     void UpdateMaxLevel(LhsSpecialization const& lhs_specialization);
-    void AddNewMinimal(MdNode& cur_node, MdSpecialization const& md, model::Index cur_node_index);
     void AddNewMinimal(MdNode& cur_node, MdSpecialization const& md, MdLhs::iterator cur_node_iter);
     MdNode* TryGetNextNode(GeneralizationHelper& helper, model::Index child_array_index,
                            auto new_minimal_action,

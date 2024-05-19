@@ -68,20 +68,6 @@ protected:
 };
 
 template <typename NodeType>
-void AddUnchecked(NodeType* cur_node_ptr, MdLhs const& lhs, model::Index cur_node_index,
-                  auto final_node_action) {
-    assert(cur_node_ptr->IsEmpty());
-    for (MdElement element = lhs.FindNextNonZero(cur_node_index); lhs.IsNotEnd(element);
-         element = lhs.FindNextNonZero(cur_node_index)) {
-        auto const& [next_node_index, next_bound] = element;
-        std::size_t const child_array_index = next_node_index - cur_node_index;
-        cur_node_ptr = cur_node_ptr->AddOneUnchecked(child_array_index, next_bound);
-        cur_node_index = next_node_index + 1;
-    }
-    final_node_action(cur_node_ptr);
-}
-
-template <typename NodeType>
 void AddUnchecked(NodeType* cur_node_ptr, MdLhs const& lhs, MdLhs::iterator cur_lhs_iter,
                   auto final_node_action) {
     assert(cur_node_ptr->IsEmpty());

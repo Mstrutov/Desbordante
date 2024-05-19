@@ -216,15 +216,6 @@ void MdLattice::MdVerificationMessenger::LowerAndSpecialize(
     lattice_->Specialize(GetLhs(), invalidated.GetInvalidated());
 }
 
-void MdLattice::AddNewMinimal(MdNode& cur_node, MdSpecialization const& md, Index cur_node_index) {
-    assert(!NotEmpty(cur_node.rhs_bounds));
-    // assert(cur_node_index > md.lhs_specialization.specialized.index);
-    auto const& [rhs_index, rhs_bound] = md.rhs;
-    auto set_bound = [&](MdNode* node) { node->rhs_bounds[rhs_index] = rhs_bound; };
-    AddUnchecked(&cur_node, md.lhs_specialization.old_lhs, cur_node_index, set_bound);
-    UpdateMaxLevel(md.lhs_specialization);
-}
-
 void MdLattice::AddNewMinimal(MdNode& cur_node, MdSpecialization const& md,
                               MdLhs::iterator cur_node_iter) {
     assert(!NotEmpty(cur_node.rhs_bounds));
@@ -239,7 +230,7 @@ void MdLattice::UpdateMaxLevel(LhsSpecialization const& lhs) {
     std::size_t level = 0;
     auto const& [spec_child_array_index, spec_bound] = lhs.specialization_data.new_child;
     MdLhs const& old_lhs = lhs.old_lhs;
-    MdLhs::iterator hint_iter = lhs.specialization_data.spec_before;
+    MdLhs::iterator spec_iter = lhs.specialization_data.spec_before;
     Index cur_col_match_index = 0;
     MdLhs::iterator lhs_iter = old_lhs.begin();
     auto add_level = [&]() {
@@ -248,7 +239,7 @@ void MdLattice::UpdateMaxLevel(LhsSpecialization const& lhs) {
         level += get_single_level_(bound, cur_col_match_index);
         ++cur_col_match_index;
     };
-    for (; lhs_iter != hint_iter; ++lhs_iter) {
+    for (; lhs_iter != spec_iter; ++lhs_iter) {
         add_level();
     }
     level += get_single_level_(spec_bound, cur_col_match_index + spec_child_array_index);
