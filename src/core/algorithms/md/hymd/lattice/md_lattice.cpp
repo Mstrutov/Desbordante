@@ -95,7 +95,7 @@ void MdLattice::Specialize(MdLhs const& lhs, SimilarityVector const& specialize_
 }
 
 void MdLattice::Specialize(MdLhs const& lhs, Rhss const& rhss) {
-    auto get_lowest = [&](...) { return kLowestBound; };
+    auto get_lowest = [](...) { return kLowestBound; };
     auto get_lhs_bound = [](Index, DecisionBoundary bound) { return bound; };
     Specialize(lhs, rhss, get_lhs_bound, get_lowest);
 }

@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cassert>
 
+#include "algorithms/md/hymd/md_lhs.h"
+
 namespace algos::hymd::lattice::cardinality {
 
 void OneByOnePicker::NewBatch(std::size_t elements) {
@@ -85,7 +87,7 @@ auto OneByOnePicker::CompareLhss(MdLhs const& cur, MdLhs const& prev) -> Compari
         ++cur_it;
         ++prev_it;
     }
-    // Assuming all LHSs are not equal.
+    // Assuming all LHSs are distinct.
     assert(prev_it != prev_end);
     // cur has no more LHS elements, cur generalizes prev.
     return ComparisonResult::Generalization;

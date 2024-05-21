@@ -61,6 +61,7 @@ public:
         return values_.empty();
     }
 };
+
 }  // namespace algos::hymd
 
 namespace std {
