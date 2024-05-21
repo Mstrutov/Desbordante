@@ -118,8 +118,9 @@ private:
     bool IsUnsupportedReplace(LhsSpecialization const& lhs_specialization) const;
     bool IsUnsupportedNonReplace(LhsSpecialization const& lhs_specialization) const;
 
-    void UpdateMaxLevel(LhsSpecialization const& lhs_specialization);
-    void AddNewMinimal(MdNode& cur_node, MdSpecialization const& md, MdLhs::iterator cur_node_iter);
+    void UpdateMaxLevel(LhsSpecialization const& lhs_specialization, auto handle_tail);
+    void AddNewMinimal(MdNode& cur_node, MdSpecialization const& md, MdLhs::iterator cur_node_iter,
+                       auto handle_level_update_tail);
     MdNode* TryGetNextNode(GeneralizationHelper& helper, model::Index child_array_index,
                            auto new_minimal_action,
                            model::md::DecisionBoundary const next_lhs_bound, MdLhs::iterator iter,
@@ -134,7 +135,7 @@ private:
     void AddIfMinimal(MdSpecialization const& md, auto handle_tail, auto gen_checker_method);
     void AddIfMinimalAppend(MdSpecialization const& md);
     void WalkToTail(MdSpecialization const& md, GeneralizationHelper& helper,
-                    MdLhs::iterator next_lhs_iter);
+                    MdLhs::iterator next_lhs_iter, auto handle_level_update_tail);
     void AddIfMinimalReplace(MdSpecialization const& md);
     void AddIfMinimalInsert(MdSpecialization const& md);
 

@@ -222,16 +222,16 @@ void MdLattice::MdVerificationMessenger::LowerAndSpecialize(
 }
 
 void MdLattice::AddNewMinimal(MdNode& cur_node, MdSpecialization const& md,
-                              MdLhs::iterator cur_node_iter) {
+                              MdLhs::iterator cur_node_iter, auto handle_level_update_tail) {
     assert(!NotEmpty(cur_node.rhs_bounds));
     assert(cur_node_iter >= md.lhs_specialization.specialization_data.spec_before);
     auto const& [rhs_index, rhs_bound] = md.rhs;
     auto set_bound = [&](MdNode* node) { node->rhs_bounds[rhs_index] = rhs_bound; };
     AddUnchecked(&cur_node, md.lhs_specialization.old_lhs, cur_node_iter, set_bound);
-    UpdateMaxLevel(md.lhs_specialization);
+    UpdateMaxLevel(md.lhs_specialization, handle_level_update_tail);
 }
 
-void MdLattice::UpdateMaxLevel(LhsSpecialization const& lhs) {
+void MdLattice::UpdateMaxLevel(LhsSpecialization const& lhs, auto handle_tail) {
     std::size_t level = 0;
     auto const& [spec_child_array_index, spec_bound] = lhs.specialization_data.new_child;
     MdLhs const& old_lhs = lhs.old_lhs;
@@ -244,17 +244,14 @@ void MdLattice::UpdateMaxLevel(LhsSpecialization const& lhs) {
         level += get_single_level_(bound, cur_col_match_index);
         ++cur_col_match_index;
     };
-    for (; lhs_iter != spec_iter; ++lhs_iter) {
-        add_level();
-    }
+    auto add_until = [&](MdLhs::iterator end_iter) {
+        for (; lhs_iter != end_iter; ++lhs_iter) add_level();
+    };
+    add_until(spec_iter);
     level += get_single_level_(spec_bound, cur_col_match_index + spec_child_array_index);
-    MdLhs::iterator lhs_end = old_lhs.end();
-    if (lhs_iter != lhs_end) {
-        if (spec_child_array_index != lhs_iter->child_array_index) add_level();
-        for (++lhs_iter; lhs_iter != lhs_end; ++lhs_iter) {
-            add_level();
-        }
-    }
+    MdLhs::iterator const lhs_end = old_lhs.end();
+    auto add_until_end = [&]() { add_until(lhs_end); };
+    handle_tail(add_until_end, lhs_iter);
     if (level > max_level_) max_level_ = level;
 }
 
@@ -380,13 +377,15 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md, auto handle_tail,
 }
 
 void MdLattice::WalkToTail(MdSpecialization const& md, GeneralizationHelper& helper,
-                           MdLhs::iterator next_lhs_iter) {
+                           MdLhs::iterator next_lhs_iter, auto handle_level_update_tail) {
     MdGenChecker const& total_checker = helper.GetTotalChecker();
     MdLhs::iterator lhs_end = md.lhs_specialization.old_lhs.end();
     while (next_lhs_iter != lhs_end) {
         auto const& [child_array_index, next_lhs_bound] = *next_lhs_iter;
         ++next_lhs_iter;
-        auto add_normal = [&](MdNode& node) { AddNewMinimal(node, md, next_lhs_iter); };
+        auto add_normal = [&](MdNode& node) {
+            AddNewMinimal(node, md, next_lhs_iter, handle_level_update_tail);
+        };
         if (total_checker.HasGeneralizationInChildren(helper.CurNode(), next_lhs_iter,
                                                       child_array_index + 1))
             return;
@@ -403,8 +402,9 @@ void MdLattice::AddIfMinimalAppend(MdSpecialization const& md) {
     assert(spec_iter == md.lhs_specialization.old_lhs.end());
     auto const& [spec_child_array_index, spec_bound] =
             md.lhs_specialization.specialization_data.new_child;
+    auto do_nothing = [](...) {};
     auto handle_tail = [&](GeneralizationHelper& helper) {
-        auto add_normal = [&](MdNode& node) { AddNewMinimal(node, md, spec_iter); };
+        auto add_normal = [&](MdNode& node) { AddNewMinimal(node, md, spec_iter, do_nothing); };
         if (helper.SetAndCheck(TryGetNextNode(helper, spec_child_array_index, add_normal,
                                               spec_bound, spec_iter)))
             return;
@@ -421,16 +421,20 @@ void MdLattice::AddIfMinimalReplace(MdSpecialization const& md) {
     auto const& [child_array_index, old_bound] = *spec_iter;
     assert(spec_child_array_index == child_array_index);
     assert(old_bound < spec_bound);
+    auto skip_one = [](auto add_until_end, MdLhs::iterator& iter) {
+        ++iter;
+        add_until_end();
+    };
     auto handle_tail = [&](GeneralizationHelper& helper) {
         assert(helper.Children()[child_array_index].has_value());
         auto get_higher = [&](MdBoundMap& b_map) { return b_map.upper_bound(old_bound); };
         ++spec_iter;
-        auto add_normal = [&](MdNode& node) { AddNewMinimal(node, md, spec_iter); };
+        auto add_normal = [&](MdNode& node) { AddNewMinimal(node, md, spec_iter, skip_one); };
         if (helper.SetAndCheck(TryGetNextNodeBoundMap(*helper.Children()[child_array_index], helper,
                                                       spec_child_array_index, add_normal,
                                                       spec_bound, spec_iter, get_higher)))
             return;
-        WalkToTail(md, helper, spec_iter);
+        WalkToTail(md, helper, spec_iter, skip_one);
     };
     AddIfMinimal(md, handle_tail, &MdSpecGenChecker::HasGeneralizationInChildrenReplace);
 }
@@ -444,9 +448,10 @@ void MdLattice::AddIfMinimalInsert(MdSpecialization const& md) {
     assert(old_child_array_index > spec_child_array_index);
     std::size_t const offset = -(spec_child_array_index + 1);
     std::size_t const fol_spec_child_index = old_child_array_index + offset;
+    auto add_all = [](auto add_until_end, ...) { add_until_end(); };
     auto fol_add = [&](MdNode& node) {
         AddNewMinimal(*node.AddOneUnchecked(fol_spec_child_index, next_lhs_bound), md,
-                      spec_iter + 1);
+                      spec_iter + 1, add_all);
     };
     auto handle_tail = [&](GeneralizationHelper& helper) {
         MdGenChecker const& total_checker = helper.GetTotalChecker();
@@ -455,11 +460,11 @@ void MdLattice::AddIfMinimalInsert(MdSpecialization const& md) {
             return;
         if (total_checker.HasGeneralizationInChildren(helper.CurNode(), spec_iter, offset)) return;
         ++spec_iter;
-        auto add_normal = [&](MdNode& node) { AddNewMinimal(node, md, spec_iter); };
+        auto add_normal = [&](MdNode& node) { AddNewMinimal(node, md, spec_iter, add_all); };
         if (helper.SetAndCheck(TryGetNextNode(helper, fol_spec_child_index, add_normal,
                                               next_lhs_bound, spec_iter)))
             return;
-        WalkToTail(md, helper, spec_iter);
+        WalkToTail(md, helper, spec_iter, add_all);
     };
     AddIfMinimal(md, handle_tail, &MdSpecGenChecker::HasGeneralizationInChildrenNonReplace);
 }
