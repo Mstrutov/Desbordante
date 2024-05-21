@@ -145,6 +145,7 @@ void MdLattice::TryAddRefiner(std::vector<MdRefiner>& found, DecisionBoundaryVec
                 invalidated.PushBack(invalid, sim_bound);
             }
         }
+        ++rhs_index;
         ++cur_lhs_index;
     }
     for (; rhs_index != column_matches_size_; ++rhs_index) {
