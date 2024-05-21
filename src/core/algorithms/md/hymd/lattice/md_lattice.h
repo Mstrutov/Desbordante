@@ -130,7 +130,12 @@ private:
                                    MdLhs::iterator iter, auto get_b_map_iter,
                                    std::size_t gen_check_offset = 0);
 
-    void AddIfMinimal(MdSpecialization const& md);
+    void AddIfMinimal(MdSpecialization const& md, auto handle_tail);
+    void AddIfMinimalAppend(MdSpecialization const& md);
+    void WalkToTail(MdSpecialization const& md, GeneralizationHelper& helper,
+                    MdLhs::iterator next_lhs_iter);
+    void AddIfMinimalReplace(MdSpecialization const& md);
+    void AddIfMinimalInsert(MdSpecialization const& md);
 
     static auto SetUnsupAction() noexcept {
         return [](SupportNode* node) { node->is_unsupported = true; };

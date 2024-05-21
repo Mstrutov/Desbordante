@@ -4,15 +4,15 @@
 
 namespace algos::hymd::lattice {
 struct SpecializationData {
-    MdLhs::iterator spec_before;
-    LhsNode new_child;
+    MdLhs::iterator const spec_before;
+    LhsNode const new_child;
 };
 
 struct LhsSpecialization {
     using Unspecialized = MdLhs const&;
 
     MdLhs const& old_lhs;
-    SpecializationData specialization_data;
+    SpecializationData const specialization_data;
 
     Unspecialized ToUnspecialized() const {
         return old_lhs;
