@@ -18,41 +18,31 @@ bool OneByOnePicker::IsGeneralization(MdLhs::iterator gen_it, MdLhs::iterator sp
                                       MdLhs::iterator const gen_end,
                                       MdLhs::iterator const spec_end) {
     using model::Index;
-    auto inc_until_eq = [](MdLhs::iterator& gen_it, MdLhs::iterator& spec_it,
+    auto inc_until_eq = [](MdLhs::iterator const gen_it, MdLhs::iterator& spec_it,
                            MdLhs::iterator const spec_end) {
-        Index cur_spec_index = spec_it->child_array_index;
-        Index const gen_index = gen_it->child_array_index;
-        // Incomparable, spec has no classifier for the considered gen's column match.
-        if (cur_spec_index > gen_index) return true;
-        if (cur_spec_index == gen_index) {
-            // Incomparable, spec's classifier matches more record pairs.
-            if (gen_it->decision_boundary > spec_it->decision_boundary) return true;
-            ++gen_it;
-            ++spec_it;
-            return false;
-        }
-        while (true) {
-            ++spec_it;
-            // Incomparable, generalization's node is after the last specialization's node.
-            if (spec_it == spec_end) return true;
-            ++cur_spec_index;
-            cur_spec_index += spec_it->child_array_index;
+        auto const [gen_index, gen_bound] = *gen_it;
+        Index cur_spec_index = 0;
+        do {
+            auto const& [spec_child_index, spec_bound] = *spec_it;
+            cur_spec_index += spec_child_index;
             // Incomparable, spec has no classifier for the considered gen's column match.
             if (cur_spec_index > gen_index) return true;
             if (cur_spec_index == gen_index) {
                 // Incomparable, spec's classifier matches more record pairs.
-                if (gen_it->decision_boundary > spec_it->decision_boundary) return true;
-                ++gen_it;
+                if (gen_bound > spec_bound) return true;
                 ++spec_it;
                 return false;
             }
-        }
+            ++cur_spec_index;
+        } while (++spec_it != spec_end);
+        // Incomparable, generalization's node is after the last specialization's node.
+        return true;
     };
     while (true) {
         bool is_incomparable = inc_until_eq(gen_it, spec_it, spec_end);
         if (is_incomparable) return false;
         // Fewer classifiers in gen, gen generalizes spec.
-        if (gen_it == gen_end) return true;
+        if (++gen_it == gen_end) return true;
         // More classifiers in gen, gen is incomparable with spec.
         if (spec_it == spec_end) return false;
     }
