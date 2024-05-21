@@ -115,7 +115,8 @@ private:
 
     bool IsUnsupported(MdLhs const& lhs) const;
 
-    bool IsUnsupported(LhsSpecialization const& lhs_specialization) const;
+    bool IsUnsupportedReplace(LhsSpecialization const& lhs_specialization) const;
+    bool IsUnsupportedNonReplace(LhsSpecialization const& lhs_specialization) const;
 
     void UpdateMaxLevel(LhsSpecialization const& lhs_specialization);
     void AddNewMinimal(MdNode& cur_node, MdSpecialization const& md, MdLhs::iterator cur_node_iter);
@@ -130,7 +131,7 @@ private:
                                    MdLhs::iterator iter, auto get_b_map_iter,
                                    std::size_t gen_check_offset = 0);
 
-    void AddIfMinimal(MdSpecialization const& md, auto handle_tail);
+    void AddIfMinimal(MdSpecialization const& md, auto handle_tail, auto gen_checker_method);
     void AddIfMinimalAppend(MdSpecialization const& md);
     void WalkToTail(MdSpecialization const& md, GeneralizationHelper& helper,
                     MdLhs::iterator next_lhs_iter);

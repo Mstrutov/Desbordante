@@ -66,28 +66,29 @@ void MdLattice::Specialize(MdLhs const& lhs, Rhss const& rhss, auto get_higher_l
             (this->*method)({lhs_spec, *rhs_it});
         }
     };
-    auto specialize_element = [&](Index spec_child_index, DecisionBoundary spec_past, auto method) {
+    auto specialize_element = [&](Index spec_child_index, DecisionBoundary spec_past,
+                                  auto add_method, auto support_check_method) {
         std::optional<DecisionBoundary> const specialized_lhs_bound =
                 SpecializeOneLhs(lhs_spec_index, spec_past);
         if (!specialized_lhs_bound.has_value()) return;
         LhsSpecialization lhs_spec{lhs, {lhs_iter, {spec_child_index, *specialized_lhs_bound}}};
-        if (IsUnsupported(lhs_spec)) return;
-        add_all_rhs(lhs_spec, method);
+        if ((this->*support_check_method)(lhs_spec)) return;
+        add_all_rhs(lhs_spec, add_method);
     };
     for (; lhs_iter != lhs_end; ++lhs_iter, ++lhs_spec_index) {
         auto const& [child_array_index, bound] = *lhs_iter;
         for (Index spec_child_index = 0; spec_child_index != child_array_index;
              ++spec_child_index, ++lhs_spec_index) {
             specialize_element(spec_child_index, get_higher_other_bound(lhs_spec_index),
-                               &MdLattice::AddIfMinimalInsert);
+                               &MdLattice::AddIfMinimalInsert, &MdLattice::IsUnsupportedNonReplace);
         }
         specialize_element(child_array_index, get_higher_lhs_bound(lhs_spec_index, bound),
-                           &MdLattice::AddIfMinimalReplace);
+                           &MdLattice::AddIfMinimalReplace, &MdLattice::IsUnsupportedReplace);
     }
     for (Index spec_child_index = 0; lhs_spec_index != column_matches_size_;
          ++lhs_spec_index, ++spec_child_index) {
         specialize_element(spec_child_index, get_higher_other_bound(lhs_spec_index),
-                           &MdLattice::AddIfMinimalAppend);
+                           &MdLattice::AddIfMinimalAppend, &MdLattice::IsUnsupportedNonReplace);
     };
 }
 
@@ -352,7 +353,8 @@ MdNode* MdLattice::TryGetNextNode(GeneralizationHelper& helper, Index const chil
             [](MdBoundMap& b_map) { return b_map.begin(); }, gen_check_offset);
 }
 
-void MdLattice::AddIfMinimal(MdSpecialization const& md, auto handle_tail) {
+void MdLattice::AddIfMinimal(MdSpecialization const& md, auto handle_tail,
+                             auto gen_checker_method) {
     MdSpecGenChecker gen_checker{md};
     MdGenChecker const& total_checker = gen_checker.GetTotalChecker();
     auto helper = GeneralizationHelper(md.rhs, md_root_, total_checker);
@@ -362,15 +364,15 @@ void MdLattice::AddIfMinimal(MdSpecialization const& md, auto handle_tail) {
     while (next_lhs_iter != spec_iter) {
         auto const& [child_array_index, next_lhs_bound] = *next_lhs_iter;
         ++next_lhs_iter;
-        if (gen_checker.HasGeneralizationInChildren(helper.CurNode(), next_lhs_iter,
-                                                    child_array_index + 1))
+        if ((gen_checker.*gen_checker_method)(helper.CurNode(), next_lhs_iter,
+                                              child_array_index + 1))
             return;
         assert(helper.Children()[child_array_index].has_value());
         MdBoundMap& bound_map = *helper.Children()[child_array_index];
         assert(bound_map.find(next_lhs_bound) != bound_map.end());
         auto it = bound_map.begin();
         for (; it->first != next_lhs_bound; ++it) {
-            if (gen_checker.HasGeneralization(it->second, next_lhs_iter)) return;
+            if ((gen_checker.*gen_checker_method)(it->second, next_lhs_iter, 0)) return;
         }
         helper.SetAndCheck(&it->second);
     }
@@ -408,7 +410,7 @@ void MdLattice::AddIfMinimalAppend(MdSpecialization const& md) {
             return;
         helper.SetBoundOnCurrent();
     };
-    AddIfMinimal(md, handle_tail);
+    AddIfMinimal(md, handle_tail, &MdSpecGenChecker::HasGeneralizationInChildrenNonReplace);
 }
 
 void MdLattice::AddIfMinimalReplace(MdSpecialization const& md) {
@@ -430,7 +432,7 @@ void MdLattice::AddIfMinimalReplace(MdSpecialization const& md) {
             return;
         WalkToTail(md, helper, spec_iter);
     };
-    AddIfMinimal(md, handle_tail);
+    AddIfMinimal(md, handle_tail, &MdSpecGenChecker::HasGeneralizationInChildrenReplace);
 }
 
 void MdLattice::AddIfMinimalInsert(MdSpecialization const& md) {
@@ -459,7 +461,7 @@ void MdLattice::AddIfMinimalInsert(MdSpecialization const& md) {
             return;
         WalkToTail(md, helper, spec_iter);
     };
-    AddIfMinimal(md, handle_tail);
+    AddIfMinimal(md, handle_tail, &MdSpecGenChecker::HasGeneralizationInChildrenNonReplace);
 }
 
 void MdLattice::RaiseInterestingnessBounds(
@@ -601,8 +603,13 @@ std::vector<MdLatticeNodeInfo> MdLattice::GetAll() {
     return collected;
 }
 
-bool MdLattice::IsUnsupported(LhsSpecialization const& lhs_spec) const {
-    return SpecGeneralizationChecker<SupportNode>{lhs_spec}.HasGeneralization(support_root_);
+bool MdLattice::IsUnsupportedReplace(LhsSpecialization const& lhs_spec) const {
+    return SpecGeneralizationChecker<SupportNode>{lhs_spec}.HasGeneralizationReplace(support_root_);
+}
+
+bool MdLattice::IsUnsupportedNonReplace(LhsSpecialization const& lhs_spec) const {
+    return SpecGeneralizationChecker<SupportNode>{lhs_spec}.HasGeneralizationNonReplace(
+            support_root_);
 }
 
 void MdLattice::MarkNewLhs(SupportNode& cur_node, MdLhs const& lhs, MdLhs::iterator cur_lhs_iter) {
