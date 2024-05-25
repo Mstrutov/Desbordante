@@ -199,7 +199,7 @@ void HyMD::RegisterResults(SimilarityData const& similarity_data,
             }
             return lhs;
         }();
-        for (Index rhs_index = 0; rhs_index < column_match_number; ++rhs_index) {
+        for (Index rhs_index = 0; rhs_index != column_match_number; ++rhs_index) {
             model::md::DecisionBoundary const rhs_bound = rhs_bounds[rhs_index];
             if (rhs_bound == kLowestBound) continue;
             model::md::ColumnSimilarityClassifier rhs{rhs_index, rhs_bound};

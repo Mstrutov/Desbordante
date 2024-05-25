@@ -81,21 +81,22 @@ void AddUnchecked(NodeType* cur_node_ptr, MdLhs const& lhs, MdLhs::iterator cur_
 template <typename NodeType>
 void CheckedAdd(NodeType* cur_node_ptr, MdLhs const& lhs, auto const& info, auto unchecked_add,
                 auto final_node_action) {
-    for (auto lhs_iter = lhs.begin(), lhs_end = lhs.end(); lhs_iter != lhs_end; ++lhs_iter) {
+    for (auto lhs_iter = lhs.begin(), lhs_end = lhs.end(); lhs_iter != lhs_end;) {
         auto const& [child_array_index, next_bound] = *lhs_iter;
+        ++lhs_iter;
         std::size_t const next_child_array_size =
                 cur_node_ptr->GetChildArraySize(child_array_index);
         auto [boundary_map, is_first_arr] = cur_node_ptr->TryEmplaceChild(child_array_index);
         if (is_first_arr) {
             NodeType& new_node =
                     boundary_map.try_emplace(next_bound, next_child_array_size).first->second;
-            unchecked_add(new_node, info, lhs_iter + 1);
+            unchecked_add(new_node, info, lhs_iter);
             return;
         }
         auto [it_map, is_first_map] = boundary_map.try_emplace(next_bound, next_child_array_size);
         NodeType& next_node = it_map->second;
         if (is_first_map) {
-            unchecked_add(next_node, info, lhs_iter + 1);
+            unchecked_add(next_node, info, lhs_iter);
             return;
         }
         cur_node_ptr = &next_node;

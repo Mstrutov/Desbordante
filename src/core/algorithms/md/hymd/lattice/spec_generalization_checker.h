@@ -64,7 +64,8 @@ class SpecGeneralizationChecker {
                spec_iter->child_array_index == spec_delta);
         model::md::DecisionBoundary const old_bound = spec_iter->decision_boundary;
         auto get_higher = [&](BoundMap const& b_map) { return b_map.upper_bound(old_bound); };
-        return HasChildGenSpec(node, child_array_index, spec_iter + 1, spec_bound, 0,
+        ++spec_iter;
+        return HasChildGenSpec(node, child_array_index, spec_iter, spec_bound, 0,
                                &SpecGeneralizationChecker::HasGeneralizationTotal, get_higher);
     }
 

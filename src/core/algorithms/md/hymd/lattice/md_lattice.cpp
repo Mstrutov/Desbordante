@@ -493,15 +493,15 @@ void MdLattice::RaiseInterestingnessBounds(
     }
 
     Index child_array_index = 0;
-    for (MdLhs::iterator end = lhs.end(); cur_lhs_iter != end;
-         ++cur_lhs_iter, ++child_array_index) {
+    for (MdLhs::iterator end = lhs.end(); cur_lhs_iter != end; ++child_array_index) {
         auto const& [offset, generalization_bound_limit] = *cur_lhs_iter;
+        ++cur_lhs_iter;
         child_array_index += offset;
         MdOptionalChild const& optional_child = cur_node.children[child_array_index];
         if (!optional_child.has_value()) continue;
         for (auto const& [generalization_bound, node] : *optional_child) {
             if (generalization_bound > generalization_bound_limit) break;
-            RaiseInterestingnessBounds(node, lhs, cur_interestingness_bounds, cur_lhs_iter + 1,
+            RaiseInterestingnessBounds(node, lhs, cur_interestingness_bounds, cur_lhs_iter,
                                        indices);
         }
     }
