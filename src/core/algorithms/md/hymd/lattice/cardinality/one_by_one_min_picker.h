@@ -24,6 +24,16 @@ private:
 
     static bool IsGeneralization(MdLhs::iterator gen_it, MdLhs::iterator spec_it,
                                  MdLhs::iterator gen_end, MdLhs::iterator spec_end);
+
+    static bool IsGeneralizationIncr(MdLhs::iterator gen_it, MdLhs::iterator spec_it,
+                                     MdLhs::iterator gen_end, MdLhs::iterator spec_end) {
+        // Fewer classifiers in gen, gen generalizes spec.
+        if (++gen_it == gen_end) return true;
+        // More classifiers in gen, gen is incomparable with spec.
+        if (++spec_it == spec_end) return false;
+        return IsGeneralization(gen_it, spec_it, gen_end, spec_end);
+    }
+
     static ComparisonResult CompareLhss(MdLhs const& cur, MdLhs const& prev);
 
 public:
