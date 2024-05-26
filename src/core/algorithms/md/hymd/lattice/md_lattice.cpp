@@ -105,15 +105,14 @@ void MdLattice::Specialize(MdLhs const& lhs, Rhss const& rhss) {
 }
 
 void MdLattice::MdRefiner::Refine() {
-    for (auto upd_iter = invalidated_.UpdateIterBegin(), upd_end = invalidated_.UpdateIterEnd();
-         upd_iter != upd_end; ++upd_iter) {
-        auto const& [rhs_index, new_bound] = *upd_iter;
+    for (auto new_rhs : invalidated_.GetUpdateView()) {
+        auto const& [rhs_index, new_bound] = new_rhs;
         DecisionBoundary& md_rhs_bound_ref = (*node_info_.rhs_bounds)[rhs_index];
         md_rhs_bound_ref = kLowestBound;
         // trivial
         if (new_bound == kLowestBound) continue;
         // not minimal
-        if (lattice_->HasGeneralization({GetLhs(), *upd_iter})) continue;
+        if (lattice_->HasGeneralization({GetLhs(), new_rhs})) continue;
         md_rhs_bound_ref = new_bound;
     }
     lattice_->Specialize(GetLhs(), *sim_, invalidated_.GetInvalidated());
@@ -213,9 +212,7 @@ void MdLattice::MdVerificationMessenger::MarkUnsupported() {
 
 void MdLattice::MdVerificationMessenger::LowerAndSpecialize(
         utility::InvalidatedRhss const& invalidated) {
-    for (auto upd_iter = invalidated.UpdateIterBegin(), upd_end = invalidated.UpdateIterEnd();
-         upd_iter != upd_end; ++upd_iter) {
-        auto const& [rhs_index, new_bound] = *upd_iter;
+    for (auto [rhs_index, new_bound] : invalidated.GetUpdateView()) {
         GetRhs()[rhs_index] = new_bound;
     }
     lattice_->Specialize(GetLhs(), invalidated.GetInvalidated());
