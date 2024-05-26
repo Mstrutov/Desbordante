@@ -11,11 +11,11 @@ struct MdSpecialization {
     LhsSpecialization const& lhs_specialization;
     MdElement rhs;
 
-    Unspecialized ToUnspecialized() const {
+    Unspecialized ToUnspecialized() const noexcept {
         return {lhs_specialization.ToUnspecialized(), rhs};
     }
 
-    LhsSpecialization const& GetLhsSpecialization() const {
+    LhsSpecialization const& GetLhsSpecialization() const noexcept {
         return lhs_specialization;
     }
 };

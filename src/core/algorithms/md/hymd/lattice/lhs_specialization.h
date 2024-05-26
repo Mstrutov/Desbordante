@@ -14,11 +14,11 @@ struct LhsSpecialization {
     MdLhs const& old_lhs;
     SpecializationData const specialization_data;
 
-    Unspecialized ToUnspecialized() const {
+    Unspecialized ToUnspecialized() const noexcept {
         return old_lhs;
     }
 
-    LhsSpecialization const& GetLhsSpecialization() const {
+    LhsSpecialization const& GetLhsSpecialization() const noexcept {
         return *this;
     }
 };
