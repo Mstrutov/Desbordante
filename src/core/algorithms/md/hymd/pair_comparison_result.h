@@ -2,9 +2,9 @@
 
 #include <vector>
 
-#include "algorithms/md/decision_boundary.h"
+#include "algorithms/md/hymd/preprocessing/similarity.h"
 #include "algorithms/md/hymd/utility/vector_double_hash.h"
 
 namespace algos::hymd {
-using DecisionBoundaryVector = std::vector<model::md::DecisionBoundary>;
+using PairComparisonResult = std::vector<preprocessing::Similarity>;
 }  // namespace algos::hymd

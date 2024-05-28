@@ -7,12 +7,9 @@
 
 namespace algos::hymd {
 
-SimilarityData SimilarityData::CreateFrom(
-        indexes::RecordsInfo* const records_info,
-        std::vector<
-                std::tuple<std::unique_ptr<preprocessing::similarity_measure::SimilarityMeasure>,
-                           model::Index, model::Index>> const column_matches_info_initial,
-        util::WorkerThreadPool& pool) {
+SimilarityData SimilarityData::CreateFrom(indexes::RecordsInfo* const records_info,
+                                          ColMatchesInfo const column_matches_info_initial,
+                                          util::WorkerThreadPool& pool) {
     bool const one_table_given = records_info->OneTableGiven();
     std::size_t const col_match_number = column_matches_info_initial.size();
     std::vector<ColumnMatchInfo> column_matches_info;
@@ -43,14 +40,14 @@ SimilarityData SimilarityData::CreateFrom(
     return {records_info, std::move(column_matches_info), std::move(column_matches_lhs_bounds)};
 }
 
-std::unordered_set<SimilarityVector> SimilarityData::GetSimVecs(
+std::unordered_set<PairComparisonResult> SimilarityData::CompareAllWith(
         RecordIdentifier const left_record_id) const {
     // TODO: use the "slim" sim index to fill those instead of lookups in similarity matrices
     CompressedRecord const& left_record = GetLeftCompressor().GetRecords()[left_record_id];
-    std::unordered_set<SimilarityVector> sim_vecs;
+    std::unordered_set<PairComparisonResult> comparisons;
     // Optimization not performed in Metanome.
     RecordIdentifier const start_from = single_table_ ? left_record_id + 1 : 0;
-    SimilarityVector pair_sims;
+    PairComparisonResult pair_sims;
     pair_sims.reserve(GetColumnMatchNumber());
     indexes::CompressedRecords const& right_records = GetRightCompressor().GetRecords();
     // TODO: parallelize this
@@ -61,24 +58,23 @@ std::unordered_set<SimilarityVector> SimilarityData::GetSimVecs(
             auto it = sim_matrix_row.find(record[right_col_index]);
             pair_sims.push_back(it == sim_matrix_row.end() ? kLowestBound : it->second);
         }
-        sim_vecs.insert(pair_sims);
+        comparisons.insert(pair_sims);
         pair_sims.clear();
     });
-    return sim_vecs;
+    return comparisons;
 }
 
-SimilarityVector SimilarityData::GetSimilarityVector(CompressedRecord const& left_record,
-                                                     CompressedRecord const& right_record) const {
-    std::size_t const col_match_number = GetColumnMatchNumber();
-    SimilarityVector similarities;
-    similarities.reserve(col_match_number);
+PairComparisonResult SimilarityData::CompareRecords(CompressedRecord const& left_record,
+                                                    CompressedRecord const& right_record) const {
+    PairComparisonResult comparison_result;
+    comparison_result.reserve(GetColumnMatchNumber());
     for (auto const& [sim_info, left_col_index, right_col_index] : column_matches_sim_info_) {
         indexes::SimilarityMatrixRow const& row =
                 sim_info.similarity_matrix[left_record[left_col_index]];
         auto sim_it = row.find(right_record[right_col_index]);
-        similarities.push_back(sim_it == row.end() ? kLowestBound : sim_it->second);
+        comparison_result.push_back(sim_it == row.end() ? kLowestBound : sim_it->second);
     }
-    return similarities;
+    return comparison_result;
 }
 
 std::optional<model::md::DecisionBoundary> SimilarityData::GetPreviousDecisionBound(

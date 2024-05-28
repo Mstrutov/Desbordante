@@ -1,5 +1,6 @@
 #include "algorithms/md/hymd/lattice/cardinality/min_picking_level_getter.h"
 
+#include "algorithms/md/hymd/lattice/rhs.h"
 #include "algorithms/md/hymd/lowest_bound.h"
 #include "util/erase_if_replace.h"
 
@@ -13,7 +14,7 @@ std::vector<ValidationInfo> MinPickingLevelGetter::GetCurrentMdsInternal(
         boost::dynamic_bitset<> const& previously_picked_rhs =
                 picked_.try_emplace(messenger.GetLhs(), column_match_number).first->second;
         boost::dynamic_bitset<> indices(column_match_number);
-        DecisionBoundaryVector const& rhs = messenger.GetRhs();
+        lattice::Rhs const& rhs = messenger.GetRhs();
         for (model::Index i = 0; i < column_match_number; ++i) {
             if (rhs[i] != kLowestBound) {
                 indices.set(i);

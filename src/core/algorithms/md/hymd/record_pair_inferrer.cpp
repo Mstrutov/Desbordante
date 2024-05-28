@@ -23,9 +23,9 @@ bool RecordPairInferrer::ShouldStopInferring(Statistics const& statistics) const
     */
 }
 
-void RecordPairInferrer::ProcessSimVec(SimilarityVector const& sim) {
+void RecordPairInferrer::ProcessSimVec(PairComparisonResult const& pair_comparison_result) {
     using MdRefiner = lattice::MdLattice::MdRefiner;
-    std::vector<MdRefiner> refiners = lattice_->CollectRefinersForViolated(sim);
+    std::vector<MdRefiner> refiners = lattice_->CollectRefinersForViolated(pair_comparison_result);
     for (MdRefiner& refiner : refiners) {
         refiner.Refine();
     }
@@ -40,33 +40,34 @@ bool RecordPairInferrer::InferFromRecordPairs(Recommendations recommendations) {
                 // efficiency_reciprocal_ *= 2;
                 return true;
             }
-            SimilarityVector const sim =
+            PairComparisonResult const& pair_comparison_result =
                     get_sim_vec(collection.extract(collection.begin()).value());
-            if (avoid_same_sim_vec_processing_) {
-                bool const not_seen_before = checked_sim_vecs_.insert(sim).second;
+            if (avoid_same_comparison_processing_) {
+                bool const not_seen_before =
+                        processed_comparisons_.insert(pair_comparison_result).second;
                 if (!not_seen_before) continue;
             }
-            ProcessSimVec(sim);
+            ProcessSimVec(pair_comparison_result);
             ++statistics.sim_vecs_processed;
         }
         return false;
     };
     if (process_collection(recommendations, [&](Recommendation& rec) {
             // TODO: parallelize similarity vector calculation
-            return similarity_data_->GetSimilarityVector(*rec.left_record, *rec.right_record);
+            return similarity_data_->CompareRecords(*rec.left_record, *rec.right_record);
         })) {
         return false;
     }
-    auto move_out = [&](SimilarityVector& v) { return std::move(v); };
-    if (process_collection(sim_vecs_to_check_, move_out)) {
+    auto move_out = [&](PairComparisonResult& pair_comp_res) { return std::move(pair_comp_res); };
+    if (process_collection(comparisons_to_process_, move_out)) {
         return false;
     }
     std::size_t const left_size = similarity_data_->GetLeftSize();
     while (next_left_record_ < left_size) {
         ++statistics.samplings_started;
-        sim_vecs_to_check_ = similarity_data_->GetSimVecs(next_left_record_);
+        comparisons_to_process_ = similarity_data_->CompareAllWith(next_left_record_);
         ++next_left_record_;
-        if (process_collection(sim_vecs_to_check_, move_out)) {
+        if (process_collection(comparisons_to_process_, move_out)) {
             return false;
         }
     }

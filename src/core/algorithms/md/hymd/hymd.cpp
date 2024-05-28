@@ -180,7 +180,6 @@ void HyMD::RegisterResults(SimilarityData const& similarity_data,
     }
     std::vector<model::MD> mds;
     for (lattice::MdLatticeNodeInfo const& md : lattice_mds) {
-        DecisionBoundaryVector const& rhs_bounds = *md.rhs_bounds;
         std::vector<model::md::LhsColumnSimilarityClassifier> const lhs = [&]() {
             std::vector<model::md::LhsColumnSimilarityClassifier> lhs;
             lhs.reserve(column_match_number);
@@ -199,8 +198,9 @@ void HyMD::RegisterResults(SimilarityData const& similarity_data,
             }
             return lhs;
         }();
+        lattice::Rhs const& rhs = *md.rhs;
         for (Index rhs_index = 0; rhs_index != column_match_number; ++rhs_index) {
-            model::md::DecisionBoundary const rhs_bound = rhs_bounds[rhs_index];
+            model::md::DecisionBoundary const rhs_bound = rhs[rhs_index];
             if (rhs_bound == kLowestBound) continue;
             model::md::ColumnSimilarityClassifier rhs{rhs_index, rhs_bound};
             mds.emplace_back(left_schema_.get(), right_schema_.get(), column_matches, lhs, rhs);

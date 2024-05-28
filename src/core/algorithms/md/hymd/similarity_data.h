@@ -5,7 +5,6 @@
 
 #include "algorithms/md/decision_boundary.h"
 #include "algorithms/md/hymd/column_match_info.h"
-#include "algorithms/md/hymd/decision_boundary_vector.h"
 #include "algorithms/md/hymd/indexes/pli_cluster.h"
 #include "algorithms/md/hymd/indexes/records_info.h"
 #include "algorithms/md/hymd/indexes/similarity_index.h"
@@ -13,8 +12,6 @@
 #include "algorithms/md/hymd/lattice/validation_info.h"
 #include "algorithms/md/hymd/preprocessing/similarity.h"
 #include "algorithms/md/hymd/preprocessing/similarity_measure/similarity_measure.h"
-#include "algorithms/md/hymd/recommendation.h"
-#include "algorithms/md/hymd/similarity_vector.h"
 #include "model/index.h"
 #include "util/worker_thread_pool.h"
 
@@ -77,10 +74,10 @@ public:
         return GetLeftCompressor().GetNumberOfRecords();
     }
 
-    [[nodiscard]] std::unordered_set<SimilarityVector> GetSimVecs(
+    [[nodiscard]] std::unordered_set<PairComparisonResult> CompareAllWith(
             RecordIdentifier left_record_id) const;
-    [[nodiscard]] SimilarityVector GetSimilarityVector(CompressedRecord const& left_record,
-                                                       CompressedRecord const& right_record) const;
+    [[nodiscard]] PairComparisonResult CompareRecords(CompressedRecord const& left_record,
+                                                      CompressedRecord const& right_record) const;
 
     [[nodiscard]] std::optional<model::md::DecisionBoundary> GetPreviousDecisionBound(
             model::md::DecisionBoundary lhs_bound, model::Index column_match_index) const;

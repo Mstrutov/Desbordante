@@ -4,8 +4,6 @@
 #include <string>
 #include <tuple>
 
-#include "algorithms/md/decision_boundary.h"
-#include "algorithms/md/hymd/decision_boundary_vector.h"
 #include "algorithms/md/hymd/indexes/column_similarity_info.h"
 #include "algorithms/md/hymd/indexes/pli_cluster.h"
 #include "algorithms/md/hymd/preprocessing/data_info.h"

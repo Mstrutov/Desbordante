@@ -4,8 +4,8 @@
 #include <functional>
 #include <vector>
 
-#include "algorithms/md/hymd/decision_boundary_vector.h"
 #include "algorithms/md/hymd/indexes/records_info.h"
+#include "algorithms/md/hymd/lattice/rhs.h"
 #include "algorithms/md/hymd/lowest_bound.h"
 #include "algorithms/md/hymd/table_identifiers.h"
 #include "algorithms/md/hymd/utility/invalidated_rhss.h"
@@ -108,7 +108,7 @@ class Validator::SetPairProcessor {
     CompressedRecords const& left_records_ = validator_->GetLeftCompressor().GetRecords();
     CompressedRecords const& right_records_ = validator_->GetRightCompressor().GetRecords();
     InvalidatedRhss& invalidated_;
-    DecisionBoundaryVector& rhs_bounds_;
+    lattice::Rhs& lattice_rhs_;
     MdLhs const& lhs_;
     PairProvider pair_provider_;
 
@@ -153,10 +153,10 @@ class Validator::SetPairProcessor {
 
 public:
     SetPairProcessor(Validator const* validator, InvalidatedRhss& invalidated,
-                     DecisionBoundaryVector& rhs_bounds, MdLhs const& lhs)
+                     lattice::Rhs& rhs, MdLhs const& lhs)
         : validator_(validator),
           invalidated_(invalidated),
-          rhs_bounds_(rhs_bounds),
+          lattice_rhs_(rhs),
           lhs_(lhs),
           pair_provider_(validator, lhs) {}
 
@@ -192,17 +192,17 @@ Validator::SetPairProcessor<PairProvider>::MakeWorkingAndRecs(
     for (Index index : indices) {
         RecommendationVector& last_recs = recommendations.emplace_back();
         auto const& [sim_info, left_index, right_index] = column_matches_info_[index];
-        MdElement rhs{index, rhs_bounds_[index]};
+        MdElement rhs{index, lattice_rhs_[index]};
         working.emplace_back(rhs, last_recs, validator_->GetLeftValueNum(index), right_records_,
                              sim_info.similarity_matrix, left_index, right_index);
     }
 
     auto for_each_working = [&](auto f) { std::for_each(working.begin(), working.end(), f); };
-    for_each_working([&](WorkingInfo const& w) { rhs_bounds_[w.old_rhs.index] = kLowestBound; });
+    for_each_working([&](WorkingInfo const& w) { lattice_rhs_[w.old_rhs.index] = kLowestBound; });
     std::vector<DecisionBoundary> const gen_max_rhs =
             validator_->lattice_->GetRhsInterestingnessBounds(lhs_, indices);
     for_each_working([&](WorkingInfo const& w) {
-        rhs_bounds_[w.old_rhs.index] = w.old_rhs.decision_boundary;
+        lattice_rhs_[w.old_rhs.index] = w.old_rhs.decision_boundary;
     });
 
     auto it = working.begin();
@@ -462,14 +462,14 @@ public:
 
 Validator::Result Validator::Validate(lattice::ValidationInfo& info) const {
     MdLhs const& lhs = info.messenger->GetLhs();
-    DecisionBoundaryVector& rhs_bounds = info.messenger->GetRhs();
+    lattice::Rhs& lattice_rhs = info.messenger->GetRhs();
     // After a call to this method, info.rhs_indices must not be used
     boost::dynamic_bitset<>& indices_bitset = info.rhs_indices;
     std::size_t const cardinality = lhs.Cardinality();
     InvalidatedRhss invalidated;
     if (cardinality == 0) [[unlikely]] {
         util::ForEachIndex(indices_bitset, [&](auto index) {
-            DecisionBoundary const old_bound = rhs_bounds[index];
+            DecisionBoundary const old_bound = lattice_rhs[index];
             DecisionBoundary const new_bound =
                     (*column_matches_info_)[index].similarity_info.lowest_similarity;
             if (old_bound == new_bound) [[unlikely]]
@@ -483,13 +483,13 @@ Validator::Result Validator::Validate(lattice::ValidationInfo& info) const {
         Index const non_zero_index = lhs.begin()->child_array_index;
         // Never happens when disjointedness pruning is on.
         if (indices_bitset.test_set(non_zero_index, false)) {
-            invalidated.PushBack({non_zero_index, rhs_bounds[non_zero_index]}, kLowestBound);
+            invalidated.PushBack({non_zero_index, lattice_rhs[non_zero_index]}, kLowestBound);
         }
-        SetPairProcessor<OneCardPairProvider> processor(this, invalidated, rhs_bounds, lhs);
+        SetPairProcessor<OneCardPairProvider> processor(this, invalidated, lattice_rhs, lhs);
         return processor.ProcessPairs(indices_bitset);
     }
 
-    SetPairProcessor<MultiCardPairProvider> processor(this, invalidated, rhs_bounds, lhs);
+    SetPairProcessor<MultiCardPairProvider> processor(this, invalidated, lattice_rhs, lhs);
     return processor.ProcessPairs(indices_bitset);
 }
 
