@@ -37,7 +37,7 @@ private:
     static constexpr std::size_t kFinalLatticeHeuristicGrowthDenominator = 2;
 
     static constexpr std::size_t kStaleHeuristicNumerator = 1;
-    static constexpr std::size_t kStaleHeuristicDenominator = 2;
+    static constexpr std::size_t kStaleHeuristicDenominator = 21;
 
     bool const avoid_same_comparison_processing_ = true;
 

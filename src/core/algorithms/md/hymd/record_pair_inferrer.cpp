@@ -1,6 +1,9 @@
 #include "algorithms/md/hymd/record_pair_inferrer.h"
 
 #include <cstddef>
+#include <optional>
+
+#include <boost/circular_buffer.hpp>
 
 #include "algorithms/md/hymd/lattice/md_lattice_node_info.h"
 #include "algorithms/md/hymd/lowest_bound.h"
@@ -10,6 +13,9 @@
 
 namespace algos::hymd {
 
+constexpr std::size_t kBufferSize = 1000;
+static_assert(kBufferSize > 0);
+
 struct RecordPairInferrer::PairStatistics {
     std::size_t rhss_removed = 0;
     std::size_t all_rhss_removed = 0;
@@ -17,6 +23,8 @@ struct RecordPairInferrer::PairStatistics {
 };
 
 struct RecordPairInferrer::Statistics {
+    using OptionalStats = std::optional<PairStatistics>;
+
     std::size_t samplings_started = 0;
 
     std::size_t pairs_processed = 0;
@@ -27,10 +35,39 @@ struct RecordPairInferrer::Statistics {
 
     std::size_t invalidated_number = 0;
 
-    void AddPairStatistics(PairStatistics const& pair_statistics) noexcept {
+    boost::circular_buffer<OptionalStats> pairs{kBufferSize};
+
+    void AddPairStatistics(PairStatistics&& pair_statistics) {
+        if (pairs.full()) {
+            if (OptionalStats const& first_el = *pairs.begin(); first_el.has_value()) {
+                mds_removed -= first_el->rhss_removed;
+                all_rhss_removed -= first_el->all_rhss_removed;
+                invalidated_number -= first_el->invalidated_number;
+            } else {
+                ++pairs_processed;
+            }
+        } else {
+            ++pairs_processed;
+            ++pairs_inspected;
+        }
         mds_removed += pair_statistics.rhss_removed;
         all_rhss_removed += pair_statistics.all_rhss_removed;
         invalidated_number += pair_statistics.invalidated_number;
+        pairs.push_back(std::move(pair_statistics));
+    }
+
+    void AddSkipped() {
+        if (pairs.full()) {
+            if (OptionalStats const& first_el = *pairs.begin(); first_el.has_value()) {
+                --pairs_processed;
+                mds_removed -= first_el->rhss_removed;
+                all_rhss_removed -= first_el->all_rhss_removed;
+                invalidated_number -= first_el->invalidated_number;
+            }
+        } else {
+            ++pairs_inspected;
+        }
+        pairs.push_back();
     }
 };
 
@@ -87,7 +124,10 @@ bool RecordPairInferrer::InferFromRecordPairs(Recommendations recommendations) {
             if (avoid_same_comparison_processing_) {
                 bool const not_seen_before =
                         processed_comparisons_.insert(pair_comparison_result).second;
-                if (!not_seen_before) continue;
+                if (!not_seen_before) {
+                    statistics.AddSkipped();
+                    continue;
+                }
             }
             statistics.AddPairStatistics(ProcessPairComparison(pair_comparison_result));
             ++statistics.pairs_processed;
