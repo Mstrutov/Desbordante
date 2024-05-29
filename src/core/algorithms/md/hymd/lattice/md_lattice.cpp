@@ -105,18 +105,26 @@ void MdLattice::Specialize(MdLhs const& lhs, Rhss const& rhss) {
     Specialize(lhs, rhss, get_lhs_bound, get_lowest);
 }
 
-void MdLattice::MdRefiner::Refine() {
+std::size_t MdLattice::MdRefiner::Refine() {
+    std::size_t removed = 0;
     for (auto new_rhs : invalidated_.GetUpdateView()) {
         auto const& [rhs_index, new_bound] = new_rhs;
         DecisionBoundary& md_rhs_bound_ref = (*node_info_.rhs)[rhs_index];
         md_rhs_bound_ref = kLowestBound;
-        // trivial
-        if (new_bound == kLowestBound) continue;
-        // not minimal
-        if (lattice_->HasGeneralization({GetLhs(), new_rhs})) continue;
+        bool const trivial = new_bound == kLowestBound;
+        if (trivial) {
+            ++removed;
+            continue;
+        }
+        bool const not_minimal = lattice_->HasGeneralization({GetLhs(), new_rhs});
+        if (not_minimal) {
+            ++removed;
+            continue;
+        }
         md_rhs_bound_ref = new_bound;
     }
     lattice_->Specialize(GetLhs(), *pair_similarities_, invalidated_.GetInvalidated());
+    return removed;
 }
 
 void MdLattice::TryAddRefiner(std::vector<MdRefiner>& found, Rhs& rhs,

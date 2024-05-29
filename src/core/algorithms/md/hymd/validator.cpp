@@ -69,7 +69,10 @@ struct WorkingInfo {
     Index const right_index;
 
     bool EnoughRecommendations() const {
-        return recommendations.size() >= 20;
+        return true;
+        // <=> return recommendations.size() >= 1 /* was 20 */;
+        // I believe this check is no longer needed, as we are only giving "useful" recommendations,
+        // which means those that are very likely to actually remove the need to validate MDs.
     }
 
     bool ShouldStop() const {
@@ -238,15 +241,19 @@ auto Validator::SetPairProcessor<PairProvider>::LowerForColumnMatchNoCheck(
             ValueIdentifier const right_value_id = right_record[working_info.right_index];
             auto it_right = row.find(right_value_id);
             if (it_right == row.end()) {
-                add_recommendations();
             rhs_not_valid:
+                add_recommendations();
+            // rhs_not_valid:
                 current_rhs_bound = kLowestBound;
                 if (working_info.EnoughRecommendations()) return Status::kInvalidated;
                 continue;
             }
 
             preprocessing::Similarity const pair_similarity = it_right->second;
-            if (pair_similarity < working_info.old_rhs.decision_boundary) add_recommendations();
+            // NOTE: I believe the purpose of inference from record pairs is to cut down on the
+            // number of costly validations. But a validation still happens if the value was lowered
+            // but not to zero.
+            // if (pair_similarity < working_info.old_rhs.decision_boundary) add_recommendations();
             if (pair_similarity < current_rhs_bound) current_rhs_bound = pair_similarity;
             if (current_rhs_bound <= working_info.interestingness_boundary) goto rhs_not_valid;
         }

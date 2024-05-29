@@ -13,6 +13,7 @@ namespace algos::hymd {
 class RecordPairInferrer {
 private:
     struct Statistics;
+    struct PairStatistics;
 
     SimilarityData* const similarity_data_;
     lattice::MdLattice* const lattice_;
@@ -25,11 +26,22 @@ private:
 
     RecordIdentifier next_left_record_ = 0;
 
-    // std::size_t efficiency_reciprocal_ = 100;
+    static constexpr std::size_t kPairsRequiredForPhaseSwitch = 5;
+
+    std::size_t final_lattice_numerator_ = 1;
+    // Represents the reciprocal of the ratio in 5.3.1 of the "Efficient Discovery of Matching
+    // Dependencies" article, except instead of refined MDs, removed MDs are used in the numerator
+    // (denominator in the reciprocal).
+    std::size_t final_lattice_denominator_ = 1;
+    static constexpr std::size_t kFinalLatticeHeuristicGrowthNumerator = 1;
+    static constexpr std::size_t kFinalLatticeHeuristicGrowthDenominator = 2;
+
+    static constexpr std::size_t kStaleHeuristicNumerator = 1;
+    static constexpr std::size_t kStaleHeuristicDenominator = 2;
 
     bool const avoid_same_comparison_processing_ = true;
 
-    void ProcessSimVec(PairComparisonResult const& pair_comparison_result);
+    PairStatistics ProcessPairComparison(PairComparisonResult const& pair_comparison_result);
     bool ShouldStopInferring(Statistics const& statistics) const noexcept;
 
 public:

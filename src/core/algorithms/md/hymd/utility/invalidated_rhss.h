@@ -95,5 +95,9 @@ public:
     bool IsEmpty() const noexcept {
         return invalidated_.empty();
     }
+
+    std::size_t Size() const noexcept {
+        return invalidated_.size();
+    }
 };
 }  // namespace algos::hymd::utility

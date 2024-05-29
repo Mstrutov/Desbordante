@@ -58,7 +58,11 @@ public:
             node_info_.ZeroRhs();
         }
 
-        void Refine();
+        std::size_t Refine();
+
+        bool InvalidatedNumber() const noexcept {
+            return invalidated_.Size();
+        }
     };
 
     class MdVerificationMessenger {
