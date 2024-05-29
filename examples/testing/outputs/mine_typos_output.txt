@@ -1,0 +1,44 @@
+Starting typo discovery scenario with parameters:
+RADIUS=3
+RATIO=0.1
+ERROR=0.005
+DATASET_PATH='examples/datasets/Workshop.csv'
+EXACT_ALGORITHM='HyFD'
+APPROXIMATE_ALGORITHM='Pyro'
+HEADER=0
+SEPARATOR=','
+
+Dataset sample:
+                                       id      worker_name supervisor_surname       workshop salary                   job_post
+0    404f50cb-caf0-4974-97f9-9463434537e1   Jennifer Moore        Galen Calla    Yogatacular    980    Client Solution Analyst
+1    b5e38281-9c09-49bf-91f5-c55397df4d43       Edward Lee      Carrie Silvia    MonsterWorq    905  Front-End Loader Operator
+2    972b299d-2f27-4d6d-81d2-8effbc543bf1        Brian Lee      Shena Desiree  Talkspiration    700             Farm Assistant
+3    3241fb48-5a15-4638-bd68-d915834a3f89   Kenneth Turner        Paul Jeffry     Verbalthon    980    Client Solution Analyst
+4    9cbb9026-f157-4a01-aace-a42b05ab2a28   Betty Campbell    Addyson Aaliyah     SpeakerAce    800            Physiotherapist
+..                                    ...              ...                ...            ...    ...                        ...
+940  9cd700bc-b3d9-439d-afe9-945c2a20bc37    Richard Lopez        Galen Calla    Yogatacular    845   Senior Financial Planner
+941  cc199ff4-453a-4ae5-9fbd-b45d72fa952a  Helen Rodriguez      Carrie Silvia    MonsterWorq    465                Electrician
+942  de650347-880a-42a2-88c9-4329f26fb912      Karen White      Carrie Silvia    MonsterWorq    510       JavaScript Developer
+943  ae604e24-e040-4d50-b685-5b4897ab9ae9    Charles Smith      Shena Desiree  Talkspiration    975              Store Manager
+944  d5cb954a-e942-47ae-9b62-b57f7a84c2db        Jeff King      Carrie Silvia    MonsterWorq    465                Electrician
+
+[945 rows x 6 columns]
+
+Searching for almost holding FDs...
+
+Found! Almost holding FDs:
+[supervisor_surname salary] -> job_post
+[supervisor_surname job_post] -> salary
+[workshop] -> supervisor_surname
+[workshop salary] -> job_post
+[workshop job_post] -> salary
+
+Selecting FD with index 2:
+ rows count    workshop supervisor_surname
+        198 Yogatacular        Galen Calla
+          1 Yogatacular      Galen Calella
+
+Typo candidates and context:
+                                     id       worker_name supervisor_surname     workshop salary                 job_post
+0  404f50cb-caf0-4974-97f9-9463434537e1    Jennifer Moore        Galen Calla  Yogatacular    980  Client Solution Analyst
+7  ddba9118-ec89-472d-9f3f-bebd919f0e3a  William Robinson      Galen Calella  Yogatacular    975            Store Manager

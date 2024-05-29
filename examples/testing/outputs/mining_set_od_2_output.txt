@@ -1,0 +1,134 @@
++----+--------+------------+-----------+
+|    |   year | position   | percent   |
+|----+--------+------------+-----------|
+|  0 |   2020 | director   | 10%       |
+|  1 |   2020 | other      | 50%       |
+|  2 |   2020 | manager    | 40%       |
+|  3 |   2021 | manager    | 35%       |
+|  4 |   2021 | other      | 55%       |
+|  5 |   2021 | director   | 10%       |
++----+--------+------------+-----------+
+
+Attribute symbols:
+year -- 1
+position -- 2
+percent -- 3
+
+descending ods: 0
+
+ascending ods: 2
+{} : 3<= ~ 2<=
+{} : 2<= ~ 3<=
+
+Dependency "{} : 3<= ~ 2<=" means that ordering the table by attribute
+"percent" automatically entails ordering by attribute "position".
+Moreover, this is observed regardless of other attributes, since the
+dependency context is empty.
+
+Let's sort it by attribute "percent".
+
+Sorted table:
++----+--------+------------+-----------+
+|    |   year | position   | percent   |
+|----+--------+------------+-----------|
+|  0 |   2020 | director   | 10%       |
+|  5 |   2021 | director   | 10%       |
+|  3 |   2021 | manager    | 35%       |
+|  2 |   2020 | manager    | 40%       |
+|  1 |   2020 | other      | 50%       |
+|  4 |   2021 | other      | 55%       |
++----+--------+------------+-----------+
+
+We can see that this sort entails automatic ordering by attribute
+"position".
+
+Dependency "{} : 2<= ~ 3<=" is similar to the first and means that
+ordering the table by attribute "position" automatically entails
+ordering by attribute "percent". This can be seen in the table above.
+
+In other words, these dependencies indicate that the ordering of
+percents entails an automatic ordering of the positions and vice
+versa.
+
+simple ods: 2
+{3} : [] -> 2<=
+{1,2} : [] -> 3<=
+
+Dependency "{3} : [] -> 2<=" means that inside each equivalence
+class from "percent" the constancy of the attribute "position" can
+be traced.
+
+We have 5 equivalence classes in "percent":
+class [10%] with 2 elements
+class [50%] with 1 element
+class [40%] with 1 element
+class [35%] with 1 element
+class [55%] with 1 element
+class [10%] with 2 elements
+
+This table shows the constancy of values from attribute "position"
+within each equivalence class from "percent". For clarity, lines
+containing different equivalence classes are colored differently.
+
++--------+------------+-----------+
+|   year | position   | percent   |
+|--------+------------+-----------|
+|   2020 | director   | 10%       |
+|   2020 | other      | 50%       |
+|   2020 | manager    | 40%       |
+|   2021 | manager    | 35%       |
+|   2021 | other      | 55%       |
+|   2021 | director   | 10%       |
++--------+------------+-----------+
+
+Dependency "{1,2} : [] -> 3<=" contains 2 attributes ("year" and
+"position") in its context and means the following: in the context
+of one year and one position the constancy of percents is observed.
+That is, in those tuples in which the year and position are the same,
+the same percent value is observed.
+
+The following table shows these observations.
+
++--------+------------+-----------+
+|   year | position   | percent   |
+|--------+------------+-----------|
+|   2020 | director   | 10%       |
+|   2020 | other      | 50%       |
+|   2020 | manager    | 40%       |
+|   2021 | manager    | 35%       |
+|   2021 | other      | 55%       |
+|   2021 | director   | 10%       |
++--------+------------+-----------+
+
+Consider the following two tables. In the first, dependency
+"{1,2} : [] -> 3<=" continues to exist. But in the second one no
+longer exists, since it is violated in third tuple, where the pair
+(2020, director) corresponds to 20%.
+
+Dependency "{1,2} : [] -> 3<=" continues to exist:
++--------+------------+-----------+
+|   year | position   | percent   |
+|--------+------------+-----------|
+|   2020 | director   | 10%       |
+|   2020 | director   | 10%       |
+|   2020 | director   | 10%       |
+|   2020 | other      | 50%       |
+|   2020 | manager    | 40%       |
+|   2021 | manager    | 35%       |
+|   2021 | other      | 55%       |
+|   2021 | director   | 10%       |
++--------+------------+-----------+
+
+Dependency "{1,2} : [] -> 3<=" no longer exists:
++--------+------------+-----------+
+|   year | position   | percent   |
+|--------+------------+-----------|
+|   2020 | director   | 10%       |
+|   2020 | director   | 10%       |
+|   2020 | director   | 20%       |
+|   2020 | other      | 50%       |
+|   2020 | manager    | 40%       |
+|   2021 | manager    | 35%       |
+|   2021 | other      | 55%       |
+|   2021 | director   | 10%       |
++--------+------------+-----------+

@@ -94,7 +94,7 @@ def print_simple_ods_with_comments(simple_ods, table):
     print('be traced.')
 
     percent_values = list(table['percent'])
-    percent_classes = set([f'class [{i}] with {percent_values.count(i)} element{"" if percent_values.count(i) == 1 else "s"}'
+    percent_classes = list([f'class [{i}] with {percent_values.count(i)} element{"" if percent_values.count(i) == 1 else "s"}'
                            for i in percent_values])
 
     print()

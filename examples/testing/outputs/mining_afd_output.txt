@@ -1,0 +1,4 @@
+AFDs:
+[Id] -> ProductName
+[Id] -> Price
+[ProductName] -> Price

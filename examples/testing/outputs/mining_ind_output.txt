@@ -1,0 +1,34 @@
+Found inclusion dependencies (-> means "is included in"):
+
+(course.csv, [Department name]) -> (department.csv, [Department name])
+(instructor.csv, [Department name]) -> (department.csv, [Department name])
+(student.csv, [Department name]) -> (department.csv, [Department name])
+(teaches.csv, [Instructor ID]) -> (instructor.csv, [ID])
+(teaches.csv, [Course ID]) -> (course.csv, [Course ID])
+
+Tables for first IND:
+course.csv:
+
+Course ID   Title              Department name                       
+---------------------------------------------------------------------
+IT-1        Computer Science   Institute of Information Technology   
+MM-3        Algebra            Mathematics and Mechanics Faculty     
+H-1         History            Institute of History                  
+FL-2        English            Faculty of Foreign Languages          
+IT-2        Programming        Institute of Information Technology   
+S-5         Philosophy         Faculty of Sociology                  
+P-2         Physics            Faculty of Physics                    
+C-8         Chemistry          Institute of Chemistry                
+
+department.csv:
+
+Department name                       Building             
+-----------------------------------------------------------
+Institute of Information Technology   5 Academic av.       
+Mathematics and Mechanics Faculty     3 Academic av.       
+Institute of History                  29A University st.   
+Faculty of Foreign Languages          10 Science sq.       
+Faculty of Sociology                  29C University st.   
+Faculty of Physics                    10 Academic av.      
+Institute of Chemistry                11 Academic av.      
+Graduate School of Managemment        49 Science sq.       

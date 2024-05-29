@@ -1,0 +1,124 @@
+options: 
+MINIMUM SUPPORT = 8 , MINIMUM CONFIDENCE = 0.7 , MAXIMUM LHS COUNT = 3
+displaying the first five (or fewer) discovered CFDs:
+
+CFD:
+{(3, False)} -> (4, True) :
+
+      Outlook Temperature Humidity  Windy   Play
+ 0      sunny         hot     high  False  False 
+ 1      sunny         hot     high   True  False 
+ 2   overcast         hot     high  False   True 
+ 3       rain        mild     high  False   True 
+ 4       rain        cool   normal  False   True 
+ 5       rain        cool   normal   True  False 
+ 6   overcast        cool   normal   True   True 
+ 7      sunny        mild     high  False  False 
+ 8      sunny        cool   normal  False   True 
+ 9       rain        mild   normal  False   True 
+ 10     sunny        mild   normal   True   True 
+ 11  overcast        mild     high   True   True 
+ 12  overcast         hot   normal  False   True 
+ 13      rain        mild     high   True  False 
+lhs count:  1
+support:  8       
+confidence:   6 / 8  =  0.7500
+
+
+
+CFD:
+{(2, _)} -> (4, _) :
+
+      Outlook Temperature Humidity  Windy   Play
+ 0      sunny         hot     high  False  False 
+ 1      sunny         hot     high   True  False 
+ 2   overcast         hot     high  False   True 
+ 3       rain        mild     high  False   True 
+ 4       rain        cool   normal  False   True 
+ 5       rain        cool   normal   True  False 
+ 6   overcast        cool   normal   True   True 
+ 7      sunny        mild     high  False  False 
+ 8      sunny        cool   normal  False   True 
+ 9       rain        mild   normal  False   True 
+ 10     sunny        mild   normal   True   True 
+ 11  overcast        mild     high   True   True 
+ 12  overcast         hot   normal  False   True 
+ 13      rain        mild     high   True  False 
+lhs count:  1
+support:  14       
+confidence:   10 / 14  =  0.7143
+
+
+
+CFD:
+{(4, _)} -> (2, _) :
+
+      Outlook Temperature Humidity  Windy   Play
+ 0      sunny         hot     high  False  False 
+ 1      sunny         hot     high   True  False 
+ 2   overcast         hot     high  False   True 
+ 3       rain        mild     high  False   True 
+ 4       rain        cool   normal  False   True 
+ 5       rain        cool   normal   True  False 
+ 6   overcast        cool   normal   True   True 
+ 7      sunny        mild     high  False  False 
+ 8      sunny        cool   normal  False   True 
+ 9       rain        mild   normal  False   True 
+ 10     sunny        mild   normal   True   True 
+ 11  overcast        mild     high   True   True 
+ 12  overcast         hot   normal  False   True 
+ 13      rain        mild     high   True  False 
+lhs count:  1
+support:  14       
+confidence:   10 / 14  =  0.7143
+
+
+
+CFD:
+{(3, _),(2, _)} -> (4, _) :
+
+      Outlook Temperature Humidity  Windy   Play
+ 0      sunny         hot     high  False  False 
+ 1      sunny         hot     high   True  False 
+ 2   overcast         hot     high  False   True 
+ 3       rain        mild     high  False   True 
+ 4       rain        cool   normal  False   True 
+ 5       rain        cool   normal   True  False 
+ 6   overcast        cool   normal   True   True 
+ 7      sunny        mild     high  False  False 
+ 8      sunny        cool   normal  False   True 
+ 9       rain        mild   normal  False   True 
+ 10     sunny        mild   normal   True   True 
+ 11  overcast        mild     high   True   True 
+ 12  overcast         hot   normal  False   True 
+ 13      rain        mild     high   True  False 
+lhs count:  2
+support:  14       
+confidence:   10 / 14  =  0.7143
+
+
+
+CFD:
+{(2, _),(3, False)} -> (4, _) :
+
+      Outlook Temperature Humidity  Windy   Play
+ 0      sunny         hot     high  False  False 
+ 1      sunny         hot     high   True  False 
+ 2   overcast         hot     high  False   True 
+ 3       rain        mild     high  False   True 
+ 4       rain        cool   normal  False   True 
+ 5       rain        cool   normal   True  False 
+ 6   overcast        cool   normal   True   True 
+ 7      sunny        mild     high  False  False 
+ 8      sunny        cool   normal  False   True 
+ 9       rain        mild   normal  False   True 
+ 10     sunny        mild   normal   True   True 
+ 11  overcast        mild     high   True   True 
+ 12  overcast         hot   normal  False   True 
+ 13      rain        mild     high   True  False 
+lhs count:  2
+support:  8       
+confidence:   6 / 8  =  0.7500
+
+
+

@@ -143,11 +143,3 @@ std::vector<Vertical> Vertical::GetParents() const {
     }
     return parents;
 }
-
-bool Vertical::operator<(Vertical const& rhs) const {
-    assert(*schema_ == *rhs.schema_);
-    if (this->column_indices_ == rhs.column_indices_) return false;
-
-    boost::dynamic_bitset<> const& lr_xor = (this->column_indices_ ^ rhs.column_indices_);
-    return rhs.column_indices_.test(lr_xor.find_first());
-}

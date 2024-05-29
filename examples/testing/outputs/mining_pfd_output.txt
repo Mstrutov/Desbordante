@@ -1,0 +1,3 @@
+per_value pFDs:
+[Y] -> X
+per_tuple pFDs:

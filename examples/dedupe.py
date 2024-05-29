@@ -93,6 +93,7 @@ def merge_handler(df: pandas.DataFrame, new_rows, remaining_rows, used_rows):
     for col_name, values in zip(df.columns,
                                 zip(*df.iloc[list(used_rows)].itertuples(index=False))):
         distinct_values = list(set(values))
+        distinct_values.sort()
         index = 0 if len(distinct_values) == 1 else choose_index(col_name, distinct_values)
         new_row.append(distinct_values[index])
     remaining_rows -= used_rows

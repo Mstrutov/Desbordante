@@ -1,4 +1,5 @@
 import desbordante
+from ordered_set import OrderedSet
 
 TABLE = 'examples/datasets/glitchy_sensor.csv'
 ERROR = 0.18
@@ -6,7 +7,7 @@ ERROR_MEASURE = 'per_value' # per_tuple or per_value
 
 
 def stringify(fds):
-    return set(map(str, fds))
+    return OrderedSet(map(str, fds))
 
 
 def get_afds():
@@ -23,8 +24,8 @@ def get_pfds():
     return algo.get_fds()
 
 
-pfds = set(get_pfds())
-afds = set(get_afds())
+pfds = OrderedSet(get_pfds())
+afds = OrderedSet(get_afds())
 
 print("pFDs \ AFDs =", stringify(pfds - afds))
 print("AFDs \ pFDs =", stringify(afds - pfds))

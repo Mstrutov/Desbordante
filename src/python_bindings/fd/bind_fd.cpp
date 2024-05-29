@@ -56,8 +56,7 @@ void BindFd(py::module_& main_module) {
     static constexpr auto kPFDTaneName = "PFDTane";
     auto fd_algos_module =
             BindPrimitive<hyfd::HyFD, Aid, Depminer, DFD, FastFDs, FDep, FdMine, FUN, Pyro, Tane,
-                          PFDTane>(fd_module, py::overload_cast<>(&FDAlgorithm::FdList, py::const_),
-                                   "FdAlgorithm", "get_fds",
+                          PFDTane>(fd_module, &FDAlgorithm::SortedFdList, "FdAlgorithm", "get_fds",
                                    {"HyFD", "Aid", "Depminer", "DFD", "FastFDs", "FDep", "FdMine",
                                     "FUN", kPyroName, kTaneName, kPFDTaneName});
 

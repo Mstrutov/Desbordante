@@ -1,0 +1,19 @@
+Discovered ranges for (Delivery date - Dispatch date) are:
+[(2.0, 7.0), (15.0, 22.0)]
+
+Rows in which the result of the chosen operation (-) is outside of discovered ranges:
+id: 7
+Dispatch date: 1
+Delivery date: 30
+Difference: 29
+
+id: 26
+Dispatch date: 7
+Delivery date: 18
+Difference: 11
+
+id: 30
+Dispatch date: 11
+Delivery date: 22
+Difference: 11
+

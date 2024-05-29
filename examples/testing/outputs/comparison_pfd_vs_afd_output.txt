@@ -1,0 +1,7 @@
+pFDs \ AFDs = OrderedSet(['[DeviceId] -> Data'])
+AFDs \ pFDs = OrderedSet()
+AFDs ∩ pFDs = OrderedSet(['[Id] -> DeviceId', '[Id] -> Data', '[Data] -> Id', '[Data] -> DeviceId'])
+1 - PerValue([DeviceId] -> Data) = 0.1714285714
+e([DeviceId] -> Data) = 0.23076923076923078
+In case of PerValue error measure, violations on data from the single "glitchy"
+sensor device among many do not prevent dependecy from being found

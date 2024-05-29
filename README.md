@@ -54,13 +54,13 @@ python3 cli.py --task=fd --table=../examples/datasets/university_fd.csv , True
 ```
 
 ```text
-[Course Classroom] -> Professor
-[Classroom Semester] -> Professor
-[Classroom Semester] -> Course
 [Professor] -> Course
-[Professor Semester] -> Classroom
+[Course Classroom] -> Professor
 [Course Semester] -> Classroom
 [Course Semester] -> Professor
+[Classroom Semester] -> Course
+[Classroom Semester] -> Professor
+[Professor Semester] -> Classroom
 ```
 
 2) Discover all approximate functional dependencies with error less than or equal to 0.1 in a table represented by a .csv file that uses a comma as the separator and has a header row. In this example the default AFD discovery algorithm (Pyro) is used.
@@ -114,13 +114,13 @@ for fd in result:
 ```
 ```text
 FDs:
-[Course Classroom] -> Professor
-[Classroom Semester] -> Professor
-[Classroom Semester] -> Course
 [Professor] -> Course
-[Professor Semester] -> Classroom
+[Course Classroom] -> Professor
 [Course Semester] -> Classroom
 [Course Semester] -> Professor
+[Classroom Semester] -> Course
+[Classroom Semester] -> Professor
+[Professor Semester] -> Classroom
 ```
 
 2) Discover all approximate functional dependencies with error less than or equal to 0.1 in a table represented by a .csv file that uses a comma as the separator and has a header row. In this example the AFD discovery algorithm Pyro is used.
@@ -141,8 +141,8 @@ for fd in result:
 ```
 ```text
 AFDs:
-[Id] -> Price
 [Id] -> ProductName
+[Id] -> Price
 [ProductName] -> Price
 ```
 
@@ -178,16 +178,16 @@ MFD holds
 >>> pyro.load_data(table=df)
 >>> pyro.execute(error=0.0)
 >>> print(f'[{", ".join(map(str, pyro.get_fds()))}]')
-[[0 1 2] -> 4, [0 2 3] -> 4, [0 1 3] -> 4, [1 2 3] -> 4]
+[[0 1 2] -> 4, [0 1 3] -> 4, [0 2 3] -> 4, [1 2 3] -> 4]
 >>> pyro.execute(error=0.1)
 >>> print(f'[{", ".join(map(str, pyro.get_fds()))}]')
-[[2] -> 0, [2] -> 3, [2] -> 1, [0] -> 2, [3] -> 0, [0] -> 3, [0] -> 1, [1] -> 3, [1] -> 0, [3] -> 2, [3] -> 1, [1] -> 2, [2] -> 4, [3] -> 4, [0] -> 4, [1] -> 4]
+[[0] -> 1, [0] -> 2, [0] -> 3, [0] -> 4, [1] -> 0, [1] -> 2, [1] -> 3, [1] -> 4, [2] -> 0, [2] -> 1, [2] -> 3, [2] -> 4, [3] -> 0, [3] -> 1, [3] -> 2, [3] -> 4]
 >>> pyro.execute(error=0.2)
 >>> print(f'[{", ".join(map(str, pyro.get_fds()))}]')
-[[2] -> 0, [0] -> 2, [3] -> 2, [1] -> 2, [2] -> 4, [3] -> 4, [0] -> 4, [1] -> 4, [3] -> 0, [1] -> 0, [2] -> 3, [2] -> 1, [0] -> 3, [0] -> 1, [1] -> 3, [3] -> 1]
+[[0] -> 1, [0] -> 2, [0] -> 3, [0] -> 4, [1] -> 0, [1] -> 2, [1] -> 3, [1] -> 4, [2] -> 0, [2] -> 1, [2] -> 3, [2] -> 4, [3] -> 0, [3] -> 1, [3] -> 2, [3] -> 4]
 >>> pyro.execute(error=0.3)
 >>> print(f'[{", ".join(map(str, pyro.get_fds()))}]')
-[[2] -> 1, [0] -> 2, [2] -> 0, [2] -> 3, [0] -> 1, [3] -> 2, [3] -> 1, [1] -> 2, [3] -> 0, [0] -> 3, [4] -> 1, [1] -> 0, [1] -> 3, [4] -> 2, [4] -> 3, [2] -> 4, [3] -> 4, [0] -> 4, [1] -> 4]
+[[0] -> 1, [0] -> 2, [0] -> 3, [0] -> 4, [1] -> 0, [1] -> 2, [1] -> 3, [1] -> 4, [2] -> 0, [2] -> 1, [2] -> 3, [2] -> 4, [3] -> 0, [3] -> 1, [3] -> 2, [3] -> 4, [4] -> 1, [4] -> 2, [4] -> 3]
 ```
 
 ## Web interface

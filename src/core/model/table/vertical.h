@@ -42,7 +42,9 @@ public:
      * it treats bitsets little endian during comparison and this is not
      * suitable for this case, check out operator< for Columns.
      */
-    bool operator<(Vertical const& rhs) const;
+    bool operator<(Vertical const& rhs) const {
+        return column_indices_ < rhs.column_indices_;
+    }
 
     bool operator==(Vertical const& other) const {
         return column_indices_ == other.column_indices_;

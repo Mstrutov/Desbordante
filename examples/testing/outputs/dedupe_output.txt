@@ -1,0 +1,92 @@
+Deduplication parameters:
+ALGORITHM='Pyro'
+ERROR=0.00100
+DATASET_PATH='examples/datasets/duplicates.csv'
+SEPARATOR=','
+INITIAL_WINDOW_SIZE=4
+
+Dataset sample:
+      id             name address       city                          email phone country
+0   5996        Kaede Sue      66      Pirus       Kaede.Sue4422@virtex.rum    39      EU
+1     36       Licia Wolf      35  Pilington       Licia.Wolf1260@cmail.com    35      CM
+2     17        Steve Doe      16     Syndye           Steve.Doe272@muli.ry    16      GZ
+3     62      Lisa Tarski      61     Syndye     Lisa.Tarski3782@virtex.rum    61      JU
+4      6      Mary Tarski       5     Lumdum       Mary.Tarski30@ferser.edu     5      PR
+..   ...              ...     ...        ...                            ...   ...     ...
+73    15        Ivan Dawn      14     Syndye      Ivan.Dawn210@atomlema.ocg    14      FC
+74  5993       Lisa Honjo      63       Roit      Lisa.Honjo4032@virtex.rum    63      AI
+75    59         Lisa Sue      58     Muxicu         Lisa.Sue3422@cmail.com    58      AI
+76    21  Steve Shiramine      20  Pilington  Steve.Shiramine420@ferser.edu    20      GZ
+77    44      Maxine Wolf      43     Muxicu   Maxine.Wolf1892@atomlema.ocg    43      PR
+
+[78 rows x 7 columns]
+Original records: 78
+
+AFD info:
+0: id -> ( name address city email phone country )
+2: address -> ( name )
+4: email -> ( name address phone country )
+5: phone -> ( name )
+LHS column index: RHS columns:
+1: name
+2: address
+3: city
+4: email
+5: phone
+6: country
+RHS columns to use (indices): Equal columns to consider duplicates:       id          name address      city                       email phone country
+5     27     Björn Sue      26      Roit      Björn.Sue702@cmail.com    26      CM
+6     30  Björn Tarski      29    Lumdum  Björn.Tarski870@ferser.edu    29      PR
+7   5957    Björn Wolf      27              Björn.Wolf756@virtex.rum    27      AI
+8     28    Björn Wolf      27              Björn.Wolf756@virtex.rum    27      AI
+9  11886    Björn Wolf      28  Kustruma    Björn.Wolf756@virtex.rum    27      AI
+Command: Column: id. Which value to use?
+0: 11886
+1: 28
+2: 5957
+index: Column: address. Which value to use?
+0: 27
+1: 28
+index: Column: city. Which value to use?
+0: 
+1: Kustruma
+index:    id          name address    city                       email phone country
+5  27     Björn Sue      26    Roit      Björn.Sue702@cmail.com    26      CM
+6  30  Björn Tarski      29  Lumdum  Björn.Tarski870@ferser.edu    29      PR
+Command:       id        name address       city                       email phone country
+42    63   Lisa Dawn      62  Pilington  Lisa.Dawn3906@atomlema.ocg    62      EU
+43    57    Lisa Doe      56       Roit     Lisa.Doe3192@virtex.rum    56      AI
+44    64  Lisa Honjo      63      Pirus   Lisa.Honjo4032@virtex.rum    63      AI
+45  5993  Lisa Honjo      63       Roit   Lisa.Honjo4032@virtex.rum    63      AI
+Command:        id       name address    city                     email phone country
+50     60  Lisa Wolf      59  Syndye   Lisa.Wolf3540@cmail.com    59      FC
+51      7  Mary Dawn       6  Syndye  Mary.Dawn42@atomlema.ocg     6      PR
+52   5930   Mary Doe          Lumdum  Mary.Doe-5926@ferser.edu     0        
+53  11859   Mary Doe          Lumdum  Mary.Doe-5926@ferser.edu     0      EU
+54      1   Mary Doe          Lumdum         Mary.Doe0@muli.ry     4      EU
+Command: Column: id. Which value to use?
+0: 11859
+1: 5930
+index: Column: country. Which value to use?
+0: 
+1: EU
+index:     id       name address    city                     email phone country
+50  60  Lisa Wolf      59  Syndye   Lisa.Wolf3540@cmail.com    59      FC
+51   7  Mary Dawn       6  Syndye  Mary.Dawn42@atomlema.ocg     6      PR
+54   1   Mary Doe          Lumdum         Mary.Doe0@muli.ry     4      EU
+Command: 
+Resulting records: 75. Duplicates found: 3
+    id             name address       city                          email phone country
+0   31       Björn Dawn      30     Muxicu     Björn.Dawn930@atomlema.ocg    30      JU
+1   25        Björn Doe      24  Pilington           Björn.Doe600@muli.ry    24      FC
+2   32      Björn Honjo      31   Kustruma      Björn.Honjo992@virtex.rum    31      RI
+3   29  Björn Shiramine      28     Syndye  Björn.Shiramine812@virtex.rum    28      EU
+4   26      Björn Smith      25  Pilington      Björn.Smith650@virtex.rum    25      RI
+..  ..              ...     ...        ...                            ...   ...     ...
+70  21  Steve Shiramine      20  Pilington  Steve.Shiramine420@ferser.edu    20      GZ
+71  20       Steve Wolf      19  Pilington          Steve.Wolf380@muli.ry    19      RI
+72  22     Steve Tarski      21  Pilington   Steve.Tarski462@atomlema.ocg    21      PR
+73  19        Steve Sue      18     Syndye        Steve.Sue342@virtex.rum    18      AI
+74  18      Steve Smith      17     Lumdum       Steve.Smith306@cmail.com    17      EU
+
+[75 rows x 7 columns]

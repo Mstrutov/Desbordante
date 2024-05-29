@@ -1,0 +1,90 @@
+First, let's look at the duplicates_short.csv table and try to verify the functional dependency in it.
+
+       id             name  ...  phone country
+0      26      Björn Smith  ...     25      RI
+1   11859         Mary Doe  ...      0      EU
+2       1         Mary Doe  ...      4      EU
+3      56      Emily Honjo  ...     55      GZ
+4      30     Björn Tarski  ...     29      PR
+5   17788         Mary Doe  ...      0      EU
+6    5930         Mary Doe  ...      0      EU
+7      58       Lisa Smith  ...     57      CM
+8      29  Björn Shiramine  ...     28      EU
+9      28       Björn Wolf  ...     27      AI
+10     60        Lisa Wolf  ...     59      FC
+11  11886       Björn Wolf  ...     27      AI
+12   5970       Maxine Doe  ...     40      CM
+13     46    Maxine Tarski  ...     45      EU
+14   5957       Björn Wolf  ...     27      AI
+
+[15 rows x 7 columns]
+
+Checking whether [id] -> [name] FD holds
+ FD holds 
+Checking whether [name] -> [credit_score] FD holds
+ FD does not hold 
+Number of clusters violating FD: 2
+ #1 cluster: 
+1: Mary Doe -> 0.0
+2: Mary Doe -> 0.0
+5: Mary Doe -> 0.0
+6: Mary Doe -> nan
+Most frequent rhs value proportion: 0.75
+Num distinct rhs values: 2
+
+ #2 cluster: 
+9: Björn Wolf -> 27.0
+11: Björn Wolf -> 28.0
+14: Björn Wolf -> 27.0
+Most frequent rhs value proportion: 0.6666666666666666
+Num distinct rhs values: 2
+
+We learned that in this case the specified FD does not hold and there are two clusters of rows that contain values that prevent our FD from holding. A cluster (with respect to a fixed FD) is a collection of rows that share the same left-hand side part but differ on the right-hand side one.
+Let's take a closer look at them.
+
+In the first cluster, three values are "0" and a single one is "nan". This suggests that this single entry with the "nan" value is a result of a mistake by someone who is not familiar with the table population policy. Therefore, it should probably be changed to "0".
+
+Now let's take a look at the second cluster. There are two entries: "27" and "28". In this case, it is probably a typo, since buttons 7 and 8 are located close to each other on the keyboard.
+
+Having analyzed these clusters, we can conclude that our FD does not hold due to typos in the data. Therefore, by eliminating them, we can get this FD to hold (and make our dataset error-free).
+
+--------------------------------------------------------------------------------
+Now let's look at the DnD.csv to consider the AFD
+
+  Creature  Strength  HaveMagic
+0     Ogre         9      False
+1     Ogre         6      False
+2      Elf         6       True
+3      Elf         6       True
+4      Elf         1       True
+5    Dwarf         9      False
+6    Dwarf         6      False
+
+Checking whether [Creature] -> [Strength] AFD holds (error threshold = 0.5)
+ AFD with this error threshold holds 
+Checking whether [Creature] -> [Strength] AFD holds (error threshold = 0.1)
+ AFD with this error threshold does not hold 
+But the same  AFD with error threshold = 0.19047619047619047 holds
+
+Similarly to the FD verification primitive, the AFD one can provide a user with clusters:
+
+Number of clusters violating FD: 3
+ #1 cluster: 
+2: Elf -> 6
+3: Elf -> 6
+4: Elf -> 1
+Most frequent rhs value proportion: 0.6666666666666666
+Num distinct rhs values: 2
+
+ #2 cluster: 
+0: Ogre -> 9
+1: Ogre -> 6
+Most frequent rhs value proportion: 0.5
+Num distinct rhs values: 2
+
+ #3 cluster: 
+5: Dwarf -> 9
+6: Dwarf -> 6
+Most frequent rhs value proportion: 0.5
+Num distinct rhs values: 2
+

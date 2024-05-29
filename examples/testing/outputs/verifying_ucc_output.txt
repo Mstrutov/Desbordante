@@ -1,0 +1,18 @@
+Checking whether (First Name) UCC holds
+UCC does not hold
+Total number of rows violating UCC: 2
+Number of clusters violating UCC: 1
+Clusters violating UCC:
+[4, 5]
+
+Checking whether (First Name, Last Name) UCC holds
+UCC holds
+
+Checking whether (Born Town, Born Country) UCC holds
+UCC does not hold
+Total number of rows violating UCC: 5
+Number of clusters violating UCC: 2
+Clusters violating UCC:
+[2, 3, 4]
+[6, 7]
+

@@ -1,0 +1,8 @@
+FDs:
+[Professor] -> Course
+[Course Classroom] -> Professor
+[Course Semester] -> Classroom
+[Course Semester] -> Professor
+[Classroom Semester] -> Course
+[Classroom Semester] -> Professor
+[Professor Semester] -> Classroom

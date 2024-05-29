@@ -1,0 +1,49 @@
+
++----+----------+-----------------+--------+
+|    |   weight |   shipping cost |   days |
+|----+----------+-----------------+--------|
+|  0 |        5 |              14 |      2 |
+|  1 |       10 |              22 |      6 |
+|  2 |        3 |              10 |      4 |
+|  3 |       10 |              25 |      7 |
+|  4 |        5 |              14 |      2 |
+|  5 |       20 |              40 |      8 |
++----+----------+-----------------+--------+
+
+Resulting dependencies for this table are:
+['weight', 'days'] -> ['shipping cost']
+['shipping cost'] -> ['weight', 'days']
+['weight'] -> ['shipping cost']
+
+Depenency [weight] -> [shipping cost] means that ordering table by weight
+will also order table by shipping cost automatically. Let's order by weight: 
+
++----+----------+-----------------+--------+
+|    |   weight |   shipping cost |   days |
+|----+----------+-----------------+--------|
+|  2 |        3 |              10 |      4 |
+|  0 |        5 |              14 |      2 |
+|  4 |        5 |              14 |      2 |
+|  1 |       10 |              22 |      6 |
+|  3 |       10 |              25 |      7 |
+|  5 |       20 |              40 |      8 |
++----+----------+-----------------+--------+
+
+We can see that shipping cost is sorted too. And dependency seems reasonable:
+the more the package weights, the more expensive it will be to send it.
+
+Order dependencies are called lexicographical, because ordering for multiple
+columns is lexicographical. For example [shipping cost] -> [weight, days] implies
+that ordering by shipping cost will also lexicographically order [weight, days]:
+
++----+----------+-----------------+--------+
+|    |   weight |   shipping cost |   days |
+|----+----------+-----------------+--------|
+|  2 |        3 |              10 |      4 |
+|  0 |        5 |              14 |      2 |
+|  4 |        5 |              14 |      2 |
+|  1 |       10 |              22 |      6 |
+|  3 |       10 |              25 |      7 |
+|  5 |       20 |              40 |      8 |
++----+----------+-----------------+--------+
+

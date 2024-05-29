@@ -1,0 +1,152 @@
+Columns with null: []
+Columns with all unique values: [0, 1]
+Number of columns: 6
+
+Column num: 0
+Min: 0008f14d-e2a7-4582-bf5e-89ce32b55606
+Max: fff1cd7a-04f9-486c-97de-d5d2c6ddb3cb
+Distinct: 945
+
+Column num: 1
+Min: Anthony Campbell
+Max: William Taylor
+Distinct: 945
+
+Column num: 2
+Min: Addyson Aaliyah
+Max: Shena Desiree
+Distinct: 6
+
+Column num: 3
+Min: MonsterWorq
+Max: Yogatacular
+Distinct: 5
+
+Column num: 4
+Avg: 932.258201058201
+Sum of squares: 894298474
+Median: 945.0
+Min: 465
+Max: 2036
+Distinct: 28
+Corrected std: 278.07204551856535
+
+Column num: 5
+Min: Client Solution Analyst
+Max: Workshop Technician
+Distinct: 15
+
+Column num = 0
+num_chars = 34020
+num_uppercase_chars = 0
+type = String
+isCategorical = 0
+num_lowercase_chars = 11108
+count = 945
+quantile50 = 81aabb56-808c-48a1-b2a3-5d3f2e1a752f
+num_digit_chars = 19132
+distinct = 945
+avg_chars = 36.000000
+min = 0008f14d-e2a7-4582-bf5e-89ce32b55606
+quantile25 = 4307ef5b-2e00-4316-b04c-debff4edc5c4
+max = fff1cd7a-04f9-486c-97de-d5d2c6ddb3cb
+quantile75 = c8539dda-ec0e-4c67-a2f4-2d201bb82171
+num_non_letter_chars = 22912
+vocab = -0123456789abcdef
+
+Column num = 1
+num_chars = 12261
+num_uppercase_chars = 1890
+type = String
+isCategorical = 0
+num_lowercase_chars = 9426
+count = 945
+quantile50 = Kenneth King
+num_digit_chars = 0
+distinct = 945
+avg_chars = 12.974603
+min = Anthony Campbell
+quantile25 = Donna White
+max = William Taylor
+quantile75 = Patricia Gonzalez
+num_non_letter_chars = 945
+vocab =  ABCDEGHJKLMNPRSTWYabcdefghiklmnoprstuvwyz
+
+Column num = 2
+num_chars = 11843
+num_uppercase_chars = 1890
+type = String
+isCategorical = 1
+num_lowercase_chars = 9008
+count = 945
+quantile50 = Galen Calla
+num_digit_chars = 0
+distinct = 6
+avg_chars = 12.532275
+min = Addyson Aaliyah
+quantile25 = Carrie Silvia
+max = Shena Desiree
+quantile75 = Paul Jeffry
+num_non_letter_chars = 945
+vocab =  ACDGJPSadefhilnorsuvy
+
+Column num = 3
+num_chars = 10452
+num_uppercase_chars = 1300
+type = String
+isCategorical = 1
+num_lowercase_chars = 9152
+count = 945
+quantile50 = Talkspiration
+num_digit_chars = 0
+distinct = 5
+avg_chars = 11.060317
+min = MonsterWorq
+quantile25 = SpeakerAce
+max = Yogatacular
+quantile75 = Verbalthon
+num_non_letter_chars = 0
+vocab = AMSTVWYabceghiklnopqrstu
+
+Column num = 4
+median_ad = 100.000000
+geometric_mean = 893.289725
+median = 945.000000
+sum_of_squares = 894298474
+num_negatives = 0
+quantile75 = 1020
+type = Int
+mean_ad = 186.978103
+isCategorical = 0
+kurtosis = 2.859101
+count = 945
+quantile50 = 945
+num_zeros = 0
+avg = 932.258201
+distinct = 28
+STD = 278.072046
+skewness = 1.132442
+min = 465
+quantile25 = 800
+max = 2036
+sum = 880984
+
+Column num = 5
+num_chars = 17603
+num_uppercase_chars = 2226
+type = String
+isCategorical = 0
+num_lowercase_chars = 14152
+count = 945
+quantile50 = Physiotherapist
+num_digit_chars = 0
+distinct = 15
+avg_chars = 18.627513
+min = Client Solution Analyst
+quantile25 = JavaScript Developer
+max = Workshop Technician
+quantile75 = Service Technician
+num_non_letter_chars = 1225
+vocab =  -ACDEFJLMOPRSTWacdeghijklmnoprstuvy
+
+

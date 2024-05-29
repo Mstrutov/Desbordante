@@ -1,0 +1,108 @@
++----+--------+------------------+--------------+
+|    |   year |   employee_grade |   avg_salary |
+|----+--------+------------------+--------------|
+|  0 |   2020 |               24 |         1000 |
+|  1 |   2020 |               40 |         7000 |
+|  2 |   2020 |               32 |         5000 |
+|  3 |   2020 |               29 |         3000 |
+|  4 |   2020 |               49 |        10000 |
+|  5 |   2021 |               50 |        15000 |
+|  6 |   2021 |               25 |         1500 |
+|  7 |   2021 |               30 |         6000 |
++----+--------+------------------+--------------+
+
+Attribute symbols:
+year -- 1
+employee_grade -- 2
+avg_salary -- 3
+
+descending ods: 0
+
+ascending ods: 2
+{1} : 2<= ~ 3<=
+{1} : 3<= ~ 2<=
+
+Dependency "{1} : 2<= ~ 3<=" means that ordering the table
+inside each equivalence class from "year" by attribute "avg_salary"
+automatically entails ordering by attribute "employee_grade".
+
+We have 2 equivalence classes in "year": [2020] and [2021].
+Let's split the table into two tables based on these classes.
+
+Part 1: this part of table corresponds to class [2020]
++----+--------+------------------+--------------+
+|    |   year |   employee_grade |   avg_salary |
+|----+--------+------------------+--------------|
+|  0 |   2020 |               24 |         1000 |
+|  1 |   2020 |               40 |         7000 |
+|  2 |   2020 |               32 |         5000 |
+|  3 |   2020 |               29 |         3000 |
+|  4 |   2020 |               49 |        10000 |
++----+--------+------------------+--------------+
+
+Let's sort it by attribute "avg_salary".
+
+Sorted part 1:
++----+--------+------------------+--------------+
+|    |   year |   employee_grade |   avg_salary |
+|----+--------+------------------+--------------|
+|  0 |   2020 |               24 |         1000 |
+|  3 |   2020 |               29 |         3000 |
+|  2 |   2020 |               32 |         5000 |
+|  1 |   2020 |               40 |         7000 |
+|  4 |   2020 |               49 |        10000 |
++----+--------+------------------+--------------+
+
+We can see that this sort entails automatic ordering by
+attribute "employee_grade".
+
+Part 2: this part of table corresponds to class [2021]
++----+--------+------------------+--------------+
+|    |   year |   employee_grade |   avg_salary |
+|----+--------+------------------+--------------|
+|  5 |   2021 |               50 |        15000 |
+|  6 |   2021 |               25 |         1500 |
+|  7 |   2021 |               30 |         6000 |
++----+--------+------------------+--------------+
+
+Let's sort it by attribute "avg_salary".
+
+Sorted part 2:
++----+--------+------------------+--------------+
+|    |   year |   employee_grade |   avg_salary |
+|----+--------+------------------+--------------|
+|  6 |   2021 |               25 |         1500 |
+|  7 |   2021 |               30 |         6000 |
+|  5 |   2021 |               50 |        15000 |
++----+--------+------------------+--------------+
+
+We can see that this sort entails automatic ordering by
+attribute "employee_grade" too.
+
+Dependency "{1} : 3<= ~ 2<=" is similar to the first and means that
+ordering the table inside each equivalence class from "year" by
+attribute "employee_grade" automatically entails ordering by
+attribute "avg_salary". This can be seen in the tables above.
+
+In other words, these dependencies indicate that the ordering of
+average salary entails an automatic ordering of the employee grade
+and vice versa.
+
+simple ods: 4
+{2} : [] -> 1<=
+{3} : [] -> 1<=
+{3} : [] -> 2<=
+{2} : [] -> 3<=
+
+These dependencies mean that inside each equivalence class from
+an attribute from their context the constancy of the attribute
+from the right side of the dependency can be traced.
+
+For example, let's look at "{2} : [] -> 1<=". The context of this
+dependency is attribute "employee_grade". We have 8 equivalence classes
+in "employee_grade": [24], [40], [32], [29], [49], [50], [25], [30].
+Since all the elements of attribute "employee_grade" are different,
+each of these classes contains only one element, so constancy within
+each class occurs automatically.
+
+To better understand such dependencies, refer to the second example.

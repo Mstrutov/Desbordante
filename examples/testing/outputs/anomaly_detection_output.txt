@@ -1,0 +1,44 @@
+FDs found for dataset 1:
+[item_id] -> item_weight
+[item_weight] -> item_id
+[record_id] -> cargo_id
+[record_id] -> item_id
+[record_id] -> item_weight
+[record_id] -> timestamp
+[timestamp] -> cargo_id
+[timestamp] -> item_id
+[timestamp] -> item_weight
+[timestamp] -> record_id
+FDs found for dataset 2:
+[item_id] -> item_weight
+[item_weight] -> item_id
+[record_id] -> cargo_id
+[record_id] -> item_id
+[record_id] -> item_weight
+[record_id] -> timestamp
+[timestamp] -> cargo_id
+[timestamp] -> item_id
+[timestamp] -> item_weight
+[timestamp] -> record_id
+FDs found for dataset 3:
+[item_weight] -> item_id
+[record_id] -> cargo_id
+[record_id] -> item_id
+[record_id] -> item_weight
+[record_id] -> timestamp
+[timestamp] -> cargo_id
+[timestamp] -> item_id
+[timestamp] -> item_weight
+[timestamp] -> record_id
+AFDs found for dataset 3:
+[item_id cargo_id] -> item_weight
+[item_weight] -> item_id
+[record_id] -> cargo_id
+[record_id] -> item_id
+[record_id] -> item_weight
+[record_id] -> timestamp
+[timestamp] -> cargo_id
+[timestamp] -> item_id
+[timestamp] -> item_weight
+[timestamp] -> record_id
+MFD holds.

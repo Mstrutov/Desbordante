@@ -1,0 +1,64 @@
+Dataset AUCC_example.csv:
+   ID  name  card_num  card_active
+0   1  Alex       665         True
+1   2  Liam       667         True
+2   3  Ezra       553         True
+3   4  Alex       665        False
+4   5  Kian       667        False
+5   6  Otis       111         True
+--------------------------------------------------------------------------------
+Checking whether (ID) UCC holds
+--------------------------------------------------------------------------------
+
+UCC holds, showing stats for AUCC is useless
+
+--------------------------------------------------------------------------------
+Checking whether (name) UCC holds
+It should not hold, there are 2 persons, named Alex
+--------------------------------------------------------------------------------
+
+UCC does not hold
+But AUCC with error = 0.0667 holds
+
+Also:
+Total number of rows violating UCC: 2
+Number of clusters violating UCC: 1
+Clusters violating UCC:
+found 1 clusters violating UCC:
+
+First violating cluster:
+   ID  name  card_num  card_active
+0   1  Alex       665         True
+3   4  Alex       665        False
+
+--------------------------------------------------------------------------------
+Checking whether (card_num) UCC holds
+It should not hold, there are 2 identical card numbers
+--------------------------------------------------------------------------------
+
+UCC does not hold
+But AUCC with error = 0.1333 holds
+
+Also:
+Total number of rows violating UCC: 4
+Number of clusters violating UCC: 2
+Clusters violating UCC:
+found 2 clusters violating UCC:
+
+First violating cluster:
+   ID  name  card_num  card_active
+0   1  Alex       665         True
+3   4  Alex       665        False
+Second violating cluster:
+   ID  name  card_num  card_active
+1   2  Liam       667         True
+4   5  Kian       667        False
+
+--------------------------------------------------------------------------------
+Checking whether (card_num, card_active) UCC holds
+It should hold, cards with identical numbers are not active simultaneously
+--------------------------------------------------------------------------------
+
+UCC holds, showing stats for AUCC is useless
+
+--------------------------------------------------------------------------------

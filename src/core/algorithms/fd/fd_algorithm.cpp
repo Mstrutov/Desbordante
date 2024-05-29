@@ -27,6 +27,20 @@ void FDAlgorithm::ResetState() {
     ResetStateFd();
 }
 
+std::list<FD>& FDAlgorithm::SortedFdList() {
+    fd_collection_.AsList().sort([](const FD& l_fd, const FD& r_fd) {
+        if (l_fd.GetLhs().GetArity() != r_fd.GetLhs().GetArity()) {
+            return l_fd.GetLhs().GetArity() < r_fd.GetLhs().GetArity();
+        }
+        if (l_fd.GetLhs() != r_fd.GetLhs()) {
+            return l_fd.GetLhs() < r_fd.GetLhs();
+        }
+        return l_fd.GetRhsIndex() < r_fd.GetRhsIndex();
+    });
+
+    return fd_collection_.AsList();
+}
+
 std::string FDAlgorithm::GetJsonFDs() const {
     return FDsToJson(FdList());
 }
