@@ -7,6 +7,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -36,6 +37,8 @@ private:
     std::vector<std::string> ParseString(std::string const& s) const;
     void GetNextIfHas();
     void SkipLine();
+    std::optional<char> DeduceSeparator();
+    bool CheckSeparator(char sep);
 
     inline static std::string& Rtrim(std::string& s);
 
@@ -48,6 +51,8 @@ public:
     std::vector<std::string> GetNextRow() override;
     std::string GetUnparsedLine(unsigned long long const line_index);
     std::vector<std::string> ParseLine(unsigned long long const line_index);
+
+    std::optional<char> ValidateSeparator();
 
     bool HasNextRow() const override {
         return has_next_;

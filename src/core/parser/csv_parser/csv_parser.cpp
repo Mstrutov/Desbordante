@@ -5,11 +5,13 @@
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/tokenizer.hpp>
+#include <easylogging++.h>
 
 inline std::string& CSVParser::Rtrim(std::string& s) {
     boost::trim_right(s);
@@ -179,4 +181,108 @@ std::vector<std::string> CSVParser::GetNextRow() {
     GetNextIfHas();
 
     return result;
+}
+
+std::optional<char> CSVParser::DeduceSeparator() {
+    // Calculate statistics including the header row
+    bool has_header_copy = has_header_;
+    has_header_ = false;
+    Reset();
+    has_header_ = has_header_copy;
+
+    std::unordered_map<char, unsigned> letter_count;
+    if (has_next_) {
+        for (char c : next_line_) {
+            letter_count[c]++;
+        }
+    }
+
+    std::unordered_map<char, unsigned> next_letter_count;
+    while (has_next_) {
+        GetNextIfHas();
+        next_letter_count.clear();
+        for (char c : next_line_) {
+            next_letter_count[c]++;
+        }
+        for (auto letter : letter_count) {
+            if (letter.second != next_letter_count[letter.first]) {
+                letter_count[letter.first] = 0;
+            }
+        }
+    }
+
+    char possible_separator;
+    unsigned max_separator_count = 0;
+
+    for (auto letter : letter_count) {
+        if (letter.second > max_separator_count) {
+            max_separator_count = letter.second;
+            possible_separator = letter.first;
+        }
+    }
+    Reset();
+
+    if (max_separator_count) {
+        return possible_separator;
+    }
+
+    return std::nullopt;
+}
+
+bool CSVParser::CheckSeparator(char sep) {
+    // Calculate statistics including the header row
+    bool has_header_copy = has_header_;
+    has_header_ = false;
+    Reset();
+    has_header_ = has_header_copy;
+
+    char separator_copy = separator_;
+    separator_ = sep;
+
+    unsigned sep_count = 0;
+    std::vector<std::string> next_parsed;
+    if (has_next_) {
+        next_parsed = GetNextRow();
+        sep_count = next_parsed.size();
+    }
+
+    while (has_next_) {
+        next_parsed = GetNextRow();
+        if (sep_count != next_parsed.size()) {
+            Reset();
+            separator_ = separator_copy;
+            return false;
+        }
+    }
+
+    Reset();
+    separator_ = separator_copy;
+
+    return true;
+}
+
+std::optional<char> CSVParser::ValidateSeparator() {
+    std::optional<char> possible_separator = DeduceSeparator();
+
+    if (CheckSeparator(separator_)) {
+        if (possible_separator == std::nullopt || separator_ == possible_separator ||
+            GetNumberOfColumns() != 1 || !CheckSeparator(possible_separator.value())) {
+            return separator_;
+        }
+
+        LOG(WARNING) << "Inserted separator for the table " << relation_name_
+                     << " seems to be wrong";
+        LOG(WARNING) << "Possible separator for the table is: \'" << possible_separator.value()
+                     << "\'";
+        return possible_separator;
+    }
+
+    LOG(WARNING) << "Inserted separator for the table " << relation_name_ << " seems to be wrong";
+    if (possible_separator != std::nullopt && CheckSeparator(possible_separator.value())) {
+        LOG(WARNING) << "Possible separator for the table is: \'" << possible_separator.value()
+                     << "\'";
+        return possible_separator;
+    }
+
+    return std::nullopt;
 }
