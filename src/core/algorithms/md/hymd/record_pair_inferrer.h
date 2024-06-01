@@ -32,6 +32,12 @@ public:
     };
 
 private:
+    enum class InferenceStatus {
+        KeepGoing,
+        LatticeIsAlmostFinal,
+        PairsAreStale,
+    };
+
     SimilarityData* const similarity_data_;
     lattice::MdLattice* const lattice_;
 
@@ -43,13 +49,13 @@ private:
 
     RecordIdentifier next_left_record_ = 0;
 
-    PhaseSwitchHeuristicParameters heuristic_parameters{{1, 1}};
+    PhaseSwitchHeuristicParameters heuristic_parameters{{1, 100}};
 
     bool const avoid_same_comparison_processing_ = true;
 
     PairStatistics ProcessPairComparison(PairComparisonResult const& pair_comparison_result);
     template <typename StatisticsType>
-    bool ShouldStopInferring(StatisticsType const& statistics) const noexcept;
+    InferenceStatus Evaluate(StatisticsType const& statistics) const noexcept;
 
 public:
     RecordPairInferrer(SimilarityData* similarity_data, lattice::MdLattice* lattice,

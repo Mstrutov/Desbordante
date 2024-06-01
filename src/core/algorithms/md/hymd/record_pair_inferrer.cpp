@@ -88,12 +88,11 @@ struct TotalStatistics : public Statistics {
 
     void AddSkipped() noexcept {
         ++pairs_inspected;
-        ++pairs_processed;
     }
 };
 
 template <typename StatisticsType>
-bool RecordPairInferrer::ShouldStopInferring(StatisticsType const& statistics) const noexcept {
+auto RecordPairInferrer::Evaluate(StatisticsType const& statistics) const noexcept -> InferenceStatus {
     // NOTE: this is the condition from the original implementation. I believe it severely reduces
     // the benefits of the hybrid approach on datasets where inference from record pairs is
     // efficient.
@@ -103,17 +102,20 @@ bool RecordPairInferrer::ShouldStopInferring(StatisticsType const& statistics) c
     // case when only one table is inspected.
     bool const not_enough_data = statistics.pairs_inspected <
                                  PhaseSwitchHeuristicParameters::kPairsRequiredForPhaseSwitch;
-    if (not_enough_data) return false;
+    if (not_enough_data) return InferenceStatus::KeepGoing;
     // Modified phase switch heuristic described in "Efficient Discovery of Matching Dependencies".
     bool const lattice_is_almost_final = PhaseSwitchHeuristicParameters::IsGe(
             statistics.pairs_inspected, heuristic_parameters.final_lattice_ratio,
             statistics.mds_removed);
+    if (lattice_is_almost_final) return InferenceStatus::LatticeIsAlmostFinal;
+
     // New phase switch heuristic: if there are too many pairs that share similarity classifier
     // boundaries with already processed pairs, switch phase.
     bool const pairs_are_stale = PhaseSwitchHeuristicParameters::IsGe(
             statistics.pairs_inspected, PhaseSwitchHeuristicParameters::kStaleRatio,
             statistics.pairs_processed);
-    return lattice_is_almost_final || pairs_are_stale;
+    if (pairs_are_stale) return InferenceStatus::PairsAreStale;
+    return InferenceStatus::KeepGoing;
 }
 
 auto RecordPairInferrer::ProcessPairComparison(PairComparisonResult const& pair_comparison_result)
@@ -134,14 +136,21 @@ auto RecordPairInferrer::ProcessPairComparison(PairComparisonResult const& pair_
 }
 
 bool RecordPairInferrer::InferFromRecordPairs(Recommendations recommendations) {
-    WindowStatistics statistics{std::max(kSmallestWindowSize,
-                                         heuristic_parameters.final_lattice_ratio.denominator * 2)};
+    TotalStatistics statistics{};
 
     auto process_collection = [&](auto& collection, auto get_sim_vec) {
         while (!collection.empty()) {
-            if (ShouldStopInferring(statistics)) {
-                heuristic_parameters.final_lattice_ratio *= heuristic_parameters.kFinalLatticeMult;
-                return true;
+            switch (Evaluate(statistics)) {
+                case InferenceStatus::KeepGoing:
+                    break;
+                case InferenceStatus::LatticeIsAlmostFinal:
+                    heuristic_parameters.final_lattice_ratio *=
+                            heuristic_parameters.kFinalLatticeMult;
+                case InferenceStatus::PairsAreStale:
+                    return true;
+                default:
+                    assert(false);
+                    __builtin_unreachable();
             }
             PairComparisonResult const& pair_comparison_result =
                     get_sim_vec(collection.extract(collection.begin()).value());
