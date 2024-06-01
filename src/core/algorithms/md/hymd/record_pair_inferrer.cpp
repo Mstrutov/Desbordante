@@ -13,8 +13,8 @@
 
 namespace algos::hymd {
 
-constexpr std::size_t kBufferSize = 1000;
-static_assert(kBufferSize > 0);
+constexpr std::size_t kSmallestWindowSize = 1000;
+static_assert(kSmallestWindowSize > 0);
 
 struct RecordPairInferrer::PairStatistics {
     std::size_t rhss_removed = 0;
@@ -22,9 +22,7 @@ struct RecordPairInferrer::PairStatistics {
     std::size_t invalidated_number = 0;
 };
 
-struct RecordPairInferrer::Statistics {
-    using OptionalStats = std::optional<PairStatistics>;
-
+struct Statistics {
     std::size_t samplings_started = 0;
 
     std::size_t pairs_processed = 0;
@@ -35,9 +33,21 @@ struct RecordPairInferrer::Statistics {
 
     std::size_t invalidated_number = 0;
 
-    boost::circular_buffer<OptionalStats> pairs{kBufferSize};
+    void AddPairStats(RecordPairInferrer::PairStatistics pair_statistics) noexcept {
+        mds_removed += pair_statistics.rhss_removed;
+        all_rhss_removed += pair_statistics.all_rhss_removed;
+        invalidated_number += pair_statistics.invalidated_number;
+    }
+};
 
-    void AddPairStatistics(PairStatistics&& pair_statistics) {
+struct WindowStatistics : public Statistics {
+    using OptionalStats = std::optional<RecordPairInferrer::PairStatistics>;
+
+    boost::circular_buffer<OptionalStats> pairs;
+
+    WindowStatistics(std::size_t window_size) : pairs(window_size) {}
+
+    void AddPairStatistics(RecordPairInferrer::PairStatistics&& pair_statistics) {
         if (pairs.full()) {
             if (OptionalStats const& first_el = *pairs.begin(); first_el.has_value()) {
                 mds_removed -= first_el->rhss_removed;
@@ -50,9 +60,7 @@ struct RecordPairInferrer::Statistics {
             ++pairs_processed;
             ++pairs_inspected;
         }
-        mds_removed += pair_statistics.rhss_removed;
-        all_rhss_removed += pair_statistics.all_rhss_removed;
-        invalidated_number += pair_statistics.invalidated_number;
+        AddPairStats(pair_statistics);
         pairs.push_back(std::move(pair_statistics));
     }
 
@@ -71,7 +79,21 @@ struct RecordPairInferrer::Statistics {
     }
 };
 
-bool RecordPairInferrer::ShouldStopInferring(Statistics const& statistics) const noexcept {
+struct TotalStatistics : public Statistics {
+    void AddPairStatistics(RecordPairInferrer::PairStatistics&& pair_statistics) noexcept {
+        ++pairs_inspected;
+        ++pairs_processed;
+        AddPairStats(pair_statistics);
+    }
+
+    void AddSkipped() noexcept {
+        ++pairs_inspected;
+        ++pairs_processed;
+    }
+};
+
+template <typename StatisticsType>
+bool RecordPairInferrer::ShouldStopInferring(StatisticsType const& statistics) const noexcept {
     // NOTE: this is the condition from the original implementation. I believe it severely reduces
     // the benefits of the hybrid approach on datasets where inference from record pairs is
     // efficient.
@@ -79,15 +101,18 @@ bool RecordPairInferrer::ShouldStopInferring(Statistics const& statistics) const
 
     // Without this, the algorithm will switch phase after processing the first record pair in the
     // case when only one table is inspected.
-    bool const not_enough_data = statistics.pairs_inspected < kPairsRequiredForPhaseSwitch;
+    bool const not_enough_data = statistics.pairs_inspected <
+                                 PhaseSwitchHeuristicParameters::kPairsRequiredForPhaseSwitch;
     if (not_enough_data) return false;
     // Modified phase switch heuristic described in "Efficient Discovery of Matching Dependencies".
-    bool const lattice_is_almost_final = statistics.pairs_inspected * final_lattice_numerator_ >=
-                                         final_lattice_denominator_ * statistics.mds_removed;
+    bool const lattice_is_almost_final = PhaseSwitchHeuristicParameters::IsGe(
+            statistics.pairs_inspected, heuristic_parameters.final_lattice_ratio,
+            statistics.mds_removed);
     // New phase switch heuristic: if there are too many pairs that share similarity classifier
     // boundaries with already processed pairs, switch phase.
-    bool const pairs_are_stale = statistics.pairs_inspected * kStaleHeuristicNumerator >=
-                                 kStaleHeuristicDenominator * statistics.pairs_processed;
+    bool const pairs_are_stale = PhaseSwitchHeuristicParameters::IsGe(
+            statistics.pairs_inspected, PhaseSwitchHeuristicParameters::kStaleRatio,
+            statistics.pairs_processed);
     return lattice_is_almost_final || pairs_are_stale;
 }
 
@@ -109,18 +134,17 @@ auto RecordPairInferrer::ProcessPairComparison(PairComparisonResult const& pair_
 }
 
 bool RecordPairInferrer::InferFromRecordPairs(Recommendations recommendations) {
-    Statistics statistics;
+    WindowStatistics statistics{std::max(kSmallestWindowSize,
+                                         heuristic_parameters.final_lattice_ratio.denominator * 2)};
 
     auto process_collection = [&](auto& collection, auto get_sim_vec) {
         while (!collection.empty()) {
             if (ShouldStopInferring(statistics)) {
-                final_lattice_denominator_ *= kFinalLatticeHeuristicGrowthDenominator;
-                final_lattice_numerator_ *= kFinalLatticeHeuristicGrowthNumerator;
+                heuristic_parameters.final_lattice_ratio *= heuristic_parameters.kFinalLatticeMult;
                 return true;
             }
             PairComparisonResult const& pair_comparison_result =
                     get_sim_vec(collection.extract(collection.begin()).value());
-            ++statistics.pairs_inspected;
             if (avoid_same_comparison_processing_) {
                 bool const not_seen_before =
                         processed_comparisons_.insert(pair_comparison_result).second;
@@ -130,7 +154,6 @@ bool RecordPairInferrer::InferFromRecordPairs(Recommendations recommendations) {
                 }
             }
             statistics.AddPairStatistics(ProcessPairComparison(pair_comparison_result));
-            ++statistics.pairs_processed;
         }
         return false;
     };

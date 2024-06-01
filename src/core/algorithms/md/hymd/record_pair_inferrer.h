@@ -7,14 +7,31 @@
 #include "algorithms/md/hymd/pair_comparison_result.h"
 #include "algorithms/md/hymd/recommendation.h"
 #include "algorithms/md/hymd/similarity_data.h"
+#include "util/ratio.h"
 
 namespace algos::hymd {
 
 class RecordPairInferrer {
-private:
-    struct Statistics;
+public:
     struct PairStatistics;
 
+    struct PhaseSwitchHeuristicParameters {
+        static constexpr std::size_t kPairsRequiredForPhaseSwitch = 5;
+
+        // Represents the ratio in 5.3.1 of the "Efficient Discovery of Matching Dependencies"
+        // article, except instead of refined MDs, removed MDs are used in the numerator.
+        util::Ratio<std::size_t> final_lattice_ratio;
+        static constexpr util::Ratio<std::size_t> kStaleRatio{1, 21};
+        static constexpr util::Ratio<std::size_t> kFinalLatticeMult{1, 2};
+
+        // v1 * ratio >= v2 ?
+        static bool IsGe(std::size_t v1, util::Ratio<std::size_t> ratio, std::size_t v2) noexcept {
+            auto const& [numer, denom] = ratio;
+            return v1 * numer >= v2 * denom;
+        }
+    };
+
+private:
     SimilarityData* const similarity_data_;
     lattice::MdLattice* const lattice_;
 
@@ -26,23 +43,13 @@ private:
 
     RecordIdentifier next_left_record_ = 0;
 
-    static constexpr std::size_t kPairsRequiredForPhaseSwitch = 5;
-
-    std::size_t final_lattice_numerator_ = 1;
-    // Represents the reciprocal of the ratio in 5.3.1 of the "Efficient Discovery of Matching
-    // Dependencies" article, except instead of refined MDs, removed MDs are used in the numerator
-    // (denominator in the reciprocal).
-    std::size_t final_lattice_denominator_ = 1;
-    static constexpr std::size_t kFinalLatticeHeuristicGrowthNumerator = 1;
-    static constexpr std::size_t kFinalLatticeHeuristicGrowthDenominator = 2;
-
-    static constexpr std::size_t kStaleHeuristicNumerator = 1;
-    static constexpr std::size_t kStaleHeuristicDenominator = 21;
+    PhaseSwitchHeuristicParameters heuristic_parameters{{1, 1}};
 
     bool const avoid_same_comparison_processing_ = true;
 
     PairStatistics ProcessPairComparison(PairComparisonResult const& pair_comparison_result);
-    bool ShouldStopInferring(Statistics const& statistics) const noexcept;
+    template <typename StatisticsType>
+    bool ShouldStopInferring(StatisticsType const& statistics) const noexcept;
 
 public:
     RecordPairInferrer(SimilarityData* similarity_data, lattice::MdLattice* lattice,
