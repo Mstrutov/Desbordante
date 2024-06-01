@@ -92,7 +92,8 @@ struct TotalStatistics : public Statistics {
 };
 
 template <typename StatisticsType>
-auto RecordPairInferrer::Evaluate(StatisticsType const& statistics) const noexcept -> InferenceStatus {
+auto RecordPairInferrer::Evaluate(StatisticsType const& statistics) const noexcept
+        -> InferenceStatus {
     // NOTE: this is the condition from the original implementation. I believe it severely reduces
     // the benefits of the hybrid approach on datasets where inference from record pairs is
     // efficient.
@@ -104,16 +105,16 @@ auto RecordPairInferrer::Evaluate(StatisticsType const& statistics) const noexce
                                  PhaseSwitchHeuristicParameters::kPairsRequiredForPhaseSwitch;
     if (not_enough_data) return InferenceStatus::KeepGoing;
     // Modified phase switch heuristic described in "Efficient Discovery of Matching Dependencies".
-    bool const lattice_is_almost_final = PhaseSwitchHeuristicParameters::IsGe(
-            statistics.pairs_inspected, heuristic_parameters.final_lattice_ratio,
-            statistics.mds_removed);
+    bool const lattice_is_almost_final =
+            statistics.pairs_inspected * heuristic_parameters.final_lattice_coefficient >=
+            statistics.mds_removed;
     if (lattice_is_almost_final) return InferenceStatus::LatticeIsAlmostFinal;
 
     // New phase switch heuristic: if there are too many pairs that share similarity classifier
     // boundaries with already processed pairs, switch phase.
-    bool const pairs_are_stale = PhaseSwitchHeuristicParameters::IsGe(
-            statistics.pairs_inspected, PhaseSwitchHeuristicParameters::kStaleRatio,
-            statistics.pairs_processed);
+    bool const pairs_are_stale =
+            statistics.pairs_inspected * PhaseSwitchHeuristicParameters::kStaleCoefficient >=
+            statistics.pairs_processed;
     if (pairs_are_stale) return InferenceStatus::PairsAreStale;
     return InferenceStatus::KeepGoing;
 }
@@ -144,8 +145,8 @@ bool RecordPairInferrer::InferFromRecordPairs(Recommendations recommendations) {
                 case InferenceStatus::KeepGoing:
                     break;
                 case InferenceStatus::LatticeIsAlmostFinal:
-                    heuristic_parameters.final_lattice_ratio *=
-                            heuristic_parameters.kFinalLatticeMult;
+                    heuristic_parameters.final_lattice_coefficient *=
+                            PhaseSwitchHeuristicParameters::kFinalLatticeGrowth;
                 case InferenceStatus::PairsAreStale:
                     return true;
                 default:

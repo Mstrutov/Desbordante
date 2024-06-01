@@ -20,9 +20,9 @@ public:
 
         // Represents the ratio in 5.3.1 of the "Efficient Discovery of Matching Dependencies"
         // article, except instead of refined MDs, removed MDs are used in the numerator.
-        util::Ratio<std::size_t> final_lattice_ratio;
-        static constexpr util::Ratio<std::size_t> kStaleRatio{1, 21};
-        static constexpr util::Ratio<std::size_t> kFinalLatticeMult{1, 2};
+        double final_lattice_coefficient;
+        static constexpr double kStaleCoefficient = 1 / 21.;
+        static constexpr double kFinalLatticeGrowth = 1 / 2.;
 
         // v1 * ratio >= v2 ?
         static bool IsGe(std::size_t v1, util::Ratio<std::size_t> ratio, std::size_t v2) noexcept {
@@ -49,7 +49,7 @@ private:
 
     RecordIdentifier next_left_record_ = 0;
 
-    PhaseSwitchHeuristicParameters heuristic_parameters{{1, 100}};
+    PhaseSwitchHeuristicParameters heuristic_parameters{1 / 100.};
 
     bool const avoid_same_comparison_processing_ = true;
 
