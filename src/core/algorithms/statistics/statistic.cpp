@@ -4,6 +4,40 @@
 
 namespace algos {
 
+namespace mo = model;
+
+Statistic::Statistic(std::byte const* data, model::TypeId id, bool clone_data /* = false */) {
+    if (data != nullptr) {
+        switch (id) {
+            case +mo::TypeId::kInt:
+                this->type_ = std::make_unique<mo::IntType>();
+                if (clone_data)
+                    data_ = mo::IntType().Clone(data);
+                else
+                    data_ = data;
+                break;
+
+            case +mo::TypeId::kDouble:
+                this->type_ = std::make_unique<mo::DoubleType>();
+                if (clone_data)
+                    data_ = mo::DoubleType().Clone(data);
+                else
+                    data_ = data;
+                break;
+            case +mo::TypeId::kString:
+                this->type_ = std::make_unique<mo::StringType>();
+                if (clone_data)
+                    data_ = mo::StringType().Clone(data);
+                else
+                    data_ = data;
+                break;
+
+            default:
+                break;
+        }
+    }
+}
+
 Statistic::Statistic(std::byte const* data, model::Type const* type, bool clone_data) {
     if (type != nullptr && data != nullptr) {
         has_value_ = true;
