@@ -9,7 +9,7 @@
 namespace algos::fastod {
 
 class ComplexStrippedPartition {
-private:
+protected:
     std::shared_ptr<std::vector<size_t>> sp_indexes_;
     std::shared_ptr<std::vector<size_t>> sp_begins_;
     std::shared_ptr<std::vector<DataFrame::Range>> rb_indexes_;

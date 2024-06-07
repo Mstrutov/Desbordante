@@ -46,6 +46,7 @@ CSVConfig const kTestEmpty = CreateCsvConfig("TestEmpty.csv", ',', true);
 CSVConfig const kTestSingleColumn = CreateCsvConfig("TestSingleColumn.csv", ',', true);
 CSVConfig const kTestLong = CreateCsvConfig("TestLong.csv", ',', true);
 CSVConfig const kTestFD = CreateCsvConfig("TestFD.csv", ',', true);
+CSVConfig const kTestODVerifier = CreateCsvConfig("ODVerificationData.csv", ',', true);
 CSVConfig const kOdTestNormOd = CreateCsvConfig("od_norm_data/OD_norm.csv", ',', true);
 CSVConfig const kOdTestNormSmall2x3 = CreateCsvConfig("od_norm_data/small_2x3.csv", ',', true);
 CSVConfig const kOdTestNormSmall3x3 = CreateCsvConfig("od_norm_data/small_3x3.csv", ',', true);

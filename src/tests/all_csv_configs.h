@@ -36,6 +36,7 @@ extern CSVConfig const kTestEmpty;
 extern CSVConfig const kTestSingleColumn;
 extern CSVConfig const kTestLong;
 extern CSVConfig const kTestFD;
+extern CSVConfig const kTestODVerifier;
 extern CSVConfig const kOdTestNormOd;
 extern CSVConfig const kOdTestNormSmall2x3;
 extern CSVConfig const kOdTestNormSmall3x3;
