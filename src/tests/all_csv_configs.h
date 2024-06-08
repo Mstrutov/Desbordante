@@ -88,4 +88,5 @@ extern CSVConfig const kTestDif1;
 extern CSVConfig const kTestDif2;
 extern CSVConfig const kTestDif3;
 extern CSVConfig const kSimpleTypes1;
+extern CSVConfig const kTmpDC;
 }  // namespace tests
