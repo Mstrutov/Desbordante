@@ -100,6 +100,7 @@ private:
     SingleLevelFunc const get_single_level_;
     std::vector<std::vector<model::md::DecisionBoundary>> const* const lhs_bounds_;
     bool const prune_nondisjoint_;
+    std::size_t const max_cardinality_;
 
     [[nodiscard]] bool HasGeneralization(Md const& md) const;
 
@@ -166,7 +167,7 @@ private:
 public:
     explicit MdLattice(std::size_t column_matches_size, SingleLevelFunc single_level_func,
                        std::vector<std::vector<model::md::DecisionBoundary>> const& lhs_bounds,
-                       bool prune_nondisjoint);
+                       bool prune_nondisjoint, std::size_t max_cardinality);
 
     std::size_t GetColMatchNumber() const noexcept {
         return column_matches_size_;

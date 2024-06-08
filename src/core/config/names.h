@@ -61,4 +61,5 @@ constexpr auto kRightTable = "right_table";
 constexpr auto kPruneNonDisjoint = "prune_nondisjoint";
 constexpr auto kMinSupport = "min_support";
 constexpr auto kColumnMatches = "column_matches";
+constexpr auto kMaxCardinality = "max_cardinality";
 }  // namespace config::names

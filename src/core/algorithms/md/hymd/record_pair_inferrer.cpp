@@ -147,6 +147,7 @@ bool RecordPairInferrer::InferFromRecordPairs(Recommendations recommendations) {
                 case InferenceStatus::LatticeIsAlmostFinal:
                     heuristic_parameters.final_lattice_coefficient *=
                             PhaseSwitchHeuristicParameters::kFinalLatticeGrowth;
+                    [[fallthrough]];
                 case InferenceStatus::PairsAreStale:
                     return true;
                 default:

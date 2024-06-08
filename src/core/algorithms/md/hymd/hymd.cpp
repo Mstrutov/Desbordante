@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <limits>
 
 #include "algorithms/md/hymd/lattice/cardinality/min_picking_level_getter.h"
 #include "algorithms/md/hymd/lattice/md_lattice.h"
@@ -29,7 +30,7 @@ HyMD::HyMD() : MdAlgorithm({}) {
 
 void HyMD::MakeExecuteOptsAvailable() {
     using namespace config::names;
-    MakeOptionsAvailable({kMinSupport, kPruneNonDisjoint, kColumnMatches});
+    MakeOptionsAvailable({kMinSupport, kPruneNonDisjoint, kColumnMatches, kMaxCardinality});
 }
 
 void HyMD::RegisterOptions() {
@@ -101,6 +102,8 @@ void HyMD::RegisterOptions() {
     RegisterOption(Option{
             &column_matches_option_, kColumnMatches, kDColumnMatches, {column_matches_default}}
                            .SetValueCheck(column_matches_check));
+    RegisterOption(Option{&max_cardinality_, kMaxCardinality, kDMaxCardinality,
+                          std::numeric_limits<std::size_t>::max()});
 }
 
 void HyMD::ResetStateMd() {}
@@ -144,7 +147,8 @@ unsigned long long HyMD::ExecuteInternal() {
     SimilarityData similarity_data =
             SimilarityData::CreateFrom(records_info_.get(), std::move(column_matches_info), pool);
     lattice::MdLattice lattice{column_match_number, [](...) { return 1; },
-                               similarity_data.GetLhsBounds(), prune_nondisjoint_};
+                               similarity_data.GetLhsBounds(), prune_nondisjoint_,
+                               max_cardinality_};
     LatticeTraverser lattice_traverser{
             &lattice,
             std::make_unique<lattice::cardinality::MinPickingLevelGetter>(&lattice),

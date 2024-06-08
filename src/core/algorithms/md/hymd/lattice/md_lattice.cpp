@@ -28,13 +28,14 @@ namespace algos::hymd::lattice {
 // TODO: remove recursion
 MdLattice::MdLattice(std::size_t column_matches_size, SingleLevelFunc single_level_func,
                      std::vector<std::vector<model::md::DecisionBoundary>> const& lhs_bounds,
-                     bool prune_nondisjoint)
+                     bool prune_nondisjoint, std::size_t max_cardinality)
     : column_matches_size_(column_matches_size),
       md_root_(Rhs(column_matches_size_, 1.0)),
       support_root_(column_matches_size_),
       get_single_level_(std::move(single_level_func)),
       lhs_bounds_(&lhs_bounds),
-      prune_nondisjoint_(prune_nondisjoint) {}
+      prune_nondisjoint_(prune_nondisjoint),
+      max_cardinality_(max_cardinality) {}
 
 std::optional<DecisionBoundary> MdLattice::SpecializeOneLhs(Index col_match_index,
                                                             DecisionBoundary lhs_bound) const {
@@ -47,6 +48,7 @@ std::optional<DecisionBoundary> MdLattice::SpecializeOneLhs(Index col_match_inde
 
 void MdLattice::Specialize(MdLhs const& lhs, Rhss const& rhss, auto get_higher_lhs_bound,
                            auto get_higher_other_bound) {
+    if (lhs.Cardinality() == max_cardinality_) return;
     Index lhs_spec_index = 0;
     auto rhs_begin = rhss.begin(), rhs_end = rhss.end();
     auto lhs_iter = lhs.begin(), lhs_end = lhs.end();

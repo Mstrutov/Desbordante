@@ -30,10 +30,10 @@ private:
 
     std::size_t min_support_ = 0;
     bool prune_nondisjoint_ = true;
+    std::size_t max_cardinality_ = -1;
     // TODO: thread number limit
     // TODO: different level definitions (cardinality currently used)
     // TODO: comparing only some values during similarity calculation
-    // TODO: cardinality limit
     // TODO: automatically calculating minimal support
     // TODO: limit LHS bounds searched (currently only size limit is implemented)
     // TODO: memory conservation mode (load only some columns)

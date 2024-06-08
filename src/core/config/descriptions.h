@@ -105,4 +105,5 @@ constexpr auto kDPruneNonDisjoint =
         "RHS decision boundary limits the number of records matched";
 constexpr auto kDMinSupport = "minimum support for a dependency's LHS";
 constexpr auto kDColumnMatches = "column matches to examine";
+constexpr auto kDMaxCardinality = "maximum number of MD matching classifiers";
 }  // namespace config::descriptions
