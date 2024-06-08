@@ -11,6 +11,7 @@
 #include "algorithms/cfd/enums.h"
 #include "algorithms/metric/enums.h"
 #include "association_rules/ar_algorithm_enums.h"
+#include "config/custom_random/type.h"
 #include "config/error_measure/type.h"
 #include "config/exceptions.h"
 #include "config/tabular_data/input_table_type.h"
@@ -109,6 +110,19 @@ boost::any InputTablesToAny(std::string_view option_name, py::handle obj) {
     return parsers;
 }
 
+boost::any CustomRandomFlagToAny(std::string_view option_name, py::handle obj) {
+    if (!py::isinstance<py::tuple>(obj)) {
+        throw config::ConfigurationError("std::pair python analog is tuple.");
+    }
+    auto tup = py::cast<py::tuple>(obj);
+    if (py::len(tup) != 2) {
+        throw config::ConfigurationError("Tuple for converting into std::pair must get 2 fields.");
+    }
+    bool flag = CastAndReplaceCastError<bool>(option_name, tup[0]);
+    int seed = CastAndReplaceCastError<int>(option_name, tup[1]);
+    return std::make_pair(flag, seed);
+}
+
 std::unordered_map<std::type_index, ConvFunc> const kConverters{
         kNormalConvPair<bool>,
         kNormalConvPair<double>,
@@ -126,6 +140,7 @@ std::unordered_map<std::type_index, ConvFunc> const kConverters{
         kCharEnumConvPair<algos::Binop>,
         {typeid(config::InputTable), InputTableToAny},
         {typeid(config::InputTables), InputTablesToAny},
+        {typeid(config::CustomRandomFlagType), CustomRandomFlagToAny},
         kNormalConvPair<std::filesystem::path>,
         kNormalConvPair<std::vector<std::filesystem::path>>,
 };

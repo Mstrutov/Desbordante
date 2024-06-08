@@ -39,6 +39,7 @@ class Algorithm(StrEnum):
     fun = auto()
     fastfds = auto()
     aid = auto()
+    euler = auto()
     fd_first = auto()
     fastod = auto()
     order = auto()
@@ -164,7 +165,7 @@ more information about the primitive and the algorithms, refer to the
 “Functional dependency discovery: an experimental evaluation of seven
 algorithms” paper by T. Papenbrock et al.
 
-Algorithms: PYRO, TANE, HYFD, FD_MINE, DFD, DEP_MINER, FDEP, FUN, FASTFDS, AID
+Algorithms: PYRO, TANE, HYFD, FD_MINE, DFD, DEP_MINER, FDEP, FUN, FASTFDS, AID, EULER
 Default: HYFD
 '''
 CFD_HELP = '''Discover approximate conditional functional dependencies. For
@@ -324,6 +325,13 @@ it is significantly faster (10x-100x). For more information, refer to the
 “Approximate Discovery of Functional Dependencies for Large Datasets” paper
 by T.Bleifus et al.
 '''
+EULER_HELP = '''A algorithm for discovery of non-trivial and minimal functional
+dependencies. It is approximate, using sampler stategy i.e. it can
+miss some dependencies or produce non-valid ones. In exchange,
+it is significantly faster (10x-100x). For more information, refer to the
+“EulerFD: An Efficient Double-Cycle Approximation of Functional Dependencies”
+paper by Qiongqiong Lin et al.
+'''
 SPIDER_HELP = '''A disk-backed unary inclusion dependency mining algorithm.
 For more information, refer to "Efficiently detecting inclusion dependencies"
 by J. Bauckmann et al.
@@ -424,6 +432,7 @@ ALGO_HELP_PAGES = {
     Algorithm.fun: FUN_HELP,
     Algorithm.fastfds: FASTFDS_HELP,
     Algorithm.aid: AID_HELP,
+    Algorithm.euler: EULER_HELP,
     Algorithm.fastod: FASTOD_HELP,
     Algorithm.order: ORDER_HELP,
     Algorithm.spider: SPIDER_HELP,
@@ -446,7 +455,7 @@ TASK_INFO = {
     Task.fd: TaskInfo([Algorithm.pyro, Algorithm.tane, Algorithm.hyfd,
                        Algorithm.fd_mine, Algorithm.dfd, Algorithm.dep_miner,
                        Algorithm.fdep, Algorithm.fun, Algorithm.fastfds,
-                       Algorithm.aid, Algorithm.pfdtane],
+                       Algorithm.aid, Algorithm.euler, Algorithm.pfdtane],
                       Algorithm.hyfd),
     Task.cfd: TaskInfo([Algorithm.fd_first],
                        Algorithm.fd_first),
@@ -485,6 +494,7 @@ ALGOS = {
     Algorithm.fun: desbordante.fd.algorithms.FUN,
     Algorithm.fastfds: desbordante.fd.algorithms.FastFDs,
     Algorithm.aid: desbordante.fd.algorithms.Aid,
+    Algorithm.euler: desbordante.fd.algorithms.EulerFD,
     Algorithm.fastod: desbordante.od.algorithms.Fastod,
     Algorithm.order: desbordante.od.algorithms.Order,
     Algorithm.spider: desbordante.ind.algorithms.Spider,

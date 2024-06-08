@@ -34,6 +34,7 @@ ALGO_CORRECT_OPTIONS_INFO = [
     (desb.fd.algorithms.FUN, [ONLY_NULL_EQUAL_NULL_OPTION_CONTAINER]),
     (desb.fd.algorithms.FdMine, [ONLY_NULL_EQUAL_NULL_OPTION_CONTAINER]),
     (desb.fd.algorithms.HyFD, [ONLY_NULL_EQUAL_NULL_OPTION_CONTAINER]),
+    (desb.fd.algorithms.EulerFD, [ONLY_NULL_EQUAL_NULL_OPTION_CONTAINER]),
     (desb.afd.algorithms.Pyro, [
         get_common_option_container(
             {"seed": 1, "max_lhs": 12, "threads": 5, "error": 0.015}
@@ -57,6 +58,9 @@ ALGO_CORRECT_OPTIONS_INFO = [
     ]),
     (desb.ucc.algorithms.HyUCC, [
         get_common_option_container({"threads": 15}),
+    ]),
+    (desb.fd.algorithms.EulerFD, [
+        get_common_option_container({"custom_random": (False, 102)}),
     ]),
     (desb.fd_verification.algorithms.FDVerifier, [
         get_common_option_container(
