@@ -7,7 +7,6 @@
 #include "algorithms/md/hymd/pair_comparison_result.h"
 #include "algorithms/md/hymd/recommendation.h"
 #include "algorithms/md/hymd/similarity_data.h"
-#include "util/ratio.h"
 
 namespace algos::hymd {
 
@@ -23,12 +22,6 @@ public:
         double final_lattice_coefficient;
         static constexpr double kStaleCoefficient = 1 / 21.;
         static constexpr double kFinalLatticeGrowth = 1 / 2.;
-
-        // v1 * ratio >= v2 ?
-        static bool IsGe(std::size_t v1, util::Ratio<std::size_t> ratio, std::size_t v2) noexcept {
-            auto const& [numer, denom] = ratio;
-            return v1 * numer >= v2 * denom;
-        }
     };
 
 private:
