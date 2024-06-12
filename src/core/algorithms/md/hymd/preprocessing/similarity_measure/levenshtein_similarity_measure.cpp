@@ -33,8 +33,8 @@ std::size_t GetLevenshteinBufferSize(auto const& right_string) noexcept {
 /* An optimized version of the Levenshtein distance computation algorithm from
  * https://en.wikipedia.org/wiki/Levenshtein_distance, using preallocated buffers
  */
-unsigned LevenshteinDistance(auto const* l_ptr, auto const* r_ptr, unsigned* v0,
-                             unsigned* v1) noexcept {
+unsigned LevenshteinDistance(auto const* l_ptr, auto const* r_ptr, unsigned* v0, unsigned* v1,
+                             std::size_t max_dist, std::size_t bad_value) noexcept {
     std::size_t r_size = r_ptr->size();
     assert(v0 < v1);
     assert(GetLevenshteinBufferSize(*r_ptr) == std::size_t(v1 - v0));
@@ -42,6 +42,9 @@ unsigned LevenshteinDistance(auto const* l_ptr, auto const* r_ptr, unsigned* v0,
     if (r_size > l_size) {
         std::swap(l_ptr, r_ptr);
         std::swap(l_size, r_size);
+    }
+    if (l_size - r_size > max_dist) {
+        return bad_value;
     }
 
     auto const& l = *l_ptr;
@@ -137,7 +140,8 @@ indexes::SimilarityMeasureOutput LevenshteinSimilarityMeasure::MakeIndexes(
                           upgraded */
                     utility::MakeUniqueForOverwrite<unsigned[]>(buf_size * 2);
 
-            auto get_similarity = [&string_left, left_size, &data_info_right, buf1 = buf.get(),
+            auto get_similarity = [this, &string_left, left_size, &data_info_right,
+                                   buf1 = buf.get(),
                                    buf2 = buf.get() + buf_size](ValueIdentifier value_id_right) {
                 auto const& right_nulls = data_info_right->GetNulls();
                 if (right_nulls.find(value_id_right) != right_nulls.end()) return kLowestBound;
@@ -150,9 +154,9 @@ indexes::SimilarityMeasureOutput LevenshteinSimilarityMeasure::MakeIndexes(
                 // Left has to be second since that's what the function uses to determine the buffer
                 // size it needs
                 Similarity value =
-                        static_cast<Similarity>(max_dist - LevenshteinDistance(&string_right,
-                                                                               &string_left, buf1,
-                                                                               buf2)) /
+                        static_cast<Similarity>(
+                                max_dist - LevenshteinDistance(&string_right, &string_left, buf1,
+                                                               buf2, max_dist * (1 - min_sim_), max_dist)) /
                         static_cast<Similarity>(max_dist);
                 return value;
             };
