@@ -14,6 +14,7 @@
 #include "gfd/bind_gfd_verification.h"
 #include "ind/bind_ind.h"
 #include "mfd/bind_mfd_verification.h"
+#include "nd/bind_nd_verification.h"
 #include "od/bind_od.h"
 #include "statistics/bind_statistics.h"
 #include "ucc/bind_ucc.h"
@@ -34,9 +35,10 @@ PYBIND11_MODULE(desbordante, module) {
         el::Loggers::reconfigureAllLoggers(conf);
     }
 
-    for (auto bind_func : {BindMainClasses, BindDataTypes, BindFd, BindCfd, BindAr, BindUcc, BindAc,
-                           BindOd, BindFdVerification, BindMfdVerification, BindUccVerification,
-                           BindStatistics, BindInd, BindGfdVerification, BindSplit}) {
+    for (auto bind_func :
+         {BindMainClasses, BindDataTypes, BindFd, BindCfd, BindAr, BindUcc, BindAc, BindOd,
+          BindFdVerification, BindMfdVerification, BindUccVerification, BindStatistics, BindInd,
+          BindGfdVerification, BindSplit, BindNdVerification}) {
         bind_func(module);
     }
 }
