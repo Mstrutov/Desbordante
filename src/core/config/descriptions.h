@@ -105,4 +105,5 @@ constexpr auto kDMemLimitMB = "memory limit im MBs";
 constexpr auto kDDifferenceTable = "CSV table containing difference limits for each column";
 constexpr auto kDNumRows = "Use only first N rows of the table";
 constexpr auto kDNUmColumns = "Use only first N columns of the table";
+constexpr auto kDNDWeight = "Weight of ND to verify (positive integer)";
 }  // namespace config::descriptions
